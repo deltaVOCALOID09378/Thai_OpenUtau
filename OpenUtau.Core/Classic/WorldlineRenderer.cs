@@ -34,6 +34,8 @@ namespace OpenUtau.Classic {
             Ustx.DYN,
             Ustx.PITD,
             Ustx.CLR,
+            Ustx.CLRY,
+            Ustx.XSY,
             Ustx.SHFT,
             Ustx.VEL,
             Ustx.VOL,
@@ -63,7 +65,7 @@ namespace OpenUtau.Classic {
             };
         }
 
-        public Task<RenderResult> Render(RenderPhrase phrase, Progress progress, int trackNo, CancellationTokenSource cancellation, bool isPreRender) {
+        public Task<RenderResult> Render(RenderPhrase phrase, Progress progress, int trackNo, CancellationTokenSource cancellation, bool isPreRender, RenderPhraseEvents? renderEvents = null) {
             var resamplerItems = new List<ResamplerItem>();
             foreach (var phone in phrase.phones) {
                 resamplerItems.Add(new ResamplerItem(phrase, phone));
@@ -74,9 +76,12 @@ namespace OpenUtau.Classic {
                 phrase.AddCacheFile(wavPath);
                 string progressInfo = $"Track {trackNo + 1}: {this} {string.Join(" ", phrase.phones.Select(p => p.phoneme))}";
                 progress.Complete(0, progressInfo);
-                if (File.Exists(wavPath)) {
-                    using (var waveStream = Wave.OpenFile(wavPath)) {
-                        result.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                var cacheLock = Renderers.GetCacheLock(wavPath);
+                lock (cacheLock) {
+                    if (File.Exists(wavPath)) {
+                        using (var waveStream = Wave.OpenFile(wavPath)) {
+                            result.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                        }
                     }
                 }
                 if (result.samples == null) {
@@ -176,9 +181,16 @@ namespace OpenUtau.Classic {
                         }
                     }
                     AddDirects(phrase, resamplerItems, result);
-                    var source = new WaveSource(0, 0, 0, 1);
-                    source.SetSamples(result.samples);
-                    WaveFileWriter.CreateWaveFile16(wavPath, new ExportAdapter(source).ToMono(1, 0));
+                    if (result.samples != null) {
+                        // Synchronous: a detached write races a subsequent cold re-render's read.
+                        try {
+                            lock (cacheLock) {
+                                Wave.WriteMono16Wav(wavPath, result.samples);
+                            }
+                        } catch (Exception e) {
+                            Serilog.Log.Error(e, $"Failed to write cache file: {wavPath}");
+                        }
+                    }
                 }
                 progress.Complete(phrase.phones.Length, progressInfo);
                 if (result.samples != null) {
@@ -242,3 +254,4 @@ namespace OpenUtau.Classic {
         public override string ToString() => version == 1 ? Renderers.WORLDLINE_R : Renderers.WORLDLINE_R2;
     }
 }
+

@@ -15,6 +15,7 @@ namespace OpenUtau.Core.DiffSinger {
         public override string Id => voicebank.Id;
         public override string Name => voicebank.Name;
         public override Dictionary<string, string> LocalizedNames => voicebank.LocalizedNames;
+        public override IList<string> SearchTerms => voicebank.SearchTerms;
         public override USingerType SingerType => voicebank.SingerType;
         public override string BasePath => voicebank.BasePath;
         public override string Author => voicebank.Author;
@@ -52,6 +53,15 @@ namespace OpenUtau.Core.DiffSinger {
         public DsPitch pitchPredictor = null;
         public DiffSingerSpeakerEmbedManager speakerEmbedManager = null;
         public DsVariance variancePredictor = null;
+        /// <summary>
+        /// Guards the lazily created native models above: building one, using one and freeing one
+        /// are mutually exclusive per singer. Locking the model instances themselves cannot do
+        /// that, because the instance to lock does not exist until it has been built and is set to
+        /// null when it is freed — so two threads could build the same model at once, or one could
+        /// go on using a model a concurrent <see cref="FreeMemory"/> had already disposed. The
+        /// result was an access violation inside onnxruntime rather than a managed exception.
+        /// </summary>
+        public object SessionLock { get; } = new object();
         public bool HasPitchPredictor => File.Exists(Path.Join(Location, "dspitch", "dsconfig.yaml"));
         public bool HasVariancePredictor => File.Exists(Path.Join(Location,"dsvariance", "dsconfig.yaml"));
 
@@ -72,7 +82,7 @@ namespace OpenUtau.Core.DiffSinger {
                 }
             } else {
                 avatarData = null;
-                Log.Error("Avatar can't be found");
+                Log.Information("Avatar not found");
             }
 
             subbanks.Clear();
@@ -81,42 +91,54 @@ namespace OpenUtau.Core.DiffSinger {
 
             //Load diffsinger config of a voicebank
             string configPath = Path.Combine(Location, "dsconfig.yaml");
+            bool dsConfigLoaded = false;
             if(configPath != null && File.Exists(configPath)){
                 try {
                     dsConfig = Core.Yaml.DefaultDeserializer.Deserialize<DsConfig>(
                         File.ReadAllText(configPath, Encoding.UTF8));
+                    dsConfigLoaded = true;
                 } catch (Exception e) {
                     Log.Error(e, $"Failed to load dsconfig.yaml for {Name} from {configPath}");
+                    errors.Add($"Failed to load dsconfig.yaml: {e.Message}");
                     dsConfig = new DsConfig();
                 }
             } else {
                 Log.Error($"dsconfig.yaml not found for {Name} at {configPath}");
+                errors.Add($"dsconfig.yaml not found at {configPath}");
                 dsConfig = new DsConfig();
             }
 
-            //Load phoneme list
-            string phonemesPath = Path.Combine(Location, dsConfig.phonemes);
-            if(phonemesPath != null && File.Exists(phonemesPath)){
-                try {
-                    phonemeTokens = DiffSingerUtils.LoadPhonemes(phonemesPath);
-                    phonemes = phonemeTokens.Keys.ToList();
-                } catch (Exception e){
-                    Log.Error(e, $"Failed to load phoneme list for {Name} from {phonemesPath}");
-                }
-            } else {
-                Log.Error($"phonemes file not found for {Name} at {phonemesPath}");
-            }
-
-            //Load language Id if needed
-            if(dsConfig.use_lang_id){
-                if(dsConfig.languages == null){
-                    Log.Error("\"languages\" field is not specified in dsconfig.yaml");
-                } else {
-                var langIdPath = Path.Join(Location, dsConfig.languages);
+            if(dsConfigLoaded) {
+                //Load phoneme tokens for acoustic model (render-time tokenization)
+                string phonemesPath = Path.Combine(Location, dsConfig.phonemes);
+                if(phonemesPath != null && File.Exists(phonemesPath)){
                     try {
-                        languageIds = DiffSingerUtils.LoadLanguageIds(langIdPath);
-                    } catch (Exception e) {
-                        Log.Error(e, $"failed to load language id from {langIdPath}");
+                        phonemeTokens = DiffSingerUtils.LoadPhonemes(phonemesPath);
+                        phonemes = phonemeTokens.Keys.ToList();
+                    } catch (Exception e){
+                        Log.Error(e, $"Failed to load phoneme tokens for {Name} from {phonemesPath}");
+                        errors.Add($"Failed to load phoneme tokens: {e.Message}");
+                        phonemeTokens = new Dictionary<string, int>();
+                    }
+                } else {
+                    Log.Error($"phonemes file not found for {Name} at {phonemesPath}");
+                    errors.Add($"Phonemes file not found at {phonemesPath}");
+                    phonemeTokens = new Dictionary<string, int>();
+                }
+
+                //Load language Id if needed
+                if(dsConfig.use_lang_id){
+                    if(dsConfig.languages == null){
+                        Log.Error("\"languages\" field is not specified in dsconfig.yaml");
+                        errors.Add("\"languages\" field is not specified in dsconfig.yaml but use_lang_id is true");
+                    } else {
+                        var langIdPath = Path.Join(Location, dsConfig.languages);
+                        try {
+                            languageIds = DiffSingerUtils.LoadLanguageIds(langIdPath);
+                        } catch (Exception e) {
+                            Log.Error(e, $"failed to load language id from {langIdPath}");
+                            errors.Add($"Failed to load language IDs: {e.Message}");
+                        }
                     }
                 }
             }
@@ -137,23 +159,24 @@ namespace OpenUtau.Core.DiffSinger {
         }
 
         public override bool TryGetOto(string phoneme, out UOto oto) {
-            var parts = phoneme.Split();
-            if (parts.All(p => phonemes.Contains(p))) {
-                oto = UOto.OfDummy(phoneme);
-                return true;
-            }
-            oto = null;
-            return false;
+            // We always return true here just not to let OTO get in our way.
+            // Phonemizer and acoustic model work independently and both can report missing phonemes by their own,
+            // so do other submodules.
+            oto = UOto.OfDummy(phoneme);
+            return true;
         }
 
-        public override IEnumerable<UOto> GetSuggestions(string text) {
+        public override Dictionary<string, UOto> GetSuggestions(string text, bool isAlias) {
             if (text != null) {
                 text = text.ToLowerInvariant().Replace(" ", "");
             }
             bool all = string.IsNullOrEmpty(text);
             return table.Keys
                 .Where(key => all || key.Contains(text))
-                .Select(key => UOto.OfDummy(key));
+                .ToDictionary(
+                    key => key,
+                    key => UOto.OfDummy(key)
+                );
         }
 
         public override byte[] LoadPortrait() {
@@ -163,52 +186,67 @@ namespace OpenUtau.Core.DiffSinger {
         }
 
         public InferenceSession getAcousticSession() {
-            if (acousticSession is null) {
-                var acousticPath = Path.Combine(Location, dsConfig.acoustic);
-                var acousticBytes = File.ReadAllBytes(acousticPath);
-                acousticHash = XXH64.DigestOf(acousticBytes);
-                acousticSession = Onnx.getInferenceSession(acousticBytes, OnnxRunnerChoice.Default);
+            lock (SessionLock) {
+                if (acousticSession is null) {
+                    var acousticPath = Path.Combine(Location, dsConfig.acoustic);
+                    var acousticBytes = File.ReadAllBytes(acousticPath);
+                    acousticHash = XXH64.DigestOf(acousticBytes);
+                    acousticSession = Onnx.getInferenceSession(acousticBytes, OnnxRunnerChoice.Default);
+                }
+                return acousticSession;
             }
-            return acousticSession;
         }
 
         public DsVocoder getVocoder() {
-            if(vocoder is null) {
-                if(File.Exists(Path.Join(Location, "dsvocoder", "vocoder.yaml"))) {
-                    vocoder = new DsVocoder(Path.Join(Location, "dsvocoder"));
-                    return vocoder;
+            lock (SessionLock) {
+                if(vocoder is null) {
+                    if(File.Exists(Path.Join(Location, "dsvocoder", "vocoder.yaml"))) {
+                        vocoder = new DsVocoder(Path.Join(Location, "dsvocoder"));
+                        return vocoder;
+                    }
+                    vocoder = new DsVocoder(Path.Combine(PathManager.Inst.DependencyPath, dsConfig.vocoder));
                 }
-                vocoder = new DsVocoder(dsConfig.vocoder);
+                return vocoder;
             }
-            return vocoder;
         }
 
         public DsPitch? getPitchPredictor(){
-            if(pitchPredictor is null) {
-                if(HasPitchPredictor){
-                    pitchPredictor = new DsPitch(Path.Join(Location, "dspitch"));
+            lock (SessionLock) {
+                if(pitchPredictor is null) {
+                    if(HasPitchPredictor){
+                        pitchPredictor = new DsPitch(Path.Join(Location, "dspitch"));
+                    }
                 }
+                return pitchPredictor;
             }
-            return pitchPredictor;
         }
-       
+
         public DiffSingerSpeakerEmbedManager getSpeakerEmbedManager(){
-            if(speakerEmbedManager is null) {
-                speakerEmbedManager = new DiffSingerSpeakerEmbedManager(dsConfig, Location);
+            lock (SessionLock) {
+                if(speakerEmbedManager is null) {
+                    speakerEmbedManager = new DiffSingerSpeakerEmbedManager(dsConfig, Location);
+                }
+                return speakerEmbedManager;
             }
-            return speakerEmbedManager;
         }
 
         public DsVariance? getVariancePredictor(){
-            if(variancePredictor is null) {
-                if(HasVariancePredictor){
-                    variancePredictor = new DsVariance(Path.Join(Location, "dsvariance"));
+            lock (SessionLock) {
+                if(variancePredictor is null) {
+                    if(HasVariancePredictor){
+                        variancePredictor = new DsVariance(Path.Join(Location, "dsvariance"));
+                    }
                 }
+                return variancePredictor;
             }
-            return variancePredictor;
         }
 
         public int PhonemeTokenize(string phoneme){
+            if(phonemeTokens == null || phonemeTokens.Count == 0){
+                throw new Exception(
+                    $"Phoneme vocabulary is not loaded for singer \"{Name}\". " +
+                    "Please check that dsconfig.yaml and the phonemes file are valid.");
+            }
             bool success = phonemeTokens.TryGetValue(phoneme, out int token);
             if(!success){
                 throw new Exception($"Phoneme \"{phoneme}\" isn't supported by acoustic model. Please check {Path.Combine(Location, dsConfig.phonemes)}");
@@ -218,29 +256,18 @@ namespace OpenUtau.Core.DiffSinger {
 
         public override void FreeMemory(){
             Log.Information($"Freeing memory for singer {Id}");
-            if(acousticSession != null) {
-                lock(acousticSession) {
-                    acousticSession?.Dispose();
-                }
+            // The same lock the getters take, so a render already inside one of these models
+            // finishes before it is disposed instead of being left holding a freed handle.
+            lock (SessionLock) {
+                acousticSession?.Dispose();
                 acousticSession = null;
-            }
-            if(vocoder != null) {
-                lock(vocoder) {
-                    vocoder?.Dispose();
-                }
+                vocoder?.Dispose();
                 vocoder = null;
-            }
-            if(pitchPredictor != null) {
-                lock(pitchPredictor) {
-                    pitchPredictor?.Dispose();
-                }
+                pitchPredictor?.Dispose();
                 pitchPredictor = null;
-            }
-            if(variancePredictor != null){
-                lock(variancePredictor) {
-                    variancePredictor?.Dispose();
-                }
+                variancePredictor?.Dispose();
                 variancePredictor = null;
+                DiffSingerRealCurveScheduler.CancelAll();
             }
         }
     }

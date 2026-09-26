@@ -8,7 +8,6 @@ using NWaves.Operations;
 using NWaves.Signals;
 using OpenUtau.Api;
 using OpenUtau.Core.Render;
-using OpenUtau.Core.SignalChain;
 using Serilog;
 using SharpCompress;
 using YamlDotNet.Serialization;
@@ -19,6 +18,11 @@ namespace OpenUtau.Core.Ustx {
         public string comment = string.Empty;
         public int trackNo;
         public int position = 0;
+
+        /// <summary>
+        /// Stable identity that survives clone / cut-paste / reload.
+        /// </summary>
+        [YamlIgnore] public Pipeline.PartId Id { get; internal set; } = Pipeline.PartId.New();
 
         [YamlIgnore] public virtual string DisplayName { get; }
         [YamlIgnore] public virtual int Duration { set; get; }
@@ -50,13 +54,11 @@ namespace OpenUtau.Core.Ustx {
         [YamlIgnore] public List<RenderPhrase> renderPhrases = new List<RenderPhrase>();
 
         [YamlIgnore] private PhonemizerResponse phonemizerResponse;
+        [YamlIgnore] private Dictionary<string, Phonemizer> overridePhonemizers = new Dictionary<string, Phonemizer>();
         [YamlIgnore] private long notesTimestamp;
         [YamlIgnore] private long phonemesTimestamp;
 
-        [YamlIgnore] private ISignalSource mix;
-
         [YamlIgnore] public bool PhonemesUpToDate => notesTimestamp == phonemesTimestamp;
-        [YamlIgnore] public ISignalSource Mix => mix;
 
         public override string DisplayName => name;
         public override int Duration { get => duration; set => duration = value; }
@@ -65,6 +67,10 @@ namespace OpenUtau.Core.Ustx {
             int endTicks = position + (notes.LastOrDefault()?.End ?? 1);
             project.timeAxis.TickPosToBarBeat(endTicks, out int bar, out int beat, out int remainingTicks);
             return project.timeAxis.BarBeatToTickPos(bar, beat + 1) - position;
+        }
+        public int GetMinDurTickForNoteEdit(UProject project, int noteEnd) {
+            project.timeAxis.TickPosToBarBeat(position + noteEnd - 1, out int bar, out int beat, out int remainingTicks);
+            return project.timeAxis.BarBeatToTickPos(bar + 2, 0) - position;
         }
         
         public override int GetMaxPosiTick(UProject project) {
@@ -85,11 +91,23 @@ namespace OpenUtau.Core.Ustx {
             }
             Duration = Math.Max(Duration, GetMinDurTick(project));
             foreach (var curve in curves) {
-                if (project.expressions.TryGetValue(curve.abbr, out var descriptor)) {
+                // Curves may belong to track expressions, so resolve through the track.
+                // Keep the existing descriptor when not found, so that undoing an expression
+                // configuration change does not lose curves.
+                if (track.TryGetExpDescriptor(project, curve.abbr, out var descriptor)) {
                     curve.descriptor = descriptor;
                 }
             }
+            // Same as UNote.AfterLoad: drop data whose expression no longer exists.
+            foreach (var curve in curves.Where(curve => curve.descriptor == null)) {
+                Log.Warning($"Removed curve \"{curve.abbr}\" with unknown expression from part \"{name}\".");
+            }
+            curves.RemoveAll(curve => curve.descriptor == null);
         }
+
+        [YamlIgnore] internal long phraseGeneration;
+        [YamlIgnore] internal long phraseAppliedGeneration;
+        [YamlIgnore] internal readonly Pipeline.PhraseBuildGate phraseGate = new Pipeline.PhraseBuildGate();
 
         public override void Validate(ValidateOptions options, UProject project, UTrack track) {
             UNote lastNote = null;
@@ -116,6 +134,10 @@ namespace OpenUtau.Core.Ustx {
             if (!options.SkipPhonemizer) {
                 var noteIndexes = new List<int>();
                 var groups = new List<Phonemizer.Note[]>();
+                
+                var trackPhonemizers = new List<Phonemizer> { track.Phonemizer };
+                var notePhonemizerIndices = new List<int>();
+
                 int noteIndex = 0;
                 foreach (var note in notes) {
                     if (note.OverlapError || note.Extends != null) {
@@ -130,15 +152,42 @@ namespace OpenUtau.Core.Ustx {
                     }
                     groups.Add(group.Select(e => e.ToPhonemizerNote(track, this)).ToArray());
                     noteIndexes.Add(noteIndex);
+
+                    int pIndex = 0;
+                    if (!string.IsNullOrEmpty(note.PhonemizerOverride)) {
+                        pIndex = trackPhonemizers.FindIndex(p => p != null && p.Name == note.PhonemizerOverride);
+                        if (pIndex == -1) {
+                            if (!overridePhonemizers.TryGetValue(note.PhonemizerOverride, out var newPhonemizer)) {
+                                var factory = PhonemizerFactory.GetAll().FirstOrDefault(f => f.name == note.PhonemizerOverride);
+                                newPhonemizer = factory?.Create();
+                                if (newPhonemizer != null) {
+                                    overridePhonemizers[note.PhonemizerOverride] = newPhonemizer;
+                                }
+                            }
+                            
+                            if (newPhonemizer != null) {
+                                trackPhonemizers.Add(newPhonemizer);
+                                pIndex = trackPhonemizers.Count - 1;
+                            } else {
+                                pIndex = 0;
+                            }
+                        }
+                    }
+                    notePhonemizerIndices.Add(pIndex);
                     noteIndex++;
                 }
+
                 var request = new PhonemizerRequest() {
                     singer = track.Singer,
                     part = this,
                     timestamp = DateTime.Now.ToFileTimeUtc(),
                     noteIndexes = noteIndexes.ToArray(),
                     notes = groups.ToArray(),
-                    phonemizer = track.Phonemizer,
+                    
+                    // NEW: Feed the runner our multi-phonemizer data instead of a single phonemizer
+                    phonemizers = trackPhonemizers.ToArray(),
+                    notePhonemizerIndices = notePhonemizerIndices.ToArray(),
+                    
                     timeAxis = project.timeAxis.Clone(),
                 };
                 notesTimestamp = request.timestamp;
@@ -149,7 +198,9 @@ namespace OpenUtau.Core.Ustx {
                     var resp = phonemizerResponse;
                     if (resp.timestamp == notesTimestamp) {
                         phonemes.Clear();
-                        notes.ForEach(note => note.phonemizerExpressions.Clear());
+                        foreach (var note in notes) {
+                            note.phonemizerExpressions.Clear();
+                        }
 
                         for (int i = 0; i < resp.phonemes.Length; ++i) {
                             var indexes = new List<int>();
@@ -159,7 +210,8 @@ namespace OpenUtau.Core.Ustx {
                                     rawPosition = resp.phonemes[i][j].position - position,
                                     rawPhoneme = resp.phonemes[i][j].phoneme,
                                     index = resp.phonemes[i][j].index ?? j,
-                                    Parent = note
+                                    Parent = note,
+                                    ErrorException = resp.phonemes[i][j].error
                                 };
                                 // Check for duplicate indexes
                                 if (phonemes.Any(p => p.Parent == phoneme.Parent && p.index == phoneme.index)) {
@@ -215,6 +267,8 @@ namespace OpenUtau.Core.Ustx {
                     phoneme.phoneme = phoneme.rawPhoneme;
                     phoneme.preutterDelta = null;
                     phoneme.overlapDelta = null;
+                    phoneme.attackTimeDelta = null;
+                    phoneme.releaseTimeDelta = null;
                     var note = phoneme.Parent;
                     if (note == null) {
                         continue;
@@ -225,6 +279,20 @@ namespace OpenUtau.Core.Ustx {
                         phoneme.phoneme = !string.IsNullOrWhiteSpace(o.phoneme) ? o.phoneme : phoneme.rawPhoneme;
                         phoneme.preutterDelta = o.preutterDelta;
                         phoneme.overlapDelta = o.overlapDelta;
+                        phoneme.attackTimeDelta = o.attackTimeDelta;
+                        phoneme.releaseTimeDelta = o.releaseTimeDelta;
+                    }
+                }
+                // A phonemizer is expected to return positions in order. Report it when that did
+                // not happen, instead of letting the safety treatment below repair it silently.
+                // rawPosition is the phonemizer output before user phoneme overrides are applied,
+                // so this only fires for the phonemizer itself, not for edited offsets.
+                for (int i = 0; i < phonemes.Count - 1; ++i) {
+                    if (phonemes[i].rawPosition > phonemes[i + 1].rawPosition) {
+                        Log.Warning("Out-of-order phonemes in part {Part}: {Phoneme} at {Position} comes after {Next} at {NextPosition}.",
+                            name, phonemes[i].rawPhoneme, phonemes[i].rawPosition,
+                            phonemes[i + 1].rawPhoneme, phonemes[i + 1].rawPosition);
+                        break;
                     }
                 }
                 // Safety treatment after phonemizer output and phoneme overrides.
@@ -239,10 +307,65 @@ namespace OpenUtau.Core.Ustx {
                     phoneme.Validate(options, project, track, this, note);
                 }
             }
-            renderPhrases.Clear();
-            if (PhonemesUpToDate) {
-                renderPhrases.AddRange(RenderPhrase.FromPart(project, track, this));
+        // Snapshot on the UI thread; the heavy phrase build runs off-thread
+        // and fills renderPhrases when it lands.
+            if (!PhonemesUpToDate) {
+                lock (this) {
+                    renderPhrases.Clear();
+                }
+                return;
             }
+            long generation = ++phraseGeneration;
+            var source = Pipeline.PhraseSource.FromPart(project, track, this, generation);
+            if (source == null) {
+                lock (this) {
+                    renderPhrases.Clear();
+                }
+                return;
+            }
+            Pipeline.DocumentSnapshotStore.Inst.SetPart(this, source);
+            phraseGate.MarkPending(generation);
+            var builder = Pipeline.PhraseSourceBuilder.Current;
+            if (builder != null && builder.Push(source, this)) {
+                return;
+            }
+            // No worker (test hosts): build inline.
+            try {
+                ApplyPhraseSourceResult(source, source.BuildPhrases());
+            } catch (Exception e) {
+                Log.Error(e, "Failed to build phrase source {part}", Id);
+                lock (this) {
+                    renderPhrases.Clear();
+                }
+                phraseGate.MarkCompleted(generation);
+            }
+        }
+
+        internal void ApplyPhraseSourceResult(Pipeline.PhraseSource source, RenderPhrase[] phrases) {
+            bool applied;
+            lock (this) {
+                applied = source.Generation > phraseAppliedGeneration;
+                if (applied) {
+                    phraseAppliedGeneration = source.Generation;
+                    renderPhrases.Clear();
+                    renderPhrases.AddRange(phrases);
+                }
+            }
+            if (!applied) {
+                return;
+            }
+            phraseGate.MarkCompleted(source.Generation);
+            if (DocManager.Inst.MainScheduler != null) {
+                RenderView.Inst.InvalidateAll();
+            }
+        }
+
+        /// <summary>
+        /// Bounded wait for the latest phrase-source build to land. Must not
+        /// be called while holding the project lock.
+        /// </summary>
+        internal bool WaitPhraseSource(TimeSpan timeout) {
+            return phraseGate.WaitFor(phraseGeneration, timeout);
         }
 
         internal void SetPhonemizerResponse(PhonemizerResponse response) {
@@ -262,14 +385,9 @@ namespace OpenUtau.Core.Ustx {
             }
         }
 
-        internal void SetMix(ISignalSource mix) {
-            lock (this) {
-                this.mix = mix;
-            }
-        }
-
         public override UPart Clone() {
             return new UVoicePart() {
+                Id = Id,
                 name = name,
                 comment = comment,
                 trackNo = trackNo,
@@ -335,6 +453,7 @@ namespace OpenUtau.Core.Ustx {
 
         public override UPart Clone() {
             var part = new UWavePart() {
+                Id = Id,
                 _filePath = _filePath,
                 relativePath = relativePath,
                 skip = skip,
@@ -430,19 +549,19 @@ namespace OpenUtau.Core.Ustx {
             Load(project);
         }
 
-        public ISignalSource TrimSamples(UProject project) {
+        /// <summary>
+        /// The wave part's placement and trimmed pcm (fades applied to a copy; the
+        /// document's <see cref="Samples"/> is never mutated). Used by the slot-based
+        /// transport (playback and export).
+        /// </summary>
+        public (double offsetMs, double estimatedLengthMs, int channels, float[] pcm) GetTrimmedSamples(UProject project) {
             double offsetMs = project.timeAxis.TickPosToMsPos(position);
             double estimatedLengthMs = project.timeAxis.TickPosToMsPos(End) - offsetMs;
-            var waveSource = new WaveSource(
-                offsetMs,
-                estimatedLengthMs,
-                0, channels);
             int skipCount = (int)(GetSkipMs(project) * sampleRate / 1000) * channels;
             int trimCount = (int)(GetTrimMs(project) * sampleRate / 1000) * channels;
             int remainingCount = Samples.Length - skipCount - trimCount;
             if (remainingCount <= 0) {
-                waveSource.SetSamples(new float[0]);
-                return waveSource;
+                return (offsetMs, estimatedLengthMs, channels, new float[0]);
             }
             float[] trimmedSamples = new float[remainingCount];
             Array.Copy(Samples, skipCount, trimmedSamples, 0, remainingCount);
@@ -464,8 +583,8 @@ namespace OpenUtau.Core.Ustx {
                     }
                 }
             }
-            waveSource.SetSamples(trimmedSamples);
-            return waveSource;
+            return (offsetMs, estimatedLengthMs, channels, trimmedSamples);
         }
+
     }
 }

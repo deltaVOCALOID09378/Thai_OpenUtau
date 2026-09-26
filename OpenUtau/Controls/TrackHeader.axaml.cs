@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
@@ -44,12 +45,15 @@ namespace OpenUtau.App.Controls {
         private double trackHeight;
         private Point offset;
         private int trackNo;
+        private readonly KeyModifiers cmdKey =
+            OS.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
 
         public TrackHeaderViewModel? ViewModel;
 
         private List<IDisposable> unbinds = new List<IDisposable>();
 
         private UTrack? track;
+        private TrackHeaderCanvas? canvas;
 
         public TrackHeader() {
             InitializeComponent();
@@ -66,6 +70,7 @@ namespace OpenUtau.App.Controls {
 
         internal void Bind(UTrack track, TrackHeaderCanvas canvas) {
             this.track = track;
+            this.canvas = canvas;
             unbinds.Add(this.Bind(TrackHeightProperty, canvas.GetObservable(TrackHeaderCanvas.TrackHeightProperty)));
             unbinds.Add(this.Bind(HeightProperty, canvas.GetObservable(TrackHeaderCanvas.TrackHeightProperty)));
             unbinds.Add(this.Bind(OffsetProperty, canvas.WhenAnyValue(x => x.TrackOffset, trackOffset => new Point(0, -trackOffset * TrackHeight))));
@@ -82,23 +87,63 @@ namespace OpenUtau.App.Controls {
             }
         }
 
+        void HeaderPointerPressed(object? sender, PointerPressedEventArgs args) {
+            if (!args.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
+                track == null ||
+                canvas?.DataContext is not TracksViewModel tracksViewModel) {
+                return;
+            }
+            if (args.KeyModifiers == KeyModifiers.Shift) {
+                tracksViewModel.SelectTracksUntil(track);
+            } else if (args.KeyModifiers == cmdKey) {
+                tracksViewModel.ToggleSelectTrack(track);
+            } else {
+                tracksViewModel.SelectTrack(track);
+            }
+        }
+
         void TrackNameButtonClicked(object sender, RoutedEventArgs args) {
             ViewModel?.Rename();
             args.Handled = true;
         }
 
         void SingerButtonClicked(object sender, RoutedEventArgs args) {
-            try {
-                ViewModel?.RefreshSingers();
-                SingersMenu.Open((Control)sender);
-            } catch (Exception e) {
-                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
-            }
             args.Handled = true;
+            ShowSingerFlyout(sender);
         }
 
         void SingerButtonContextRequested(object sender, ContextRequestedEventArgs args) {
             args.Handled = true;
+            ShowSingerFlyout(sender);
+        }
+
+        void ShowSingerFlyout(object sender) {
+            if (ViewModel == null) {
+                return;
+            }
+            try {
+                Control anchor = SingerButton;
+                if (sender != SingerButton) {
+                    // Opened from the "⋯" flyout: close it and anchor to its button instead of stacking flyouts.
+                    MoreButton.Flyout?.Hide();
+                    anchor = MoreButton;
+                }
+                var viewModel = new SingerFlyoutViewModel(() => ViewModel.Singer, ViewModel.SelectSingerCommand);
+                var content = new SingerFlyout() { DataContext = viewModel };
+                var flyout = new Flyout() {
+                    Content = content,
+                    Placement = PlacementMode.BottomEdgeAlignedLeft,
+                    ShowMode = FlyoutShowMode.Standard,
+                };
+                flyout.FlyoutPresenterClasses.Add("singerFlyout");
+                viewModel.CloseRequested += flyout.Hide;
+                flyout.Opened += (_, _) => DocManager.Inst.AddSubscriber(viewModel);
+                flyout.Closed += (_, _) => DocManager.Inst.RemoveSubscriber(viewModel);
+                content.FitToScreen(anchor);
+                flyout.ShowAt(anchor);
+            } catch (Exception e) {
+                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
+            }
         }
 
         void PhonemizerButtonClicked(object sender, RoutedEventArgs args) {
@@ -151,11 +196,11 @@ namespace OpenUtau.App.Controls {
             args.Handled = true;
         }
 
-        void TrackSettingsButtonClicked(object sender, RoutedEventArgs args) {
+        async void TrackSettingsButtonClicked(object sender, RoutedEventArgs args) {
             if (track?.Singer != null && track.Singer.Found) {
-                if (VisualRoot is Window window) {
+                if (TopLevel.GetTopLevel(this) is Window window) {
                     var dialog = new Views.TrackSettingsDialog(track);
-                    dialog.ShowDialog(window);
+                    await dialog.ShowDialog(window);
                 }
             }
         }
@@ -184,7 +229,7 @@ namespace OpenUtau.App.Controls {
                 args.Handled = true;
             }
         }
-        void VolumeOrPanTextBoxLostFocus(object sender, RoutedEventArgs args) {
+        void VolumeOrPanTextBoxLostFocus(object sender, FocusChangedEventArgs args) {
             FinishVolumeOrPanInput(sender, true);
             args.Handled = true;
         }
@@ -201,6 +246,62 @@ namespace OpenUtau.App.Controls {
             textBox.IsVisible = true;
             textBox.Focus();
         }
+
+        private void MoveHandleScrolled(object? sender, PointerWheelEventArgs e) {
+            Dispatcher.UIThread.Post(() => MoveHandleMoved(sender, e));
+        }
+
+        private void MoveHandlePressed(object? sender, PointerPressedEventArgs e) {
+            var control = sender as Control;
+            var pointer = e.GetCurrentPoint(control);
+            if (control != null && pointer.Properties.IsLeftButtonPressed) {
+                e.Pointer.Capture(control);
+            }
+        }
+
+        private void MoveHandleReleased(object? sender, PointerReleasedEventArgs e) {
+            if (e.InitialPressMouseButton == MouseButton.Left && canvas != null) {
+                Cursor = null;
+                Point point = e.GetPosition(canvas);
+                int tracksMaxIdx = DocManager.Inst.Project.tracks.Count - 1;
+                double sizeHidden = Math.Abs(Offset.Y);
+                if (track != null) {
+                    bool isAboveCenter = Canvas.GetTop(this) + TrackHeight / 2 > point.Y;
+                    int position = (int) Math.Round((sizeHidden + point.Y - (isAboveCenter ? 0 : TrackHeight)) / TrackHeight);
+                    int idx = Math.Clamp(position, 0, tracksMaxIdx);
+
+                    if (track.TrackNo != idx) {
+                        DocManager.Inst.StartUndoGroup("command.track.order");
+                        DocManager.Inst.ExecuteCmd(new SetTrackNoCommand(DocManager.Inst.Project, track, idx));
+                        DocManager.Inst.EndUndoGroup();
+                    }
+
+                }
+                if (canvas.TrackMover != null) {
+                    canvas.TrackMover.IsVisible = false;
+                }
+            }
+            e.Pointer.Capture(null);
+        }
+
+        private void MoveHandleMoved(object? sender, PointerEventArgs e) {
+            var control = sender as Control;
+            var pointer = e.GetCurrentPoint(control);
+            if (pointer.Properties.IsLeftButtonPressed && e.Pointer.Captured == control && canvas?.TrackMover != null) {
+                canvas.TrackMover.IsVisible = true;
+                Cursor = ViewConstants.cursorSizeNS;
+                double maxHeight = DocManager.Inst.Project.tracks.Count * TrackHeight;
+                Point point = e.GetPosition(canvas);
+                double offset = Math.Abs(Offset.Y);
+                double leftOver = offset % TrackHeight;
+                if (track != null) {
+                    double position = Math.Round((point.Y + leftOver) / TrackHeight) * TrackHeight;
+                    double finalPos = Math.Clamp(position - leftOver, -leftOver, maxHeight - offset);
+                    Canvas.SetTop(canvas.TrackMover, finalPos);
+                }
+            }
+        }
+
         private void FinishVolumeOrPanInput(object sender, bool commit) {
             if (sender == VolumeTextBox) {
                 if (!VolumeTextBox.IsVisible) {
