@@ -110,6 +110,8 @@ jobs:
     needs: next-version
     if: needs.next-version.outputs.skip != 'true'
     runs-on: ${{ matrix.arch.runs-on }}
+    permissions:
+      contents: read
 
     strategy:
       fail-fast: false
