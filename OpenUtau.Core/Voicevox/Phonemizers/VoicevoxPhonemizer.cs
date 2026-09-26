@@ -6,7 +6,7 @@ using OpenUtau.Api;
 using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.Core.Voicevox {
-    [Phonemizer("Voicevox Japanese Phonemizer", "VOICEVOX JA", language: "JA")]
+    [Phonemizer("Voicevox Japanese Phonemizer", "Japanese", language: "VOICEVOX")]
     public class VoicevoxPhonemizer : Phonemizer {
 
         protected VoicevoxSinger singer;
@@ -94,13 +94,10 @@ namespace OpenUtau.Core.Voicevox {
                     }).ToArray(),
                 };
             }
-            return new Result {
-                phonemes = new Phoneme[] {
-                    new Phoneme {
-                        phoneme = "error",
-                    }
-                },
-            };
+            if (SetUpException != null) {
+                throw new Exception("Phonemizer failed to process.", SetUpException);
+            }
+            throw new Exception("Part result not found");
 
         }
 

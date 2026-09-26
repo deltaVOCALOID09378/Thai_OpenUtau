@@ -1,4 +1,13 @@
-﻿using Xunit;
+// ============================================================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.2 | Date: 2026-07-28
+// Description: เพิ่มการตรวจบันทึกและโหลดโครงการ USTX แบบไปกลับ
+// ============================================================================
+
+using System;
+using System.IO;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace OpenUtau.Core.Ustx {
@@ -38,7 +47,8 @@ pitch:
   - {x: -5, y: 0, shape: io}
   - {x: 5, y: 0, shape: io}
   snap_first: true
-vibrato: {length: 0, period: 175, depth: 25, in: 10, out: 10, shift: 0, drift: 0, vol_link: 0}
+vibrato: {length: 0, period: 180, depth: 41.9, in: 38.3, out: 20, shift: 0, drift: 0, vol_link: 0}
+tuning: 0
 phoneme_expressions:
 - {index: 0, abbr: vel, value: 123}
 phoneme_overrides: []
@@ -88,6 +98,32 @@ phoneme_overrides: []
             yaml = Yaml.DefaultSerializer.Serialize(new UNote() { lyric = "\t- asdf" });
             actual = Yaml.DefaultDeserializer.Deserialize<UNote>(yaml);
             Assert.Equal("\t- asdf", actual.lyric);
+        }
+
+        [Fact]
+        public void ProjectSaveLoadRoundTripTest() {
+            string filePath = Path.Combine(
+                Path.GetTempPath(),
+                $"openutau-save-roundtrip-{Guid.NewGuid():N}.ustx");
+            try {
+                var project = Format.Ustx.Create();
+                project.name = "DELTA SYNTH Save Test";
+                project.comment = "ทดสอบการบันทึกและโหลดภาษาไทย";
+
+                Format.Ustx.Save(filePath, project);
+
+                Assert.True(File.Exists(filePath));
+                Assert.True(new FileInfo(filePath).Length > 0);
+                var loaded = Format.Ustx.Load(filePath);
+                Assert.Equal(project.name, loaded.name);
+                Assert.Equal(project.comment, loaded.comment);
+                Assert.Equal(Format.Ustx.kUstxVersion, loaded.ustxVersion);
+                Assert.Single(loaded.tracks);
+            } finally {
+                if (File.Exists(filePath)) {
+                    File.Delete(filePath);
+                }
+            }
         }
     }
 }

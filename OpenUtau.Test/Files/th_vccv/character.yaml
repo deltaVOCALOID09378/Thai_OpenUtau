@@ -1,0 +1,8 @@
+﻿language: Japanese
+engine: UTAU
+image: Icon.png
+portrait: Full.png
+portrait_opacity: 0.5
+portrait_height: 0
+author: DELTA SYNTH
+version: 1.0.0

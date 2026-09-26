@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OpenUtau.UITest_Thai"
+        Title="ทดสอบหน้าต่างแสดงผลภาษาไทย (UI Test)"
+        Width="600" Height="400"
+        FontFamily="{DynamicResource ui.fontfamily}">
+    
+    <Grid Margin="20" RowDefinitions="Auto, Auto, *, Auto">
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="การทดสอบหน้าจอสำหรับฟอนต์ Leelawadee" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+        
+        <!-- Controls -->
+        <StackPanel Grid.Row="1" Spacing="10">
+            <TextBlock Text="นี่คือตัวอย่างการแสดงผลภาษาไทยบนหน้าจอ OpenUtau" FontSize="14" />
+            <TextBlock Text="ทดสอบวรรณยุกต์: ปู่ย่าตายาย น้ำ ปะป๊า ญี่ปุ่น นกฮูก" FontSize="14" />
+            <TextBlock Text="สระและพยัญชนะ: ฎ ฏ ฐ ญ ฬ แข็งแรง" FontSize="14" />
+            
+            <TextBox Text="พิมพ์ข้อความทดสอบที่นี่..." Margin="0,10,0,0"/>
+            <ComboBox SelectedIndex="0" Margin="0,10,0,0">
+                <ComboBoxItem>ตัวเลือกที่ 1 (ลีลาวดี)</ComboBoxItem>
+                <ComboBoxItem>ตัวเลือกที่ 2 (ทดสอบ)</ComboBoxItem>
+            </ComboBox>
+        </StackPanel>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Content="ยกเลิก (Cancel)" Width="100" HorizontalContentAlignment="Center"/>
+            <Button Content="ตกลง (OK)" Width="100" HorizontalContentAlignment="Center" Classes="accent"/>
+        </StackPanel>
+    </Grid>
+</Window>

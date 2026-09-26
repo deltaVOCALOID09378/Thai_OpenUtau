@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -7,14 +7,17 @@ using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 
-namespace OpenUtau.App.Controls {
-    public partial class LyricBox : UserControl {
+namespace OpenUtau.App.Controls
+{
+    public partial class LyricBox : UserControl
+    {
         private LyricBoxViewModel viewModel;
         private TextBox box;
         private ListBox listBox;
         private DispatcherTimer? focusTimer;
 
-        public LyricBox() {
+        public LyricBox()
+        {
             InitializeComponent();
             DataContext = viewModel = new LyricBoxViewModel();
             box = PART_Box;
@@ -22,18 +25,23 @@ namespace OpenUtau.App.Controls {
             IsVisible = false;
         }
 
-        private void Box_GotFocus(object? sender, GotFocusEventArgs e) {
+        private void Box_GotFocus(object? sender, GotFocusEventArgs e)
+        {
             box.SelectAll();
         }
 
-        private void Box_LostFocus(object? sender, RoutedEventArgs e) {
+        private void Box_LostFocus(object? sender, RoutedEventArgs e)
+        {
             box.CaretIndex = 0;
         }
 
-        private void ListBox_KeyDown(object? sender, KeyEventArgs e) {
-            switch (e.Key) {
+        private void ListBox_KeyDown(object? sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
                 case Key.Enter:
-                    if (listBox.SelectedItem is LyricBoxViewModel.SuggestionItem item) {
+                    if (listBox.SelectedItem is LyricBoxViewModel.SuggestionItem item)
+                    {
                         box.Text = item.Alias;
                     }
                     EndEdit(true);
@@ -44,8 +52,10 @@ namespace OpenUtau.App.Controls {
                     e.Handled = true;
                     break;
                 case Key.Tab:
-                    if (!viewModel.IsAliasBox) {
-                        if (listBox.SelectedItem is LyricBoxViewModel.SuggestionItem item1) {
+                    if (!viewModel.IsAliasBox)
+                    {
+                        if (listBox.SelectedItem is LyricBoxViewModel.SuggestionItem item1)
+                        {
                             box.Text = item1.Alias;
                         }
                         OnTab(e.KeyModifiers);
@@ -73,25 +83,37 @@ namespace OpenUtau.App.Controls {
             }
         }
 
-        private void ListBoxSelect(int index) {
-            if (index < 0) {
-                if (listBox.SelectedIndex == 0) {
+        private void ListBoxSelect(int index)
+        {
+            if (index < 0)
+            {
+                if (listBox.SelectedIndex == 0)
+                {
                     index = listBox.ItemCount - 1;
-                } else {
+                }
+                else
+                {
                     index = 0;
                 }
-            } else if (index >= listBox.ItemCount) {
-                if (listBox.SelectedIndex == listBox.ItemCount - 1) {
+            }
+            else if (index >= listBox.ItemCount)
+            {
+                if (listBox.SelectedIndex == listBox.ItemCount - 1)
+                {
                     index = 0;
-                } else {
+                }
+                else
+                {
                     index = listBox.ItemCount - 1;
                 }
             }
             listBox.SelectedIndex = index;
         }
 
-        private void Box_KeyDown(object? sender, KeyEventArgs e) {
-            switch (e.Key) {
+        private void Box_KeyDown(object? sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
                 case Key.Enter:
                     EndEdit(true);
                     e.Handled = true;
@@ -101,7 +123,8 @@ namespace OpenUtau.App.Controls {
                     e.Handled = true;
                     break;
                 case Key.Tab:
-                    if (!viewModel.IsAliasBox) {
+                    if (!viewModel.IsAliasBox)
+                    {
                         OnTab(e.KeyModifiers);
                     }
                     e.Handled = true;
@@ -127,34 +150,53 @@ namespace OpenUtau.App.Controls {
             }
         }
 
-        private void OnTab(KeyModifiers keyModifiers) {
+        private void OnTab(KeyModifiers keyModifiers)
+        {
             UVoicePart? part = viewModel.Part;
             UNote? tabTo = null;
             var tabFrom = viewModel.NoteOrPhoneme as LyricBoxNote;
-            if (keyModifiers == KeyModifiers.None) {
+            if (keyModifiers == KeyModifiers.None)
+            {
                 tabTo = tabFrom?.Unwrap().Next;
-            } else if (keyModifiers == KeyModifiers.Shift) {
+            }
+            else if (keyModifiers == KeyModifiers.Shift)
+            {
                 tabTo = tabFrom?.Unwrap().Prev;
             }
             EndEdit(true);
-            if (tabTo != null && part != null) {
+            if (tabTo != null && part != null)
+            {
                 DocManager.Inst.ExecuteCmd(new FocusNoteNotification(part, tabTo));
                 Show(part, new LyricBoxNote(tabTo), tabTo.lyric);
             }
         }
 
-        public void ListBox_PointerPressed(object sender, PointerPressedEventArgs args) {
+        public void ListBox_PointerPressed(object sender, PointerPressedEventArgs args)
+        {
             if (sender is DockPanel panel &&
-                panel.DataContext is LyricBoxViewModel.SuggestionItem item) {
+                panel.DataContext is LyricBoxViewModel.SuggestionItem item)
+            {
                 box.Text = item.Alias;
             }
             EndEdit(true);
         }
 
-        public void Show(UVoicePart part, LyricBoxNoteOrPhoneme noteOrPhoneme, string text) {
+        public void Show(UVoicePart part, LyricBoxNoteOrPhoneme noteOrPhoneme, string text)
+        {
+            Show(part, noteOrPhoneme, text, false, false, null);
+        }
+
+        /// <param name="editTagOnly">When true, text is tag only; commit builds full = text + "/" + otherPart.</param>
+        /// <param name="editPhonemeOnly">When true, text is phoneme only; commit builds full = (otherPart + "/") + text.</param>
+        /// <param name="otherPart">The other part (phoneme-only when editTagOnly, tag when editPhonemeOnly).</param>
+        public void Show(UVoicePart part, LyricBoxNoteOrPhoneme noteOrPhoneme, string text, bool editTagOnly, bool editPhonemeOnly, string? otherPart)
+        {
             viewModel.Part = part;
             viewModel.NoteOrPhoneme = noteOrPhoneme;
             viewModel.Text = text;
+            viewModel.EditPhonemeTagOnly = editTagOnly;
+            viewModel.EditPhonemePhonemeOnly = editPhonemeOnly;
+            viewModel.PhonemeOtherPart = otherPart ?? string.Empty;
             viewModel.IsVisible = true;
             box.SelectAll();
             focusTimer = new DispatcherTimer(
@@ -164,24 +206,31 @@ namespace OpenUtau.App.Controls {
             focusTimer.Start();
         }
 
-        private void FocusTimer_Tick(object? sender, System.EventArgs e) {
+        private void FocusTimer_Tick(object? sender, System.EventArgs e)
+        {
             box.Focus();
-            if (focusTimer != null) {
+            if (focusTimer != null)
+            {
                 focusTimer.Tick -= FocusTimer_Tick;
                 focusTimer.Stop();
                 focusTimer = null;
             }
         }
 
-        public void EndEdit(bool commit = false) {
-            if (commit) {
+        public void EndEdit(bool commit = false)
+        {
+            if (commit)
+            {
                 viewModel.Commit();
             }
             viewModel.Part = null;
             viewModel.NoteOrPhoneme = null;
             viewModel.IsVisible = false;
             viewModel.Text = string.Empty;
-            TopLevel.GetTopLevel(this)?.FocusManager?.ClearFocus();
+            viewModel.EditPhonemeTagOnly = false;
+            viewModel.EditPhonemePhonemeOnly = false;
+            viewModel.PhonemeOtherPart = null;
+            this.Focus();
         }
     }
 }

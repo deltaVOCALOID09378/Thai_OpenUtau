@@ -19,19 +19,19 @@ namespace OpenUtau.Classic {
             try {
                 return Worldline.Resample(item);
             } catch (SynthRequestError e) {
-                if (e is CutOffExceedDurationError cee) {
+                if (e is CutOffExceedDurationError) {
                     throw new MessageCustomizableException(
                         $"Failed to render\n Oto error: cutoff exceeds audio duration \n{item.phone.phoneme}",
                         $"<translate:errors.failed.synth.cutoffexceedduration>\n{item.phone.phoneme}",
                         e);
                 }
-                if (e is CutOffBeforeOffsetError cbe) {
+                if (e is CutOffBeforeOffsetError) {
                     throw new MessageCustomizableException(
                         $"Failed to render\n Oto error: cutoff before offset \n{item.phone.phoneme}",
                         $"<translate:errors.failed.synth.cutoffbeforeoffset>\n{item.phone.phoneme}",
                         e);
                 }
-                throw e;
+                throw;
             }
         }
 

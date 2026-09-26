@@ -1,4 +1,10 @@
-﻿using System;
+// ==========================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai
+// Version: v.17.3
+// History/Summary: ลงทะเบียน ThaiVCCVLyricsHelper ให้ใช้งานได้
+// ==========================================
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Api;
@@ -38,6 +44,8 @@ namespace OpenUtau.Core.Util {
             typeof(JyutpingLyricsHelper),
             typeof(ArpabetG2pLyricsHelper),
             typeof(ArpabetPlusG2pLyricsHelper),
+            typeof(BrapaG2pLyricsHelper),
+            typeof(FilipinoG2pLyricsHelper),
             typeof(FrenchG2pLyricsHelper),
             typeof(FrenchMillefeuilleG2pLyricsHelper),
             typeof(GermanG2pLyricsHelper),
@@ -47,6 +55,9 @@ namespace OpenUtau.Core.Util {
             typeof(RussianG2pLyricsHelper),
             typeof(SpanishG2pLyricsHelper),
             typeof(KoreanG2pLyricsHelper),
+            typeof(ThaiG2pLyricsHelper),
+            typeof(ThaiVCCVLyricsHelper),
+            typeof(UkrainianG2pLyricsHelper),
         };
     }
 
@@ -92,7 +103,13 @@ namespace OpenUtau.Core.Util {
     public class ArpabetPlusG2pLyricsHelper : G2pLyricsHelper {
         public ArpabetPlusG2pLyricsHelper() : base(new ArpabetPlusG2p()) { }
     }
+    public class BrapaG2pLyricsHelper : G2pLyricsHelper {
+        public BrapaG2pLyricsHelper() : base(new BrapaG2p()) { }
+    }
 
+    public class FilipinoG2pLyricsHelper : G2pLyricsHelper {
+        public FilipinoG2pLyricsHelper() : base(new FilipinoG2p()) { }
+    }
     public class FrenchG2pLyricsHelper : G2pLyricsHelper {
         public FrenchG2pLyricsHelper() : base(new FrenchG2p()) { }
     }
@@ -127,6 +144,14 @@ namespace OpenUtau.Core.Util {
 
     public class KoreanG2pLyricsHelper : G2pLyricsHelper {
         public KoreanG2pLyricsHelper() : base(new KoreanG2p()) { }
+    }
+
+    public class ThaiG2pLyricsHelper : G2pLyricsHelper {
+        public ThaiG2pLyricsHelper() : base(new ThaiG2p()) { }
+    }
+
+    public class UkrainianG2pLyricsHelper : G2pLyricsHelper {
+        public UkrainianG2pLyricsHelper() : base(new UkrainianG2p()) { }
     }
 }
 

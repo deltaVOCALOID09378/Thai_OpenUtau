@@ -4,16 +4,86 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <!--<system:String x:Key="context.note.clearcache">Clear cache of phrase</system:String>-->
+  <system:String x:Key="button.apply">申請</system:String>
+  <system:String x:Key="button.cancel">取消</system:String>
+  <system:String x:Key="button.no">不</system:String>
+  <system:String x:Key="button.off">離開</system:String>
+  <system:String x:Key="button.ok">好的</system:String>
+  <system:String x:Key="button.on">在</system:String>
+  <system:String x:Key="button.open">打開</system:String>
+  <system:String x:Key="button.remove">消除</system:String>
+  <system:String x:Key="button.reset">重置</system:String>
+  <system:String x:Key="button.save">節省</system:String>
+  <system:String x:Key="button.select">選擇</system:String>
+  <system:String x:Key="button.yes">是的</system:String>
+
+  <system:String x:Key="command.batch.lyric">歌詞批次編輯</system:String>
+  <system:String x:Key="command.batch.note">筆記批量編輯</system:String>
+  <system:String x:Key="command.batch.plugin">應用程式插件編輯</system:String>
+  <system:String x:Key="command.batch.reset">批量重置</system:String>
+  <system:String x:Key="command.exp.edit">編輯表達式</system:String>
+  <system:String x:Key="command.exp.paste">貼上表達曲線</system:String>
+  <system:String x:Key="command.exp.reset">重設表達式</system:String>
+  <system:String x:Key="command.import.audio">導入音訊</system:String>
+  <system:String x:Key="command.import.track">導入曲目</system:String>
+  <system:String x:Key="command.note.add">新增備註</system:String>
+  <system:String x:Key="command.note.delete">刪除註釋</system:String>
+  <system:String x:Key="command.note.edit">編輯註釋</system:String>
+  <system:String x:Key="command.note.lyric">編輯歌詞</system:String>
+  <system:String x:Key="command.note.move">移動註釋</system:String>
+  <system:String x:Key="command.note.paste">貼上註釋</system:String>
+  <system:String x:Key="command.note.split">分割音符</system:String>
+  <system:String x:Key="command.parameter.paste">貼上參數</system:String>
+  <system:String x:Key="command.part.add">添加部分</system:String>
+  <system:String x:Key="command.part.delete">刪除部分</system:String>
+  <system:String x:Key="command.part.edit">編輯部分</system:String>
+  <system:String x:Key="command.part.fadein">編輯部分淡入</system:String>
+  <system:String x:Key="command.part.fadeout">編輯部分淡出</system:String>
+  <system:String x:Key="command.part.move">移動零件</system:String>
+  <system:String x:Key="command.part.paste">貼上部分</system:String>
+  <system:String x:Key="command.part.transcribe">轉錄音訊以創建筆記部分</system:String>
+  <system:String x:Key="command.phoneme.edit">編輯音素</system:String>
+  <system:String x:Key="command.phoneme.reset">重置音素</system:String>
+  <system:String x:Key="command.pitch.add">新增節點</system:String>
+  <system:String x:Key="command.pitch.delete">刪除節點</system:String>
+  <system:String x:Key="command.pitch.draw">繪製間距</system:String>
+  <system:String x:Key="command.pitch.edit">編輯音調</system:String>
+  <system:String x:Key="command.pitch.editpoint">編輯節點</system:String>
+  <system:String x:Key="command.pitch.reset">重置音高</system:String>
+  <system:String x:Key="command.project.exp">編輯項目表達式</system:String>
+  <system:String x:Key="command.project.key">更改項目密鑰</system:String>
+  <system:String x:Key="command.project.tempo">編輯速度</system:String>
+  <system:String x:Key="command.project.timesignature">編輯拍號</system:String>
+  <system:String x:Key="command.property.edit">編輯註釋屬性</system:String>
+  <system:String x:Key="command.property.reset">重置註釋屬性</system:String>
+  <system:String x:Key="command.track.add">新增曲目</system:String>
+  <system:String x:Key="command.track.delete">刪除曲目</system:String>
+  <system:String x:Key="command.track.duplicate">重複曲目</system:String>
+  <system:String x:Key="command.track.exp">編輯軌道表達式</system:String>
+  <system:String x:Key="command.track.order">編輯曲目順序</system:String>
+  <system:String x:Key="command.track.remapvc">重新映射聲音顏色</system:String>
+  <system:String x:Key="command.track.setting">更改曲目設定</system:String>
+  <system:String x:Key="command.track.singer">更換曲目歌手</system:String>
+  <system:String x:Key="command.vibrato.edit">編輯顫音</system:String>
+
+  <system:String x:Key="context.note.clearcache">清除短語快取</system:String>
   <system:String x:Key="context.note.copy">複製音符</system:String>
   <system:String x:Key="context.note.delete">刪除音符</system:String>
-  <!--<system:String x:Key="context.note.pasteparameters">Select and paste parameters</system:String>-->
+  <system:String x:Key="context.note.pasteparameters">選擇並貼上參數</system:String>
+  <system:String x:Key="context.part.applypitch">應用音調從...</system:String>
   <system:String x:Key="context.part.delete">刪除段落</system:String>
+  <system:String x:Key="context.part.extractingpitch">提取音高</system:String>
+  <system:String x:Key="context.part.generateharmonies">產生和諧...</system:String>
   <system:String x:Key="context.part.gotofile">開啟檔案位置</system:String>
+  <system:String x:Key="context.part.merge">合併零件</system:String>
+  <system:String x:Key="context.part.nopitchdetected">從源波部分未偵測到音調。</system:String>
+  <system:String x:Key="context.part.nopitchregion">來源波形部分和目標音符部分之間沒有重疊區域。</system:String>
+  <system:String x:Key="context.part.nopitchsource">沒有可用的波浪部件</system:String>
   <system:String x:Key="context.part.rename">重新命名段落</system:String>
   <system:String x:Key="context.part.replaceaudio">更換音訊</system:String>
-  <!--<system:String x:Key="context.part.transcribe">Transcribe audio to create a note part</system:String>-->
-  <!--<system:String x:Key="context.part.transcribing">Transcribing</system:String>-->
+  <system:String x:Key="context.part.split">在播放頭處分割部分</system:String>
+  <system:String x:Key="context.part.transcribe">轉錄音訊以創建筆記部分</system:String>
+  <system:String x:Key="context.part.transcribing">抄寫</system:String>
   <system:String x:Key="context.pitch.easein">緩入</system:String>
   <system:String x:Key="context.pitch.easeinout">緩入並緩出</system:String>
   <system:String x:Key="context.pitch.easeout">緩出</system:String>
@@ -21,10 +91,12 @@
   <system:String x:Key="context.pitch.pointadd">新增控制點</system:String>
   <system:String x:Key="context.pitch.pointdel">刪除控制點</system:String>
   <system:String x:Key="context.pitch.pointsnapprev">貼齊前一個音符</system:String>
-  <!--<system:String x:Key="context.timeline.addtempo">Add tempo change at {0}</system:String>-->
-  <!--<system:String x:Key="context.timeline.addtimesig">Add time signature change</system:String>-->
-  <!--<system:String x:Key="context.timeline.deltempo">Delete tempo change at {0}</system:String>-->
-  <!--<system:String x:Key="context.timeline.deltimesig">Delete time signature change</system:String>-->
+  <system:String x:Key="context.pitch.shape">曲線形狀</system:String>
+  <system:String x:Key="context.pitch.smooth">光滑的</system:String>
+  <system:String x:Key="context.timeline.addtempo">在{0}新增速度變化</system:String>
+  <system:String x:Key="context.timeline.addtimesig">新增拍號更改</system:String>
+  <system:String x:Key="context.timeline.deltempo">刪除{0}處的速度變化</system:String>
+  <system:String x:Key="context.timeline.deltimesig">刪除拍號更改</system:String>
 
   <system:String x:Key="debug.clear">清除</system:String>
   <system:String x:Key="debug.copylog">複製</system:String>
@@ -34,105 +106,181 @@
   <system:String x:Key="dialogs.about.message">
     OpenUtau 致力於為 UTAU 社群建立開源編輯環境，提供現代化使用體驗與智慧型拆音功能。歡迎瀏覽我們的 GitHub。
   </system:String>
+  <system:String x:Key="dialogs.dropproject.caption">開啟或匯入項目</system:String>
+  <system:String x:Key="dialogs.dropproject.import">導入曲目</system:String>
+  <system:String x:Key="dialogs.dropproject.message">您要開啟拖放的專案文件，還是將其曲目匯入目前專案？</system:String>
+  <system:String x:Key="dialogs.dropproject.open">打開專案</system:String>
   <system:String x:Key="dialogs.exitsave.caption">結束 OpenUtau</system:String>
   <system:String x:Key="dialogs.exitsave.message">專案包含未儲存的變更。是否要儲存?</system:String>
   <system:String x:Key="dialogs.export.caption">匯出</system:String>
   <system:String x:Key="dialogs.export.savefirst">請先儲存專案</system:String>
+  <system:String x:Key="dialogs.exportds.caption">匯出 DiffSinger 腳本</system:String>
+  <system:String x:Key="dialogs.exportds.curves">曲線</system:String>
+  <system:String x:Key="dialogs.exportds.notrendered">請在匯出之前渲染所有零件。</system:String>
+  <system:String x:Key="dialogs.exportds.pitch">螺距 (f0)</system:String>
+  <system:String x:Key="dialogs.exportds.variance">方差參數</system:String>
+  <system:String x:Key="dialogs.exportds.variance.hint">在首選項中啟用 DiffSinger 張量快取以匯出方差參數曲線。</system:String>
+  <system:String x:Key="dialogs.harmony.caption">產生和聲</system:String>
+  <system:String x:Key="dialogs.harmony.description">從所選部分建立新的和聲軌。音符依所選調全音階移調。</system:String>
+  <system:String x:Key="dialogs.harmony.hint">每個選定的聲音都會在來源下方創建一個帶有轉置音符的新軌道。歌手和設定是從來源軌道複製的。</system:String>
+  <system:String x:Key="dialogs.harmony.intervals">和諧的聲音</system:String>
+  <system:String x:Key="dialogs.harmony.key">鑰匙</system:String>
+  <system:String x:Key="dialogs.importproject.caption">導入專案選項</system:String>
+  <system:String x:Key="dialogs.importproject.chinesepinyin">漢字 → 拼音</system:String>
+  <system:String x:Key="dialogs.importproject.defaultlyric">預設歌詞</system:String>
+  <system:String x:Key="dialogs.importproject.fillgaps">填補短空白</system:String>
+  <system:String x:Key="dialogs.importproject.fillgaps.threshold">最大加工長度（不含）</system:String>
+  <system:String x:Key="dialogs.importproject.fillgaps.thresholditem">1/{0}註釋</system:String>
+  <system:String x:Key="dialogs.importproject.japanese">日語歌詞</system:String>
+  <system:String x:Key="dialogs.importproject.japanese.hiragana">羅馬字 → 平假名</system:String>
+  <system:String x:Key="dialogs.importproject.japanese.none">無轉換</system:String>
+  <system:String x:Key="dialogs.importproject.japanese.romaji">平假名 → 羅馬字</system:String>
+  <system:String x:Key="dialogs.importproject.leadingpadding">第一個音符前有空格</system:String>
+  <system:String x:Key="dialogs.importproject.leadingpadding.size">當第一個音符從剪輯開始處開始時進行填充</system:String>
+  <system:String x:Key="dialogs.importproject.lyricsmapping">歌詞映射（精確）</system:String>
+  <system:String x:Key="dialogs.importproject.lyricsmapping.hint">每行一個：from=to</system:String>
+  <system:String x:Key="dialogs.importproject.lyricsreplace">歌詞替換</system:String>
+  <system:String x:Key="dialogs.importproject.lyricsreplace.hint">從=&gt;到或/模式/替換/</system:String>
+  <system:String x:Key="dialogs.importproject.lyricssection">歌詞處理</system:String>
+  <system:String x:Key="dialogs.importproject.message">選擇從此文件匯入的內容：</system:String>
+  <system:String x:Key="dialogs.importproject.notes">註釋和歌詞</system:String>
+  <system:String x:Key="dialogs.importproject.pitch">螺距曲線（PITD）</system:String>
+  <system:String x:Key="dialogs.importproject.resolveoverlaps">修復重疊筆記</system:String>
+  <system:String x:Key="dialogs.importproject.tempo">速度標記</system:String>
+  <system:String x:Key="dialogs.importproject.timesig">拍號</system:String>
   <system:String x:Key="dialogs.importtracks.caption">匯入音軌</system:String>
-  <!--<system:String x:Key="dialogs.importtracks.importtempo">The imported project contains the following tempo markers. Do you want to use them?</system:String>-->
+  <system:String x:Key="dialogs.importtracks.importtempo">导入的项目包含以下速度标记。 Do you want to use them?</system:String>
   <system:String x:Key="dialogs.installdependency.caption">安裝相依性</system:String>
   <system:String x:Key="dialogs.installdependency.message">安裝 </system:String>
   <system:String x:Key="dialogs.installdll.caption">安裝拆音器</system:String>
   <system:String x:Key="dialogs.installdll.message">安裝 </system:String>
-  <system:String x:Key="dialogs.messagebox.cancel">取消</system:String>
+  <system:String x:Key="dialogs.merge.caption">合併零件</system:String>
+  <system:String x:Key="dialogs.merge.multitracks">不同軌道上的部分無法合併。</system:String>
   <system:String x:Key="dialogs.messagebox.copy">把錯誤訊息複製到剪貼簿</system:String>
-  <system:String x:Key="dialogs.messagebox.no">否</system:String>
-  <system:String x:Key="dialogs.messagebox.ok">是</system:String>
-  <system:String x:Key="dialogs.messagebox.yes">確定</system:String>
   <system:String x:Key="dialogs.noresampler.caption">未套用引擎</system:String>
   <system:String x:Key="dialogs.noresampler.message">未套用引擎! 請將引擎 EXE 或 DLL 檔案置入 Resamplers 資料夾中，並在偏好設定選擇欲使用的引擎!</system:String>
-  <!--<system:String x:Key="dialogs.recovery">Previously, OpenUtau terminated abnormally. Do you want to recover?</system:String>-->
-  <!--<system:String x:Key="dialogs.recovery.caption">Recovery project</system:String>-->
-  <!--<system:String x:Key="dialogs.remaptimeaxis.message">This tool will change the tempo of the project without changing the actual positions and durations (in seconds) of notes.
-  New BPM:</system:String>-->
+  <system:String x:Key="dialogs.recovery">在此之前，OpenUtau 異常終止。 Click here to recover.</system:String>
+  <system:String x:Key="dialogs.recovery.caption">恢復項目</system:String>
+  <system:String x:Key="dialogs.remaptimeaxis.message">该工具将改变项目的速度，而不改变音符的实际位置和持续时间（以秒为单位）。
+  新的業務流程管理：</system:String>
+  <system:String x:Key="dialogs.splitpart.caption">分割部分</system:String>
+  <system:String x:Key="dialogs.splitpart.intheway">有一個或多個音符與播放頭重疊。
+您想在目前播放頭之後最近的位置繼續分割，且不妨礙任何音符嗎？</system:String>
   <system:String x:Key="dialogs.timesig.caption">拍號</system:String>
   <system:String x:Key="dialogs.tracksettings.caption">音軌設定</system:String>
-  <!--<system:String x:Key="dialogs.tracksettings.location">Location</system:String>-->
+  <system:String x:Key="dialogs.tracksettings.location">地點</system:String>
   <system:String x:Key="dialogs.tracksettings.renderer">算繪器</system:String>
   <system:String x:Key="dialogs.tracksettings.setasdefault">設為預設</system:String>
+  <system:String x:Key="dialogs.transcribe.allnotfound">未安裝轉錄模型。 Please install GAME via the Package Manager or download manually from{0}.</system:String>
+  <system:String x:Key="dialogs.transcribe.caption">轉錄音訊</system:String>
+  <system:String x:Key="dialogs.transcribe.game.batchduration">最大批次持續時間（秒）</system:String>
+  <system:String x:Key="dialogs.transcribe.game.batchsize">批量大小</system:String>
+  <system:String x:Key="dialogs.transcribe.game.estthreshold">分數門檻</system:String>
+  <system:String x:Key="dialogs.transcribe.game.language">語言</system:String>
+  <system:String x:Key="dialogs.transcribe.game.language.universal">[普遍的]</system:String>
+  <system:String x:Key="dialogs.transcribe.game.notfound">遊戲未安裝。</system:String>
+  <system:String x:Key="dialogs.transcribe.game.options">遊戲選項</system:String>
+  <system:String x:Key="dialogs.transcribe.game.segradius">邊界半徑</system:String>
+  <system:String x:Key="dialogs.transcribe.game.segthreshold">邊界閾值</system:String>
+  <system:String x:Key="dialogs.transcribe.game.steps">採樣步驟</system:String>
+  <system:String x:Key="dialogs.transcribe.longchunk.message">一个或多个音频片段非常长，转录时可能会消耗大量内存。当音频包含伴奏时，通常会发生这种情况。還繼續嗎？</system:String>
+  <system:String x:Key="dialogs.transcribe.midialgorithm">演算法</system:String>
+  <system:String x:Key="dialogs.transcribe.rmvpe">使用 RMVPE 提取音高</system:String>
+  <system:String x:Key="dialogs.transcribe.rmvpe.notfound">未安装 RMVPE。從套件管理器安裝它。</system:String>
+  <system:String x:Key="dialogs.transcribe.some.notfound">有些沒有安裝。</system:String>
   <system:String x:Key="dialogs.unsupportedfile.caption">不支援的檔案格式</system:String>
   <system:String x:Key="dialogs.unsupportedfile.message">不支援的檔案格式： </system:String>
-  <!--<system:String x:Key="dialogs.voicecolorremapping">Voice color remapping</system:String>-->
-  <!--<system:String x:Key="dialogs.voicecolorremapping.caption">Applies to all notes in this track:</system:String>-->
+  <system:String x:Key="dialogs.voicecolorremapping">語音顏色重新映射</system:String>
+  <system:String x:Key="dialogs.voicecolorremapping.caption">適用於該曲目中的所有音符：</system:String>
+  <system:String x:Key="dialogs.voicecolorremapping.error">這個歌手沒有聲音色彩</system:String>
 
   <system:String x:Key="errors.caption">錯誤</system:String>
   <system:String x:Key="errors.details">錯誤詳情</system:String>
-  <!--<system:String x:Key="errors.diffsinger.downloadvocoder">Error loading vocoder "{0}". Please download vocoder from {1}</system:String>-->
+  <system:String x:Key="errors.diffsinger.downloadvocoder">載入聲碼器“{0}”時發生錯誤。請從{1}下載聲碼器</system:String>
   <system:String x:Key="errors.diffsinger.downloadvocoder1">載入聲碼器時錯誤 </system:String>
   <system:String x:Key="errors.diffsinger.downloadvocoder2">. 請從下列位置下載聲碼器： </system:String>
-  <!--<system:String x:Key="errors.editing.autopitch.unsupported">The current voicebank doesn't support generating pitch curve. Please use a Diffsinger or Enunu voicebank.</system:String>-->
-  <!--<system:String x:Key="errors.encryptedarchive">Encrypted archive file isn't supported. Please extract the archive file manually.</system:String>-->
-  <!--<system:String x:Key="errors.expression.abbrlong">Abbreviation must be between 1 and 4 characters long</system:String>-->
-  <!--<system:String x:Key="errors.expression.abbrset">Abbreviation must be set</system:String>-->
-  <!--<system:String x:Key="errors.expression.abbrunique">Abbreviations must be unique</system:String>-->
-  <!--<system:String x:Key="errors.expression.default">Default value must be between min and max</system:String>-->
-  <!--<system:String x:Key="errors.expression.flagunique">Flags must be unique</system:String>-->
-  <!--<system:String x:Key="errors.expression.marge">The following expressions have been merged due to duplicate flags</system:String>-->
-  <!--<system:String x:Key="errors.expression.min">Min must be smaller than max</system:String>-->
-  <!--<system:String x:Key="errors.expression.name">Name must be set</system:String>-->
+  <system:String x:Key="errors.editing.autopitch.unsupported">目前的音庫不支援生成音高曲線。請使用 Diffsinger 或 Enunu 語音庫。</system:String>
+  <system:String x:Key="errors.encryptedarchive">不支援加密的存檔檔案。請從「工具」&gt;「首選項」&gt;「路徑」開啟 Singer 資料夾，並將存檔檔案手動解壓縮到此位置。</system:String>
+  <system:String x:Key="errors.expression.abbrlong">縮寫長度必須介於 1 到 4 個字元之間</system:String>
+  <system:String x:Key="errors.expression.abbrset">必須設定縮寫</system:String>
+  <system:String x:Key="errors.expression.abbrunique">縮寫必須是唯一的</system:String>
+  <system:String x:Key="errors.expression.customDefault">項目/軌道預設值必須介於最小值和最大值之間</system:String>
+  <system:String x:Key="errors.expression.default">預設值必須介於最小值和最大值之間</system:String>
+  <system:String x:Key="errors.expression.flagunique">標誌必須是唯一的</system:String>
+  <system:String x:Key="errors.expression.marge">由於重複的標誌，以下表達式已合併</system:String>
+  <system:String x:Key="errors.expression.min">最小值必須小於最大值</system:String>
+  <system:String x:Key="errors.expression.name">必須設定名稱</system:String>
   <system:String x:Key="errors.failed.export">匯出失敗</system:String>
   <system:String x:Key="errors.failed.importaudio">匯入音訊失敗</system:String>
   <system:String x:Key="errors.failed.importfiles">匯入檔案失敗</system:String>
   <system:String x:Key="errors.failed.importmidi">匯入 MIDI 檔案失敗</system:String>
+  <system:String x:Key="errors.failed.importustandothers">無法開啟項目。它包含 ust 和其他文件格式的混合。</system:String>
+  <system:String x:Key="errors.failed.importustflags">專案中的以下未定義標誌未導入：</system:String>
   <system:String x:Key="errors.failed.installsinger">安裝歌手失敗</system:String>
   <system:String x:Key="errors.failed.load">匯入失敗</system:String>
-  <!--<system:String x:Key="errors.failed.loadprefs">Failed to load prefs. Initialize it.</system:String>-->
+  <system:String x:Key="errors.failed.loadprefs">無法載入首選項。初始化它。</system:String>
   <system:String x:Key="errors.failed.openfile">開啟失敗</system:String>
-  <!--<system:String x:Key="errors.failed.openlocation">Failed to open location</system:String>-->
-  <!--<system:String x:Key="errors.failed.opennewerproject">Project file is newer than software! Upgrade OpenUtau!</system:String>-->
-  <!--<system:String x:Key="errors.failed.render">Failed to render.</system:String>-->
-  <!--<system:String x:Key="errors.failed.runeditingmacro">Failed to run editing macro</system:String>-->
+  <system:String x:Key="errors.failed.openlocation">無法開啟位置</system:String>
+  <system:String x:Key="errors.failed.opennewerproject">專案文件比軟體新！升級OpenUtau！</system:String>
+  <system:String x:Key="errors.failed.render">渲染失敗。</system:String>
+  <system:String x:Key="errors.failed.runeditingmacro">無法運行編輯宏</system:String>
   <system:String x:Key="errors.failed.save">儲存失敗</system:String>
   <system:String x:Key="errors.failed.savesingerconfig">儲存歌手配置檔案失敗</system:String>
-  <!--<system:String x:Key="errors.failed.searchsinger">Failed to search singers</system:String>-->
-  <!--<system:String x:Key="errors.failed.synth.cutoffbeforeoffset">Oto error: cutoff before offset</system:String>-->
-  <!--<system:String x:Key="errors.failed.synth.cutoffexceedduration">Oto error: cutoff exceeds audio duration</system:String>-->
-  <!--<system:String x:Key="errors.install.cpp">Try installing the latest Visual C++ Redistributable. https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170</system:String>-->
-  <!--<system:String x:Key="errors.lyrics.regex">Character not allowed in regular expression</system:String>-->
-  <!--<system:String x:Key="errors.lyrics.regexpreview">- regular expression error -</system:String>-->
+  <system:String x:Key="errors.failed.searchsinger">搜尋歌手失敗</system:String>
+  <system:String x:Key="errors.failed.synth.cutoffbeforeoffset">Oto 錯誤：偏移前切斷</system:String>
+  <system:String x:Key="errors.failed.synth.cutoffexceedduration">Oto 錯誤：截止時間超過音訊持續時間</system:String>
+  <system:String x:Key="errors.failed.transcribe.rmvpe">載入 RMVPE ONNX 模型時發生錯誤。從套件管理器安裝它，或將 rmvpe.onnx 放入{0}</system:String>
+  <system:String x:Key="errors.failed.transcribe.some">載入某些時出錯。請從{0}下載一些</system:String>
+  <system:String x:Key="errors.install.cpp">嘗試安裝最新的 Visual C++ Redistributable。 https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170</system:String>
+  <system:String x:Key="errors.lyrics.regex">正規表示式中不允許使用的字符</system:String>
+  <system:String x:Key="errors.lyrics.regexpreview">- 正規表示式錯誤 -</system:String>
 
-  <!--<system:String x:Key="exesetup.installing">Installing "{0}"...</system:String>-->
-  <!--<system:String x:Key="exesetup.linux">To use exe resamplers or wavtools on Linux:
-1. Install wine from {0}
-2. Set wine path in Preferences > Advanced > Wine Path</system:String>-->
-  <!--<system:String x:Key="exesetup.mac">To use exe resamplers or wavtools on MacOS:
-1. Install wine using following commands
-2. Set wine path in Preferences > Advanced > Wine Path</system:String>-->
-  <!--<system:String x:Key="exesetup.resampler">Install as resampler</system:String>-->
-  <!--<system:String x:Key="exesetup.title">Installing Exe File</system:String>-->
-  <!--<system:String x:Key="exesetup.wavtool">Install as wavtool</system:String>-->
+  <system:String x:Key="exesetup.installing">正在安裝“{0}”...</system:String>
+  <system:String x:Key="exesetup.linux">要在 Linux 上使用 exe 重采样器或 wavtools：
+1. 從{0}安裝wine
+2. 在 Preferences &gt; Advanced &gt; Wine Path 中设置 wine 路径</system:String>
+  <system:String x:Key="exesetup.mac">要在 MacOS 上使用 exe 重採樣器或 wavtools：
+1.使用以下指令安裝wine
+2. 在 Preferences &gt; Advanced &gt; Wine Path 中設定 wine 路徑</system:String>
+  <system:String x:Key="exesetup.resampler">安裝為重採樣器</system:String>
+  <system:String x:Key="exesetup.title">安裝Exe文件</system:String>
+  <system:String x:Key="exesetup.wavtool">安裝為 wavtool</system:String>
 
   <system:String x:Key="exps.abbr">縮寫</system:String>
-  <system:String x:Key="exps.apply">套用</system:String>
   <system:String x:Key="exps.caption">表現</system:String>
   <system:String x:Key="exps.defaultvalue">預設</system:String>
   <system:String x:Key="exps.flag">引擎 Flag</system:String>
-  <!--<system:String x:Key="exps.getsuggestions">Add all expressions suggested by renderers</system:String>-->
+  <system:String x:Key="exps.getsuggestions">新增渲染器建議的所有表達式</system:String>
   <system:String x:Key="exps.isflag">是引擎 Flag</system:String>
   <system:String x:Key="exps.maxvalue">最大值</system:String>
   <system:String x:Key="exps.minvalue">最小值</system:String>
   <system:String x:Key="exps.name">名稱</system:String>
   <system:String x:Key="exps.optionvalues">選項</system:String>
+  <system:String x:Key="exps.project">專案表達式</system:String>
+  <system:String x:Key="exps.projectdefault">項目預設</system:String>
   <system:String x:Key="exps.sepbycomma">請使用半形逗號分隔</system:String>
+  <system:String x:Key="exps.skipoutput">當值為系統預設值時跳過標誌輸出</system:String>
+  <system:String x:Key="exps.systemdefault">系統預設值</system:String>
+  <system:String x:Key="exps.track">追蹤表達式（覆蓋）</system:String>
+  <system:String x:Key="exps.trackdefault">預設曲目</system:String>
   <system:String x:Key="exps.type">類型</system:String>
   <system:String x:Key="exps.type.curve">曲線</system:String>
   <system:String x:Key="exps.type.numerical">數值</system:String>
   <system:String x:Key="exps.type.options">選項</system:String>
 
+  <!--<system:String x:Key="harmony.interval.fifthabove">5+</system:String>-->
+  <!--<system:String x:Key="harmony.interval.fifthbelow">5-</system:String>-->
+  <!--<system:String x:Key="harmony.interval.thirdabove">3+</system:String>-->
+  <!--<system:String x:Key="harmony.interval.thirdbelow">3-</system:String>-->
+
+  <system:String x:Key="key.picker.all">所有按鍵</system:String>
+  <system:String x:Key="key.picker.analyzing">正在分析...</system:String>
+  <system:String x:Key="key.picker.suggested">建議按鍵</system:String>
+
   <system:String x:Key="languages.de">德文</system:String>
   <system:String x:Key="languages.en">英文</system:String>
   <system:String x:Key="languages.es">西班牙文</system:String>
-  <!--<system:String x:Key="languages.fil">Filipino</system:String>-->
+  <system:String x:Key="languages.fil">菲律賓人</system:String>
   <system:String x:Key="languages.fr">法文</system:String>
   <system:String x:Key="languages.invariant">不翻譯</system:String>
   <system:String x:Key="languages.it">義大利文</system:String>
@@ -147,25 +295,70 @@
   <system:String x:Key="languages.zh">中文</system:String>
   <system:String x:Key="languages.zh-yue">粵語</system:String>
 
-  <system:String x:Key="lyrics.apply">套用</system:String>
-  <system:String x:Key="lyrics.cancel">取消</system:String>
+  <system:String x:Key="lunai.caption">歌手中心</system:String>
+  <system:String x:Key="lunai.col.action">行動</system:String>
+  <system:String x:Key="lunai.col.installed">已安裝</system:String>
+  <system:String x:Key="lunai.col.name">姓名</system:String>
+  <system:String x:Key="lunai.col.version">版本</system:String>
+  <system:String x:Key="lunai.company">露奈計劃</system:String>
+  <system:String x:Key="lunai.confirm.install.caption">安裝歌手</system:String>
+  <system:String x:Key="lunai.confirm.install.message">安裝{0}？</system:String>
+  <system:String x:Key="lunai.confirm.install.tos">該歌手有使用條款。按一下「是」即表示您同意這些條款。</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.caption">解除安裝歌手</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.message">卸載{0}？</system:String>
+  <system:String x:Key="lunai.confirm.update.caption">更新歌手</system:String>
+  <system:String x:Key="lunai.confirm.update.message">將{0}更新到版本{1}？</system:String>
+  <system:String x:Key="lunai.install">安裝</system:String>
+  <system:String x:Key="lunai.installed">已安裝</system:String>
+  <system:String x:Key="lunai.latest">最新的</system:String>
+  <system:String x:Key="lunai.newversionavailable">新版本可用</system:String>
+  <system:String x:Key="lunai.notinstalled">未安裝</system:String>
+  <system:String x:Key="lunai.outdated">過時的</system:String>
+  <system:String x:Key="lunai.refresh">重新整理</system:String>
+  <system:String x:Key="lunai.search">搜尋...</system:String>
+  <system:String x:Key="lunai.section.installed">已安裝</system:String>
+  <system:String x:Key="lunai.section.notinstalled">未安裝</system:String>
+  <system:String x:Key="lunai.section.updatesavailable">可用更新</system:String>
+  <system:String x:Key="lunai.status.error">錯誤</system:String>
+  <system:String x:Key="lunai.status.fetching">正在獲取列表...</system:String>
+  <system:String x:Key="lunai.status.installfailed">安裝失敗</system:String>
+  <system:String x:Key="lunai.status.installfinished">安裝完成</system:String>
+  <system:String x:Key="lunai.status.installing">正在安裝{0}...</system:String>
+  <system:String x:Key="lunai.status.listing">掃描安裝...</system:String>
+  <system:String x:Key="lunai.status.offline">就緒（快取列表，網路不可用）</system:String>
+  <system:String x:Key="lunai.status.ready">準備好</system:String>
+  <system:String x:Key="lunai.status.uninstallfailed">解除安裝失敗</system:String>
+  <system:String x:Key="lunai.status.uninstallfinished">卸載完成</system:String>
+  <system:String x:Key="lunai.status.uninstalling">正在卸載{0}...</system:String>
+  <system:String x:Key="lunai.status.updatefinished">更新完成</system:String>
+  <system:String x:Key="lunai.status.updating">正在更新{0}...</system:String>
+  <system:String x:Key="lunai.tab.all">全部</system:String>
+  <system:String x:Key="lunai.tab.brapa">布拉帕</system:String>
+  <system:String x:Key="lunai.tab.lunai">魯奈</system:String>
+  <system:String x:Key="lunai.tab.ufr">超快速反應率</system:String>
+  <system:String x:Key="lunai.uninstall">解除安裝</system:String>
+  <system:String x:Key="lunai.unknownversion">未知</system:String>
+  <system:String x:Key="lunai.update">更新</system:String>
+  <system:String x:Key="lunai.uptodate">最新</system:String>
+  <system:String x:Key="lunai.website">網站</system:String>
+
+  <system:String x:Key="lyrics.applyselected">僅適用於選定的筆記</system:String>
   <system:String x:Key="lyrics.caption">編輯歌詞</system:String>
   <system:String x:Key="lyrics.livepreview">即時預覽</system:String>
-  <system:String x:Key="lyrics.max">個音符</system:String>
-  <system:String x:Key="lyrics.reset">重設</system:String>
+  <system:String x:Key="lyrics.nonote">沒有任何註解！</system:String>
   <system:String x:Key="lyrics.selectnotes">請先選取音符!</system:String>
   <system:String x:Key="lyrics.separators">分隔符號</system:String>
 
-  <!--<system:String x:Key="lyricsreplace.after">After :</system:String>-->
-  <!--<system:String x:Key="lyricsreplace.before">Before :</system:String>-->
+  <system:String x:Key="lyricsreplace.after">後 ：</system:String>
+  <system:String x:Key="lyricsreplace.before">前 ：</system:String>
   <system:String x:Key="lyricsreplace.preset.rmvalphabet">去除英文字母</system:String>
   <system:String x:Key="lyricsreplace.preset.rmvnonhiragana">僅保留日文假名</system:String>
-  <!--<system:String x:Key="lyricsreplace.preset.rmvphonetichint">Remove phonetic hint</system:String>-->
-  <!--<system:String x:Key="lyricsreplace.preset.rmvspace">Remove spaces and earlier</system:String>-->
-  <!--<system:String x:Key="lyricsreplace.preset.rmvtone">Remove tone suffix</system:String>-->
-  <!--<system:String x:Key="lyricsreplace.presets">Presets</system:String>-->
+  <system:String x:Key="lyricsreplace.preset.rmvphonetichint">刪除拼音提示</system:String>
+  <system:String x:Key="lyricsreplace.preset.rmvspace">刪除空格和更早的內容</system:String>
+  <system:String x:Key="lyricsreplace.preset.rmvtone">刪除聲調後綴</system:String>
+  <system:String x:Key="lyricsreplace.presets">預設</system:String>
   <system:String x:Key="lyricsreplace.preview">預覽</system:String>
-  <!--<system:String x:Key="lyricsreplace.regex">Regular expressions can be used</system:String>-->
+  <system:String x:Key="lyricsreplace.regex">可以使用正規表示式</system:String>
   <system:String x:Key="lyricsreplace.replace">歌詞替換</system:String>
 
   <system:String x:Key="menu.edit">編輯</system:String>
@@ -173,10 +366,11 @@
   <system:String x:Key="menu.edit.cut">剪下</system:String>
   <system:String x:Key="menu.edit.delete">刪除</system:String>
   <system:String x:Key="menu.edit.lockunselectednotes">鎖定未選取音符的編輯</system:String>
-  <!--<system:String x:Key="menu.edit.lockunselectednotes.expressions">Expressions</system:String>-->
+  <system:String x:Key="menu.edit.lockunselectednotes.expressions">表達式</system:String>
   <system:String x:Key="menu.edit.lockunselectednotes.pitchpoints">音高控制點</system:String>
   <system:String x:Key="menu.edit.lockunselectednotes.vibrato">顫音</system:String>
   <system:String x:Key="menu.edit.paste">貼上</system:String>
+  <system:String x:Key="menu.edit.pasteplainnotes">貼為普通筆記</system:String>
   <system:String x:Key="menu.edit.redo">重做</system:String>
   <system:String x:Key="menu.edit.selectall">全選</system:String>
   <system:String x:Key="menu.edit.undo">復原</system:String>
@@ -184,10 +378,10 @@
   <system:String x:Key="menu.file.exit">結束</system:String>
   <system:String x:Key="menu.file.exportaudio">匯出音訊</system:String>
   <system:String x:Key="menu.file.exportds">匯出 DiffSinger 指令碼至</system:String>
-  <system:String x:Key="menu.file.exportds.v2">匯出 DiffSinger 指令碼至（v2）</system:String>
-  <system:String x:Key="menu.file.exportds.v2withoutpitch">匯出 DiffSinger 指令碼至（v2，不含音高曲線）</system:String>
+  <system:String x:Key="menu.file.exportds.v2">將 DiffSinger 腳本匯出到 (v2)</system:String>
+  <system:String x:Key="menu.file.exportds.v2withoutpitch">將 DiffSinger 腳本匯出到（v2，無音高曲線）</system:String>
   <system:String x:Key="menu.file.exportmidi">匯出 MIDI 檔案</system:String>
-  <!--<system:String x:Key="menu.file.exportmixdown">Mixdown To Wav File</system:String>-->
+  <system:String x:Key="menu.file.exportmixdown">混音為 Wav 文件</system:String>
   <system:String x:Key="menu.file.exportproject">匯出專案</system:String>
   <system:String x:Key="menu.file.exportust">匯出 UST 專案</system:String>
   <system:String x:Key="menu.file.exportustto">匯出 UST 檔案至...</system:String>
@@ -211,12 +405,12 @@
   <system:String x:Key="menu.help">說明</system:String>
   <system:String x:Key="menu.help.about">關於 OpenUtau</system:String>
   <system:String x:Key="menu.help.checkupdate">檢查更新</system:String>
-  <!--<system:String x:Key="menu.help.logslocation">Open Logs Location</system:String>-->
+  <system:String x:Key="menu.help.logslocation">打開日誌位置</system:String>
   <system:String x:Key="menu.help.reportissue">回報問題</system:String>
   <system:String x:Key="menu.help.wiki">OpenUtau 說明書</system:String>
   <system:String x:Key="menu.project">專案</system:String>
-  <!--<system:String x:Key="menu.project.expressions">Expressions...</system:String>-->
-  <!--<system:String x:Key="menu.project.remaptimeaxis">Adjust Tempo (Preserve Timing)</system:String>-->
+  <system:String x:Key="menu.project.expressions">表達...</system:String>
+  <system:String x:Key="menu.project.remaptimeaxis">調整節奏（保持時機）</system:String>
   <system:String x:Key="menu.tools">工具</system:String>
   <system:String x:Key="menu.tools.clearcache">清除快取</system:String>
   <system:String x:Key="menu.tools.debugwindow">除錯視窗</system:String>
@@ -226,38 +420,52 @@
   <system:String x:Key="menu.tools.layout.hsplit11">橫向 1:1</system:String>
   <system:String x:Key="menu.tools.layout.hsplit12">橫向 1:2</system:String>
   <system:String x:Key="menu.tools.layout.hsplit13">橫向 1:3</system:String>
+  <system:String x:Key="menu.tools.layout.reset">重置佈局</system:String>
   <system:String x:Key="menu.tools.layout.vsplit11">縱向 1:1</system:String>
   <system:String x:Key="menu.tools.layout.vsplit12">縱向 1:2</system:String>
   <system:String x:Key="menu.tools.layout.vsplit13">縱向 1:3</system:String>
+  <system:String x:Key="menu.tools.packages">套餐...</system:String>
   <system:String x:Key="menu.tools.prefs">偏好設定...</system:String>
   <system:String x:Key="menu.tools.singer.install">安裝歌手...</system:String>
   <system:String x:Key="menu.tools.singer.installadv">安装歌手 (進階模式)...</system:String>
+  <system:String x:Key="menu.tools.singerhub">歌手中心...</system:String>
   <system:String x:Key="menu.tools.singers">歌手...</system:String>
-  <!--<system:String x:Key="menu.tools.wavtoolresampler.install">Install Wavtool/Resampler (.exe)...</system:String>-->
-  <!--<system:String x:Key="menu.view">View</system:String>-->
+  <system:String x:Key="menu.tools.wavtoolresampler.install">安裝 Wavtool/Resampler (.exe)...</system:String>
+  <system:String x:Key="menu.view">看法</system:String>
 
-  <!--<system:String x:Key="mergevoicebank.back">Back</system:String>-->
-  <!--<system:String x:Key="mergevoicebank.merge">Merge</system:String>-->
-  <!--<system:String x:Key="mergevoicebank.next">Next</system:String>-->
-  <!--<system:String x:Key="mergevoicebank.selectsinger">This tool will merge another voicebank into current voicebank as new voice colors.
-Choose the voicebank that you want to merge into current voicebank</system:String>-->
-  <!--<system:String x:Key="mergevoicebank.setfolder">Set new names for copied folders.</system:String>-->
-  <!--<system:String x:Key="mergevoicebank.setsubbank">Set new prefix and suffix for subbanks.
-Syntax: prefix,suffix</system:String>-->
-  <!--<system:String x:Key="mergevoicebank.setvoicecolor">Set new names for voice colors (shown in CLR expression).</system:String>-->
-  <!--<system:String x:Key="mergevoicebank.title">Merge voicebanks</system:String>-->
+  <system:String x:Key="mergevoicebank.back">後退</system:String>
+  <system:String x:Key="mergevoicebank.error">合併歌手失敗。</system:String>
+  <system:String x:Key="mergevoicebank.merge">合併</system:String>
+  <system:String x:Key="mergevoicebank.next">下一個</system:String>
+  <system:String x:Key="mergevoicebank.selectsinger">該工具會將另一個語音庫合併到目前語音庫中作為新的語音顏色。
+選擇您要合併到目前音庫的音庫</system:String>
+  <system:String x:Key="mergevoicebank.setfolder">為複製的資料夾設定新名稱。</system:String>
+  <system:String x:Key="mergevoicebank.setsubbank">為子銀行設定新的前綴和後綴。
+語法：前綴、後綴</system:String>
+  <system:String x:Key="mergevoicebank.setvoicecolor">為語音顏色設定新名稱（在 CLR 表達式中顯示）。</system:String>
+  <system:String x:Key="mergevoicebank.title">合併音庫</system:String>
+
+  <system:String x:Key="mixfx.applyonexport">匯出縮混時套用效果</system:String>
+  <system:String x:Key="mixfx.caption">試聽效果</system:String>
+  <system:String x:Key="mixfx.enabled">在該軌道啟用</system:String>
+  <system:String x:Key="mixfx.library">預設庫</system:String>
+  <system:String x:Key="mixfx.library.default">預設</system:String>
+  <system:String x:Key="mixfx.library.delete">刪除</system:String>
+  <system:String x:Key="mixfx.library.placeholder">選擇已儲存的預設...</system:String>
+  <system:String x:Key="mixfx.library.save">儲存...</system:String>
+  <system:String x:Key="mixfx.preset">預設</system:String>
+  <system:String x:Key="mixfx.recommended">套用預設設定</system:String>
+  <system:String x:Key="mixfx.recommended.tip">Vocal Air + Gentle 壓縮 + Small Room</system:String>
 
   <system:String x:Key="notedefaults.lyric">歌詞</system:String>
-  <!--<system:String x:Key="notedefaults.lyric.enter">When Enter</system:String>-->
-  <!--<system:String x:Key="notedefaults.lyric.knife">When Knife Tool</system:String>-->
+  <system:String x:Key="notedefaults.lyric.enter">當進入時</system:String>
+  <system:String x:Key="notedefaults.lyric.knife">當刀工具</system:String>
   <system:String x:Key="notedefaults.portamento">滑音</system:String>
   <system:String x:Key="notedefaults.portamento.length">長度</system:String>
   <system:String x:Key="notedefaults.portamento.start">開始</system:String>
   <system:String x:Key="notedefaults.preset">預設集</system:String>
   <system:String x:Key="notedefaults.preset.namenew">命名新預設集</system:String>
-  <system:String x:Key="notedefaults.preset.remove">移除</system:String>
   <system:String x:Key="notedefaults.preset.remove.tooltip">移除先前套用的預設集。</system:String>
-  <system:String x:Key="notedefaults.preset.save">儲存</system:String>
   <system:String x:Key="notedefaults.preset.save.tooltip">儲存目前設定為新預設集。</system:String>
   <system:String x:Key="notedefaults.reset">重設所有設定</system:String>
   <system:String x:Key="notedefaults.reset.tooltip">重設所有設定為預設值。
@@ -272,15 +480,16 @@ Syntax: prefix,suffix</system:String>-->
   <system:String x:Key="notedefaults.vibrato.out">淡出</system:String>
   <system:String x:Key="notedefaults.vibrato.period">週期</system:String>
   <system:String x:Key="notedefaults.vibrato.shift">相位</system:String>
-  <!--<system:String x:Key="notedefaults.vibrato.vollink">Volume Link</system:String>-->
+  <system:String x:Key="notedefaults.vibrato.vollink">音量連結</system:String>
 
   <system:String x:Key="noteproperty">音符屬性</system:String>
-  <system:String x:Key="noteproperty.apply">應用</system:String>
   <system:String x:Key="noteproperty.basic">基本屬性</system:String>
-  <system:String x:Key="noteproperty.cancel">取消</system:String>
+  <system:String x:Key="noteproperty.parent.phonemizer">跟隨父 Phonemizer</system:String>
+  <system:String x:Key="noteproperty.phonemizer">音素器</system:String>
   <system:String x:Key="noteproperty.set">設定</system:String>
   <system:String x:Key="noteproperty.setlongnote">僅適用於長音符</system:String>
   <system:String x:Key="noteproperty.tone">音高</system:String>
+  <system:String x:Key="noteproperty.tuning">調音</system:String>
   <system:String x:Key="noteproperty.vibratoenable">啟用</system:String>
 
   <system:String x:Key="oto.alias">別名</system:String>
@@ -301,21 +510,58 @@ Syntax: prefix,suffix</system:String>-->
   <system:String x:Key="oto.set">設定</system:String>
   <system:String x:Key="oto.suffix">後綴</system:String>
 
-  <!--<system:String x:Key="phoneticassistant.caption">Phonetic Assistant</system:String>-->
+  <system:String x:Key="packages.caption">套餐</system:String>
+  <system:String x:Key="packages.col.action">行動</system:String>
+  <system:String x:Key="packages.col.developer">開發商</system:String>
+  <system:String x:Key="packages.col.id">ID</system:String>
+  <system:String x:Key="packages.col.installed">已安裝</system:String>
+  <system:String x:Key="packages.col.name">姓名</system:String>
+  <system:String x:Key="packages.col.version">版本</system:String>
+  <system:String x:Key="packages.confirm.install.caption">安裝包</system:String>
+  <system:String x:Key="packages.confirm.install.message">您想安裝{0}嗎？</system:String>
+  <system:String x:Key="packages.confirm.uninstall.caption">解除安裝包</system:String>
+  <system:String x:Key="packages.confirm.uninstall.message">您想卸載{0}嗎？</system:String>
+  <system:String x:Key="packages.confirm.update.caption">更新套件</system:String>
+  <system:String x:Key="packages.confirm.update.message">您想將{0}更新到版本{1}嗎？</system:String>
+  <system:String x:Key="packages.errors.missing">未找到包{0}。使用套件管理器安裝它。</system:String>
+  <system:String x:Key="packages.install">安裝</system:String>
+  <system:String x:Key="packages.installed">已安裝</system:String>
+  <system:String x:Key="packages.installfromfile">從檔案安裝 (.oudep)...</system:String>
+  <system:String x:Key="packages.openinstalllocation">開啟安裝位置</system:String>
+  <system:String x:Key="packages.refresh">重新整理</system:String>
+  <system:String x:Key="packages.status.error">錯誤</system:String>
+  <system:String x:Key="packages.status.fetching">正在取得註冊表...</system:String>
+  <system:String x:Key="packages.status.installfailed">安裝失敗</system:String>
+  <system:String x:Key="packages.status.installfinished">安裝完成</system:String>
+  <system:String x:Key="packages.status.installing">正在安裝{0}...</system:String>
+  <system:String x:Key="packages.status.listinginstalled">已安裝清單...</system:String>
+  <system:String x:Key="packages.status.ready">準備好</system:String>
+  <system:String x:Key="packages.status.uninstallfailed">解除安裝失敗</system:String>
+  <system:String x:Key="packages.status.uninstallfinished">卸載完成</system:String>
+  <system:String x:Key="packages.status.uninstalling">正在卸載{0}...</system:String>
+  <system:String x:Key="packages.uninstall">解除安裝</system:String>
+  <system:String x:Key="packages.unknownversion">未知版本</system:String>
+  <system:String x:Key="packages.update">更新</system:String>
+
+  <system:String x:Key="phoneme.show.error">Alt + 點選查看完整錯誤</system:String>
+
+  <system:String x:Key="phoneticassistant.caption">語音助理</system:String>
   <system:String x:Key="phoneticassistant.copy">複製</system:String>
 
-  <!--<system:String x:Key="pianoroll.key">Key (for scale degree display)</system:String>-->
-  <!--<system:String x:Key="pianoroll.menu.batch">Batch Edits</system:String>-->
-  <!--<system:String x:Key="pianoroll.menu.batch.running">Running batch edit</system:String>-->
+  <system:String x:Key="pianoroll.key">鍵（刻度顯示）</system:String>
+  <system:String x:Key="pianoroll.menu.batch">批次編輯</system:String>
+  <system:String x:Key="pianoroll.menu.batch.running">運行批量編輯</system:String>
+  <system:String x:Key="pianoroll.menu.external">外部的</system:String>
   <system:String x:Key="pianoroll.menu.lyrics">歌詞</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.dashtoplus">使用 "+" 替換 "-"</system:String>
+  <system:String x:Key="pianoroll.menu.lyrics.dashtoplustilda">將“-”替換為“+~”</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.edit">編輯歌詞</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.hiraganatoromaji">平假名轉羅馬拼音</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.insertslur">插入轉音歌詞</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.javcvtocv">日文 VCV 轉 CV</system:String>
-  <!--<system:String x:Key="pianoroll.menu.lyrics.movesuffixtovoicecolor">Move Suffix to VoiceColor</system:String>-->
+  <system:String x:Key="pianoroll.menu.lyrics.movesuffixtovoicecolor">將後綴移至 VoiceColor</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.removelettersuffix">移除字母後綴</system:String>
-  <!--<system:String x:Key="pianoroll.menu.lyrics.removephonetichint">Remove Phonetic Hint</system:String>-->
+  <system:String x:Key="pianoroll.menu.lyrics.removephonetichint">刪除語音提示</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.removetonesuffix">移除音調後綴</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.romajitohiragana">羅馬拼音轉平假名</system:String>
   <system:String x:Key="pianoroll.menu.notedefaults">音符預設設定</system:String>
@@ -323,144 +569,248 @@ Syntax: prefix,suffix</system:String>-->
   <system:String x:Key="pianoroll.menu.notes.addbreath">新增呼吸音</system:String>
   <system:String x:Key="pianoroll.menu.notes.addtaildash">新增音符尾端 "-"</system:String>
   <system:String x:Key="pianoroll.menu.notes.addtailrest">新增音符尾端 "R"</system:String>
-  <!--<system:String x:Key="pianoroll.menu.notes.autolegato">Auto Legato</system:String>-->
+  <system:String x:Key="pianoroll.menu.notes.autolegato">自動連奏</system:String>
   <system:String x:Key="pianoroll.menu.notes.bakepitch">將手繪音高轉換為控制點音高</system:String>
   <system:String x:Key="pianoroll.menu.notes.clear.vibratos">清除顫音</system:String>
-  <!--<system:String x:Key="pianoroll.menu.notes.fixoverlap">Fix overlapping notes</system:String>-->
+  <system:String x:Key="pianoroll.menu.notes.commonnotecopy">普通筆記副本</system:String>
+  <system:String x:Key="pianoroll.menu.notes.commonnotepaste">普通筆記貼上</system:String>
+  <system:String x:Key="pianoroll.menu.notes.fixoverlap">修復重疊筆記</system:String>
   <system:String x:Key="pianoroll.menu.notes.hanzitopinyin">漢字轉拼音</system:String>
-  <!--<system:String x:Key="pianoroll.menu.notes.lengthencrossfade">Lengthen crossfades</system:String>-->
+  <system:String x:Key="pianoroll.menu.notes.lengthencrossfade">延長交叉漸變</system:String>
   <system:String x:Key="pianoroll.menu.notes.loadrenderedpitch">載入已算繪的音高曲線</system:String>
   <system:String x:Key="pianoroll.menu.notes.octavedown">降低一個八度</system:String>
   <system:String x:Key="pianoroll.menu.notes.octaveup">升高一個八度</system:String>
-  <!--<system:String x:Key="pianoroll.menu.notes.quantize">Quantize to grid size</system:String>-->
-  <!--<system:String x:Key="pianoroll.menu.notes.refreshrealcurves">Refresh real curves</system:String>-->
+  <system:String x:Key="pianoroll.menu.notes.quantize">量化到網格大小</system:String>
+  <system:String x:Key="pianoroll.menu.notes.randomizeoffset">隨機化音素偏移</system:String>
+  <system:String x:Key="pianoroll.menu.notes.randomizetiming">隨機化音符計時</system:String>
+  <system:String x:Key="pianoroll.menu.notes.randomizetuning">隨機調整</system:String>
+  <system:String x:Key="pianoroll.menu.notes.refreshrealcurves">刷新真實曲線</system:String>
   <system:String x:Key="pianoroll.menu.notes.removetaildash">刪除音符尾端 "-"</system:String>
   <system:String x:Key="pianoroll.menu.notes.removetailrest">刪除音符尾端 "R"</system:String>
-  <!--<system:String x:Key="pianoroll.menu.notes.reset.aliases">Reset phoneme aliases</system:String>-->
+  <system:String x:Key="pianoroll.menu.notes.reset.aliases">重置音素別名</system:String>
   <system:String x:Key="pianoroll.menu.notes.reset.all">重設音符為預設</system:String>
-  <!--<system:String x:Key="pianoroll.menu.notes.reset.allparameters">Reset all parameters</system:String>-->
+  <system:String x:Key="pianoroll.menu.notes.reset.allparameters">重置所有參數</system:String>
   <system:String x:Key="pianoroll.menu.notes.reset.exps">重設所有表現</system:String>
   <system:String x:Key="pianoroll.menu.notes.reset.phonemetimings">重設音標時間</system:String>
   <system:String x:Key="pianoroll.menu.notes.reset.pitchbends">重設音高曲線</system:String>
   <system:String x:Key="pianoroll.menu.notes.reset.vibratos">重設顫音</system:String>
   <system:String x:Key="pianoroll.menu.part">段落</system:String>
+  <system:String x:Key="pianoroll.menu.part.generateharmonies">產生和諧...</system:String>
   <system:String x:Key="pianoroll.menu.part.legacypluginexp">舊版插件 (實驗性)</system:String>
+  <system:String x:Key="pianoroll.menu.part.legacypluginexp.shortcuts">（遺產）</system:String>
   <system:String x:Key="pianoroll.menu.part.singer">歌手與 Oto 設定</system:String>
   <system:String x:Key="pianoroll.menu.plugin.openfolder">開啟插件資料夾</system:String>
   <system:String x:Key="pianoroll.menu.plugin.reload">重新載入</system:String>
   <system:String x:Key="pianoroll.menu.reset">重設</system:String>
   <system:String x:Key="pianoroll.menu.searchnote">搜尋音符</system:String>
-  <!--<system:String x:Key="pianoroll.menu.searchnote.alias">Alias</system:String>-->
+  <system:String x:Key="pianoroll.menu.searchnote.alias">別名</system:String>
   <system:String x:Key="pianoroll.menu.searchnote.all">全選</system:String>
   <system:String x:Key="pianoroll.menu.searchnote.close">關閉</system:String>
   <system:String x:Key="pianoroll.menu.searchnote.next">下一個</system:String>
-  <!--<system:String x:Key="pianoroll.menu.searchnote.note">Note</system:String>-->
+  <system:String x:Key="pianoroll.menu.searchnote.note">筆記</system:String>
   <system:String x:Key="pianoroll.menu.searchnote.prev">上一個</system:String>
-  <!--<system:String x:Key="pianoroll.menu.searchnote.searchalias">Search Alias</system:String>-->
-  <!--<system:String x:Key="pianoroll.snapdiv">Snap Division</system:String>-->
+  <system:String x:Key="pianoroll.menu.searchnote.searchalias">搜尋別名</system:String>
+  <system:String x:Key="pianoroll.menu.view.pianoroll">鋼琴捲簾</system:String>
+  <system:String x:Key="pianoroll.menu.view.pianoroll.detach">分離</system:String>
+  <system:String x:Key="pianoroll.menu.view.pianoroll.fullscreen">展開窗口中的鋼琴捲簾</system:String>
+  <system:String x:Key="pianoroll.menu.view.pianoroll.hide">隱藏</system:String>
+  <system:String x:Key="pianoroll.menu.view.tiktokmode">抖音錄製模式</system:String>
+  <system:String x:Key="pianoroll.snapdiv">快照部門</system:String>
+  <system:String x:Key="pianoroll.toggle.diffsinger.extralow">DiffSinger 超低品質（聲學 1、變異數 1、音調 1）</system:String>
+  <system:String x:Key="pianoroll.toggle.diffsinger.fast">DiffSinger 低品質（聲學 10、變異數 10、音調 20）</system:String>
+  <system:String x:Key="pianoroll.toggle.diffsinger.medium">DiffSinger 平衡（聲學 20、方差 20、音高 20）</system:String>
+  <system:String x:Key="pianoroll.toggle.diffsinger.quality">DiffSinger 質量（聲學 50、方差 50、音調 20）</system:String>
+  <system:String x:Key="pianoroll.toggle.expressions">視圖表達式 (L)</system:String>
   <system:String x:Key="pianoroll.toggle.finalpitch">顯示算繪音高曲線 (R)</system:String>
-  <!--<system:String x:Key="pianoroll.toggle.noteparams">View Note Parameters (\)</system:String>-->
+  <system:String x:Key="pianoroll.toggle.fullscreen">展開窗口中的鋼琴捲簾</system:String>
+  <system:String x:Key="pianoroll.toggle.keyscale">顯示關鍵比例</system:String>
+  <system:String x:Key="pianoroll.toggle.livepitch">現場音調 (DiffSinger)</system:String>
+  <system:String x:Key="pianoroll.toggle.livepitch.fast">現場音高渦輪 (DiffSinger)</system:String>
+  <system:String x:Key="pianoroll.toggle.noteparams">查看註釋參數</system:String>
+  <system:String x:Key="pianoroll.toggle.overwritepitch">切換覆蓋音高模式</system:String>
   <system:String x:Key="pianoroll.toggle.phoneme">顯示音標 (O)</system:String>
+  <system:String x:Key="pianoroll.toggle.phonemizer">查看Phonemizer標籤</system:String>
   <system:String x:Key="pianoroll.toggle.pitch">顯示手動音高曲線 (I)</system:String>
+  <system:String x:Key="pianoroll.toggle.pitchfollow">播放時垂直跟隨音符</system:String>
+  <system:String x:Key="pianoroll.toggle.realcurves">查看真實曲線</system:String>
+  <system:String x:Key="pianoroll.toggle.render">DiffSinger 渲染設置</system:String>
   <system:String x:Key="pianoroll.toggle.snap">啟用自動貼齊 (P)</system:String>
   <system:String x:Key="pianoroll.toggle.snap.auto">自動</system:String>
-  <!--<system:String x:Key="pianoroll.toggle.snap.autotriplet">Auto (triplet)</system:String>-->
+  <system:String x:Key="pianoroll.toggle.snap.autotriplet">自動（三聯）</system:String>
   <system:String x:Key="pianoroll.toggle.tips">顯示使用提示 (T)</system:String>
   <system:String x:Key="pianoroll.toggle.tone">啟用音調提示 (Y)</system:String>
   <system:String x:Key="pianoroll.toggle.vibrato">顯示顫音 (U)</system:String>
+  <system:String x:Key="pianoroll.toggle.view">看法</system:String>
   <system:String x:Key="pianoroll.toggle.waveform">顯示波形 (W)</system:String>
-  <!--<system:String x:Key="pianoroll.tool.drawlinepitch">Line Draw Pitch Tool (Shift + 4)
-    Left click to draw (draw straight line)
-    Right click to reset
-    Hold Ctrl to select
-    Hold Alt to smoothen
-  </system:String>-->
   <system:String x:Key="pianoroll.tool.drawpitch">音高繪製工具 (4)</system:String>
   <system:String x:Key="pianoroll.tool.eraser">橡皮擦工具 (3)</system:String>
   <system:String x:Key="pianoroll.tool.knife">剪刀工具 (5)</system:String>
-  <!--<system:String x:Key="pianoroll.tool.overwritepitch">Overwrite Pitch Tool (Ctrl + 4)
-    Left click to draw (overwrites vibrato or mod+)
-    Right click to reset
-    Hold Ctrl to select
-    Hold Alt to smoothen
-  </system:String>-->
-  <!--<system:String x:Key="pianoroll.tool.penplus">Pen Plus Tool (Ctrl + 2)
-    Left click to draw
-    Right click to delete
-    Hold Ctrl to select</system:String>-->
-  <!--<system:String x:Key="pianoroll.tool.penv2">Pen Tool (2)
-    Left click to draw
-    Hold Ctrl to select</system:String>-->
+  <system:String x:Key="pianoroll.tool.penplus">鋼筆加號工具 (Ctrl + 2)
+    左鍵單擊進行繪製
+    右鍵刪除
+    按住 Ctrl 鍵選擇</system:String>
+  <system:String x:Key="pianoroll.tool.penv2">鋼筆工具 (2)
+    左鍵單擊進行繪製
+    按住 Ctrl 鍵選擇</system:String>
+  <system:String x:Key="pianoroll.tool.pitchesinewave">音高正弦波工具 (Shift + 3)
+    拖曳繪製正弦波，鬆開進入調整模式
+    移動滑鼠調整波長和幅度，點擊應用
+    右鍵點擊重置
+    按住 Ctrl 鍵選擇</system:String>
+  <system:String x:Key="pianoroll.tool.pitchline">節線工具 (Shift + 1)
+    左鍵點選繪製直線
+    右鍵點擊重置
+    按住 Ctrl 鍵選擇</system:String>
+  <system:String x:Key="pianoroll.tool.pitchscurve">螺距 S 曲線工具 (Shift + 2)
+    拖曳繪製S曲線，放開進入調整模式
+    移動滑鼠調整S曲線強度，點選應用
+    右鍵點擊重置
+    按住 Ctrl 鍵選擇</system:String>
+  <system:String x:Key="pianoroll.tool.pitchsmoothen">音調平滑工具 (Shift + 4)
+    左鍵點選以平滑音高
+    右鍵點擊重置
+    按住 Ctrl 鍵選擇</system:String>
   <system:String x:Key="pianoroll.tool.selectionv2">選擇工具 (1)</system:String>
+  <system:String x:Key="pianoroll.tooltip.attack">攻擊時間增量</system:String>
+  <system:String x:Key="pianoroll.tooltip.overlap">重疊</system:String>
+  <system:String x:Key="pianoroll.tooltip.preutter">普魯特</system:String>
+  <system:String x:Key="pianoroll.tooltip.release">釋放時間增量</system:String>
 
   <system:String x:Key="prefs.advanced">進階</system:String>
   <system:String x:Key="prefs.advanced.beta">Beta測試版</system:String>
-  <!--<system:String x:Key="prefs.advanced.lyricshelper">Lyrics Helper</system:String>-->
-  <!--<system:String x:Key="prefs.advanced.lyricshelper.brackets">Lyrics Helper Adds Brackets</system:String>-->
-  <!--<system:String x:Key="prefs.advanced.rememberfiletypes">Remember these file types in "Open Recent"</system:String>-->
+  <system:String x:Key="prefs.advanced.lyricshelper">歌詞助手</system:String>
+  <system:String x:Key="prefs.advanced.lyricshelper.brackets">歌詞助手添加括號</system:String>
+  <system:String x:Key="prefs.advanced.rememberfiletypes">在「開啟最近的」中記住這些文件類型</system:String>
   <system:String x:Key="prefs.advanced.resamplerlogging">引擎紀錄</system:String>
   <system:String x:Key="prefs.advanced.resamplerlogging.warn">儲存引擎輸出紀錄至記錄檔。此選項可能影響介面與算繪效能。</system:String>
   <system:String x:Key="prefs.advanced.stable">穩定版</system:String>
   <system:String x:Key="prefs.advanced.vlabelerpath">vLabeler 路徑</system:String>
-  <!--<system:String x:Key="prefs.advanced.winepath">Wine Path (set to enable wine for compatibility)</system:String>-->
+  <system:String x:Key="prefs.advanced.winepath">Wine Path（設定為啟用 wine 以實現相容性）</system:String>
   <system:String x:Key="prefs.appearance">外觀</system:String>
-  <!--<system:String x:Key="prefs.appearance.degree">Scale degree display style</system:String>-->
+  <system:String x:Key="prefs.appearance.classicscrollbars">經典捲軸（專用軌道區域）</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.create.base">基礎主題</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.create.basedark">黑暗的</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.create.baselight">光</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.create.empty">主題名稱不能為空。</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.create.exists">同名的主題已存在。</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.create.prompt">輸入主題名稱</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.create.short">新的</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.create.title">建立自訂主題</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.delete.message">您確定要刪除該主題嗎？</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.delete.title">刪除自訂主題</system:String>
+  <system:String x:Key="prefs.appearance.customtheme.edit.title">編輯自訂主題</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.create.base">基色</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.create.bright">色彩鮮豔</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.create.empty">軌道顏色名稱不能為空。</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.create.exists">同名的軌跡顏色已存在。</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.create.prompt">輸入名稱並選擇基本顏色和明亮的顏色。</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.create.short">新的</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.create.title">建立自訂軌道顏色</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.delete.message">您確定要刪除該軌道顏色嗎？</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.delete.title">刪除自訂軌道顏色</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.edit">編輯</system:String>
+  <system:String x:Key="prefs.appearance.customtrackcolor.edit.title">編輯自訂軌道顏色</system:String>
+  <system:String x:Key="prefs.appearance.defaulttrackcolor">新軌道的預設軌道顏色</system:String>
+  <system:String x:Key="prefs.appearance.degree">比例尺顯示方式</system:String>
   <system:String x:Key="prefs.appearance.degree.numbered">簡譜（1 2 3 4 5 6 7）</system:String>
   <system:String x:Key="prefs.appearance.degree.off">關閉</system:String>
-  <!--<system:String x:Key="prefs.appearance.degree.solfege">Solfège (do re mi fa sol la ti)</system:String>-->
-  <!--<system:String x:Key="prefs.appearance.diffsingerlangcodehide">Hide language prefix from phoneme editor</system:String>-->
+  <system:String x:Key="prefs.appearance.degree.solfege">Solfège（do re mi fa sol la ti）</system:String>
+  <system:String x:Key="prefs.appearance.diffsingerlangcodehide">從音素編輯器中隱藏語言前綴</system:String>
   <system:String x:Key="prefs.appearance.lang">語言</system:String>
+  <system:String x:Key="prefs.appearance.notecornerradius">注意拐角半徑</system:String>
+  <system:String x:Key="prefs.appearance.overlayscrollbars">覆蓋滾動條（細，在內容頂部）</system:String>
+  <system:String x:Key="prefs.appearance.section.displaylines">顯示線</system:String>
+  <system:String x:Key="prefs.appearance.section.expressions">表情和音素</system:String>
+  <system:String x:Key="prefs.appearance.section.grid">網格和滾動</system:String>
+  <system:String x:Key="prefs.appearance.section.phonemepanel">音素面板</system:String>
+  <system:String x:Key="prefs.appearance.section.pianoroll">鋼琴捲簾</system:String>
+  <system:String x:Key="prefs.appearance.section.playback">回放</system:String>
+  <system:String x:Key="prefs.appearance.section.theme">主題</system:String>
+  <system:String x:Key="prefs.appearance.section.trackcolors">軌道顏色</system:String>
   <system:String x:Key="prefs.appearance.showghostnotes">在鋼琴卷軸上顯示其他音軌的音符</system:String>
   <system:String x:Key="prefs.appearance.showicon">在鋼琴卷軸上顯示角色頭像</system:String>
+  <system:String x:Key="prefs.appearance.shownoteborder">在鋼琴卷簾中顯示音符輪廓</system:String>
   <system:String x:Key="prefs.appearance.showportrait">在鋼琴卷軸上顯示角色背景圖</system:String>
+  <system:String x:Key="prefs.appearance.solidexppanelgridlines">表達式面板中的預設值實線</system:String>
+  <system:String x:Key="prefs.appearance.solidtickgridlines">實體時間軸網格線（鋼琴捲簾、曲目和表情版面板）</system:String>
   <system:String x:Key="prefs.appearance.sortorder">歌手名稱顯示語言</system:String>
   <system:String x:Key="prefs.appearance.theme">主題</system:String>
+  <system:String x:Key="prefs.appearance.theme.builtin">內建</system:String>
+  <system:String x:Key="prefs.appearance.theme.builtin.custom">內建預設</system:String>
+  <system:String x:Key="prefs.appearance.theme.custom">風俗</system:String>
   <system:String x:Key="prefs.appearance.theme.dark">深色</system:String>
   <system:String x:Key="prefs.appearance.theme.light">淺色</system:String>
+  <system:String x:Key="prefs.appearance.theme.name.cold">寒冷的</system:String>
+  <system:String x:Key="prefs.appearance.theme.name.dark">黑暗的</system:String>
+  <system:String x:Key="prefs.appearance.theme.name.light">光</system:String>
+  <system:String x:Key="prefs.appearance.theme.name.originaldark">原始黑暗</system:String>
+  <system:String x:Key="prefs.appearance.theme.name.originallight">原始光</system:String>
+  <system:String x:Key="prefs.appearance.theme.name.warm">溫暖的</system:String>
+  <system:String x:Key="prefs.appearance.tintpianorollbackgroundwithtrackcolor">用軌道顏色為鋼琴卷背景著色</system:String>
   <system:String x:Key="prefs.appearance.trackcolor">在介面上使用音軌顏色</system:String>
   <system:String x:Key="prefs.cache">快取</system:String>
-  <!--<system:String x:Key="prefs.cache.clearonquit">Clear cache on quit</system:String>-->
-  <!--<system:String x:Key="prefs.cache.diffsingertensorcache">DiffSinger Tensor Cache</system:String>-->
+  <system:String x:Key="prefs.cache.clearonquit">退出時清除快取</system:String>
+  <system:String x:Key="prefs.cache.diffsingertensorcache">DiffSinger 張量緩存</system:String>
   <system:String x:Key="prefs.caption">偏好設定</system:String>
-  <!--<system:String x:Key="prefs.diffsinger">DiffSinger</system:String>-->
+  <system:String x:Key="prefs.diffsinger">差異歌手</system:String>
+  <system:String x:Key="prefs.diffsinger.phonemepanel">DiffSinger 友善的音素面板</system:String>
+  <system:String x:Key="prefs.diffsinger.renderphraseboundaries">顯示渲染片語邊界</system:String>
+  <system:String x:Key="prefs.diffsinger.section.cache">快取</system:String>
+  <system:String x:Key="prefs.diffsinger.section.debug">偵錯</system:String>
+  <system:String x:Key="prefs.diffsinger.section.general">一般的</system:String>
+  <system:String x:Key="prefs.diffsinger.section.pitch">俯仰和 F0</system:String>
+  <system:String x:Key="prefs.diffsinger.section.quality">品質</system:String>
+  <system:String x:Key="prefs.diffsinger.section.renderquality">渲染品質</system:String>
+  <system:String x:Key="prefs.diffsinger.section.steps">渲染步驟</system:String>
   <system:String x:Key="prefs.editing">編輯</system:String>
+  <system:String x:Key="prefs.general">一般的</system:String>
   <system:String x:Key="prefs.note.restart">注意: 請重新啟動 OpenUtau 以套用變更</system:String>
-  <system:String x:Key="prefs.off">關閉</system:String>
-  <system:String x:Key="prefs.on">開啟</system:String>
   <system:String x:Key="prefs.otoeditor">Oto 編輯器</system:String>
   <system:String x:Key="prefs.otoeditor.select">預設 Oto 編輯器</system:String>
   <system:String x:Key="prefs.otoeditor.setparampath">setParam 路徑</system:String>
   <system:String x:Key="prefs.paths">路徑</system:String>
   <system:String x:Key="prefs.paths.addlsinger">額外歌手路徑</system:String>
   <system:String x:Key="prefs.paths.addlsinger.install">安裝至額外歌手路徑</system:String>
-  <!--<system:String x:Key="prefs.paths.detect">Detect</system:String>-->
-  <!--<system:String x:Key="prefs.paths.loaddeepfolders">Load all depth folders</system:String>-->
-  <system:String x:Key="prefs.paths.reset">重設</system:String>
-  <system:String x:Key="prefs.paths.select">選擇</system:String>
-  <!--<system:String x:Key="prefs.penplus">Set Pen Plus Tool as Default</system:String>-->
+  <system:String x:Key="prefs.paths.detect">探測</system:String>
+  <system:String x:Key="prefs.paths.loaddeepfolders">載入所有深度資料夾</system:String>
+  <system:String x:Key="prefs.paths.singer">歌手之路</system:String>
   <system:String x:Key="prefs.playback">播放</system:String>
   <system:String x:Key="prefs.playback.autoscroll">自動捲動</system:String>
   <system:String x:Key="prefs.playback.autoscrollmode">自動捲動模式</system:String>
+  <system:String x:Key="prefs.playback.autoscrollmode.off">離開</system:String>
   <system:String x:Key="prefs.playback.autoscrollmode.pagescroll">捲動整個頁面</system:String>
   <system:String x:Key="prefs.playback.autoscrollmode.stationarycursor">固定游標位置</system:String>
   <system:String x:Key="prefs.playback.backend">音訊後端</system:String>
   <system:String x:Key="prefs.playback.backend.auto">自動</system:String>
-  <!--<system:String x:Key="prefs.playback.backend.mini">MiniAudio</system:String>-->
+  <system:String x:Key="prefs.playback.backend.mini">迷你音訊</system:String>
   <system:String x:Key="prefs.playback.cursorposition">開始捲動位置</system:String>
   <system:String x:Key="prefs.playback.device">播放裝置</system:String>
   <system:String x:Key="prefs.playback.lockstarttime">暫停時</system:String>
   <system:String x:Key="prefs.playback.lockstarttime.off">不進行動作</system:String>
   <system:String x:Key="prefs.playback.lockstarttime.on">移動游標至起始播放位置</system:String>
-  <!--<system:String x:Key="prefs.playback.lockstarttime.onlycursor">Move only cursor back to where you started playing</system:String>-->
+  <system:String x:Key="prefs.playback.lockstarttime.onlycursor">僅將遊標移回您開始播放的位置</system:String>
+  <system:String x:Key="prefs.playback.metronome">節拍器</system:String>
+  <system:String x:Key="prefs.playback.modernplayhead">現代播放頭</system:String>
+  <system:String x:Key="prefs.playback.pitchfollow">俯仰跟隨滾動</system:String>
+  <system:String x:Key="prefs.playback.pitchfollow.enabled">播放時垂直跟隨音符</system:String>
+  <system:String x:Key="prefs.playback.pitchfollow.framesmoothing">幀平滑</system:String>
+  <system:String x:Key="prefs.playback.pitchfollow.showpath">顯示相機路徑預覽</system:String>
+  <system:String x:Key="prefs.playback.pitchfollow.threshold">半音閾值</system:String>
+  <system:String x:Key="prefs.playback.pitchfollow.verticalposition">注意垂直位置</system:String>
+  <system:String x:Key="prefs.playback.systemdefault">使用系統預設設備</system:String>
   <system:String x:Key="prefs.playback.test">測試</system:String>
   <system:String x:Key="prefs.rendering">算繪</system:String>
   <system:String x:Key="prefs.rendering.defaultrenderer">傳統音源的預設算繪器</system:String>
   <system:String x:Key="prefs.rendering.diffsingerdepth">DiffSinger 算繪深度</system:String>
-  <!--<system:String x:Key="prefs.rendering.diffsingersteps">DiffSinger Render Steps for Acoustic</system:String>-->
-  <!--<system:String x:Key="prefs.rendering.diffsingerstepspitch">DiffSinger Render Steps for Pitch</system:String>-->
-  <!--<system:String x:Key="prefs.rendering.diffsingerstepsvariance">DiffSinger Render Steps for Variance</system:String>-->
-  <!--<system:String x:Key="prefs.rendering.onnxgpu">GPU</system:String>-->
-  <!--<system:String x:Key="prefs.rendering.onnxrunner">Machine Learning Runner</system:String>-->
+  <system:String x:Key="prefs.rendering.diffsingerpitchlocalretaking">DiffSinger 推廣本地重新拍攝</system:String>
+  <system:String x:Key="prefs.rendering.diffsingershowacousticf0patchpreview">在鋼琴捲簾上顯示原聲 F0 音色預覽</system:String>
+  <system:String x:Key="prefs.rendering.diffsingersteps">DiffSinger 聲學渲染步驟</system:String>
+  <system:String x:Key="prefs.rendering.diffsingerstepspitch">DiffSinger 音調渲染步驟</system:String>
+  <system:String x:Key="prefs.rendering.diffsingerstepsvariance">DiffSinger 方差渲染步驟</system:String>
+  <system:String x:Key="prefs.rendering.diffsingerunvoicedconsonantacousticf0interpolate">DiffSinger 清輔音 F0 內插法（實驗）</system:String>
+  <system:String x:Key="prefs.rendering.diffsingervariancelocalpitchpatch">DiffSinger 音調編輯的本地方差更新</system:String>
+  <system:String x:Key="prefs.rendering.onnxgpu">圖形處理器</system:String>
+  <system:String x:Key="prefs.rendering.onnxrunner">機器學習跑者</system:String>
   <system:String x:Key="prefs.rendering.phasecomp">相位補償</system:String>
   <system:String x:Key="prefs.rendering.prerender">預先算繪</system:String>
   <system:String x:Key="prefs.rendering.resampler">引擎</system:String>
@@ -478,14 +828,140 @@ Syntax: prefix,suffix</system:String>-->
     警告: 算繪執行緒過多可能會導致OpenUtau運作緩慢
   </system:String>
   <system:String x:Key="prefs.rendering.threads.numthreads">最大算繪執行緒數</system:String>
-  <!--<system:String x:Key="prefs.rendering.wavtool">Wavtool</system:String>-->
-  <!--<system:String x:Key="prefs.utau">UTAU</system:String>-->
+  <system:String x:Key="prefs.rendering.wavtool">波形工具</system:String>
+  <system:String x:Key="prefs.shortcut.search.watermark">按名稱或按鍵搜尋...</system:String>
+  <system:String x:Key="prefs.shortcut.tooltip">左鍵單擊進行更改。右鍵單擊以重置。</system:String>
+  <system:String x:Key="prefs.shortcuts">鍵盤快速鍵</system:String>
+  <system:String x:Key="prefs.shortcuts.duplicate">捷徑「{0}」已指派給「{1}」。</system:String>
+  <system:String x:Key="prefs.shortcuts.listening">按鍵...</system:String>
+  <system:String x:Key="prefs.utau">烏塔大學</system:String>
 
-  <!--<system:String x:Key="progress.cachecleared">Cache cleared.</system:String>-->
-  <!--<system:String x:Key="progress.clearingcache">Clearing cache...</system:String>-->
+  <system:String x:Key="progress.cachecleared">快取已清除。</system:String>
+  <system:String x:Key="progress.clearingcache">正在清除快取...</system:String>
+  <system:String x:Key="progress.diffsinger.preset">應用 DiffSinger{0}預設（聲學{1}、方差{2}、音調{3}）</system:String>
   <system:String x:Key="progress.loadingsingers">正在載入歌手...</system:String>
   <system:String x:Key="progress.saved">已儲存專案。{0}</system:String>
   <system:String x:Key="progress.waitingrendering">等待算繪</system:String>
+
+  <system:String x:Key="shortcut.ClearSelection">清除選擇</system:String>
+  <system:String x:Key="shortcut.Copy">複製</system:String>
+  <system:String x:Key="shortcut.Cut">切</system:String>
+  <system:String x:Key="shortcut.DeleteNotes">刪除筆記</system:String>
+  <system:String x:Key="shortcut.DeselectAll">取消全選</system:String>
+  <system:String x:Key="shortcut.EditLyrics">編輯歌詞</system:String>
+  <system:String x:Key="shortcut.ExpSelect1">選擇表達式 1</system:String>
+  <system:String x:Key="shortcut.ExpSelect10">選擇表達式 10</system:String>
+  <system:String x:Key="shortcut.ExpSelect2">選擇表達式 2</system:String>
+  <system:String x:Key="shortcut.ExpSelect3">選擇表達式 3</system:String>
+  <system:String x:Key="shortcut.ExpSelect4">選擇表達式 4</system:String>
+  <system:String x:Key="shortcut.ExpSelect5">選擇表達式 5</system:String>
+  <system:String x:Key="shortcut.ExpSelect6">選擇表達式 6</system:String>
+  <system:String x:Key="shortcut.ExpSelect7">選擇表達式 7</system:String>
+  <system:String x:Key="shortcut.ExpSelect8">選擇表達式 8</system:String>
+  <system:String x:Key="shortcut.ExpSelect9">選擇表達式 9</system:String>
+  <system:String x:Key="shortcut.ExtendSelectionLeft">向左擴展選擇</system:String>
+  <system:String x:Key="shortcut.ExtendSelectionRight">擴展選擇權</system:String>
+  <system:String x:Key="shortcut.FocusSelection">焦點選擇</system:String>
+  <system:String x:Key="shortcut.FullScreen">切換全螢幕</system:String>
+  <system:String x:Key="shortcut.HideDetachedWindow">隱藏分離的視窗</system:String>
+  <system:String x:Key="shortcut.InsertNote">插入註釋</system:String>
+  <system:String x:Key="shortcut.MergeNotes">合併選定的筆記</system:String>
+  <system:String x:Key="shortcut.MoveCursorLeft">向左移動遊標</system:String>
+  <system:String x:Key="shortcut.MoveCursorRight">向右移動遊標</system:String>
+  <system:String x:Key="shortcut.MoveNotesLeft">向左移動音符</system:String>
+  <system:String x:Key="shortcut.MoveNotesRight">向右移動註釋</system:String>
+  <system:String x:Key="shortcut.MoveToNextPartDown">移至下一部分（下）</system:String>
+  <system:String x:Key="shortcut.MoveToNextPartUp">移至下一部分（向上）</system:String>
+  <system:String x:Key="shortcut.MuteTrack">靜音軌道</system:String>
+  <system:String x:Key="shortcut.OpenPluginMenu">開啟插件選單</system:String>
+  <system:String x:Key="shortcut.OpenSnapMenu">開啟快照選單</system:String>
+  <system:String x:Key="shortcut.Paste">貼上</system:String>
+  <system:String x:Key="shortcut.PasteParameters">貼上參數</system:String>
+  <system:String x:Key="shortcut.PastePlain">貼上為普通註釋</system:String>
+  <system:String x:Key="shortcut.PlayOrPause">播放/暫停</system:String>
+  <system:String x:Key="shortcut.PlaySelection">播放選擇</system:String>
+  <system:String x:Key="shortcut.PlayheadEnd">將播放頭移至最後</system:String>
+  <system:String x:Key="shortcut.PlayheadHome">將播放頭移至開始位置</system:String>
+  <system:String x:Key="shortcut.PlayheadLeft">向左移動播放頭</system:String>
+  <system:String x:Key="shortcut.PlayheadRight">向右移動播放頭</system:String>
+  <system:String x:Key="shortcut.PlayheadToSelectionEnd">將播放頭移至所選內容結尾</system:String>
+  <system:String x:Key="shortcut.PlayheadToSelectionStart">將播放頭移至選擇開始處</system:String>
+  <system:String x:Key="shortcut.PlayheadToViewEnd">將播放頭移至視圖末端</system:String>
+  <system:String x:Key="shortcut.PlayheadToViewStart">將播放頭移到視圖開始</system:String>
+  <system:String x:Key="shortcut.Redo">重做</system:String>
+  <system:String x:Key="shortcut.ResizeNotesLeft">調整左側註解大小</system:String>
+  <system:String x:Key="shortcut.ResizeNotesRight">向右調整註釋大小</system:String>
+  <system:String x:Key="shortcut.SaveProject">保存項目</system:String>
+  <system:String x:Key="shortcut.ScrollDown">向下捲動</system:String>
+  <system:String x:Key="shortcut.ScrollLeft">向左滾動</system:String>
+  <system:String x:Key="shortcut.ScrollRight">向右滾動</system:String>
+  <system:String x:Key="shortcut.ScrollUp">向上捲動</system:String>
+  <system:String x:Key="shortcut.SearchNote">搜尋備註</system:String>
+  <system:String x:Key="shortcut.SelectAll">選擇全部</system:String>
+  <system:String x:Key="shortcut.SelectToEnd">將選擇範圍延伸至末尾</system:String>
+  <system:String x:Key="shortcut.SelectToStart">將選擇範圍擴展到開始</system:String>
+  <system:String x:Key="shortcut.SoloTrack">獨奏曲目</system:String>
+  <system:String x:Key="shortcut.ToggleExpressions">切換表達式視圖</system:String>
+  <system:String x:Key="shortcut.ToggleFinalPitch">切換最終推介視圖</system:String>
+  <system:String x:Key="shortcut.ToggleNoteParams">切換註釋參數視圖</system:String>
+  <system:String x:Key="shortcut.TogglePhoneme">切換音素視圖</system:String>
+  <system:String x:Key="shortcut.TogglePitch">切換俯仰視圖</system:String>
+  <system:String x:Key="shortcut.TogglePlayTone">切換播放音</system:String>
+  <system:String x:Key="shortcut.ToggleSnap">切換捕捉</system:String>
+  <system:String x:Key="shortcut.ToggleTips">切換提示視圖</system:String>
+  <system:String x:Key="shortcut.ToggleVibrato">切換顫音視圖</system:String>
+  <system:String x:Key="shortcut.ToggleWaveform">切換波形視圖</system:String>
+  <system:String x:Key="shortcut.ToolSelect1">選擇工具</system:String>
+  <system:String x:Key="shortcut.ToolSelect2Alt">鋼筆工具（替代）</system:String>
+  <system:String x:Key="shortcut.ToolSelect2Main">鋼筆工具</system:String>
+  <system:String x:Key="shortcut.ToolSelect3">橡皮擦工具</system:String>
+  <system:String x:Key="shortcut.ToolSelect4Main">繪製間距工具</system:String>
+  <system:String x:Key="shortcut.ToolSelect4Overwrite">繪製間距工具（覆蓋）</system:String>
+  <system:String x:Key="shortcut.ToolSelect5">刀具</system:String>
+  <system:String x:Key="shortcut.ToolSelectPitchLine">節線工具</system:String>
+  <system:String x:Key="shortcut.ToolSelectPitchLineOverwrite">節線工具（覆蓋）</system:String>
+  <system:String x:Key="shortcut.ToolSelectPitchSCurve">螺距 S 曲線工具</system:String>
+  <system:String x:Key="shortcut.ToolSelectPitchSine">音高正弦波工具</system:String>
+  <system:String x:Key="shortcut.ToolSelectPitchSmoothen">音高平滑工具</system:String>
+  <system:String x:Key="shortcut.TransposeDown">向下移調</system:String>
+  <system:String x:Key="shortcut.TransposeOctaveDown">向下移調八度</system:String>
+  <system:String x:Key="shortcut.TransposeOctaveUp">向上移調八度</system:String>
+  <system:String x:Key="shortcut.TransposeUp">往上移調</system:String>
+  <system:String x:Key="shortcut.Undo">撤銷</system:String>
+  <system:String x:Key="shortcut.ZoomIn">放大</system:String>
+  <system:String x:Key="shortcut.ZoomOut">縮小</system:String>
+
+  <system:String x:Key="singererror.aliasfullwidthspaces">別名包含全角空格。</system:String>
+  <system:String x:Key="singererror.aliasisnfd">別名是 NFD。</system:String>
+  <system:String x:Key="singererror.aliasmultiplespaces">別名包含多個空格。</system:String>
+  <system:String x:Key="singererror.aliasstartwithspace">別名以空格開頭或結尾。</system:String>
+  <system:String x:Key="singererror.bitdepth">聲音檔案的位元深度不是 16 位元。</system:String>
+  <system:String x:Key="singererror.consonantoutofduration">輔音超出聲音檔案持續時間。</system:String>
+  <system:String x:Key="singererror.consonantshort">輔音必須 &gt;= 0。</system:String>
+  <system:String x:Key="singererror.cutoffconsonant">截止點必須位於輔音的右側。</system:String>
+  <system:String x:Key="singererror.cutoffoutofduration">截斷聲音檔案持續時間。</system:String>
+  <system:String x:Key="singererror.cutoffoverlap">截止點必須位於重疊的右側。</system:String>
+  <system:String x:Key="singererror.cutoffpreutter">截止點必須位於發聲者的右側。</system:String>
+  <system:String x:Key="singererror.duplicatealias">存在重複的別名。{0}</system:String>
+  <system:String x:Key="singererror.duplicatename">忽略 oto set "{0}":{1}中的大小寫時發現重複的檔名。
+語音庫可能無法在其他區分大小寫的作業系統上運作。</system:String>
+  <system:String x:Key="singererror.failedload">載入語音庫失敗。</system:String>
+  <system:String x:Key="singererror.invalidduration">無效持續時間{0}。</system:String>
+  <system:String x:Key="singererror.invalidoto">oto 格式無效。</system:String>
+  <system:String x:Key="singererror.mono">聲音檔案不是單聲道。</system:String>
+  <system:String x:Key="singererror.offsetoutofduration">聲音檔案持續時間之外的偏移量。</system:String>
+  <system:String x:Key="singererror.offsetshort">偏移量必須 &gt;= 0。</system:String>
+  <system:String x:Key="singererror.overlapoutofduration">重疊超出聲音檔案持續時間。</system:String>
+  <system:String x:Key="singererror.preutteroutofduration">聲音檔案持續時間超出。</system:String>
+  <system:String x:Key="singererror.preuttershort">Preutter 必須 &gt;= 0。</system:String>
+  <system:String x:Key="singererror.samplerate">聲音檔案的取樣率不是 44100Hz。</system:String>
+  <system:String x:Key="singererror.soundmissing">聲音檔案遺失</system:String>
+  <system:String x:Key="singererror.soundnotopened">無法開啟聲音檔案。</system:String>
+  <system:String x:Key="singererror.txtnotfound">找不到字元.txt。</system:String>
+  <system:String x:Key="singererror.wavisnfd">Wav 檔案名稱為 NFD。</system:String>
+  <system:String x:Key="singererror.wrongcase">檔案名稱大小寫錯誤：
+預期：{0}實際：{1}語音庫可能無法在其他作業系統上運作。</system:String>
+  <system:String x:Key="singererror.yamlnotfound">找不到character.yaml。</system:String>
 
   <system:String x:Key="singers.caption">歌手</system:String>
   <system:String x:Key="singers.editoto.editinsetparam">在 setParam 中編輯</system:String>
@@ -495,12 +971,12 @@ Syntax: prefix,suffix</system:String>-->
   <system:String x:Key="singers.editoto.regenfrq.regenerating">正在重新生成 FRQ</system:String>
   <system:String x:Key="singers.editoto.reset">重設 Oto 設定</system:String>
   <system:String x:Key="singers.editoto.save">儲存 Oto 設定</system:String>
-  <!--<system:String x:Key="singers.editoto.searchalias">Search Alias</system:String>-->
+  <system:String x:Key="singers.editoto.searchalias">搜尋別名</system:String>
   <system:String x:Key="singers.editoto.setsetparampath">請從 http://nwp8861.blog92.fc2.com/ 下載 setParam （v4.0b 或更高版本），並在偏好設定中設定 setParam 的安裝位置</system:String>
   <system:String x:Key="singers.editoto.setvlabelerpath">請從 https://github.com/sdercolin/vlabeler 下載 vLabeler （1.0.0-beta1 或更高版本），並在偏好設定中設定 vLabeler 的安裝位置</system:String>
-  <!--<system:String x:Key="singers.errorreport">Generate Singer Error Report</system:String>-->
+  <system:String x:Key="singers.errorreport">產生歌手錯誤報告</system:String>
   <system:String x:Key="singers.location">位置</system:String>
-  <!--<system:String x:Key="singers.merge">Merge with another voicebank</system:String>-->
+  <system:String x:Key="singers.merge">與另一個語音庫合併</system:String>
   <system:String x:Key="singers.otoview.moveleft">左移</system:String>
   <system:String x:Key="singers.otoview.moveright">右移</system:String>
   <system:String x:Key="singers.otoview.selectnext">選取下一項</system:String>
@@ -508,13 +984,13 @@ Syntax: prefix,suffix</system:String>-->
   <system:String x:Key="singers.otoview.showall">顯示全部</system:String>
   <system:String x:Key="singers.otoview.zoomin">放大</system:String>
   <system:String x:Key="singers.otoview.zoomout">縮小</system:String>
-  <!--<system:String x:Key="singers.playsample">Play Sample</system:String>-->
-  <!--<system:String x:Key="singers.playselectedfile">Play Selected File</system:String>-->
-  <!--<system:String x:Key="singers.publish">Publish Singer</system:String>-->
-  <!--<system:String x:Key="singers.publish.description">Create an optimized zip package of your singer for distribution.</system:String>-->
-  <!--<system:String x:Key="singers.publish.ignoretypes">Ignore these file types during packaging (gitignore syntax):</system:String>-->
-  <!--<system:String x:Key="singers.publish.publish">Publish</system:String>-->
-  <!--<system:String x:Key="singers.publish.useignore"> Use file type ignoring</system:String>-->
+  <system:String x:Key="singers.playsample">播放範例</system:String>
+  <system:String x:Key="singers.playselectedfile">播放選定的文件</system:String>
+  <system:String x:Key="singers.publish">發布歌手</system:String>
+  <system:String x:Key="singers.publish.description">創建歌手的最佳化 zip 包以供分發。</system:String>
+  <system:String x:Key="singers.publish.ignoretypes">打包時忽略這些文件類型（gitignore 語法）：</system:String>
+  <system:String x:Key="singers.publish.publish">發布</system:String>
+  <system:String x:Key="singers.publish.useignore">使用文件類型忽略</system:String>
   <system:String x:Key="singers.readme">開啟 readme.txt</system:String>
   <system:String x:Key="singers.readme.notfound">找不到 readme.txt</system:String>
   <system:String x:Key="singers.refresh">重新整理</system:String>
@@ -523,7 +999,6 @@ Syntax: prefix,suffix</system:String>-->
   <system:String x:Key="singers.setimage">設定角色頭像</system:String>
   <system:String x:Key="singers.setportrait">設定背景圖</system:String>
   <system:String x:Key="singers.setsingertype">設定歌手類型</system:String>
-  <system:String x:Key="singers.subbanks.cancel">取消</system:String>
   <system:String x:Key="singers.subbanks.clear">清除</system:String>
   <system:String x:Key="singers.subbanks.color">色彩</system:String>
   <system:String x:Key="singers.subbanks.color.add">新增色彩</system:String>
@@ -532,35 +1007,44 @@ Syntax: prefix,suffix</system:String>-->
   <system:String x:Key="singers.subbanks.edit">編輯子聲庫</system:String>
   <system:String x:Key="singers.subbanks.export">匯出 prefix.map</system:String>
   <system:String x:Key="singers.subbanks.import">匯入 prefix.map</system:String>
-  <system:String x:Key="singers.subbanks.reset">重設</system:String>
-  <system:String x:Key="singers.subbanks.save">儲存</system:String>
   <system:String x:Key="singers.subbanks.selectall">全選</system:String>
   <system:String x:Key="singers.subbanks.set">設定</system:String>
   <system:String x:Key="singers.subbanks.tone">音調</system:String>
   <system:String x:Key="singers.subbanks.toneranges">音調範圍</system:String>
-  <!--<system:String x:Key="singers.usefilename">Use filename as alias</system:String>-->
+  <system:String x:Key="singers.usefilename">使用檔案名稱作為別名</system:String>
   <system:String x:Key="singers.visitwebsite">造訪歌手網站</system:String>
 
-  <!--<system:String x:Key="singersetup.archivefileencoding">Archive File Encoding</system:String>-->
-  <!--<system:String x:Key="singersetup.archivefileencoding.prompt">Choose an encoding that make file names look right.</system:String>-->
+  <system:String x:Key="singersetup.archivefileencoding">存檔文件編碼</system:String>
+  <system:String x:Key="singersetup.archivefileencoding.prompt">選擇一種使檔案名稱看起來正確的編碼。</system:String>
   <system:String x:Key="singersetup.back">上一步</system:String>
+  <system:String x:Key="singersetup.failed">安裝歌手失敗。</system:String>
   <system:String x:Key="singersetup.install">安裝</system:String>
-  <!--<system:String x:Key="singersetup.missinginfo">Please add the following settings to this voicebank's character.yaml.</system:String>-->
+  <system:String x:Key="singersetup.missinginfo">請將以下設定加入到該語音庫的character.yaml中。</system:String>
   <system:String x:Key="singersetup.next">下一步</system:String>
   <system:String x:Key="singersetup.singertype">歌手類型</system:String>
-  <!--<system:String x:Key="singersetup.textfileencoding">Text File Encoding</system:String>-->
-  <!--<system:String x:Key="singersetup.textfileencoding.prompt">Choose an encoding that make file contents look right.</system:String>-->
+  <system:String x:Key="singersetup.succeeded">安裝成功。</system:String>
+  <system:String x:Key="singersetup.textfileencoding">文字檔案編碼</system:String>
+  <system:String x:Key="singersetup.textfileencoding.prompt">選擇一種使文件內容看起來正確的編碼。</system:String>
+  <system:String x:Key="singersetup.title">歌手設定</system:String>
+
+  <system:String x:Key="themeditor.cancel">取消</system:String>
+  <system:String x:Key="themeditor.save">節省</system:String>
+  <system:String x:Key="themeditor.title">主題編輯器</system:String>
+
+  <system:String x:Key="themeeditor.cancel">取消</system:String>
+  <system:String x:Key="themeeditor.save">節省</system:String>
+  <system:String x:Key="themeeditor.title">主題編輯器</system:String>
 
   <system:String x:Key="tip.aliasbox">覆寫別名</system:String>
-  <!--<system:String x:Key="tip.exps">Numerical,Options Type
-    Left Button Draw: Set expressions
-    Shift + Left Button Draw: Set uniform expressions
-    Right Button Draw: Reset expressions
-Curve Type
-    Left Button Draw: Draw
-    Shift + Ctrl + Left Button Draw: Line Draw
-    Shift + Left Button Draw: Horizontal Line Draw
-    Right Button Draw: Reset Line</system:String>-->
+  <system:String x:Key="tip.exps">數值、選項類型
+    左鍵繪製：設定表達式
+    Shift + 左鍵繪製：設定統一表達式
+    右鍵繪製：重置表達式
+曲線類型
+    左鍵繪製：繪製
+    Shift + Ctrl + 左鍵繪製：線條繪製
+    Shift + 左鍵繪製：水平線繪製
+    右鍵繪製：重置線</system:String>
   <system:String x:Key="tip.exps.notsupported">此算繪器不支援表現</system:String>
   <system:String x:Key="tip.lyricbox.next">Tab: 下一個音符</system:String>
   <system:String x:Key="tip.lyricbox.prev">Shift+Tab: 上一個音符</system:String>
@@ -584,30 +1068,36 @@ Curve Type
 
   <system:String x:Key="tracks.duplicate">複製音軌</system:String>
   <system:String x:Key="tracks.duplicatesettings">複製音軌設定</system:String>
-  <!--<system:String x:Key="tracks.favorite">Favorites</system:String>-->
+  <system:String x:Key="tracks.favorite">收藏夾</system:String>
   <system:String x:Key="tracks.installsinger">安裝歌手</system:String>
+  <system:String x:Key="tracks.mixfx">試聽效果...</system:String>
   <system:String x:Key="tracks.more">更多</system:String>
   <system:String x:Key="tracks.movedown">下移</system:String>
   <system:String x:Key="tracks.moveup">上移</system:String>
   <system:String x:Key="tracks.mute">靜音</system:String>
-  <!--<system:String x:Key="tracks.mute.allothers">Mute all others</system:String>-->
-  <!--<system:String x:Key="tracks.mute.only">Mute this only</system:String>-->
+  <system:String x:Key="tracks.mute.allothers">將其他所有人靜音</system:String>
+  <system:String x:Key="tracks.mute.only">僅將此靜音</system:String>
   <system:String x:Key="tracks.mute.unmuteall">全部取消靜音</system:String>
-  <!--<system:String x:Key="tracks.openaddsingers">Open additional singers location</system:String>-->
+  <system:String x:Key="tracks.nosinger">沒有歌手</system:String>
+  <system:String x:Key="tracks.openaddsingers">打開其他歌手位置</system:String>
   <system:String x:Key="tracks.opensingers">開啟歌手路徑</system:String>
   <system:String x:Key="tracks.remove">移除</system:String>
   <system:String x:Key="tracks.rename">重新命名音軌</system:String>
+  <system:String x:Key="tracks.rotateselectedtracksingers">在選定的曲目中輪換歌手</system:String>
   <system:String x:Key="tracks.selectrenderer">選取算繪器</system:String>
   <system:String x:Key="tracks.selectsinger">選取歌手</system:String>
+  <system:String x:Key="tracks.singer.applytoalltracks.tooltip">應用到所有選定的曲目</system:String>
+  <system:String x:Key="tracks.singer.favorite.tooltip">將歌手加入收藏夾</system:String>
   <system:String x:Key="tracks.singerdefault">（歌手預設） </system:String>
   <system:String x:Key="tracks.solo">獨奏</system:String>
-  <!--<system:String x:Key="tracks.solo.add">Solo additionally (which not removes solo from other tracks)</system:String>-->
-  <!--<system:String x:Key="tracks.solo.only">Solo this only (which removes solo from other tracks)</system:String>-->
+  <system:String x:Key="tracks.solo.add">另外獨奏（不會從其他曲目中刪除獨奏）</system:String>
+  <system:String x:Key="tracks.solo.only">僅限獨奏（這會從其他曲目中刪除獨奏）</system:String>
   <system:String x:Key="tracks.solo.unsoloall">全部取消獨奏</system:String>
+  <system:String x:Key="tracks.standardizesettings">標準化軌道設置</system:String>
   <system:String x:Key="tracks.trackcolor">更改音軌顏色</system:String>
   <system:String x:Key="tracks.tracksettings">音軌設定</system:String>
 
-  <!--<FontFamily x:Key="ui.fontfamily">Segoe UI,San Francisco,Helvetica Neue</FontFamily>-->
+  <FontFamily x:Key="ui.fontfamily">Segoe UI，舊金山，Helvetica Neue</FontFamily>
 
   <system:String x:Key="updater.caption">檢查更新</system:String>
   <system:String x:Key="updater.description">開放歌聲合成平台</system:String>
@@ -620,13 +1110,20 @@ Curve Type
 
   <system:String x:Key="warning">警告</system:String>
   <system:String x:Key="warning.asciipath">您的 OpenUtau 主路徑 「{0}」 包含非 ASCII 字元。部分 EXE 引擎可能無法正常運作。</system:String>
-  <!--<system:String x:Key="warning.renderer">No settings for this renderer.</system:String>-->
+  <system:String x:Key="warning.renderer">該渲染器沒有設定。</system:String>
 
-  <!--<system:String x:Key="welcome.new">New</system:String>-->
-  <!--<system:String x:Key="welcome.new.description">Create a new project</system:String>-->
-  <!--<system:String x:Key="welcome.open">Open</system:String>-->
-  <!--<system:String x:Key="welcome.open.description">Open a local project</system:String>-->
-  <!--<system:String x:Key="welcome.recent">Recent</system:String>-->
-  <!--<system:String x:Key="welcome.start">Start</system:String>-->
-  <!--<system:String x:Key="welcome.template">Template</system:String>-->
+  <system:String x:Key="welcome.new">新的</system:String>
+  <system:String x:Key="welcome.new.description">建立一個新項目</system:String>
+  <system:String x:Key="welcome.open">打開</system:String>
+  <system:String x:Key="welcome.open.description">開啟本地專案</system:String>
+  <system:String x:Key="welcome.recent">最近的</system:String>
+  <system:String x:Key="welcome.singerhub.description">從可信任來源安裝或更新語音庫</system:String>
+  <system:String x:Key="welcome.singerhub.open">開放歌手中心</system:String>
+  <system:String x:Key="welcome.start">開始</system:String>
+  <system:String x:Key="welcome.template">範本</system:String>
+
+  <system:String x:Key="workspace.panel.close">關閉面板</system:String>
+  <system:String x:Key="workspace.panel.render">使成為</system:String>
+  <system:String x:Key="workspace.panel.view">看法</system:String>
+  <system:String x:Key="workspace.tracks">曲目</system:String>
 </ResourceDictionary>

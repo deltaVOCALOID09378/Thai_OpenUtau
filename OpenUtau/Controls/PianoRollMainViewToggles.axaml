@@ -1,0 +1,220 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:OpenUtau.App.Controls"
+             x:Class="OpenUtau.App.Controls.PianoRollMainViewToggles">
+  <StackPanel Spacing="0" Orientation="{Binding LayoutOrientation, RelativeSource={RelativeSource AncestorType=c:PianoRollMainViewToggles}}">
+    <ToggleButton Classes="sideToolbarToggle tipsToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.ShowTips}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.tips}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <TextBlock Classes="sideToolbarGlyph" Text="?"/>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle playToneToggle" Margin="0" Padding="0"
+                  IsChecked="{Binding NotesViewModel.PlayTone, Mode=TwoWay}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.tone}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="filled" Data="M21,3V15.5A3.5,3.5 0 0,1 17.5,19A3.5,3.5 0 0,1 14,15.5A3.5,3.5 0 0,1 17.5,12C18.04,12 18.55,12.12 19,12.34V6.47L9,8.6V17.5A3.5,3.5 0 0,1 5.5,21A3.5,3.5 0 0,1 2,17.5A3.5,3.5 0 0,1 5.5,14C6.04,14 6.55,14.12 7,14.34V6L21,3Z" >
+            <Path.RenderTransform>
+              <TransformGroup>
+                <ScaleTransform ScaleX=".6" ScaleY=".6" />
+                <TranslateTransform X="-2" Y="-2"/>
+              </TransformGroup>
+            </Path.RenderTransform>
+          </Path>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle vibratoToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.ShowVibrato}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.vibrato}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="stroked" Data="M-6.5 1 L-6 1.5 L-4.5 0 L-2 2.5 L0.5 0 L3 2.5 L6.5 -1 L6 -1.5 L4.5 0 L2 -2.5 L-0.5 0 L-3 -2.5 Z">
+            <Path.RenderTransform>
+              <TranslateTransform X="9" Y="9"/>
+            </Path.RenderTransform>
+          </Path>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle pitchToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.ShowPitch}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.pitch}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Ellipse Classes="stroked" Height="4" Width="4" Margin="2,0,0,5" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+          <Ellipse Classes="stroked" Height="4" Width="4" Margin="0,5,2,0" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+          <Path Classes="stroked" Data="M 6.5 11.5 L 8 11.5 L 8.5 11 L 9.5 7 L 10 6.5 L 11.5 6.5"/>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle finalPitchToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.ShowFinalPitch}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.finalpitch}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="stroked" Data="M 5.5 11.5 L 8 11.5 L 8.5 11 L 9.5 7 L 10 6.5 L 12.5 6.5"/>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle waveformToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.ShowWaveform}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.waveform}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="filled" Data="M22 12L20 13L19 14L18 13L17 16L16 13L15 21L14 13L13 15L12 13L11 17L10 13L9 22L8 13L7 19L6 13L5 14L4 13L2 12L4 11L5 10L6 11L7 5L8 11L9 2L10 11L11 7L12 11L13 9L14 11L15 3L16 11L17 8L18 11L19 10L20 11L22 12Z">
+            <Path.RenderTransform>
+              <TransformGroup>
+                <ScaleTransform ScaleX=".67" ScaleY=".67" />
+                <TranslateTransform X="-2" Y="-2"/>
+              </TransformGroup>
+            </Path.RenderTransform>
+          </Path>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle phonemeToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.ShowPhoneme}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.phoneme}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="stroked" Data="M 3 13 L 6 5.5 L 12 5.5 L 15 13"/>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle expressionsToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.ShowExpressions}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.expressions}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Ellipse Classes="stroked" Height="4" Width="4" Margin="4,4,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+          <Ellipse Classes="stroked" Height="4" Width="4" Margin="0,6,4,0" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+          <Path Classes="stroked" Data="M 6 8 V 13.62"/>
+          <Path Classes="stroked" Data="M 12 10 V 13.62"/>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle realCurvesToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.ShowRealCurves}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.realcurves}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="filled realCurveFill" Data="M 2.5 12 C 5.5 6.5, 8 10.5, 10.5 6.5 C 12 5, 13.5 6, 14.5 8 L 14.5 14 L 2.5 14 Z"/>
+          <Path Classes="stroked" Data="M 2.5 12 C 5.5 6.5, 8 10.5, 10.5 6.5 C 12 5, 13.5 6, 14.5 8"/>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle phonemizerTagsToggle" Margin="0" Padding="0" IsChecked="{Binding ShowPhonemizerTags}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.phonemizer}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="filled" Data="M21.41 11.58l-9-9C12.04 2.21 11.54 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.41l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.41zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z">
+            <Path.RenderTransform>
+              <TransformGroup>
+                <ScaleTransform ScaleX=".65" ScaleY=".65" />
+                <TranslateTransform X="-1" Y="-1"/>
+              </TransformGroup>
+            </Path.RenderTransform>
+          </Path>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle keyScaleToggle" Margin="0" Padding="0"
+                  IsChecked="{Binding NotesViewModel.ShowKeyScale, Mode=TwoWay}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.keyscale}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="stroked" Data="M 6.5 3 L 6.5 13 M 10.5 3 L 10.5 13 M 3.5 6.5 L 13.5 5.5 M 3.5 10.5 L 13.5 9.5">
+            <Path.RenderTransform>
+              <TranslateTransform X="1" Y="1"/>
+            </Path.RenderTransform>
+          </Path>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle pitchFollowToggle" Margin="0" Padding="0"
+                  IsChecked="{Binding AppearancePreferences.PlaybackPitchFollowEnabled, Mode=TwoWay}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.pitchfollow}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="filled pitchFollowStick" Data="M 8.5 4.5 L 9.5 4.5 L 9.5 13.5 L 8.5 13.5 Z"/>
+          <Path Classes="stroked" Data="M 6.5 7 L 9 4.5 L 11.5 7"/>
+          <Path Classes="stroked" Data="M 6.5 11 L 9 13.5 L 11.5 11"/>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Classes="sideToolbarToggle pitchOverwriteToggle" Margin="0" Padding="0"
+                  IsVisible="{Binding ShowPitchOverwriteToggle, RelativeSource={RelativeSource AncestorType=c:PianoRollMainViewToggles}}"
+                  IsChecked="{Binding PitchOverwrite, Mode=TwoWay}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.overwritepitch}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Grid Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="filled" Data="M 19.540126 3.1598821 C 19.330126 2.9498825 18.969979 2.9502481 18.759981 3.1602475 L 17.740128 4.1801 L 19.820028 6.2599998 L 20.840246 5.2500134 C 21.060246 5.0300138 21.060246 4.6700018 20.840246 4.4600022 L 19.540126 3.1598821 Z  M 17.149995 4.7702332 L 11.000186 10.920042 L 11.000186 12.999942 L 13.080086 12.999942 L 19.229895 6.8501331 L 17.149995 4.7702332 Z  M 19.879589 13.222841 L 17.879714 13.222475 L 17.879714 16.222471 L 14.879718 16.222471 L 14.879718 18.222712 L 17.879714 18.222712 L 17.879714 21.222708 L 19.879955 21.222708 L 19.879955 18.222712 L 22.879951 18.222712 L 22.879585 16.222837 L 19.879589 16.222837 L 19.879589 13.222841 Z  M 10.059992 11.260237 C 8.4999952 10.230239 6.499898 9.3198861 4.6399018 9.0498865 C 3.5799038 8.8898869 2.4599531 9.1097532 2.0999539 10.259751 C 1.7799545 11.249749 2.2898688 12.249906 2.8698676 13.029906 C 4.2398648 14.859902 6.369998 15.739794 7.9599948 17.31979 C 8.2999942 17.64979 8.7100549 18.040057 8.9100545 18.500057 C 9.1200541 18.940055 9.0701879 18.969971 8.6001889 18.969971 C 7.3601913 18.969971 5.8099483 17.999985 4.7999503 17.359985 L 3.7899638 19.059861 C 5.3199608 19.999859 7.8801301 21.469991 9.7501265 20.849993 C 11.530123 20.149993 11.139771 18.220057 10.239773 17.000059 C 9.349774 15.750061 8.1202131 14.889988 6.8802155 14.05999 C 6.0002173 13.49999 5.1901443 12.79982 4.5401455 11.999822 C 4.2601461 11.669822 3.6901105 11.059774 4.2701093 10.939774 C 4.8601081 10.819776 5.880071 11.399798 6.40007 11.619798 C 7.3100682 11.999798 8.2100072 12.440113 9.0500056 12.960113 L 10.059992 11.260237 Z" >
+            <Path.RenderTransform>
+              <TransformGroup>
+                <ScaleTransform ScaleX=".67" ScaleY=".67" />
+                <TranslateTransform X="-2" Y="-2"/>
+              </TransformGroup>
+            </Path.RenderTransform>
+          </Path>
+        </Grid>
+      </Grid>
+    </ToggleButton>
+    <ToggleButton Name="SnapToggle" Classes="sideToolbarToggle snapToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.IsSnapOn}">
+      <ToolTip.Tip>
+        <TextBlock Text="{DynamicResource pianoroll.toggle.snap}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+      </ToolTip.Tip>
+      <Border Classes="toolbarIconHostSide">
+        <Grid Classes="toolbarIconHostSideLayout">
+          <Path Classes="stroked" Data="M 4.5 13.5 L 7.5 13.5 L 7.5 9.5 A 1,1 0 1 1 10.5,9.5 L 10.5 13.5 L 13.5 13.5 L 13.5 8.5 A 1,1 0 1 0 4.5,8.5 Z"/>
+        </Grid>
+      </Border>
+    </ToggleButton>
+    <StackPanel Spacing="0"
+                IsVisible="{Binding ShowDiffSingerToolbar, RelativeSource={RelativeSource AncestorType=c:PianoRollMainViewToggles}}">
+      <Border Classes="sideToolbarSeparator"/>
+      <ToggleButton Classes="sideToolbarToggle livePitchToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.LivePitchNormal}">
+        <ToolTip.Tip>
+          <TextBlock Text="{DynamicResource pianoroll.toggle.livepitch}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+        </ToolTip.Tip>
+        <Grid Classes="toolbarIconHostSide">
+          <Grid Classes="toolbarIconHostSideLayout">
+            <TextBlock Classes="sideToolbarGlyph livePitchLabel" Text="Live"/>
+          </Grid>
+        </Grid>
+      </ToggleButton>
+      <ToggleButton Classes="sideToolbarToggle livePitchFastToggle" Margin="0" Padding="0" IsChecked="{Binding NotesViewModel.LivePitchSuperFast}">
+        <ToolTip.Tip>
+          <TextBlock Text="{DynamicResource pianoroll.toggle.livepitch.fast}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+        </ToolTip.Tip>
+        <Grid Classes="toolbarIconHostSide">
+          <Grid Classes="toolbarIconHostSideLayout">
+            <TextBlock Classes="sideToolbarGlyph livePitchLabel livePitchFastLabel" Text="Live+"/>
+          </Grid>
+        </Grid>
+      </ToggleButton>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

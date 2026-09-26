@@ -1,4 +1,7 @@
-﻿using System;
+using System;
+// UpdaterViewModel.cs v1.1 - 2026-07-28
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai (Delta)
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,13 +19,17 @@ using OpenUtau.Core.Util;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 
-namespace OpenUtau.App.ViewModels {
-    public class UpdaterViewModel : ViewModelBase {
-        class GithubReleaseAsset {
+namespace OpenUtau.App.ViewModels
+{
+    public class UpdaterViewModel : ViewModelBase
+    {
+        class GithubReleaseAsset
+        {
             public string name = string.Empty;
             public string browser_download_url = string.Empty;
         }
-        class GithubRelease {
+        class GithubRelease
+        {
 #pragma warning disable 0649
             public string html_url = string.Empty;
             public long id = long.MaxValue;
@@ -42,53 +49,62 @@ namespace OpenUtau.App.ViewModels {
         private SparkleUpdater? sparkle;
         private UpdateInfo? updateInfo;
         private bool updateAccepted;
+        private static readonly HttpClient updateClient = CreateUpdateClient();
 
-        public UpdaterViewModel() {
+        public UpdaterViewModel()
+        {
             UpdaterStatus = string.Empty;
             UpdateAvailable = false;
             UpdateButtonFontWeight = FontWeight.Normal;
-            Init();
+            _ = InitAsync();
         }
 
-        public static async Task<SparkleUpdater?> NewUpdaterAsync() {
-            try {
+        public static async Task<SparkleUpdater?> NewUpdaterAsync()
+        {
+            try
+            {
                 var release = await SelectRelease();
-                if (release == null) {
-                    Log.Error("No updatable release found.");
+                if (release == null)
+                {
+                    Log.Information("No updatable release found.");
                     return null;
                 }
                 Log.Information($"Checking update at: {release.html_url}");
                 var appcast = SelectAppcast(release);
-                if (appcast == null) {
-                    Log.Error("No updatable appcast found.");
+                if (appcast == null)
+                {
+                    Log.Warning("The selected release does not contain an appcast for this platform.");
                     return null;
                 }
                 Log.Information($"Checking appcast: {appcast.browser_download_url}");
-                return new ZipUpdater(appcast.browser_download_url, new Ed25519Checker(SecurityMode.Unsafe)) {
+                return new ZipUpdater(appcast.browser_download_url, new Ed25519Checker(SecurityMode.Unsafe))
+                {
                     UIFactory = null,
                     CheckServerFileName = false,
                     RelaunchAfterUpdate = true,
                     RelaunchAfterUpdateCommandPrefix = OS.IsLinux() ? "./" : string.Empty,
-                    AppCastHandler = new XMLAppCast() {
+                    AppCastHandler = new XMLAppCast()
+                    {
                         AppCastFilter = new DowngradableFilter()
                     },
                 };
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Log.Error(e, "Failed to select appcast to update.");
                 return null;
             }
         }
 
-        static async Task<GithubRelease?> SelectRelease() {
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-            client.DefaultRequestHeaders.Add("User-Agent", "Other");
-            client.Timeout = TimeSpan.FromSeconds(30);
-            using var resposne = await client.GetAsync("https://api.github.com/repos/stakira/OpenUtau/releases");
-            resposne.EnsureSuccessStatusCode();
-            string respBody = await resposne.Content.ReadAsStringAsync();
+        static async Task<GithubRelease?> SelectRelease()
+        {
+            using var response = await updateClient.GetAsync(
+                "https://api.github.com/repos/keirokeer/OpenUtau-DiffSinger-Lunai/releases");
+            response.EnsureSuccessStatusCode();
+            string respBody = await response.Content.ReadAsStringAsync();
             List<GithubRelease>? releases = JsonConvert.DeserializeObject<List<GithubRelease>>(respBody);
-            if (releases == null) {
+            if (releases == null)
+            {
                 return null;
             }
             return releases
@@ -97,91 +113,131 @@ namespace OpenUtau.App.ViewModels {
                 .FirstOrDefault();
         }
 
-        static GithubReleaseAsset? SelectAppcast(GithubRelease release) {
+        static HttpClient CreateUpdateClient()
+        {
+            var client = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(30),
+            };
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("User-Agent", "OpenUtau-DELTA-SYNTH");
+            return client;
+        }
+
+        static GithubReleaseAsset? SelectAppcast(GithubRelease release)
+        {
             string suffix = PathManager.Inst.IsInstalled ? "-installer" : "";
             return release.assets
                 .Where(a => a.name == $"appcast.{OS.GetUpdaterRid()}{suffix}.xml")
                 .FirstOrDefault();
         }
 
-        async void Init() {
-            UpdaterStatus = ThemeManager.GetString("updater.status.checking");
-            sparkle = await NewUpdaterAsync();
-            if (sparkle == null) {
-                UpdaterStatus = ThemeManager.GetString("updater.status.unknown");
-                return;
-            }
-            updateInfo = await sparkle.CheckForUpdatesQuietly();
-            if (updateInfo == null) {
-                UpdaterStatus = ThemeManager.GetString("updater.status.unknown");
-                return;
-            }
-            switch (updateInfo.Status) {
-                case UpdateStatus.UpdateAvailable:
-                case UpdateStatus.UserSkipped:
-                    UpdaterStatus = string.Format(ThemeManager.GetString("updater.status.available"), updateInfo.Updates[0].Version);
-                    UpdateAvailable = true;
-                    UpdateButtonFontWeight = FontWeight.Bold;
-                    break;
-                case UpdateStatus.UpdateNotAvailable:
-                    UpdaterStatus = ThemeManager.GetString("updater.status.notavailable");
-                    break;
-                case UpdateStatus.CouldNotDetermine:
+        async Task InitAsync()
+        {
+            try
+            {
+                UpdaterStatus = ThemeManager.GetString("updater.status.checking");
+                sparkle = await NewUpdaterAsync();
+                if (sparkle == null)
+                {
                     UpdaterStatus = ThemeManager.GetString("updater.status.unknown");
-                    break;
+                    return;
+                }
+                updateInfo = await sparkle.CheckForUpdatesQuietly();
+                if (updateInfo == null)
+                {
+                    UpdaterStatus = ThemeManager.GetString("updater.status.unknown");
+                    return;
+                }
+                switch (updateInfo.Status)
+                {
+                    case UpdateStatus.UpdateAvailable:
+                    case UpdateStatus.UserSkipped:
+                        UpdaterStatus = string.Format(ThemeManager.GetString("updater.status.available"), updateInfo.Updates[0].Version);
+                        UpdateAvailable = true;
+                        UpdateButtonFontWeight = FontWeight.Bold;
+                        break;
+                    case UpdateStatus.UpdateNotAvailable:
+                        UpdaterStatus = ThemeManager.GetString("updater.status.notavailable");
+                        break;
+                    case UpdateStatus.CouldNotDetermine:
+                        UpdaterStatus = ThemeManager.GetString("updater.status.unknown");
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                UpdaterStatus = ThemeManager.GetString("updater.status.unknown");
+                Log.Warning(e, "Update check failed.");
             }
         }
 
-        public void OnGithub() {
-            try {
+        public void OnGithub()
+        {
+            try
+            {
                 OS.OpenWeb("https://github.com/stakira/OpenUtau/wiki");
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
         }
 
-        public async void OnUpdate() {
-            if (sparkle == null || updateInfo == null || updateInfo.Updates.Count == 0) {
+        public async void OnUpdate()
+        {
+            if (sparkle == null || updateInfo == null || updateInfo.Updates.Count == 0)
+            {
                 return;
             }
             UpdateAvailable = false;
             updateAccepted = true;
 
             AppCastItem? downloadedItem = null;
-            sparkle.CloseApplication += () => {
+            sparkle.CloseApplication += () =>
+            {
                 Log.Information($"shutting down for update");
                 CloseApplication?.Invoke();
                 Log.Information($"shut down for update");
             };
-            sparkle.DownloadStarted += (item, path) => {
+            sparkle.DownloadStarted += (item, path) =>
+            {
                 Log.Information($"download started {path}");
                 downloadedItem = item;
             };
-            sparkle.DownloadFinished += (item, path) => {
+            sparkle.DownloadFinished += (item, path) =>
+            {
                 Log.Information($"download finished {path}");
                 // `item` is somehow null in this callback, likely a NetSparkle bug.
                 item = item ?? downloadedItem;
-                if (item == null) {
+                if (item == null)
+                {
                     Log.Error("DownloadFinished unexpected null item.");
-                } else {
+                }
+                else
+                {
                     sparkle.InstallUpdate(downloadedItem, path);
                 }
             };
-            sparkle.DownloadHadError += (item, path, e) => {
+            sparkle.DownloadHadError += (item, path, e) =>
+            {
                 Log.Error(e, $"download error {path}");
             };
-            sparkle.DownloadMadeProgress += (sender, item, e) => {
+            sparkle.DownloadMadeProgress += (sender, item, e) =>
+            {
                 UpdaterStatus = $"{e.ProgressPercentage}%";
             };
 
             await sparkle.InitAndBeginDownload(updateInfo.Updates.First());
         }
 
-        public void OnClosing() {
+        public void OnClosing()
+        {
             if (!updateAccepted && updateInfo != null &&
                 (updateInfo.Status == UpdateStatus.UpdateAvailable ||
                 updateInfo.Status == UpdateStatus.UserSkipped) &&
-                updateInfo.Updates.Count > 0) {
+                updateInfo.Updates.Count > 0)
+            {
                 Log.Information($"Skipping update {updateInfo.Updates[0].Version}");
                 Preferences.Default.SkipUpdate = updateInfo.Updates[0].Version.ToString();
                 Preferences.Save();
@@ -190,47 +246,61 @@ namespace OpenUtau.App.ViewModels {
     }
 
     // Force allow downgrading so that switching between beta and stable works.
-    public class DowngradableFilter : IAppCastFilter {
-        static bool Eq(int a, int b) {
+    public class DowngradableFilter : IAppCastFilter
+    {
+        static bool Eq(int a, int b)
+        {
             a = a == -1 ? 0 : a;
             b = b == -1 ? 0 : b;
             return a == b;
         }
         // Ambiguous version equal where 1.2 == 1.2.0 == 1.2.0.0.
-        static bool Eq(Version a, Version b) {
+        static bool Eq(Version a, Version b)
+        {
             return Eq(a.Major, b.Major)
                 && Eq(a.Minor, b.Minor)
                 && Eq(a.Build, b.Build)
                 && Eq(a.Revision, b.Revision);
         }
-        public FilterResult GetFilteredAppCastItems(Version installed, List<AppCastItem> items) {
+        public FilterResult GetFilteredAppCastItems(Version installed, List<AppCastItem> items)
+        {
             items = items.Where(item => !Eq(new Version(item.Version), installed)).ToList();
             return new FilterResult(/*forceInstallOfLatestInFilteredList=*/true, items);
         }
     }
 
-    public class ZipUpdater : SparkleUpdater {
+    public class ZipUpdater : SparkleUpdater
+    {
         public ZipUpdater(string appcastUrl, ISignatureVerifier signatureVerifier) :
-            base(appcastUrl, signatureVerifier) { }
+            base(appcastUrl, signatureVerifier)
+        { }
         public ZipUpdater(string appcastUrl, ISignatureVerifier signatureVerifier, string referenceAssembly) :
-            base(appcastUrl, signatureVerifier, referenceAssembly) { }
+            base(appcastUrl, signatureVerifier, referenceAssembly)
+        { }
         public ZipUpdater(string appcastUrl, ISignatureVerifier signatureVerifier, string referenceAssembly, IUIFactory factory) :
-            base(appcastUrl, signatureVerifier, referenceAssembly, factory) { }
+            base(appcastUrl, signatureVerifier, referenceAssembly, factory)
+        { }
 
-        protected override string GetWindowsInstallerCommand(string downloadFilePath) {
+        protected override string GetWindowsInstallerCommand(string downloadFilePath)
+        {
             string installerExt = Path.GetExtension(downloadFilePath);
-            if (DoExtensionsMatch(installerExt, ".exe")) {
+            if (DoExtensionsMatch(installerExt, ".exe"))
+            {
                 return $"\"{downloadFilePath}\"";
             }
-            if (DoExtensionsMatch(installerExt, ".msi")) {
+            if (DoExtensionsMatch(installerExt, ".msi"))
+            {
                 return $"msiexec /i \"{downloadFilePath}\"";
             }
-            if (DoExtensionsMatch(installerExt, ".msp")) {
+            if (DoExtensionsMatch(installerExt, ".msp"))
+            {
                 return $"msiexec /p \"{downloadFilePath}\"";
             }
-            if (DoExtensionsMatch(installerExt, ".zip")) {
+            if (DoExtensionsMatch(installerExt, ".zip"))
+            {
                 string restart = RestartExecutablePath.TrimEnd('\\', '/');
-                if (Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 17063) {
+                if (Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 17063)
+                {
                     Log.Information("Starting update with tar.");
                     return $"tar -x -f \"{downloadFilePath}\" -C \"{restart}\"";
                 }

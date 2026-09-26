@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +10,7 @@ using Avalonia.Media.Imaging;
 using DynamicData.Binding;
 using NAudio.Wave;
 using NWaves.Signals;
+using OpenUtau.Api;
 using OpenUtau.App.Views;
 using OpenUtau.Classic;
 using OpenUtau.Core;
@@ -18,8 +19,10 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 
-namespace OpenUtau.App.ViewModels {
-    public class SingersViewModel : ViewModelBase {
+namespace OpenUtau.App.ViewModels
+{
+    public class SingersViewModel : ViewModelBase
+    {
         public IEnumerable<USinger> Singers => SingerManager.Inst.SingerGroups.Values.SelectMany(l => l);
         [Reactive] public USinger? Singer { get; set; }
         [Reactive] public Bitmap? Avatar { get; set; }
@@ -51,36 +54,51 @@ namespace OpenUtau.App.ViewModels {
         private readonly ReactiveCommand<Api.PhonemizerFactory, Unit> setDefaultPhonemizerCommand;
         private List<MenuItemViewModel> setDefaultPhonemizerMenuItems;
 
-        public SingersViewModel() {
+        public SingersViewModel()
+        {
 #if DEBUG
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
             setEncodingMenuItems = new List<MenuItemViewModel>();
             setSingerTypeMenuItems = new List<MenuItemViewModel>();
             setDefaultPhonemizerMenuItems = new List<MenuItemViewModel>();
-            if (Singers.Count() > 0) {
+            if (Singers.Count() > 0)
+            {
                 Singer = Singers.FirstOrDefault();
             }
             this.WhenAnyValue(vm => vm.Singer)
                 .WhereNotNull()
-                .Subscribe(singer => {
-                    if (MessageBox.LoadingIsActive()) {
-                        try {
+                .Subscribe(singer =>
+                {
+                    if (LoadingWindow.IsLoading())
+                    {
+                        try
+                        {
                             AttachSinger();
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e)
+                        {
                             DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
                         }
-                    } else {
+                    }
+                    else
+                    {
                         DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(SingersDialog), true, "singer"));
-                        try {
+                        try
+                        {
                             AttachSinger();
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e)
+                        {
                             DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
-                        } finally {
+                        }
+                        finally
+                        {
                             DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(SingersDialog), false, "singer"));
                         }
                     }
-                    void AttachSinger() {
+                    void AttachSinger()
+                    {
                         singer.EnsureLoaded();
                         Avatar = LoadAvatar(singer);
                         Otos.Clear();
@@ -89,7 +107,8 @@ namespace OpenUtau.App.ViewModels {
                         DisplayedOtos.AddRange(singer.Otos);
                         Info = $"Author: {singer.Author}\nVoice: {singer.Voice}\nWeb: {singer.Web}\nVersion: {singer.Version}\n{singer.OtherInfo}\n\n{string.Join("\n", singer.Errors)}";
                         HasWebsite = !string.IsNullOrEmpty(singer.Web);
-                        if (Singer is ClassicSinger cSinger) {
+                        if (Singer is ClassicSinger cSinger)
+                        {
                             UseFilenameAsAlias = cSinger.UseFilenameAsAlias ?? false;
                         }
                         LoadSubbanks();
@@ -107,154 +126,201 @@ namespace OpenUtau.App.ViewModels {
                             Encoding.GetEncoding("macintosh"),
                         };
                         setEncodingMenuItems = encodings.Select(encoding =>
-                            new MenuItemViewModel() {
+                            new MenuItemViewModel(singer.TextFileEncoding == encoding)
+                            {
                                 Header = encoding.EncodingName,
                                 Command = setEncodingCommand,
                                 CommandParameter = encoding,
-                                IsChecked = singer.TextFileEncoding == encoding,
                             }
                         ).ToList();
                         var singerTypes = new string[] {
                             "utau", "enunu", "diffsinger", "voicevox"
                         };
                         setSingerTypeMenuItems = singerTypes.Select(singerType =>
-                            new MenuItemViewModel() {
+                            new MenuItemViewModel((SingerTypeUtils.SingerTypeNames.TryGetValue(singer.SingerType, out var name) ? name : "") == singerType)
+                            {
                                 Header = singerType,
                                 Command = setSingerTypeCommand,
                                 CommandParameter = singerType,
-                                IsChecked = (SingerTypeUtils.SingerTypeNames.TryGetValue(singer.SingerType, out var name) ? name : "") == singerType,
                             }
                         ).ToList();
-                        setDefaultPhonemizerMenuItems = DocManager.Inst.PhonemizerFactories.Select(factory => new MenuItemViewModel() {
-                            Header = factory.ToString(),
-                            Command = setDefaultPhonemizerCommand,
-                            CommandParameter = factory,
-                            IsChecked = singer.DefaultPhonemizer == factory.type.FullName,
-                        }).ToList();
+                        setDefaultPhonemizerMenuItems = PhonemizerFactory.GetAll().Select(factory =>
+                            new MenuItemViewModel(singer.DefaultPhonemizer == factory.type.FullName)
+                            {
+                                Header = factory.ToString(),
+                                Command = setDefaultPhonemizerCommand,
+                                CommandParameter = factory,
+                            }
+                        ).ToList();
                         this.RaisePropertyChanged(nameof(SetEncodingMenuItems));
                         this.RaisePropertyChanged(nameof(SetSingerTypeMenuItems));
                         this.RaisePropertyChanged(nameof(SetDefaultPhonemizerMenuItems));
                     }
                 });
             this.WhenAnyValue(vm => vm.SearchAlias)
-                .Subscribe(alias => {
+                .Subscribe(alias =>
+                {
                     Search();
                 });
-            setEncodingCommand = ReactiveCommand.Create<Encoding>(encoding => {
+            setEncodingCommand = ReactiveCommand.Create<Encoding>(encoding =>
+            {
                 SetEncoding(encoding);
             });
-            setSingerTypeCommand = ReactiveCommand.Create<string>(singerType => {
+            setSingerTypeCommand = ReactiveCommand.Create<string>(singerType =>
+            {
                 SetSingerType(singerType);
             });
-            setDefaultPhonemizerCommand = ReactiveCommand.Create<Api.PhonemizerFactory>(factory => {
+            setDefaultPhonemizerCommand = ReactiveCommand.Create<Api.PhonemizerFactory>(factory =>
+            {
                 SetDefaultPhonemizer(factory);
             });
         }
 
-        private void SetEncoding(Encoding encoding) {
-            if (Singer == null) {
+        private void SetEncoding(Encoding encoding)
+        {
+            if (Singer == null)
+            {
                 return;
             }
-            try {
+            try
+            {
                 ModifyConfig(Singer, config => config.TextFileEncoding = encoding.WebName);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 var customEx = new MessageCustomizableException("Failed to save singer config", "<translate:errors.failed.savesingerconfig>", e);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
             }
         }
 
-        public void SetImage(string filepath) {
-            if (Singer == null) {
+        public void SetImage(string filepath)
+        {
+            if (Singer == null)
+            {
                 return;
             }
-            try {
+            try
+            {
                 ModifyConfig(Singer, config => config.Image = filepath);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 var customEx = new MessageCustomizableException("Failed to save singer config", "<translate:errors.failed.savesingerconfig>", e);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
             }
         }
 
-        public void SetPortrait(string filepath) {
-            if (Singer == null) {
+        public void SetPortrait(string filepath)
+        {
+            if (Singer == null)
+            {
                 return;
             }
-            try {
+            try
+            {
                 ModifyConfig(Singer, config => config.Portrait = filepath);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 var customEx = new MessageCustomizableException("Failed to save singer config", "<translate:errors.failed.savesingerconfig>", e);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
             }
         }
 
-        private void SetSingerType(string singerType) {
-            if (Singer == null) {
+        private void SetSingerType(string singerType)
+        {
+            if (Singer == null)
+            {
                 return;
             }
-            try {
+            try
+            {
                 ModifyConfig(Singer, config => config.SingerType = singerType);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 var customEx = new MessageCustomizableException("Failed to save singer config", "<translate:errors.failed.savesingerconfig>", e);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
             }
         }
 
-        private void SetDefaultPhonemizer(Api.PhonemizerFactory factory) {
-            if (Singer == null) {
+        private void SetDefaultPhonemizer(Api.PhonemizerFactory factory)
+        {
+            if (Singer == null)
+            {
                 return;
             }
-            try {
+            try
+            {
                 ModifyConfig(Singer, config => config.DefaultPhonemizer = factory.type.FullName ?? string.Empty);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 var customEx = new MessageCustomizableException("Failed to save singer config", "<translate:errors.failed.savesingerconfig>", e);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
             }
         }
 
-        public void SetUseFilenameAsAlias() {
-            if (Singer == null || !IsClassic) {
+        public void SetUseFilenameAsAlias()
+        {
+            if (Singer == null || !IsClassic)
+            {
                 return;
             }
-            try {
+            try
+            {
                 ModifyConfig(Singer, config => config.UseFilenameAsAlias = !this.UseFilenameAsAlias);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 var customEx = new MessageCustomizableException("Failed to save singer config", "<translate:errors.failed.savesingerconfig>", e);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
             }
         }
 
-        private void ModifyConfig(USinger singer, Action<VoicebankConfig> modify) {
+        private void ModifyConfig(USinger singer, Action<VoicebankConfig> modify)
+        {
             var yamlFile = Path.Combine(singer.Location, "character.yaml");
             VoicebankConfig? config = null;
-            if (File.Exists(yamlFile)) {
-                using (var stream = File.OpenRead(yamlFile)) {
+            if (File.Exists(yamlFile))
+            {
+                using (var stream = File.OpenRead(yamlFile))
+                {
                     config = VoicebankConfig.Load(stream);
                 }
             }
-            if (config == null) {
+            if (config == null)
+            {
                 config = new VoicebankConfig();
             }
             modify(config);
-            using (var stream = File.Open(yamlFile, FileMode.Create)) {
+            using (var stream = File.Open(yamlFile, FileMode.Create))
+            {
                 config.Save(stream);
             }
             RefreshSinger();
         }
 
-        public void ErrorReport() {
-            if (Singer == null || Singer.SingerType != USingerType.Classic) {
+        public void ErrorReport()
+        {
+            if (Singer == null || Singer.SingerType != USingerType.Classic)
+            {
                 return;
             }
-            Task task = Task.Run(() => {
+            Task task = Task.Run(() =>
+            {
                 DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(SingersDialog), true, "singer error report"));
                 var checker = new VoicebankErrorChecker(Singer.Location, Singer.BasePath);
                 checker.Check();
                 string outFile = Path.Combine(Singer.Location, "errors.txt");
-                using (var stream = File.Open(outFile, FileMode.Create)) {
-                    using (var writer = new StreamWriter(stream)) {
+                using (var stream = File.Open(outFile, FileMode.Create))
+                {
+                    using (var writer = new StreamWriter(stream))
+                    {
                         writer.WriteLine($"------ Informations ------");
                         writer.WriteLine();
-                        for (var i = 0; i < checker.Infos.Count; i++) {
+                        for (var i = 0; i < checker.Infos.Count; i++)
+                        {
                             writer.WriteLine($"--- Info {i + 1} ---");
                             writer.WriteLine(GetErrorText(checker.Infos[i]));
                         }
@@ -262,7 +328,8 @@ namespace OpenUtau.App.ViewModels {
                         writer.WriteLine($"------ Errors ------");
                         writer.WriteLine($"Total errors: {checker.Errors.Count}");
                         writer.WriteLine();
-                        for (var i = 0; i < checker.Errors.Count; i++) {
+                        for (var i = 0; i < checker.Errors.Count; i++)
+                        {
                             writer.WriteLine($"--- Error {i + 1} ---");
                             writer.WriteLine(GetErrorText(checker.Errors[i]));
                         }
@@ -270,95 +337,128 @@ namespace OpenUtau.App.ViewModels {
                 }
                 OS.GotoFile(outFile);
             });
-            task.ContinueWith(task => {
+            task.ContinueWith(task =>
+            {
                 DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(SingersDialog), false, "singer error report"));
-                if (task.IsFaulted && task.Exception != null) {
+                if (task.IsFaulted && task.Exception != null)
+                {
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(task.Exception));
                 }
             });
 
-            string GetErrorText(VoicebankError error) {
+            string GetErrorText(VoicebankError error)
+            {
                 var builder = new StringBuilder();
-                if (!string.IsNullOrEmpty(error.messageKey)) {
+                if (!string.IsNullOrEmpty(error.messageKey))
+                {
                     var message = ThemeManager.GetString(error.messageKey);
                     builder.AppendLine(string.Format(message, error.strings));
                 }
-                if (error.trace != null) {
+                if (error.trace != null)
+                {
                     builder.AppendLine(error.trace.ToString());
                 }
-                if (!string.IsNullOrEmpty(error.soundFile)) {
+                if (!string.IsNullOrEmpty(error.soundFile))
+                {
                     builder.AppendLine(error.soundFile);
                 }
-                if (error.e != null) {
+                if (error.e != null)
+                {
                     builder.AppendLine(error.e.ToString());
                 }
                 return builder.ToString();
             }
         }
 
-        public void Refresh() {
+        public void Refresh()
+        {
             string singerId = string.Empty;
-            if (Singer != null) {
+            if (Singer != null)
+            {
                 singerId = Singer.Id;
             }
             DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(SingersDialog), true, "singer"));
             SingerManager.Inst.SearchAllSingers();
             this.RaisePropertyChanged(nameof(Singers));
-            if (!string.IsNullOrEmpty(singerId) && SingerManager.Inst.Singers.TryGetValue(singerId, out var singer)) {
+            if (!string.IsNullOrEmpty(singerId) && SingerManager.Inst.Singers.TryGetValue(singerId, out var singer))
+            {
                 Singer = singer;
-            } else {
+            }
+            else
+            {
                 Singer = Singers.FirstOrDefault();
             }
             DocManager.Inst.ExecuteCmd(new SingersRefreshedNotification());
             DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(SingersDialog), false, "singer"));
         }
 
-        Bitmap? LoadAvatar(USinger singer) {
-            if (singer.AvatarData == null) {
+        Bitmap? LoadAvatar(USinger singer)
+        {
+            if (singer.AvatarData == null)
+            {
                 return null;
             }
-            try {
-                using (var stream = new MemoryStream(singer.AvatarData)) {
+            try
+            {
+                using (var stream = new MemoryStream(singer.AvatarData))
+                {
                     return new Bitmap(stream);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Log.Error(e, "Failed to load avatar.");
                 return null;
             }
         }
 
-        public void OpenLocation() {
-            try {
-                if (Singer != null) {
+        public void OpenLocation()
+        {
+            try
+            {
+                if (Singer != null)
+                {
                     var location = Singer.Location;
-                    if (File.Exists(location)) {
+                    if (File.Exists(location))
+                    {
                         //Vogen voicebank is a singlefile
                         OS.GotoFile(location);
-                    } else {
+                    }
+                    else
+                    {
                         //classic or ENUNU voicebank is a folder
                         OS.OpenFolder(location);
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
         }
 
-        public void LoadSubbanks() {
+        public void LoadSubbanks()
+        {
             Subbanks.Clear();
-            if (Singer == null) {
+            if (Singer == null)
+            {
                 return;
             }
-            try {
+            try
+            {
                 Subbanks.AddRange(Singer.Subbanks);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 var customEx = new MessageCustomizableException("Failed to load subbanks", "<translate:errors.failed.load>: subbanks", e);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
             }
         }
 
-        public void RefreshSinger() {
-            if (Singer == null) {
+        public void RefreshSinger()
+        {
+            if (Singer == null)
+            {
                 return;
             }
             int index = SelectedIndex;
@@ -371,24 +471,31 @@ namespace OpenUtau.App.ViewModels {
 
             DocManager.Inst.ExecuteCmd(new SingersRefreshedNotification(Singer));
             DocManager.Inst.ExecuteCmd(new OtoChangedNotification());
-            if (Otos.Count > 0) {
+            if (Otos.Count > 0)
+            {
                 index = Math.Clamp(index, 0, Otos.Count - 1);
                 SelectedIndex = index;
             }
         }
 
-        private void Search() {
-            if (string.IsNullOrWhiteSpace(SearchAlias)) {
+        private void Search()
+        {
+            if (string.IsNullOrWhiteSpace(SearchAlias))
+            {
                 DisplayedOtos.Clear();
                 DisplayedOtos.AddRange(Otos);
-            } else {
+            }
+            else
+            {
                 DisplayedOtos.Clear();
                 DisplayedOtos.AddRange(Otos.Where(o => o.Alias.Contains(SearchAlias)));
             }
         }
 
-        public void SetOffset(double value, double totalDur) {
-            if (SelectedOto == null) {
+        public void SetOffset(double value, double totalDur)
+        {
+            if (SelectedOto == null)
+            {
                 return;
             }
             var delta = value - SelectedOto.Offset;
@@ -396,15 +503,18 @@ namespace OpenUtau.App.ViewModels {
             SelectedOto.Consonant -= delta;
             SelectedOto.Preutter -= delta;
             SelectedOto.Overlap -= delta;
-            if (SelectedOto.Cutoff < 0) {
+            if (SelectedOto.Cutoff < 0)
+            {
                 SelectedOto.Cutoff += delta;
             }
             FixCutoff(SelectedOto, totalDur);
             NotifyOtoChanged();
         }
 
-        public void SetOverlap(double value, double totalDur) {
-            if (SelectedOto == null) {
+        public void SetOverlap(double value, double totalDur)
+        {
+            if (SelectedOto == null)
+            {
                 return;
             }
             SelectedOto.Overlap = value - SelectedOto.Offset;
@@ -412,8 +522,10 @@ namespace OpenUtau.App.ViewModels {
             NotifyOtoChanged();
         }
 
-        public void SetPreutter(double value, double totalDur) {
-            if (SelectedOto == null) {
+        public void SetPreutter(double value, double totalDur)
+        {
+            if (SelectedOto == null)
+            {
                 return;
             }
             SelectedOto.Preutter = value - SelectedOto.Offset;
@@ -421,8 +533,10 @@ namespace OpenUtau.App.ViewModels {
             NotifyOtoChanged();
         }
 
-        public void SetFixed(double value, double totalDur) {
-            if (SelectedOto == null) {
+        public void SetFixed(double value, double totalDur)
+        {
+            if (SelectedOto == null)
+            {
                 return;
             }
             SelectedOto.Consonant = value - SelectedOto.Offset;
@@ -430,8 +544,10 @@ namespace OpenUtau.App.ViewModels {
             NotifyOtoChanged();
         }
 
-        public void SetCutoff(double value, double totalDur) {
-            if (SelectedOto == null || value < SelectedOto.Offset) {
+        public void SetCutoff(double value, double totalDur)
+        {
+            if (SelectedOto == null || value < SelectedOto.Offset)
+            {
                 return;
             }
             SelectedOto.Cutoff = -(value - SelectedOto.Offset);
@@ -439,66 +555,87 @@ namespace OpenUtau.App.ViewModels {
             NotifyOtoChanged();
         }
 
-        private static void FixCutoff(UOto oto, double totalDur) {
+        private static void FixCutoff(UOto oto, double totalDur)
+        {
             double cutoff = oto.Cutoff >= 0
                 ? totalDur - oto.Cutoff
                 : oto.Offset - oto.Cutoff;
             // 1ms is inserted between consonant and cutoff to avoid resample problem.
             double minCutoff = oto.Offset + Math.Max(Math.Max(oto.Overlap, oto.Preutter), oto.Consonant + 1);
-            if (cutoff < minCutoff) {
+            if (cutoff < minCutoff)
+            {
                 oto.Cutoff = -(minCutoff - oto.Offset);
             }
         }
 
-        public void NotifyOtoChanged() {
-            if (Singer != null) {
+        public void NotifyOtoChanged()
+        {
+            if (Singer != null)
+            {
                 Singer.OtoDirty = true;
             }
             DocManager.Inst.ExecuteCmd(new OtoChangedNotification());
         }
 
-        public void SaveOtos() {
-            if (Singer != null) {
-                try {
+        public void SaveOtos()
+        {
+            if (Singer != null)
+            {
+                try
+                {
                     Singer.Save();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
                 }
             }
             RefreshSinger();
         }
 
-        public void GotoOto(USinger singer, UOto? oto) {
-            if (Singers.Contains(singer)) {
+        public void GotoOto(USinger singer, UOto? oto)
+        {
+            if (Singers.Contains(singer))
+            {
                 Singer = singer;
-                if (oto != null && Singer.Otos.Contains(oto)) {
+                if (oto != null && Singer.Otos.Contains(oto))
+                {
                     SelectedOto = oto;
                 }
             }
         }
 
-        public Task RegenFrq(string[] files, string? method, Action<int> progress) {
-            return Task.Run(() => {
+        public Task RegenFrq(string[] files, string? method, Action<int> progress)
+        {
+            return Task.Run(() =>
+            {
                 double stepMs = Frq.kHopSize * 1000.0 / 44100;
                 int count = 0;
-                if (method == "crepe") {
-                    Parallel.For(0, files.Length, new ParallelOptions {
+                if (method == "crepe")
+                {
+                    Parallel.For(0, files.Length, new ParallelOptions
+                    {
                         MaxDegreeOfParallelism = Environment.ProcessorCount / 2
                     },
                     () => new Core.Analysis.Crepe.Crepe(),
-                    (i, loop, crepe) => {
+                    (i, loop, crepe) =>
+                    {
                         string file = files[i];
-                        if (!File.Exists(file)) {
+                        if (!File.Exists(file))
+                        {
                             throw new FileNotFoundException(string.Format("File {0} missing!", file));
                         }
                         string frqFile = VoicebankFiles.GetFrqFile(file);
                         DiscreteSignal? signal = null;
-                        using (var waveStream = Core.Format.Wave.OpenFile(file)) {
+                        using (var waveStream = Core.Format.Wave.OpenFile(file))
+                        {
                             signal = Core.Format.Wave.GetSignal(waveStream.ToSampleProvider().ToMono(1, 0));
                         }
-                        if (signal != null) {
+                        if (signal != null)
+                        {
                             var frq = Frq.Build(signal.Samples, crepe.ComputeF0(signal, stepMs));
-                            using (var stream = File.OpenWrite(frqFile)) {
+                            using (var stream = File.OpenWrite(frqFile))
+                            {
                                 frq.Save(stream);
                             }
                         }
@@ -506,22 +643,30 @@ namespace OpenUtau.App.ViewModels {
                         return crepe;
                     },
                     crepe => crepe.Dispose());
-                } else {
-                    Parallel.ForEach(files, parallelOptions: new ParallelOptions {
+                }
+                else
+                {
+                    Parallel.ForEach(files, parallelOptions: new ParallelOptions
+                    {
                         MaxDegreeOfParallelism = Environment.ProcessorCount / 2
-                    }, body: file => {
-                        if (!File.Exists(file)) {
+                    }, body: file =>
+                    {
+                        if (!File.Exists(file))
+                        {
                             throw new FileNotFoundException(string.Format("File {0} missing!", file));
                         }
                         string frqFile = VoicebankFiles.GetFrqFile(file);
                         float[]? samples;
-                        using (var waveStream = Core.Format.Wave.OpenFile(file)) {
+                        using (var waveStream = Core.Format.Wave.OpenFile(file))
+                        {
                             samples = Core.Format.Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
                         }
-                        if (samples != null) {
+                        if (samples != null)
+                        {
                             int f0Method;
-                            switch (method) {
-                                case "dioss":
+                            switch (method)
+                            {
+                                case "harvest":
                                     f0Method = 1;
                                     break;
                                 case "pyin":
@@ -533,7 +678,8 @@ namespace OpenUtau.App.ViewModels {
                             }
                             var f0 = Core.Render.Worldline.F0(samples, 44100, stepMs, f0Method);
                             var frq = Frq.Build(samples, f0);
-                            using (var stream = File.OpenWrite(frqFile)) {
+                            using (var stream = File.OpenWrite(frqFile))
+                            {
                                 frq.Save(stream);
                             }
                         }

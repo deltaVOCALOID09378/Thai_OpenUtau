@@ -1,0 +1,28 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="300"
+        x:Class="OpenUtau.App.Views.AutoPitchwriterDialog"
+        Title="The AutoPitchwriter"
+        WindowStartupLocation="CenterScreen"
+        Width="450" Height="300" MinWidth="450" MinHeight="300"
+        CanResize="False">
+    <StackPanel Margin="10" Spacing="10">
+        <CheckBox Name="chkThunderbolt" Content="Thunderbolt shape" IsChecked="True"/>
+        <CheckBox Name="chkPitchDropRise" Content="Pitch-drop / Pitch-rise"/>
+        <CheckBox Name="chkSlope" Content="The Slope"/>
+        
+        <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Text="Base portamento: Start" VerticalAlignment="Center"/>
+            <TextBox Name="txtPortamentoStart" Text="-25" Width="50"/>
+            <TextBlock Text="Length" VerticalAlignment="Center"/>
+            <TextBox Name="txtPortamentoLength" Text="50" Width="50"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Default" Click="OnDefaultClick" Width="80"/>
+            <Button Content="Run" Click="OnRunClick" Width="80"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

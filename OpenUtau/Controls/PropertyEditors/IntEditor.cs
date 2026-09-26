@@ -4,12 +4,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Interactivity;
+using OpenUtau.App.Controls;
 using ReactiveUI;
 
-namespace OpenUtau.Controls{
-    public class IntEditor : TextBox
+namespace OpenUtau.Controls
+{
+    public class IntEditor : WorkspacePanelTextBox
     {
-        protected override Type StyleKeyOverride => typeof(TextBox);
         public static readonly DirectProperty<IntEditor, int> ValueProperty =
             AvaloniaProperty.RegisterDirect<IntEditor, int>(
                 nameof(Value),
@@ -20,9 +21,11 @@ namespace OpenUtau.Controls{
 
         public IntEditor()
         {
+            Classes.Add("workspacePanelTextBox");
             Text = "0";
             this.WhenAnyValue(x => x.Text)
-                .Subscribe((text => { 
+                .Subscribe((text =>
+                {
                     OnTextChanged(text);
                 }));
         }
@@ -41,17 +44,19 @@ namespace OpenUtau.Controls{
 
         protected void OnTextChanged(string? newText)
         {
-            if (!IsKeyboardFocusWithin){
+            if (!IsKeyboardFocusWithin)
+            {
                 return;
             }
 
-            if( newText != null && int.TryParse(newText, out int newValue))
+            if (newText != null && int.TryParse(newText, out int newValue))
             {
-                Value = newValue;  
+                Value = newValue;
             }
         }
 
-        protected override void OnLostFocus(RoutedEventArgs e) {
+        protected override void OnLostFocus(RoutedEventArgs e)
+        {
             base.OnLostFocus(e);
             if (!int.TryParse(Text, out int newValue))
             {

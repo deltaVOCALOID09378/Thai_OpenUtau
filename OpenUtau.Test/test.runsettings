@@ -1,0 +1,16 @@
+<!--
+  Made And Checked By DELTA SYNTH & Gemini AI
+  Original by Patiphat Wongyai (Delta)
+  Version: 1.0
+  Date: 2026-07-15
+  Description: Increase test host connection timeout for slow machines.
+-->
+<RunSettings>
+  <RunConfiguration>
+    <!-- Increase testhost connection timeout from 90s to 300s (5 minutes) -->
+    <TestSessionTimeout>600000</TestSessionTimeout>
+  </RunConfiguration>
+  <xUnit>
+    <MaxParallelThreads>1</MaxParallelThreads>
+  </xUnit>
+</RunSettings>

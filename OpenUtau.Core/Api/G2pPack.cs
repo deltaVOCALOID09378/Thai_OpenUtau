@@ -9,6 +9,9 @@ using OpenUtau.Core.Util;
 
 namespace OpenUtau.Api {
     public abstract class G2pPack : IG2p {
+        internal const int BlankToken = 2;
+        internal const int FirstPhonemeToken = 4;
+
         protected readonly static Regex kAllPunct = new Regex(@"^[\p{P}]$");
 
         protected Dictionary<string, int> GraphemeIndexes { get; set; }
@@ -69,12 +72,23 @@ namespace OpenUtau.Api {
                 return null;
             }
             var phonemes = Dict.Query(grapheme);
-            if (phonemes == null && !PredCache.TryGetValue(grapheme, out phonemes)) {
+            if (phonemes == null) {
+                lock (PredCache) {
+                    PredCache.TryGetValue(grapheme, out phonemes);
+                }
+            }
+            if (phonemes == null) {
                 phonemes = Predict(grapheme);
                 if (phonemes.Length == 0) {
                     return null;
                 }
-                PredCache.Add(grapheme, phonemes);
+                lock (PredCache) {
+                    if (PredCache.TryGetValue(grapheme, out var cached)) {
+                        phonemes = cached;
+                    } else {
+                        PredCache.Add(grapheme, phonemes);
+                    }
+                }
             }
             return phonemes.Clone() as string[];
         }
@@ -88,7 +102,7 @@ namespace OpenUtau.Api {
             if (src.Length == 0 || Session == null) {
                 return new string[0];
             }
-            Tensor<int> tgt = new int[,] { { 2 } }.ToTensor();
+            Tensor<int> tgt = new int[,] { { BlankToken } }.ToTensor();
             Tensor<int> t = new DenseTensor<int>(1);
             var srcLength = src.Dimensions[1];
             var inputs = new List<NamedOnnxValue>();
@@ -97,9 +111,9 @@ namespace OpenUtau.Api {
                 inputs.Add(NamedOnnxValue.CreateFromTensor("src", src));
                 inputs.Add(NamedOnnxValue.CreateFromTensor("tgt", tgt));
                 inputs.Add(NamedOnnxValue.CreateFromTensor("t", t));
-                var outputs = Session.Run(inputs);
+                using var outputs = Session.Run(inputs);
                 var pred = outputs.First().AsTensor<int>()[0];
-                if (pred != 2) {
+                if (IsPhonemeToken(pred, Phonemes.Length)) {
                     var newTgt = new DenseTensor<int>(new int[] { 1, tgt.Dimensions[1] + 1 });
                     for (int i = 0; i < tgt.Dimensions[1]; ++i) {
                         newTgt[0, i] = tgt[0, i];
@@ -109,7 +123,6 @@ namespace OpenUtau.Api {
                 } else {
                     t[0] += 1;
                 }
-                outputs.Dispose();
             }
             var phonemes = DecodePhonemes(tgt.Skip(1).ToArray());
             return phonemes;
@@ -131,6 +144,10 @@ namespace OpenUtau.Api {
 
         protected string[] DecodePhonemes(int[] indexes) {
             return indexes.Select(idx => Phonemes[idx]).ToArray();
+        }
+
+        internal static bool IsPhonemeToken(int token, int phonemeCount) {
+            return token >= FirstPhonemeToken && token < phonemeCount;
         }
     }
 }

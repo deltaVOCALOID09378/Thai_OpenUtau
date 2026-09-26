@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +8,7 @@ using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using Serilog;
 using SharpCompress.Archives;
+using SharpCompress.Readers;
 
 namespace OpenUtau.Core.Vogen {
     [Serializable]
@@ -48,7 +49,7 @@ namespace OpenUtau.Core.Vogen {
             }
             IEnumerable<string> files;
             if (Preferences.Default.LoadDeepFolderSinger) {
-                files = Directory.EnumerateFiles(basePath, "*.vogeon", SearchOption.AllDirectories);
+                files = Directory.EnumerateFiles(basePath, "*.vogeon", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true });
             } else {
                 // TopDirectoryOnly
                 files = Directory.EnumerateFiles(basePath, "*.vogeon");
@@ -70,7 +71,7 @@ namespace OpenUtau.Core.Vogen {
             VogenMeta meta;
             byte[] model;
             byte[] avatar = null;
-            using (var archive = ArchiveFactory.Open(filePath)) {
+            using (var archive = ArchiveFactory.OpenArchive(filePath, new ReaderOptions())) {
                 var metaEntry = archive.Entries.First(e => e.Key == "meta.json");
                 if (metaEntry == null) {
                     throw new ArgumentException("missing meta.json");

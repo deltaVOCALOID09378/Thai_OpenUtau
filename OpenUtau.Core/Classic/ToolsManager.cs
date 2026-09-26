@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -76,7 +76,8 @@ namespace OpenUtau.Classic {
             try {
                 Directory.CreateDirectory(basePath);
                 foreach (var file in Directory.EnumerateFiles(basePath, "*", new EnumerationOptions() {
-                    RecurseSubdirectories = true
+                    RecurseSubdirectories = true,
+                    IgnoreInaccessible = true
                 })) {
                     var driver = LoadResampler(file, basePath);
                     if (driver != null) {
@@ -101,7 +102,8 @@ namespace OpenUtau.Classic {
             try {
                 Directory.CreateDirectory(basePath);
                 foreach (var file in Directory.EnumerateFiles(basePath, "*", new EnumerationOptions() {
-                    RecurseSubdirectories = true
+                    RecurseSubdirectories = true,
+                    IgnoreInaccessible = true
                 })) {
                     var driver = LoadWavtool(file, basePath);
                     if (driver != null) {

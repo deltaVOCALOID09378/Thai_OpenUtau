@@ -1,49 +1,66 @@
-// Version: 1.0
-// Credit: DELTA SYNTH & Gemini (Original: stakira)
-
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using OpenUtau.App.Views;
+using OpenUtau.Colors;
 using Serilog;
 
-namespace OpenUtau.App {
-    public class App : Application {
-        public override void Initialize() {
+// ============================================================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.2 | Date: 2026-07-28
+// Description: ทำให้การโหลดธีมรอผลได้ ป้องกันการแข่งขันระหว่างการเริ่มโปรแกรม
+// ============================================================================
+
+namespace OpenUtau.App
+{
+    public class App : Application
+    {
+        public override void Initialize()
+        {
             Log.Information("Initializing application.");
             AvaloniaXamlLoader.Load(this);
             InitializeCulture();
-            InitializeTheme();
             Log.Information("Initialized application.");
         }
 
-        public override void OnFrameworkInitializationCompleted() {
+        public override void OnFrameworkInitializationCompleted()
+        {
             Log.Information("Framework initialization completed.");
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
                 desktop.MainWindow = new SplashWindow();
             }
 
             base.OnFrameworkInitializationCompleted();
         }
 
-        public void InitializeCulture() {
+        public void InitializeCulture()
+        {
             Log.Information("Initializing culture.");
             string sysLang = CultureInfo.InstalledUICulture.Name;
             string prefLang = Core.Util.Preferences.Default.Language;
             var languages = GetLanguages();
-            if (languages.ContainsKey(prefLang)) {
+            if (languages.ContainsKey(prefLang))
+            {
                 SetLanguage(prefLang);
-            } else if (languages.ContainsKey(sysLang)) {
+            }
+            else if (languages.ContainsKey(sysLang))
+            {
                 SetLanguage(sysLang);
                 Core.Util.Preferences.Default.Language = sysLang;
                 Core.Util.Preferences.Save();
-            } else {
+            }
+            else
+            {
                 SetLanguage("en-US");
             }
 
@@ -53,59 +70,102 @@ namespace OpenUtau.App {
             Log.Information("Initialized culture.");
         }
 
-        public static Dictionary<string, IResourceProvider> GetLanguages() {
-            if (Current == null) {
+        public static Dictionary<string, IResourceProvider> GetLanguages()
+        {
+            if (Current == null)
+            {
                 return new();
             }
             var result = new Dictionary<string, IResourceProvider>();
-            foreach (string key in Current.Resources.Keys.OfType<string>()) {
+            foreach (string key in Current.Resources.Keys.OfType<string>())
+            {
                 if (key.StartsWith("strings-") &&
                     Current.Resources.TryGetResource(key, ThemeVariant.Default, out var res) &&
-                    res is IResourceProvider rp) {
+                    res is IResourceProvider rp)
+                {
                     result.Add(key.Replace("strings-", ""), rp);
                 }
             }
             return result;
         }
 
-        public static void SetLanguage(string language) {
-            if (Current == null) {
+        public static void SetLanguage(string language)
+        {
+            if (Current == null)
+            {
                 return;
             }
             var languages = GetLanguages();
-            foreach (var res in languages.Values) {
+            foreach (var res in languages.Values)
+            {
                 Current.Resources.MergedDictionaries.Remove(res);
             }
-            if (language != "en-US") {
+            if (language != "en-US")
+            {
                 Current.Resources.MergedDictionaries.Add(languages["en-US"]);
             }
-            if (languages.TryGetValue(language, out var res1)) {
+            if (languages.TryGetValue(language, out var res1))
+            {
                 Current.Resources.MergedDictionaries.Add(res1);
             }
         }
 
-        static void InitializeTheme() {
+        public static async Task InitializeThemeAsync()
+        {
             Log.Information("Initializing theme.");
+            try
+            {
+                CustomTheme.ListThemes();
+                await OudepLoaderRegistry.LoadAllAsync();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to load themes from packages.");
+            }
             SetTheme();
             Log.Information("Initialized theme.");
         }
 
-        public static void SetTheme() {
-            if (Current == null) {
+        public static void SetTheme()
+        {
+            if (Current == null)
+            {
                 return;
             }
-            var light = (IResourceProvider)Current.Resources["themes-light"]!;
-            var dark = (IResourceProvider)Current.Resources["themes-dark"]!;
-            Current.Resources.MergedDictionaries.Remove(light);
-            Current.Resources.MergedDictionaries.Remove(dark);
-            if (Core.Util.Preferences.Default.Theme == 0) {
-                Current.Resources.MergedDictionaries.Add(light);
-                Current.RequestedThemeVariant = ThemeVariant.Light;
-            } else {
-                Current.Resources.MergedDictionaries.Add(dark);
-                Current.RequestedThemeVariant = ThemeVariant.Dark;
+            var light = (IResourceDictionary)Current.Resources["themes-light"]!;
+            var dark = (IResourceDictionary)Current.Resources["themes-dark"]!;
+            switch (Core.Util.Preferences.Default.ThemeName)
+            {
+                case BuiltInThemeLoader.LightThemeName:
+                    ApplyTheme(light);
+                    Current.RequestedThemeVariant = ThemeVariant.Light;
+                    break;
+                case BuiltInThemeLoader.DarkThemeName:
+                    ApplyTheme(dark);
+                    Current.RequestedThemeVariant = ThemeVariant.Dark;
+                    break;
+                default:
+                    if (BuiltInThemeLoader.TryCreateThemeByName(Core.Util.Preferences.Default.ThemeName, out var builtInTheme))
+                    {
+                        ThemeApplicator.Apply(builtInTheme);
+                        Current.RequestedThemeVariant = builtInTheme.IsDarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
+                    }
+                    else
+                    {
+                        CustomTheme.ApplyTheme(Core.Util.Preferences.Default.ThemeName);
+                    }
+                    break;
             }
             ThemeManager.LoadTheme();
+        }
+
+        private static void ApplyTheme(IResourceDictionary resDict)
+        {
+            var res = Current?.Resources;
+            foreach (var item in resDict)
+            {
+                res![item.Key] = item.Value;
+            }
         }
     }
 }

@@ -7,7 +7,7 @@
         xmlns:c="clr-namespace:OpenUtau.App.Controls"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="640"
         x:Class="OpenUtau.App.Views.SingersDialog"
-        Icon="/Assets/open-utau.ico"
+        Icon="/Assets/Thai OpenUtau Logo type.ico"
         Title="{DynamicResource singers.caption}" Width="1050" MinWidth="1050" MinHeight="640"
         WindowStartupLocation="CenterScreen" KeyDown="OnKeyDown">
   <Design.DataContext>
@@ -59,7 +59,7 @@
                 Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
       <Button Content="{DynamicResource singers.location}" Margin="0" Width="100"
               IsEnabled="{Binding Singer, Converter={x:Static ObjectConverters.IsNotNull}}" Command="{Binding OpenLocation}"/>
-      <Button Margin="0" Padding="0"
+      <Button Classes="iconButton" Margin="0" Padding="0"
               IsEnabled="{Binding Singer, Converter={x:Static ObjectConverters.IsNotNull}}"
               Click="OnSingerMenuButton">
         <Path Classes="clear"
@@ -73,24 +73,7 @@
           </Path.RenderTransform>
         </Path>
         <Button.ContextMenu>
-          <ContextMenu Name="SingerMenu" PlacementMode="Bottom">
-            <ContextMenu.Styles>
-              <Style Selector="CheckBox">
-                <Setter Property="IsHitTestVisible" Value="False" />
-                <Style Selector="^:unchecked /template/ Border#NormalRectangle">
-                  <Setter Property="BorderThickness" Value="0" />
-                  <Setter Property="Background" Value="Transparent"/>
-                </Style>
-                <Style Selector="^:checked /template/ Path#CheckGlyph">
-                  <Setter Property="Fill" Value="{DynamicResource SelectedTrackAccentBrush}" />
-                  <Setter Property="Width" Value="12" />
-                </Style>
-                <Style Selector="^:checked /template/ Border#NormalRectangle">
-                  <Setter Property="BorderThickness" Value="0" />
-                  <Setter Property="Background" Value="Transparent"/>
-                </Style>
-              </Style>
-            </ContextMenu.Styles>
+          <ContextMenu Name="SingerMenu" Placement="Bottom">
             <MenuItem Header="{DynamicResource singers.visitwebsite}" Click="OnVisitWebsite" IsEnabled="{Binding HasWebsite}"/>
             <MenuItem Header="{DynamicResource singers.setimage}" Click="OnSetImage"/>
             <MenuItem Header="{DynamicResource singers.setportrait}" Click="OnSetPortrait"/>
@@ -109,7 +92,7 @@
           </ContextMenu>
         </Button.ContextMenu>
       </Button>
-      <TextBox Text="{Binding SearchAlias}" Watermark="{DynamicResource singers.editoto.searchalias}" Margin="0"
+      <c:WorkspacePanelTextBox Text="{Binding SearchAlias}" Classes="workspacePanelTextBox" Watermark="{DynamicResource singers.editoto.searchalias}" Margin="0"
                MinWidth="160" HorizontalAlignment="Stretch" Focusable="True" IsVisible="{Binding UseSearchAlias}" />
     </StackPanel>
     <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,0" Height="20"
@@ -148,8 +131,8 @@
           <MenuItem Header="{DynamicResource singers.editoto.editinvlabeler}" Click="GotoVLabelerOto"/>
           <MenuItem Header="{DynamicResource singers.editoto.editinsetparam}" Click="GotoSetParamOto"/>
           <MenuItem Header="{DynamicResource singers.editoto.regenfrq}">
+            <MenuItem Header="HARVEST" Click="RegenFrq" Tag="harvest"/>
             <MenuItem Header="DIO" Click="RegenFrq" Tag="dio"/>
-            <MenuItem Header="DIO(5x)" Click="RegenFrq" Tag="dioss"/>
             <MenuItem Header="pYIN" Click="RegenFrq" Tag="pyin"/>
             <MenuItem Header="CREPE" Click="RegenFrq" Tag="crepe"/>
           </MenuItem>
@@ -173,37 +156,37 @@
     <GridSplitter Grid.Row="3" Grid.ColumnSpan="3" Height="10"
                   Background="{DynamicResource SystemControlBackgroundAltHighBrush}"/>
     <StackPanel Grid.Row="6" Grid.ColumnSpan="3" Margin="10,0" Orientation="Horizontal" Spacing="3">
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">Q</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource singers.otoview.selectprev}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">E</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource singers.otoview.selectnext}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">F</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource singers.otoview.showall}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">W</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource singers.otoview.zoomin}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">S</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource singers.otoview.zoomout}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">A</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource singers.otoview.moveleft}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">D</TextBlock>
       </Border>
@@ -211,7 +194,7 @@
     </StackPanel>
     <StackPanel Grid.Row="6" Grid.ColumnSpan="3" Margin="10,0" Orientation="Horizontal" Spacing="3"
                 HorizontalAlignment="Right">
-        <Border BorderThickness="1" CornerRadius="4" ClipToBounds="True"
+        <Border BorderThickness="1" CornerRadius="6" ClipToBounds="True"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
             <Button Margin="0" Padding="8,0,8,0" Classes="normal" Background="Transparent" Click="OnPlaySelectedFile">
                 <Button.Content>
@@ -228,7 +211,7 @@
                 </Button.Content>
             </Button>
         </Border>
-        <Border BorderThickness="1" CornerRadius="4" ClipToBounds="True"
+        <Border BorderThickness="1" CornerRadius="6" ClipToBounds="True"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
             <ToggleButton Classes="normal" Background="Transparent" IsChecked="{Binding ZoomInMel}">
                 <Path Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
@@ -244,27 +227,27 @@
         </Border>
     </StackPanel>
     <StackPanel Grid.Row="8" Grid.ColumnSpan="3" Margin="10,0" Orientation="Horizontal" Spacing="3">
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">1</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource oto.edit.offset}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">2</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource oto.edit.overlap}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">3</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource oto.edit.preutter}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">4</TextBlock>
       </Border>
       <TextBlock Margin="0,1,6,1" Text="{DynamicResource oto.edit.consonant}"/>
-      <Border Margin="0" BorderThickness="1" CornerRadius="4"
+      <Border Margin="0" BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
         <TextBlock Margin="2,0">5</TextBlock>
       </Border>

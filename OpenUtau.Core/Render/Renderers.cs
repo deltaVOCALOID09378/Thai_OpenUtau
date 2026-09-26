@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,13 +9,14 @@ using OpenUtau.Core.Util;
 namespace OpenUtau.Core.Render {
     public static class Renderers {
         public const string CLASSIC = "CLASSIC";
-        public const string WORLDLINER = "WORLDLINE-R";
+        public const string WORLDLINE_R = "WORLDLINE-R";
+        public const string WORLDLINE_R2 = "WORLDLINE-R2";
         public const string ENUNU = "ENUNU";
         public const string VOGEN = "VOGEN";
         public const string DIFFSINGER = "DIFFSINGER";
         public const string VOICEVOX = "VOICEVOX";
 
-        static readonly string[] classicRenderers = new[] { WORLDLINER, CLASSIC };
+        static readonly string[] classicRenderers = new[] { WORLDLINE_R, CLASSIC };
         static readonly string[] enunuRenderers = new[] { ENUNU };
         static readonly string[] vogenRenderers = new[] { VOGEN };
         static readonly string[] diffSingerRenderers = new[] { DIFFSINGER };
@@ -57,8 +58,10 @@ namespace OpenUtau.Core.Render {
         public static IRenderer CreateRenderer(string renderer) {
             if (renderer == CLASSIC) {
                 return new ClassicRenderer();
-            } else if (renderer?.StartsWith(WORLDLINER.Substring(0, 9)) ?? false) {
-                return new WorldlineRenderer();
+            } else if (renderer == WORLDLINE_R2) {
+                return new WorldlineRenderer(version: 2);
+            } else if (renderer?.StartsWith(WORLDLINE_R.Substring(0, 9)) ?? false) {
+                return new WorldlineRenderer(version: 1);
             } else if (renderer == ENUNU) {
                 return new Enunu.EnunuRenderer();
             } else if (renderer == VOGEN) {
@@ -93,7 +96,10 @@ namespace OpenUtau.Core.Render {
                 float a = phrase.dynamics[i];
                 float b = (i + 1) == phrase.dynamics.Length ? phrase.dynamics[i] : phrase.dynamics[i + 1];
                 for (int j = startSample; j < endSample; ++j) {
-                    result.samples[j] *= a + (b - a) * (j - startSample) / (endSample - startSample);
+                    float val = result.samples[j] * (a + (b - a) * (j - startSample) / (endSample - startSample));
+                    if (val > 1f) val = 1f;
+                    else if (val < -1f) val = -1f;
+                    result.samples[j] = val;
                 }
                 startTick = endTick;
                 startSample = endSample;

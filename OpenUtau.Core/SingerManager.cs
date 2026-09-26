@@ -11,6 +11,13 @@ using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using Serilog;
 
+// ============================================================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.2 | Date: 2026-07-28
+// Description: ปรับการหน่วงโหลดคลังเสียงให้ยกเลิกได้โดยไม่พักเธรดโดยไม่จำเป็น
+// ============================================================================
+
 namespace OpenUtau.Core {
     public class SingerManager : SingletonBase<SingerManager> {
         public Dictionary<string, USinger> Singers { get; private set; } = new Dictionary<string, USinger>();
@@ -61,27 +68,29 @@ namespace OpenUtau.Core {
             var oldCancellation = Interlocked.Exchange(ref reloadCancellation, newCancellation);
             if (oldCancellation != null) {
                 oldCancellation.Cancel();
-                oldCancellation.Dispose();
             }
-            Task.Run(() => {
-                Thread.Sleep(200);
-                if (newCancellation.IsCancellationRequested) {
-                    return;
+
+            _ = Task.Run(async () => {
+                try {
+                    await Task.Delay(200, newCancellation.Token).ConfigureAwait(false);
+                    await Refresh().ConfigureAwait(false);
+                } catch (OperationCanceledException) when (newCancellation.IsCancellationRequested) {
+                    // การร้องขอครั้งใหม่เข้ามาแทนที่งานเดิม จึงยกเลิกงานหน่วงเดิมตามปกติ
+                } finally {
+                    Interlocked.CompareExchange(ref reloadCancellation, null, newCancellation);
+                    newCancellation.Dispose();
                 }
-                Refresh();
             });
         }
 
-        private void Refresh() {
+        private async Task Refresh() {
             var singers = new HashSet<USinger>();
             while (reloadQueue.TryDequeue(out USinger singer)) {
                 singers.Add(singer);
             }
             foreach (var singer in singers) {
                 Log.Information($"Reloading {singer.Id}");
-                new Task(() => {
-                    DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"Reloading {singer.Id}"));
-                }).Start(DocManager.Inst.MainScheduler);
+                PostToUI(() => DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"Reloading {singer.Id}")));
                 int retries = 5;
                 while (retries > 0) {
                     retries--;
@@ -93,16 +102,24 @@ namespace OpenUtau.Core {
                             Log.Error(e, $"Failed to reload {singer.Id}");
                         } else {
                             Log.Error(e, $"Retrying reload {singer.Id}");
-                            Thread.Sleep(200);
+                            // Non-blocking delay: Thread.Sleep here would tie up a
+                            // threadpool thread for up to 1s per failed singer,
+                            // which can starve other queued work (rendering, UI
+                            // dispatch, etc.) under load.
+                            await Task.Delay(200).ConfigureAwait(false);
                         }
                     }
                 }
                 Log.Information($"Reloaded {singer.Id}");
-                new Task(() => {
+                PostToUI(() => {
                     DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"Reloaded {singer.Id}"));
                     DocManager.Inst.ExecuteCmd(new OtoChangedNotification(external: true));
-                }).Start(DocManager.Inst.MainScheduler);
+                });
             }
+        }
+
+        private static void PostToUI(Action action) {
+            Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, DocManager.Inst.MainScheduler);
         }
 
         //Check which singers are in use and free memory for those that are not

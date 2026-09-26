@@ -1,4 +1,8 @@
-﻿using System;
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai
+// Version: v.1.1
+// History/Summary: Added ShowPitchNotification, PageUp/PageDown track switching, and AutoPitchVibrato Batch Edit.
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,32 +11,40 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
+using OpenUtau.App.Controls;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
+using OpenUtau.ViewModels;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 using SharpCompress;
 
-namespace OpenUtau.App.ViewModels {
+namespace OpenUtau.App.ViewModels
+{
     public class NotesRefreshEvent { }
-    public class NotesSelectionEvent {
+    public class NotesSelectionEvent
+    {
         public readonly UNote[] selectedNotes;
         public readonly UNote[] tempSelectedNotes;
-        public NotesSelectionEvent(NoteSelectionViewModel selection) {
+        public NotesSelectionEvent(NoteSelectionViewModel selection)
+        {
             selectedNotes = selection.ToArray();
             tempSelectedNotes = selection.TempSelectedNotes.ToArray();
         }
     }
     public class WaveformRefreshEvent { }
 
-    public class NotesViewModel : ViewModelBase, ICmdSubscriber {
+    public class NotesViewModel : ViewModelBase, ICmdSubscriber
+    {
         [Reactive] public Rect Bounds { get; set; }
         public int TickCount => Part?.Duration ?? 480 * 4;
         public int TrackCount => ViewConstants.MaxTone;
@@ -45,46 +57,120 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public double TrackOffset { get; set; }
         [Reactive] public int SnapDiv { get; set; }
         [Reactive] public int Key { get; set; }
+        [Reactive] public bool KeyIsMajor { get; set; }
+        [Reactive] public bool ShowKeyScale { get; set; }
         public ObservableCollectionExtended<int> SnapTicks { get; } = new ObservableCollectionExtended<int>();
         [Reactive] public double PlayPosX { get; set; }
         [Reactive] public double PlayPosHighlightX { get; set; }
         [Reactive] public double PlayPosHighlightWidth { get; set; }
         [Reactive] public bool PlayPosWaitingRendering { get; set; }
-        [Reactive] public bool CursorTool { get; set; }
-        [Reactive] public bool PenTool { get; set; }
-        [Reactive] public bool PenPlusTool { get; set; }
-        [Reactive] public bool EraserTool { get; set; }
-        [Reactive] public bool DrawPitchTool { get; set; }
-        [Reactive] public bool DrawLinePitchTool { get; set; }
-        [Reactive] public bool OverwritePitchTool { get; set; }
-        [Reactive] public bool KnifeTool { get; set; }
-        public ReactiveCommand<string, Unit> SelectToolCommand { get; }
+        [Reactive] public bool UseModernPlayhead { get; set; }
+        public bool HasRangeSelection => DocManager.Inst.rangeEndTick > DocManager.Inst.rangeStartTick;
+        public bool ShowPlaybackBarHighlight => !PlaybackManager.Inst.PlayingMaster || HasRangeSelection;
+        public bool ShowClassicPlayPosMarker => !UseModernPlayhead;
+        public bool ShowModernPlayPosMarker => UseModernPlayhead;
+        public bool ShowWidePlayPosBar =>
+            ShowPlaybackBarHighlight && (HasRangeSelection || !UseModernPlayhead);
+        public bool ShowThinPlayPosLine
+        {
+            get
+            {
+                if (UseModernPlayhead)
+                {
+                    return true;
+                }
+                return PlaybackManager.Inst.PlayingMaster;
+            }
+        }
+
+        public void RefreshPlaybackHighlightVisibility()
+        {
+            this.RaisePropertyChanged(nameof(ShowPlaybackBarHighlight));
+            this.RaisePropertyChanged(nameof(ShowClassicPlayPosMarker));
+            this.RaisePropertyChanged(nameof(ShowModernPlayPosMarker));
+            this.RaisePropertyChanged(nameof(ShowWidePlayPosBar));
+            this.RaisePropertyChanged(nameof(ShowThinPlayPosLine));
+        }
         [Reactive] public bool ShowTips { get; set; }
         [Reactive] public bool PlayTone { get; set; }
+        [Reactive] public bool LivePitchNormal { get; set; }
+        [Reactive] public bool LivePitchSuperFast { get; set; }
+        bool livePitchSyncing;
         [Reactive] public bool ShowVibrato { get; set; }
         [Reactive] public bool ShowPitch { get; set; }
         [Reactive] public bool ShowFinalPitch { get; set; }
         [Reactive] public bool ShowWaveform { get; set; }
+        [Reactive] public bool ShowPitchFollowPath { get; set; }
         [Reactive] public bool ShowPhoneme { get; set; }
         [Reactive] public bool ShowNoteParams { get; set; }
+        [Reactive] public double NotePropertiesPanelWidth { get; set; }
         [Reactive] public bool ShowExpressions { get; set; }
+        [Reactive] public bool ShowRealCurves { get; set; }
         [Reactive] public bool IsSnapOn { get; set; }
         [Reactive] public string SnapDivText { get; set; }
         [Reactive] public string KeyText { get; set; }
         [Reactive] public Rect ExpBounds { get; set; }
         [Reactive] public string PrimaryKey { get; set; }
         [Reactive] public bool PrimaryKeyNotSupported { get; set; }
+        [Reactive] public bool ShowCurveToolbar { get; set; }
         [Reactive] public string SecondaryKey { get; set; }
         [Reactive] public double ExpTrackHeight { get; set; }
         [Reactive] public double ExpShadowOpacity { get; set; }
         [Reactive] public double ExpHeightMin { get; set; }
         [Reactive] public double ExpHeightMax { get; set; }
+        [Reactive] public double PhonemePanelHeight { get; set; }
+        [Reactive] public double PhonemePanelHeightMin { get; set; }
+        [Reactive] public double PhonemePanelHeightMax { get; set; }
+        public bool PhonemePanelResizeEnabled => Preferences.Default.DiffSingerPhonemePanelMode;
+        public bool PhonemePanelDetached => ShowPhoneme && Preferences.Default.DiffSingerPhonemePanelMode;
+        public bool ShowEmbeddedPhoneme => ShowPhoneme && !Preferences.Default.DiffSingerPhonemePanelMode;
+        public double PhonemeEmbeddedHeight => ViewConstants.PhonemeEmbeddedHeight;
+        public double WaveformBottomMargin => ShowEmbeddedPhoneme ? ViewConstants.PhonemeEmbeddedHeight + 4 : 4;
+        public double SearchBarBottomMargin => ShowEmbeddedPhoneme ? 70 + ViewConstants.PhonemeEmbeddedHeight : 70;
+        public Thickness WaveformBottomMarginThickness => new Thickness(0, 0, 0, WaveformBottomMargin);
+        public Thickness SearchBarBottomMarginThickness => new Thickness(12, 12, 12, SearchBarBottomMargin);
+        // Tag strip (20px) only in DiffSinger panel mode when lang prefix is shown for the open track.
+        public double PhonemePanelTagStripHeight
+        {
+            get
+            {
+                if (!Preferences.Default.DiffSingerPhonemePanelMode || Part == null)
+                {
+                    return 0;
+                }
+                var track = Part.trackNo < Project.tracks.Count ? Project.tracks[Part.trackNo] : null;
+                if (PhonemeUIRender.ShouldHideLangPrefixForDisplay(track))
+                {
+                    return 0;
+                }
+                return ViewConstants.PhonemeTagStripHeight;
+            }
+        }
+        public Thickness PianoRollHScrollBottomMargin => new Thickness(0, 0, 0, ShowEmbeddedPhoneme ? ViewConstants.PhonemeEmbeddedHeight + 4 : 4);
+        public GridLength PhonemeGapGridLength => ShowPhoneme && PhonemePanelDetached ? new GridLength(8) : new GridLength(0);
+        public double PhonemePanelOuterHeight => PhonemePanelHeight + PhonemePanelTagStripHeight;
+        public GridLength PhonemePanelOuterGridLength => ShowPhoneme && PhonemePanelDetached
+            ? new GridLength(PhonemePanelOuterHeight)
+            : new GridLength(0);
+        public double PhonemePanelOuterMinHeight => ShowPhoneme && PhonemePanelDetached
+            ? PhonemePanelHeightMin + PhonemePanelTagStripHeight
+            : 0;
+        public GridLength ExpGapGridLength => ShowExpressions ? new GridLength(8) : new GridLength(0);
+        public GridLength ExpPanelGridLength => ShowExpressions ? new GridLength(ViewConstants.ExpPanelHeightDefault) : new GridLength(0);
+        public GridLength PhonemePanelHeightGridLength => new GridLength(PhonemePanelHeight + PhonemePanelTagStripHeight);
+        public GridLength NotePropsGapGridLength => ShowNoteParams ? new GridLength(8) : new GridLength(0);
+        public GridLength NotePropsColumnWidth => ShowNoteParams
+            ? new GridLength(NotePropsPanelMetrics.ClampWidth(NotePropertiesPanelWidth))
+            : new GridLength(0);
+        public bool NotePropsHidden => !ShowNoteParams;
         [Reactive] public UVoicePart? Part { get; set; }
         [Reactive] public Bitmap? Avatar { get; set; }
         [Reactive] public Bitmap? Portrait { get; set; }
         [Reactive] public IBrush? PortraitMask { get; set; }
         [Reactive] public string WindowTitle { get; set; } = "Piano Roll";
+        [Reactive] public string PartDisplayName { get; set; } = string.Empty;
         [Reactive] public SolidColorBrush TrackAccentColor { get; set; } = ThemeManager.GetTrackColor("Blue").AccentColor;
+        [Reactive] public SolidColorBrush TrackNoteColor { get; set; } = ThemeManager.GetTrackColor("Blue").NoteColor;
         public double ViewportTicks => viewportTicks.Value;
         public double ViewportTracks => viewportTracks.Value;
         public double SmallChangeX => smallChangeX.Value;
@@ -101,6 +187,25 @@ namespace OpenUtau.App.ViewModels {
         // See the comments on TracksViewModel.playPosXToTickOffset
         private double playPosXToTickOffset => Bounds.Width != 0 ? ViewportTicks / Bounds.Width : 0;
 
+        // Smooth scroll for Stationary Cursor (PlaybackAutoScroll == 1): exponential ease toward target.
+        private const double SmoothScrollSnapThreshold = 0.05;
+        /// <summary>Target TickOffset for smooth stationary-cursor scroll; null when not in use.</summary>
+        private double? smoothScrollTargetTickOffset;
+        /// <summary>True after playback-driven smooth scroll was active; used to discard stale targets on pause/EOF.</summary>
+        private bool stationaryCursorFollowedPlayback;
+        /// <summary>True while SmoothScrollStep is updating TickOffset, so we don't treat that as user scroll.</summary>
+        private bool _inSmoothScrollStep;
+
+        private readonly PlaybackPitchFollowPath pitchFollowPath = new PlaybackPitchFollowPath();
+        private readonly List<PitchFollowPathSamplePoint> pitchFollowPathSamples = new();
+        public IReadOnlyList<PitchFollowPathSamplePoint> PitchFollowPathSamples => pitchFollowPathSamples;
+        public bool PitchFollowPathIsBuilt => pitchFollowPath.IsBuilt;
+        private bool _inPitchFollowScrollStep;
+        private bool pitchFollowUserOverride;
+        private bool pitchFollowWasPlaying;
+        private DateTime pitchFollowLastStepUtc;
+        private bool pitchFollowRenderingActive;
+
         private readonly ObservableAsPropertyHelper<double> viewportTicks;
         private readonly ObservableAsPropertyHelper<double> viewportTracks;
         private readonly ObservableAsPropertyHelper<double> smallChangeX;
@@ -112,20 +217,26 @@ namespace OpenUtau.App.ViewModels {
         private int _lastNoteLength = 480;
         private string? portraitSource;
         private readonly object portraitLock = new object();
+        private Bitmap? portraitFull;
+        private int portraitRasterHeight;
         private int userSnapDiv = -2;
         private int userKey => Project.key;
 
-        public NotesViewModel() {
+        public NotesViewModel()
+        {
             SnapDivs = new List<MenuItemViewModel>();
-            SetSnapUnitCommand = ReactiveCommand.Create<int>(div => {
+            SetSnapUnitCommand = ReactiveCommand.Create<int>(div =>
+            {
                 userSnapDiv = div;
                 UpdateSnapDiv();
             });
 
             Keys = new List<MenuItemViewModel>();
-            SetKeyCommand = ReactiveCommand.Create<int>(key => {
-                DocManager.Inst.StartUndoGroup();
-                DocManager.Inst.ExecuteCmd(new KeyCommand(Project, key));
+            SetKeyCommand = ReactiveCommand.Create<int>(encoded =>
+            {
+                var key = KeySignatureHelper.Decode(encoded);
+                DocManager.Inst.StartUndoGroup("command.project.key");
+                DocManager.Inst.ExecuteCmd(new KeyCommand(Project, key.Tonic, key.IsMajor));
                 DocManager.Inst.EndUndoGroup();
                 UpdateKey();
             });
@@ -143,150 +254,322 @@ namespace OpenUtau.App.ViewModels {
                 .Select(h => h / 8)
                 .ToProperty(this, x => x.SmallChangeY);
             this.WhenAnyValue(x => x.Bounds)
-                .Subscribe(_ => {
+                .Subscribe(_ =>
+                {
                     OnXZoomed(new Point(), 0);
                     OnYZoomed(new Point(), 0);
                 });
 
             this.WhenAnyValue(x => x.TickWidth)
-                .Subscribe(tickWidth => {
+                .Subscribe(tickWidth =>
+                {
                     UpdateSnapDiv();
                     SetPlayPos(DocManager.Inst.playPosTick, false);
                 });
             this.WhenAnyValue(x => x.TickOffset)
-                .Subscribe(tickOffset => {
+                .Subscribe(tickOffset =>
+                {
                     SetPlayPos(DocManager.Inst.playPosTick, false);
                 });
             this.WhenAnyValue(x => x.ExpBounds, x => x.PrimaryKey)
-                .Subscribe(t => {
-                    if (t.Item2 != null &&
-                        Project.expressions.TryGetValue(t.Item2, out var descriptor) &&
-                        descriptor.type == UExpressionType.Options &&
-                        descriptor.options.Length > 0) {
-                        ExpTrackHeight = t.Item1.Height / descriptor.options.Length;
-                        ExpShadowOpacity = 0;
-                    } else {
+                .Subscribe(t =>
+                {
+                    UExpressionDescriptor? descriptor = null;
+                    if (t.Item2 != null)
+                    {
+                        UExpressionDescriptor trackDesc = default!;
+                        bool hasTrackDesc = Part != null && Project.tracks[Part.trackNo]
+                            .TryGetExpDescriptor(Project, t.Item2, out trackDesc);
+                        if (hasTrackDesc)
+                        {
+                            descriptor = trackDesc;
+                        }
+                        else if (Project.expressions.TryGetValue(t.Item2, out var projDesc))
+                        {
+                            descriptor = projDesc;
+                        }
+                    }
+                    if (descriptor != null)
+                    {
+                        if (descriptor.type == UExpressionType.Options)
+                        {
+                            int numOptions = Math.Max(descriptor.options.Length, 1);
+                            ExpTrackHeight = t.Item1.Height / numOptions;
+                            ExpShadowOpacity = 0;
+                        }
+                        else
+                        {
+                            ExpTrackHeight = 0;
+                        }
+                        ShowCurveToolbar = descriptor.type == UExpressionType.Curve;
+                    }
+                    else
+                    {
                         ExpTrackHeight = 0;
                         ExpShadowOpacity = 0.3;
+                        ShowCurveToolbar = false;
                     }
                 });
             this.WhenAnyValue(x => x.Project)
-                .Subscribe(project => {
-                    if (project == null) {
+                .Subscribe(project =>
+                {
+                    if (project == null)
+                    {
                         return;
                     }
                     SnapDivs.Clear();
-                    SnapDivs.Add(new MenuItemViewModel {
+                    SnapDivs.Add(new MenuItemViewModel
+                    {
                         Header = ThemeManager.GetString("pianoroll.toggle.snap.auto"),
                         Command = SetSnapUnitCommand,
                         CommandParameter = -2,
                     });
-                    SnapDivs.Add(new MenuItemViewModel {
+                    SnapDivs.Add(new MenuItemViewModel
+                    {
                         Header = ThemeManager.GetString("pianoroll.toggle.snap.autotriplet"),
                         Command = SetSnapUnitCommand,
                         CommandParameter = -3,
                     });
                     SnapDivs.AddRange(MusicMath.GetSnapDivs(project.resolution)
-                        .Select(div => new MenuItemViewModel {
+                        .Select(div => new MenuItemViewModel
+                        {
                             Header = $"1/{div}",
                             Command = SetSnapUnitCommand,
                             CommandParameter = div,
                         }));
                     Keys.Clear();
-                    Keys.AddRange(MusicMath.KeysInOctave
-                        .Select((key, index) => new MenuItemViewModel {
-                            Header = $"1={key.Item1}",
+                    Keys.AddRange(KeySignatureHelper.AllKeys()
+                        .Select(key => new MenuItemViewModel
+                        {
+                            Header = KeySignatureHelper.FormatKey(key),
                             Command = SetKeyCommand,
-                            CommandParameter = index,
+                            CommandParameter = KeySignatureHelper.Encode(key),
                         }));
                 });
 
-            CursorTool = false;
-            if (Preferences.Default.PenPlusDefault) {
-                PenPlusTool = true;
-                PenTool = false;
-            } else {
-                PenTool = true;
-                PenPlusTool = false;
-            }
-            EraserTool = false;
-            DrawPitchTool = false;
-            DrawLinePitchTool = false;
-            OverwritePitchTool = false;
-            KnifeTool = false;
-            SelectToolCommand = ReactiveCommand.Create<string>(index => {
-                CursorTool = index == "1";
-                PenTool = index == "2";
-                PenPlusTool = index == "2+";
-                EraserTool = index == "3";
-                DrawPitchTool = index == "4";
-                OverwritePitchTool = index == "4+";
-                DrawLinePitchTool = index == "4++";
-                KnifeTool = index == "5";
-            });
-
             ShowTips = Preferences.Default.ShowTips;
-            IsSnapOn = true;
+            ShowKeyScale = Preferences.Default.ShowKeyScaleOnPianoRoll;
+            this.WhenAnyValue(x => x.ShowKeyScale)
+                .Skip(1)
+                .Subscribe(showKeyScale =>
+                {
+                    Preferences.Default.ShowKeyScaleOnPianoRoll = showKeyScale;
+                    Preferences.Save();
+                    MessageBus.Current.SendMessage(new PianorollRefreshEvent("KeyScale"));
+                });
+            IsSnapOn = false; // Changed to unquantized (free movement) by default
             SnapDivText = string.Empty;
             KeyText = string.Empty;
 
             PlayTone = Preferences.Default.PlayTone;
             this.WhenAnyValue(x => x.PlayTone)
-             .Subscribe(playTone => {
-                 Preferences.Default.PlayTone = playTone;
-                 Preferences.Save();
-             });
+                .Subscribe(playTone =>
+                {
+                    Preferences.Default.PlayTone = playTone;
+                    Preferences.Save();
+                });
+            ApplyLivePitchModeFromPreferences();
+            this.WhenAnyValue(x => x.LivePitchNormal)
+                .Subscribe(checkedNormal =>
+                {
+                    if (livePitchSyncing)
+                    {
+                        return;
+                    }
+                    if (checkedNormal)
+                    {
+                        SetLivePitchMode(LivePitchMode.Normal);
+                    }
+                    else if (Preferences.Default.RealTimePitchMode == (int)LivePitchMode.Normal)
+                    {
+                        SetLivePitchMode(LivePitchMode.Off);
+                    }
+                });
+            this.WhenAnyValue(x => x.LivePitchSuperFast)
+                .Subscribe(checkedFast =>
+                {
+                    if (livePitchSyncing)
+                    {
+                        return;
+                    }
+                    if (checkedFast)
+                    {
+                        SetLivePitchMode(LivePitchMode.SuperFast);
+                    }
+                    else if (Preferences.Default.RealTimePitchMode == (int)LivePitchMode.SuperFast)
+                    {
+                        SetLivePitchMode(LivePitchMode.Off);
+                    }
+                });
             ShowVibrato = Preferences.Default.ShowVibrato;
             this.WhenAnyValue(x => x.ShowVibrato)
-            .Subscribe(showVibrato => {
+            .Subscribe(showVibrato =>
+            {
                 Preferences.Default.ShowVibrato = showVibrato;
                 Preferences.Save();
             });
             ShowPitch = Preferences.Default.ShowPitch;
             this.WhenAnyValue(x => x.ShowPitch)
-            .Subscribe(showPitch => {
+            .Subscribe(showPitch =>
+            {
                 Preferences.Default.ShowPitch = showPitch;
                 Preferences.Save();
             });
             ShowFinalPitch = Preferences.Default.ShowFinalPitch;
             this.WhenAnyValue(x => x.ShowFinalPitch)
-            .Subscribe(showFinalPitch => {
+            .Subscribe(showFinalPitch =>
+            {
                 Preferences.Default.ShowFinalPitch = showFinalPitch;
                 Preferences.Save();
             });
             ShowWaveform = Preferences.Default.ShowWaveform;
             this.WhenAnyValue(x => x.ShowWaveform)
-            .Subscribe(showWaveform => {
+            .Subscribe(showWaveform =>
+            {
                 Preferences.Default.ShowWaveform = showWaveform;
                 Preferences.Save();
             });
+            ShowPitchFollowPath = IsPitchFollowPathPreviewVisible();
+            this.WhenAnyValue(x => x.ShowPitchFollowPath)
+            .Subscribe(showPath =>
+            {
+                if (!Preferences.Default.PlaybackPitchFollowEnabled)
+                {
+                    return;
+                }
+                Preferences.Default.PlaybackPitchFollowShowPath = showPath;
+                Preferences.Save();
+                RefreshPitchFollowPathPreview();
+            });
             ShowPhoneme = Preferences.Default.ShowPhoneme;
+            UpdatePhonemePanelLayoutConstraints();
+            this.WhenAnyValue(x => x.PhonemePanelHeight)
+                .Subscribe(_ =>
+                {
+                    this.RaisePropertyChanged(nameof(PhonemePanelOuterHeight));
+                    this.RaisePropertyChanged(nameof(PhonemePanelOuterGridLength));
+                    this.RaisePropertyChanged(nameof(PhonemePanelHeightGridLength));
+                });
+            MessageBus.Current.Listen<NotesRefreshEvent>()
+                .Subscribe(_ =>
+                {
+                    UpdatePhonemePanelLayoutConstraints();
+                    RaisePhonemePanelLayoutChanged();
+                });
             this.WhenAnyValue(x => x.ShowPhoneme)
-            .Subscribe(showPhoneme => {
+            .Subscribe(showPhoneme =>
+            {
                 Preferences.Default.ShowPhoneme = showPhoneme;
                 Preferences.Save();
+                this.RaisePropertyChanged(nameof(PhonemeGapGridLength));
+                this.RaisePropertyChanged(nameof(PhonemePanelDetached));
+                this.RaisePropertyChanged(nameof(ShowEmbeddedPhoneme));
+                this.RaisePropertyChanged(nameof(WaveformBottomMargin));
+                this.RaisePropertyChanged(nameof(SearchBarBottomMargin));
+                this.RaisePropertyChanged(nameof(WaveformBottomMarginThickness));
+                this.RaisePropertyChanged(nameof(SearchBarBottomMarginThickness));
+                this.RaisePropertyChanged(nameof(PianoRollHScrollBottomMargin));
+                this.RaisePropertyChanged(nameof(PhonemePanelOuterHeight));
+                this.RaisePropertyChanged(nameof(PhonemePanelOuterGridLength));
+                this.RaisePropertyChanged(nameof(PhonemePanelOuterMinHeight));
             });
             ShowExpressions = Preferences.Default.ShowExpressions;
             this.WhenAnyValue(x => x.ShowExpressions)
-            .Subscribe(showExpressions => {
+            .Subscribe(showExpressions =>
+            {
                 ExpHeightMin = showExpressions
                     ? ViewConstants.ExpHeightMin : 0;
                 ExpHeightMax = showExpressions
                     ? ViewConstants.ExpHeightMax : 0;
                 Preferences.Default.ShowExpressions = showExpressions;
                 Preferences.Save();
+                this.RaisePropertyChanged(nameof(ExpGapGridLength));
+                this.RaisePropertyChanged(nameof(ExpPanelGridLength));
             });
-            ShowNoteParams = Preferences.Default.ShowNoteParams;
-            this.WhenAnyValue(x => x.ShowNoteParams)
-            .Subscribe(showNoteParams => {
-                Preferences.Default.ShowNoteParams = showNoteParams;
+            ShowRealCurves = Preferences.Default.ShowRealCurves;
+            this.WhenAnyValue(x => x.ShowRealCurves)
+            .Subscribe(showRealCurves =>
+            {
+                Preferences.Default.ShowRealCurves = showRealCurves;
                 Preferences.Save();
             });
+            ShowNoteParams = Preferences.Default.ShowNoteParams;
+            NotePropertiesPanelWidth = NotePropsPanelMetrics.ClampWidth(Preferences.Default.NotePropertiesPanelWidth);
+            this.WhenAnyValue(x => x.ShowNoteParams)
+            .Subscribe(showNoteParams =>
+            {
+                Preferences.Default.ShowNoteParams = showNoteParams;
+                Preferences.Save();
+                this.RaisePropertyChanged(nameof(NotePropsGapGridLength));
+                this.RaisePropertyChanged(nameof(NotePropsColumnWidth));
+                this.RaisePropertyChanged(nameof(NotePropsHidden));
+            });
+            this.WhenAnyValue(x => x.NotePropertiesPanelWidth)
+            .Subscribe(width =>
+            {
+                var clamped = NotePropsPanelMetrics.ClampWidth(width);
+                if (System.Math.Abs(clamped - width) > 0.01)
+                {
+                    NotePropertiesPanelWidth = clamped;
+                    return;
+                }
+                Preferences.Default.NotePropertiesPanelWidth = clamped;
+                Preferences.Save();
+                this.RaisePropertyChanged(nameof(NotePropsColumnWidth));
+            });
+            UseModernPlayhead = Preferences.Default.UseModernPlayhead;
+            MessageBus.Current.Listen<PlayheadModeChangedEvent>()
+                .Subscribe(e =>
+                {
+                    UseModernPlayhead = e.UseModernPlayhead;
+                    this.RaisePropertyChanged(nameof(ShowClassicPlayPosMarker));
+                    this.RaisePropertyChanged(nameof(ShowModernPlayPosMarker));
+                    RefreshPlaybackHighlightVisibility();
+                    if (Part != null)
+                    {
+                        SetPlayPos(DocManager.Inst.playPosTick, false);
+                    }
+                });
+            // When user scrolls (scrollbar, zoom, pan), sync smooth-scroll target so we don't pull the view back.
+            this.WhenAnyValue(x => x.TickOffset)
+                .Skip(1)
+                .Subscribe(_ =>
+                {
+                    if (!_inSmoothScrollStep && Preferences.Default.PlaybackAutoScroll == 1)
+                    {
+                        smoothScrollTargetTickOffset = TickOffset;
+                    }
+                });
+            this.WhenAnyValue(x => x.Part)
+                .Subscribe(_ =>
+                {
+                    smoothScrollTargetTickOffset = null;
+                    stationaryCursorFollowedPlayback = false;
+                });
+
+            this.WhenAnyValue(x => x.ViewportTracks)
+                .Subscribe(_ => RebuildPitchFollowPath());
+            this.WhenAnyValue(x => x.TrackOffset)
+                .Skip(1)
+                .Subscribe(_ =>
+                {
+                    if (!_inPitchFollowScrollStep && Preferences.Default.PlaybackPitchFollowEnabled)
+                    {
+                        pitchFollowUserOverride = true;
+                    }
+                });
+            MessageBus.Current.Listen<PlaybackPitchFollowSettingsChangedEvent>()
+                .Subscribe(_ =>
+                {
+                    RebuildPitchFollowPath();
+                    ShowPitchFollowPath = IsPitchFollowPathPreviewVisible();
+                });
 
             TickWidth = ViewConstants.PianoRollTickWidthDefault;
             TrackHeight = ViewConstants.NoteHeightDefault;
             TrackOffset = 4 * 12 + 6;
-            if (Preferences.Default.ShowTips) {
+            if (Preferences.Default.ShowTips)
+            {
                 Preferences.Default.ShowTips = false;
                 Preferences.Save();
             }
@@ -296,13 +579,28 @@ namespace OpenUtau.App.ViewModels {
             HitTest = new NotesViewModelHitTest(this);
             DocManager.Inst.AddSubscriber(this);
 
+            this.WhenAnyValue(x => x.Part)
+                .Subscribe(p =>
+                {
+                    MessageBus.Current.SendMessage(new PianoRollOpenPartChangedEvent(p));
+                    PublishPianoRollViewport();
+                });
+
+            this.WhenAnyValue(x => x.TickOffset, x => x.ViewportTicks, x => x.Bounds)
+                .Subscribe(_ => PublishPianoRollViewport());
+
             MessageBus.Current.Listen<PianorollRefreshEvent>()
-                .Subscribe(e => {
-                    switch (e.refreshItem) {
+                .Subscribe(e =>
+                {
+                    switch (e.refreshItem)
+                    {
                         case "Part":
-                            if (Part == null || Project == null) {
+                            if (Part == null || Project == null)
+                            {
                                 UnloadPart();
-                            } else {
+                            }
+                            else
+                            {
                                 LoadPart(Part, Project);
                             }
                             break;
@@ -314,10 +612,25 @@ namespace OpenUtau.App.ViewModels {
                             break;
                     }
                 });
+            MessageBus.Current.Listen<CurveSelectionEvent>()
+                .Subscribe(e =>
+                {
+                    Selection.SelectNone();
+                    MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
+                });
+            MessageBus.Current.Listen<CurveCopyEvent>()
+                .Subscribe(e =>
+                {
+                    DocManager.Inst.NotesClipboard?.Clear();
+                });
+            MessageBus.Current.Listen<ThemeChangedEvent>()
+                .Subscribe(_ => RefreshTrackColorBrushes(Part, Project));
         }
 
-        private void UpdateSnapDiv() {
-            if (userSnapDiv > 0) {
+        private void UpdateSnapDiv()
+        {
+            if (userSnapDiv > 0)
+            {
                 SnapDiv = userSnapDiv;
                 SnapDivText = $"1/{userSnapDiv}";
                 return;
@@ -332,14 +645,18 @@ namespace OpenUtau.App.ViewModels {
             SnapDivText = $"(1/{div})";
         }
 
-        private void UpdateKey(){
+        private void UpdateKey()
+        {
             Key = userKey;
-            KeyText = "1="+MusicMath.KeysInOctave[userKey].Item1;
+            KeyIsMajor = Project.keyIsMajor;
+            KeyText = KeySignatureHelper.FormatProjectKey(Project, shortName: true);
         }
 
-        public void OnXZoomed(Point position, double delta) {
+        public void OnXZoomed(Point position, double delta)
+        {
             bool recenter = true;
-            if (TickOffset == 0 && position.X < 0.1) {
+            if (TickOffset == 0 && position.X < 0.1)
+            {
                 recenter = false;
             }
             double center = TickOffset + position.X * ViewportTicks;
@@ -354,7 +671,8 @@ namespace OpenUtau.App.ViewModels {
             Notify();
         }
 
-        public void OnYZoomed(Point position, double delta) {
+        public void OnYZoomed(Point position, double delta)
+        {
             double center = TrackOffset + position.Y * ViewportTracks;
             double trackHeight = TrackHeight * (1.0 + delta * 2);
             trackHeight = Math.Clamp(trackHeight, ViewConstants.NoteHeightMin, ViewConstants.NoteHeightMax);
@@ -365,13 +683,25 @@ namespace OpenUtau.App.ViewModels {
             Notify();
         }
 
-        private void Notify() {
+        private void Notify()
+        {
             this.RaisePropertyChanged(nameof(TickCount));
             this.RaisePropertyChanged(nameof(HScrollBarMax));
             this.RaisePropertyChanged(nameof(ViewportTicks));
             this.RaisePropertyChanged(nameof(TrackCount));
             this.RaisePropertyChanged(nameof(VScrollBarMax));
             this.RaisePropertyChanged(nameof(ViewportTracks));
+            PublishPianoRollViewport();
+        }
+
+        void PublishPianoRollViewport()
+        {
+            if (Part == null || ViewportTicks <= 0)
+            {
+                MessageBus.Current.SendMessage(new PianoRollViewportChangedEvent(0, 0));
+                return;
+            }
+            MessageBus.Current.SendMessage(new PianoRollViewportChangedEvent(TickOffset, ViewportTicks));
         }
 
         /// <summary>
@@ -379,21 +709,26 @@ namespace OpenUtau.App.ViewModels {
         /// </summary>
         /// <param name="point">Mouse position</param>
         /// <returns>Tick position related to the beginning of the part</returns>
-        public int PointToTick(Point point) {
+        public int PointToTick(Point point)
+        {
             return (int)(point.X / TickWidth + TickOffset);
         }
 
-        public void TickToLineTick(int tick, out int left, out int right) {
-            if (SnapTicks.Count == 0) {
+        public void TickToLineTick(int tick, out int left, out int right)
+        {
+            if (SnapTicks.Count == 0)
+            {
                 left = 0;
                 right = Project.resolution;
                 return;
             }
             int index = SnapTicks.BinarySearch(tick + TickOrigin);
-            if (index < 0) {
+            if (index < 0)
+            {
                 index = ~index - 1;
             }
-            if (0 >= SnapTicks.Count - 2) {
+            if (0 >= SnapTicks.Count - 2)
+            {
                 left = right = tick;
                 return;
             }
@@ -402,36 +737,45 @@ namespace OpenUtau.App.ViewModels {
             right = SnapTicks[index + 1] - TickOrigin;
         }
 
-        public void PointToLineTick(Point point, out int left, out int right) {
+        public void PointToLineTick(Point point, out int left, out int right)
+        {
             int tick = PointToTick(point);
             TickToLineTick(tick, out left, out right);
         }
 
-        public int PointToTone(Point point) {
+        public int PointToTone(Point point)
+        {
             return ViewConstants.MaxTone - 1 - (int)(point.Y / TrackHeight + TrackOffset);
         }
-        public double PointToToneDouble(Point point) {
+        public double PointToToneDouble(Point point)
+        {
             return ViewConstants.MaxTone - 1 - (point.Y / TrackHeight + TrackOffset) + 0.5;
         }
-        public Point TickToneToPoint(double tick, double tone) {
+        public Point TickToneToPoint(double tick, double tone)
+        {
             return new Point(
                 (tick - TickOffset) * TickWidth,
                 (ViewConstants.MaxTone - 1 - tone - TrackOffset) * TrackHeight);
         }
-        public Point TickToneToPoint(Vector2 tickTone) {
+        public Point TickToneToPoint(Vector2 tickTone)
+        {
             return TickToneToPoint(tickTone.X, tickTone.Y);
         }
-        public Size TickToneToSize(double ticks, double tone) {
+        public Size TickToneToSize(double ticks, double tone)
+        {
             return new Size(ticks * TickWidth, tone * TrackHeight);
         }
 
-        public UNote? MaybeAddNote(Point point, bool useLastLength) {
-            if (Part == null) {
+        public UNote? MaybeAddNote(Point point, bool useLastLength)
+        {
+            if (Part == null)
+            {
                 return null;
             }
             var project = DocManager.Inst.Project;
             int tone = PointToTone(point);
-            if (tone >= ViewConstants.MaxTone || tone < 0) {
+            if (tone >= ViewConstants.MaxTone || tone < 0)
+            {
                 return null;
             }
             int snapUnit = project.resolution * 4 / SnapDiv;
@@ -443,265 +787,449 @@ namespace OpenUtau.App.ViewModels {
             return note;
         }
 
-        private void LoadPart(UPart part, UProject project) {
-            if (!(part is UVoicePart)) {
+        private void LoadPart(UPart part, UProject project)
+        {
+            if (!(part is UVoicePart))
+            {
                 return;
             }
             UnloadPart();
             Part = part as UVoicePart;
+            UpdatePhonemePanelLayoutConstraints();
             OnPartModified();
             LoadPortrait(part, project);
             LoadWindowTitle(part, project);
             LoadTrackColor(part, project);
             UpdateKey();
+            RebuildPitchFollowPath();
+            pitchFollowUserOverride = false;
         }
 
-        //If PortraitHeight is 0, the default behaviour is resizing any image taller than 800px to 800px,
-        //and keeping the sizes of images shorter than 800px unchanged.
-        //If PortraitHeight isn't 0, then the image will be resized to the specified height.
-        private Bitmap ResizePortrait(Bitmap Portrait, int PortraitHeight) {
-            int targetHeight;
-            if (PortraitHeight == 0) {
-                if (Portrait.Size.Height > 800) {
-                    targetHeight = 800;
-                } else {
-                    return Portrait;
+        //If PortraitHeight is 0, keep the source image at full resolution.
+        //If PortraitHeight isn't 0, downscale to the specified height when the source is taller.
+        private static Bitmap ScalePortraitToHeight(Bitmap source, int portraitHeight)
+        {
+            if (portraitHeight <= 0 || source.PixelSize.Height <= portraitHeight)
+            {
+                return source;
+            }
+            int targetWidth = Math.Max(1, (int)Math.Round(
+                portraitHeight * source.PixelSize.Width / (double)source.PixelSize.Height));
+            return source.CreateScaledBitmap(
+                new PixelSize(targetWidth, portraitHeight),
+                BitmapInterpolationMode.HighQuality);
+        }
+
+        void DisposePortraitBitmaps()
+        {
+            if (!ReferenceEquals(Portrait, portraitFull))
+            {
+                Portrait?.Dispose();
+            }
+            Portrait = null;
+            portraitFull?.Dispose();
+            portraitFull = null;
+            portraitRasterHeight = 0;
+        }
+
+        public void EnsurePortraitForDisplayHeight(double displayHeight, double renderScale = 1.0)
+        {
+            lock (portraitLock)
+            {
+                if (portraitFull == null)
+                {
+                    return;
                 }
-            } else {
-                targetHeight = PortraitHeight;
+                int targetH = (int)Math.Ceiling(displayHeight * renderScale);
+                targetH = Math.Clamp(targetH, 1, portraitFull.PixelSize.Height);
+                if (Portrait != null && portraitRasterHeight == targetH)
+                {
+                    return;
+                }
+                Bitmap next;
+                if (targetH >= portraitFull.PixelSize.Height)
+                {
+                    next = portraitFull;
+                }
+                else
+                {
+                    int targetW = Math.Max(1, (int)Math.Round(
+                        targetH * portraitFull.PixelSize.Width / (double)portraitFull.PixelSize.Height));
+                    next = portraitFull.CreateScaledBitmap(
+                        new PixelSize(targetW, targetH),
+                        BitmapInterpolationMode.HighQuality);
+                }
+                if (!ReferenceEquals(Portrait, portraitFull) && Portrait != null)
+                {
+                    Portrait.Dispose();
+                }
+                Portrait = next;
+                portraitRasterHeight = targetH;
             }
-            int targetWidth = (int)Math.Round(targetHeight * Portrait.Size.Width / Portrait.Size.Height);
-            if(targetWidth == 0){
-                targetWidth = 1;
-            }
-            return Portrait.CreateScaledBitmap(new PixelSize(targetWidth, targetHeight));
+            this.RaisePropertyChanged(nameof(Portrait));
         }
 
-        private void LoadPortrait(UPart? part, UProject? project) {
-            if (part == null || project == null) {
-                lock (portraitLock) {
-                    Avatar = null;
-                    Portrait = null;
+        private void LoadPortrait(UPart? part, UProject? project)
+        {
+            if (part == null || project == null)
+            {
+                lock (portraitLock)
+                {
+                    DisposePortraitBitmaps();
                     portraitSource = null;
                 }
                 return;
             }
             var singer = project.tracks[part.trackNo].Singer;
-            lock (portraitLock) {
+            lock (portraitLock)
+            {
                 Avatar?.Dispose();
                 Avatar = null;
-                if (singer != null && singer.AvatarData != null && Preferences.Default.ShowIcon) {
-                    try {
-                        using (var stream = new MemoryStream(singer.AvatarData)) {
+                if (singer != null && singer.AvatarData != null && Preferences.Default.ShowIcon)
+                {
+                    try
+                    {
+                        using (var stream = new MemoryStream(singer.AvatarData))
+                        {
                             Avatar = new Bitmap(stream);
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         Avatar?.Dispose();
                         Avatar = null;
                         Log.Error(e, $"Failed to load Avatar {singer.Avatar}");
                     }
                 }
             }
-            if (singer == null || string.IsNullOrEmpty(singer.Portrait) || !Preferences.Default.ShowPortrait) {
-                lock (portraitLock) {
-                    Portrait = null;
+            if (singer == null || string.IsNullOrEmpty(singer.Portrait) || !Preferences.Default.ShowPortrait)
+            {
+                lock (portraitLock)
+                {
+                    DisposePortraitBitmaps();
                     portraitSource = null;
                 }
                 return;
             }
-            if (portraitSource != singer.Portrait) {
-                lock (portraitLock) {
-                    Portrait?.Dispose();
-                    Portrait = null;
-                    portraitSource = null;
-                }
-                PortraitMask = new SolidColorBrush(Colors.White, singer.PortraitOpacity);
-                Task.Run(() => {
-                    lock (portraitLock) {
-                        try {
-                            var data = singer.LoadPortrait();
-                            if (data == null) {
-                                Portrait = null;
-                                portraitSource = null;
-                            } else {
-                                using (var stream = new MemoryStream(data)) { 
-                                    Portrait = ResizePortrait(new Bitmap(stream), singer.PortraitHeight);
-                                    portraitSource = singer.Portrait;
-                                }
+            if (portraitSource == singer.Portrait)
+            {
+                return;
+            }
+            var portraitKey = singer.Portrait;
+            var portraitOpacity = singer.PortraitOpacity;
+            var portraitHeight = singer.PortraitHeight;
+            PortraitMask = new SolidColorBrush(Avalonia.Media.Colors.White, portraitOpacity);
+            Task.Run(() =>
+            {
+                Bitmap? loaded = null;
+                try
+                {
+                    var data = singer.LoadPortrait();
+                    if (data != null)
+                    {
+                        using var stream = new MemoryStream(data);
+                        loaded = new Bitmap(stream);
+                        if (portraitHeight > 0)
+                        {
+                            var scaled = ScalePortraitToHeight(loaded, portraitHeight);
+                            if (!ReferenceEquals(scaled, loaded))
+                            {
+                                loaded.Dispose();
+                                loaded = scaled;
                             }
-                        } catch (Exception e) {
-                            Portrait?.Dispose();
-                            Portrait = null;
-                            portraitSource = null;
-                            Log.Error(e, $"Failed to load Portrait {singer.Portrait}");
                         }
                     }
+                }
+                catch (Exception e)
+                {
+                    loaded?.Dispose();
+                    loaded = null;
+                    Log.Error(e, $"Failed to load Portrait {portraitKey}");
+                }
+                var bitmap = loaded;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    lock (portraitLock)
+                    {
+                        DisposePortraitBitmaps();
+                        portraitFull = bitmap;
+                        Portrait = bitmap;
+                        portraitRasterHeight = bitmap?.PixelSize.Height ?? 0;
+                        portraitSource = portraitKey;
+                    }
+                    this.RaisePropertyChanged(nameof(Portrait));
+                    MessageBus.Current.SendMessage(new PianorollRefreshEvent("Portrait"));
                 });
-            }
+            });
         }
-        private void LoadWindowTitle(UPart? part, UProject? project) {
-            if (part == null || project == null) {
+        private void LoadWindowTitle(UPart? part, UProject? project)
+        {
+            if (part == null || project == null)
+            {
                 WindowTitle = "Piano Roll";
+                PartDisplayName = string.Empty;
                 return;
             }
             WindowTitle = project.tracks[part.trackNo].TrackName + " - " + part.DisplayName;
+            PartDisplayName = part.DisplayName;
         }
 
-        private void LoadTrackColor(UPart? part, UProject? project) {
-            if (part == null || project == null) {
-                TrackAccentColor = ThemeManager.GetTrackColor("Blue").AccentColor;
-                ThemeManager.ChangePianorollColor("Blue");
-                return;
-            }
-            TrackAccentColor = ThemeManager.GetTrackColor(project.tracks[part.trackNo].TrackColor).AccentColor;
-            string name = Preferences.Default.UseTrackColor
-                ? project.tracks[part.trackNo].TrackColor
-                : "Blue";
+        private void LoadTrackColor(UPart? part, UProject? project)
+        {
+            RefreshTrackColorBrushes(part, project);
+            string name = part == null || project == null
+                ? "Blue"
+                : Preferences.Default.UseTrackColor
+                    ? project.tracks[part.trackNo].TrackColor
+                    : "Blue";
             ThemeManager.ChangePianorollColor(name);
         }
 
-        private void UnloadPart() {
+        private void RefreshTrackColorBrushes(UPart? part, UProject? project)
+        {
+            if (part == null || project == null)
+            {
+                TrackAccentColor = ThemeManager.GetTrackColor("Blue").AccentColor;
+                TrackNoteColor = new SolidColorBrush(ThemeManager.GetTrackColor("Blue").NoteColor.Color) { Opacity = 0.5 };
+                return;
+            }
+            var trackColor = ThemeManager.GetTrackColor(project.tracks[part.trackNo].TrackColor);
+            TrackAccentColor = trackColor.AccentColor;
+            TrackNoteColor = new SolidColorBrush(trackColor.NoteColor.Color) { Opacity = 0.5 };
+        }
+
+        private void UnloadPart()
+        {
             DeselectNotes();
             Part = null;
+            pitchFollowPath.Build(null, 0, 0, 0, 0, Project.resolution);
             LoadPortrait(null, null);
             LoadWindowTitle(null, null);
         }
 
-        private void OnPartModified() {
-            if (Part == null) {
+        private void OnPartModified()
+        {
+            if (Part == null)
+            {
                 return;
             }
             TickOrigin = Part.position;
+            RaisePhonemePanelLayoutChanged();
+            RebuildPitchFollowPath();
             Notify();
         }
 
-        private void DeselectNote(UNote note) {
-            if (Selection.Remove(note)) {
+        void UpdatePhonemePanelLayoutConstraints()
+        {
+            if (Preferences.Default.DiffSingerPhonemePanelMode)
+            {
+                PhonemePanelHeightMin = ViewConstants.PhonemePanelHeightMin;
+                PhonemePanelHeightMax = ViewConstants.PhonemePanelHeightMax;
+                if (PhonemePanelHeight < PhonemePanelHeightMin)
+                {
+                    PhonemePanelHeight = PhonemePanelHeightMin;
+                }
+            }
+            else
+            {
+                PhonemePanelHeightMin = ViewConstants.PhonemeEmbeddedHeight;
+                PhonemePanelHeightMax = ViewConstants.PhonemeEmbeddedHeight;
+                PhonemePanelHeight = ViewConstants.PhonemeEmbeddedHeight;
+            }
+            this.RaisePropertyChanged(nameof(PhonemePanelResizeEnabled));
+            this.RaisePropertyChanged(nameof(PhonemePanelDetached));
+            this.RaisePropertyChanged(nameof(ShowEmbeddedPhoneme));
+            this.RaisePropertyChanged(nameof(PhonemeEmbeddedHeight));
+            this.RaisePropertyChanged(nameof(WaveformBottomMargin));
+            this.RaisePropertyChanged(nameof(SearchBarBottomMargin));
+            this.RaisePropertyChanged(nameof(WaveformBottomMarginThickness));
+            this.RaisePropertyChanged(nameof(SearchBarBottomMarginThickness));
+            this.RaisePropertyChanged(nameof(PianoRollHScrollBottomMargin));
+        }
+
+        void RaisePhonemePanelLayoutChanged()
+        {
+            this.RaisePropertyChanged(nameof(PhonemePanelTagStripHeight));
+            this.RaisePropertyChanged(nameof(PhonemePanelDetached));
+            this.RaisePropertyChanged(nameof(ShowEmbeddedPhoneme));
+            this.RaisePropertyChanged(nameof(PhonemeEmbeddedHeight));
+            this.RaisePropertyChanged(nameof(WaveformBottomMargin));
+            this.RaisePropertyChanged(nameof(SearchBarBottomMargin));
+            this.RaisePropertyChanged(nameof(WaveformBottomMarginThickness));
+            this.RaisePropertyChanged(nameof(SearchBarBottomMarginThickness));
+            this.RaisePropertyChanged(nameof(PianoRollHScrollBottomMargin));
+            this.RaisePropertyChanged(nameof(PhonemeGapGridLength));
+            this.RaisePropertyChanged(nameof(PhonemePanelOuterHeight));
+            this.RaisePropertyChanged(nameof(PhonemePanelOuterGridLength));
+            this.RaisePropertyChanged(nameof(PhonemePanelOuterMinHeight));
+            this.RaisePropertyChanged(nameof(PhonemePanelHeightGridLength));
+        }
+
+        private void DeselectNote(UNote note)
+        {
+            if (Selection.Remove(note))
+            {
                 MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
             }
         }
 
-        public void DeselectNotes() {
+        public void DeselectNotes()
+        {
             Selection.SelectNone();
             MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
         }
 
-        public void ToggleSelectNote(UNote note) {
+        public void ToggleSelectNote(UNote note)
+        {
             /// <summary>
             /// Change the selection state of a note without affecting the selection state of the other notes.
             /// Add it to selection if it isn't selected, or deselect it if it is already selected.
             /// </summary>
-            if (Part == null) {
+            if (Part == null)
+            {
                 return;
             }
-            if (Selection.Contains(note)) {
+            if (Selection.Contains(note))
+            {
                 DeselectNote(note);
-            } else {
+            }
+            else
+            {
                 SelectNote(note, false);
             }
         }
 
-        public void SelectNote(UNote note) {
+        public void SelectNote(UNote note)
+        {
             /// <summary>
             /// Select a note and deselect all the other notes.
             /// </summary>
             SelectNote(note, true);
         }
-        public void SelectNote(UNote note, bool deselectExisting) {
-            if (Part == null) {
+        public void SelectNote(UNote note, bool deselectExisting)
+        {
+            if (Part == null)
+            {
                 return;
             }
-            if (deselectExisting ? Selection.Select(note) : Selection.Add(note)) {
+            if (deselectExisting ? Selection.Select(note) : Selection.Add(note))
+            {
                 MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
             }
         }
-        public void MoveSelection(int delta) {
-            if (Selection.Move(delta)) {
+        public void MoveSelection(int delta)
+        {
+            if (Selection.Move(delta))
+            {
                 MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
                 ScrollIntoView(Selection.Head!);
-            };
+            }
         }
-        public void ExtendSelection(int delta) {
-            if (Selection.Resize(delta)) {
+        public void ExtendSelection(int delta)
+        {
+            if (Selection.Resize(delta))
+            {
                 MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
                 ScrollIntoView(Selection.Head!);
-            };
+            }
         }
-        public void ExtendSelection(UNote note) {
-            if (Selection.SelectTo(note)) {
+        public void ExtendSelection(UNote note)
+        {
+            if (Selection.SelectTo(note))
+            {
                 MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
-            };
+            }
         }
 
-        public void MoveCursor(int delta) {
-            if (!Selection.IsEmpty) {
+        public void MoveCursor(int delta)
+        {
+            if (!Selection.IsEmpty)
+            {
                 MoveSelection(delta);
                 return;
             }
             var target = Part!.notes.FirstOrDefault();
-            if (target == null) {
+            if (target == null)
+            {
                 return;
             }
             var centerTick = TickOffset + ViewportTicks * 0.5;
             // get closest note to center, without going over
-            while (target.Next != null && (target!.position < TickOffset || target!.Next.position < centerTick)) {
+            while (target.Next != null && (target!.position < TickOffset || target!.Next.position < centerTick))
+            {
                 target = target.Next;
             }
             SelectNote(target);
             ScrollIntoView(target);
         }
 
-        public void SelectAllNotes() {
-            if (Part == null) {
+        public void SelectAllNotes()
+        {
+            if (Part == null)
+            {
                 return;
             }
             Selection.Select(Part);
             MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
         }
 
-        public void SelectNotesUntil(UNote note) {
-            if (Part == null) {
+        public void SelectNotesUntil(UNote note)
+        {
+            if (Part == null)
+            {
                 return;
             }
-            if (Part.notes.Intersect(Selection).ToList().Count == 0) {
+            if (Part.notes.Intersect(Selection).ToList().Count == 0)
+            {
                 SelectNote(note);
                 return;
             }
             var thisIndex = Part.notes.IndexOf(note);
-            if (thisIndex < 0) {
+            if (thisIndex < 0)
+            {
                 return;
             }
             var firstSelectedNote = Part.notes.FirstOrDefault(x => Selection.Contains(x));
-            if (firstSelectedNote == null) {
+            if (firstSelectedNote == null)
+            {
                 return;
             }
             var rangeStart = Part.notes.IndexOf(firstSelectedNote);
             var lastSelectedNote = Part.notes.LastOrDefault(x => Selection.Contains(x));
-            if (lastSelectedNote == null) {
+            if (lastSelectedNote == null)
+            {
                 return;
             }
             var rangeEndInclusive = Part.notes.IndexOf(lastSelectedNote);
             int rangeToAddStart;
             int rangeToAddEndInclusive;
-            if (thisIndex < rangeStart) {
+            if (thisIndex < rangeStart)
+            {
                 rangeToAddStart = thisIndex;
                 rangeToAddEndInclusive = rangeEndInclusive;
-            } else if (thisIndex > rangeEndInclusive) {
+            }
+            else if (thisIndex > rangeEndInclusive)
+            {
                 rangeToAddStart = rangeStart;
                 rangeToAddEndInclusive = thisIndex;
-            } else {
+            }
+            else
+            {
                 rangeToAddStart = rangeStart;
                 rangeToAddEndInclusive = rangeEndInclusive;
             }
             var notesToAdd = Part.notes.ToList().GetRange(rangeToAddStart, rangeToAddEndInclusive - rangeToAddStart + 1);
             var changed = Selection.Add(notesToAdd);
-            if (changed) {
+            if (changed)
+            {
                 MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
             }
         }
 
-        public void TempSelectNotes(int x0, int x1, int y0, int y1) {
-            if (Part == null) {
+        public void TempSelectNotes(int x0, int x1, int y0, int y1)
+        {
+            if (Part == null)
+            {
                 return;
             }
             var tempNotes = Part.notes
@@ -712,21 +1240,26 @@ namespace OpenUtau.App.ViewModels {
             MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
         }
 
-        public void CommitTempSelectNotes() {
+        public void CommitTempSelectNotes()
+        {
             Selection.CommitTemporarySelection();
             MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
         }
 
-        public void CleanupSelectedNotes() {
-            if (Part == null) {
+        public void CleanupSelectedNotes()
+        {
+            if (Part == null)
+            {
                 return;
             }
             var toCleanup = Selection.Except(Part.notes).ToList();
             Selection.Remove(toCleanup);
         }
 
-        public void InsertNote() {
-            if (Part == null) {
+        public void InsertNote()
+        {
+            if (Part == null)
+            {
                 return;
             }
 
@@ -738,27 +1271,32 @@ namespace OpenUtau.App.ViewModels {
             int tone = fromNote?.tone ?? DEFAULT_TONE;
             int tick = fromNote?.RightBound ?? (int)TickOffset;
             int dur = fromNote?.duration ?? snapUnit;
-            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.StartUndoGroup("command.note.add");
             UNote note = DocManager.Inst.Project.CreateNote(tone, tick, dur);
             DocManager.Inst.ExecuteCmd(new AddNoteCommand(Part, note));
             SelectNote(note);
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void TransposeSelection(int deltaNoteNum) {
-            if (Part == null || Selection.IsEmpty) {
+        public void TransposeSelection(int deltaNoteNum)
+        {
+            if (Part == null || Selection.IsEmpty)
+            {
                 return;
             }
             var selectedNotes = Selection.ToList();
-            if (selectedNotes.Any(note => note.tone + deltaNoteNum <= 0 || note.tone + deltaNoteNum >= ViewConstants.MaxTone)) {
+            if (selectedNotes.Any(note => note.tone + deltaNoteNum <= 0 || note.tone + deltaNoteNum >= ViewConstants.MaxTone))
+            {
                 return;
             }
-            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.StartUndoGroup("command.note.move");
             DocManager.Inst.ExecuteCmd(new MoveNoteCommand(Part, selectedNotes, 0, deltaNoteNum));
             DocManager.Inst.EndUndoGroup();
         }
-        public void MoveSelectedNotes(int deltaTicks) {
-            if (Part == null || Selection.IsEmpty) {
+        public void MoveSelectedNotes(int deltaTicks)
+        {
+            if (Part == null || Selection.IsEmpty)
+            {
                 return;
             }
             var selectedNotes = Selection.ToList();
@@ -766,47 +1304,54 @@ namespace OpenUtau.App.ViewModels {
             //var delta = Math.Clamp(deltaTicks, -1 * selectedNotes.First().position, Part.End - selectedNotes.Last().position);
             var delta = Math.Max(deltaTicks, -1 * selectedNotes.First().position);
 
-            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.StartUndoGroup("command.note.move");
             DocManager.Inst.ExecuteCmd(new MoveNoteCommand(Part, selectedNotes, delta, 0));
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void ResizeSelectedNotes(int deltaTicks) {
-            if (Part == null || Selection.IsEmpty) {
+        public void ResizeSelectedNotes(int deltaTicks)
+        {
+            if (Part == null || Selection.IsEmpty)
+            {
                 return;
             }
 
             var selectedNotes = Selection.ToList();
 
             // ignore if change would make a note smaller than minimal size
-            if (deltaTicks < 0) {
+            if (deltaTicks < 0)
+            {
                 int smallestDuration = selectedNotes.Select(n => n.duration).Min();
 
                 var project = DocManager.Inst.Project;
                 int snapUnit = project.resolution * 4 / SnapDiv;
                 int minNoteTicks = IsSnapOn ? snapUnit : 15;
 
-                if (smallestDuration + deltaTicks < minNoteTicks) {
+                if (smallestDuration + deltaTicks < minNoteTicks)
+                {
                     return;
                 }
             }
-            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.StartUndoGroup("command.note.edit");
             DocManager.Inst.ExecuteCmd(new ResizeNoteCommand(Part, selectedNotes, deltaTicks));
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void MergeSelectedNotes() {
-            if (Part == null || Selection.IsEmpty || Selection.Count <= 1) {
+        public void MergeSelectedNotes()
+        {
+            if (Part == null || Selection.IsEmpty || Selection.Count <= 1)
+            {
                 return;
             }
             var notes = Selection.ToList();
             notes.Sort((a, b) => a.position.CompareTo(b.position));
             //Ignore slur lyrics
             var mergedLyrics = String.Join("", notes.Select(x => x.lyric).Where(l => !l.StartsWith("+")));
-            if(mergedLyrics == ""){ //If all notes are slur, the merged note is single slur note
+            if (mergedLyrics == "")
+            { //If all notes are slur, the merged note is single slur note
                 mergedLyrics = notes[0].lyric;
             }
-            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.StartUndoGroup("command.note.edit");
             DocManager.Inst.ExecuteCmd(new ChangeNoteLyricCommand(Part, notes[0], mergedLyrics));
             DocManager.Inst.ExecuteCmd(new ResizeNoteCommand(Part, notes[0], notes.Last().End - notes[0].End));
             notes.RemoveAt(0);
@@ -814,64 +1359,126 @@ namespace OpenUtau.App.ViewModels {
             DocManager.Inst.EndUndoGroup();
         }
 
-        internal void DeleteSelectedNotes() {
-            if (Part == null || Selection.IsEmpty) {
+        internal void DeleteSelectedNotes()
+        {
+            if (Part == null || Selection.IsEmpty)
+            {
                 return;
             }
-            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.StartUndoGroup("command.note.delete");
             DocManager.Inst.ExecuteCmd(new RemoveNoteCommand(Part, Selection.ToList()));
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void CopyNotes() {
-            if (Part != null && !Selection.IsEmpty) {
+        public void CopyNotes()
+        {
+            if (Part != null && !Selection.IsEmpty)
+            {
                 var selectedNotes = Selection.ToList();
                 DocManager.Inst.NotesClipboard = selectedNotes.Select(note => note.Clone()).ToList();
             }
         }
 
-        public void CutNotes() {
-            if (Part != null && !Selection.IsEmpty) {
+        public void CutNotes()
+        {
+            if (Part != null && !Selection.IsEmpty)
+            {
                 var selectedNotes = Selection.ToList();
                 DocManager.Inst.NotesClipboard = selectedNotes.Select(note => note.Clone()).ToList();
-                DocManager.Inst.StartUndoGroup();
+                DocManager.Inst.StartUndoGroup("command.note.delete");
                 DocManager.Inst.ExecuteCmd(new RemoveNoteCommand(Part, selectedNotes));
                 DocManager.Inst.EndUndoGroup();
             }
         }
 
-        public void PasteNotes() {
-            if (Part != null && DocManager.Inst.NotesClipboard != null && DocManager.Inst.NotesClipboard.Count > 0) {
+        public void PasteNotes()
+        {
+            if (Part != null && DocManager.Inst.NotesClipboard != null && DocManager.Inst.NotesClipboard.Count > 0)
+            {
                 int snapUnit = DocManager.Inst.Project.resolution * 4 / SnapDiv;
                 int left = (DocManager.Inst.playPosTick / snapUnit) * snapUnit;
                 int minPosition = DocManager.Inst.NotesClipboard.Select(note => note.position).Min();
                 //If PlayPos is before the beginning of the part, don't paste.
-                if (left >= Part.position) {
-                    int offset = left - minPosition - Part.position;
-                    var notes = DocManager.Inst.NotesClipboard.Select(note => note.Clone()).ToList();
-                    notes.ForEach(note => note.position += offset);
-                    DocManager.Inst.StartUndoGroup();
-                    DocManager.Inst.ExecuteCmd(new AddNoteCommand(Part, notes));
-                    int minDurTick = Part.GetMinDurTick(Project);
-                    if (Part.Duration < minDurTick) {
-                        DocManager.Inst.ExecuteCmd(new ResizePartCommand(Project, Part, minDurTick - Part.Duration, false));
-                    }
-                    DocManager.Inst.EndUndoGroup();
-                    Selection.Select(notes);
-                    MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
+                if (left < Part.position)
+                {
+                    return;
+                }
+                int offset = left - minPosition - Part.position;
+                var notes = DocManager.Inst.NotesClipboard.Select(note => note.Clone()).ToList();
+                notes.ForEach(note => note.position += offset);
+                DocManager.Inst.StartUndoGroup("command.note.paste");
+                DocManager.Inst.ExecuteCmd(new AddNoteCommand(Part, notes));
+                int minDurTick = Part.GetMinDurTick(Project);
+                if (Part.Duration < minDurTick)
+                {
+                    DocManager.Inst.ExecuteCmd(new ResizeVoicePartCommand(Project, Part, minDurTick - Part.Duration, false));
+                }
+                DocManager.Inst.EndUndoGroup();
+                Selection.Select(notes);
+                MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
 
-                    var note = notes.First();
-                    if (left < TickOffset || TickOffset + ViewportTicks < note.position + note.duration + Part.position) {
-                        TickOffset = Math.Clamp(note.position + note.duration * 0.5 - ViewportTicks * 0.5, 0, HScrollBarMax);
-                    }
+                var note = notes.First();
+                if (left < TickOffset || TickOffset + ViewportTicks < note.position + note.duration + Part.position)
+                {
+                    TickOffset = Math.Clamp(note.position + note.duration * 0.5 - ViewportTicks * 0.5, 0, HScrollBarMax);
                 }
             }
         }
 
-        public async void PasteSelectedParams(PianoRollWindow window) {
-            if (Part != null && DocManager.Inst.NotesClipboard != null && DocManager.Inst.NotesClipboard.Count > 0) {
+        /// <summary>
+        /// Paste notes but only keep tone, relative position, duration and lyric.
+        /// </summary>
+        public void PastePlainNotes()
+        {
+            UNote toPlainNote(UNote note)
+            {
+                var plainNote = DocManager.Inst.Project.CreateNote(
+                    note.tone,
+                    note.position,
+                    note.duration);
+                plainNote.lyric = note.lyric;
+                return plainNote;
+            }
+
+            if (Part != null && DocManager.Inst.NotesClipboard != null && DocManager.Inst.NotesClipboard.Count > 0)
+            {
+                int snapUnit = DocManager.Inst.Project.resolution * 4 / SnapDiv;
+                int left = (DocManager.Inst.playPosTick / snapUnit) * snapUnit;
+                int minPosition = DocManager.Inst.NotesClipboard.Select(note => note.position).Min();
+                //If PlayPos is before the beginning of the part, don't paste.
+                if (left < Part.position)
+                {
+                    return;
+                }
+                int offset = left - minPosition - Part.position;
+                var notes = DocManager.Inst.NotesClipboard.Select(note => toPlainNote(note)).ToList();
+                notes.ForEach(note => note.position += offset);
+                DocManager.Inst.StartUndoGroup("command.note.paste");
+                DocManager.Inst.ExecuteCmd(new AddNoteCommand(Part, notes));
+                int minDurTick = Part.GetMinDurTick(Project);
+                if (Part.Duration < minDurTick)
+                {
+                    DocManager.Inst.ExecuteCmd(new ResizeVoicePartCommand(Project, Part, minDurTick - Part.Duration, false));
+                }
+                DocManager.Inst.EndUndoGroup();
+                Selection.Select(notes);
+                MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
+
+                var note = notes.First();
+                if (left < TickOffset || TickOffset + ViewportTicks < note.position + note.duration + Part.position)
+                {
+                    TickOffset = Math.Clamp(note.position + note.duration * 0.5 - ViewportTicks * 0.5, 0, HScrollBarMax);
+                }
+            }
+        }
+
+        public async void PasteSelectedParams(Window window)
+        {
+            if (Part != null && DocManager.Inst.NotesClipboard != null && DocManager.Inst.NotesClipboard.Count > 0)
+            {
                 var selectedNotes = Selection.ToList();
-                if(selectedNotes.Count == 0) {
+                if (selectedNotes.Count == 0)
+                {
                     return;
                 }
 
@@ -880,28 +1487,35 @@ namespace OpenUtau.App.ViewModels {
                 dialog.DataContext = vm;
                 await dialog.ShowDialog(window);
 
-                if (dialog.Apply) {
-                    DocManager.Inst.StartUndoGroup();
+                if (dialog.Apply)
+                {
+                    DocManager.Inst.StartUndoGroup("command.parameter.paste");
 
                     int c = 0;
                     var track = Project.tracks[Part.trackNo];
-                    foreach (var note in selectedNotes) {
+                    foreach (var note in selectedNotes)
+                    {
                         var copyNote = DocManager.Inst.NotesClipboard[c];
 
-                        for (int i = 0; i < vm.Params.Count; i++) {
-                            switch (i) {
+                        for (int i = 0; i < vm.Params.Count; i++)
+                        {
+                            switch (i)
+                            {
                                 case 0:
-                                    if (vm.Params[i].IsSelected) {
+                                    if (vm.Params[i].IsSelected)
+                                    {
                                         DocManager.Inst.ExecuteCmd(new SetPitchPointsCommand(Part, note, copyNote.pitch));
                                     }
                                     break;
                                 case 1:
-                                    if (vm.Params[i].IsSelected) {
+                                    if (vm.Params[i].IsSelected)
+                                    {
                                         DocManager.Inst.ExecuteCmd(new SetVibratoCommand(Part, note, copyNote.vibrato));
                                     }
                                     break;
                                 default:
-                                    if (vm.Params[i].IsSelected) {
+                                    if (vm.Params[i].IsSelected)
+                                    {
                                         float?[] values = copyNote.GetExpressionNoteHas(Project, track, vm.Params[i].Abbr);
                                         DocManager.Inst.ExecuteCmd(new SetNoteExpressionCommand(Project, track, Part, note, vm.Params[i].Abbr, values));
                                     }
@@ -910,7 +1524,8 @@ namespace OpenUtau.App.ViewModels {
                         }
 
                         c++;
-                        if (c >= DocManager.Inst.NotesClipboard.Count) {
+                        if (c >= DocManager.Inst.NotesClipboard.Count)
+                        {
                             c = 0;
                         }
                     }
@@ -919,236 +1534,643 @@ namespace OpenUtau.App.ViewModels {
             }
         }
 
-        public void ToggleVibrato(UNote note) {
-            if (Part == null) {
+        public void ToggleVibrato(UNote note)
+        {
+            if (Part == null)
+            {
                 return;
             }
             var vibrato = note.vibrato;
-            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.StartUndoGroup("command.vibrato.edit");
             DocManager.Inst.ExecuteCmd(new VibratoLengthCommand(Part, note, vibrato.length == 0 ? NotePresets.Default.DefaultVibrato.VibratoLength : 0));
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void ClearPhraseCache() {
-            if (Part != null && !Selection.IsEmpty) {
+        public void ClearPhraseCache()
+        {
+            if (Part != null && !Selection.IsEmpty)
+            {
                 DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, ThemeManager.GetString("progress.clearingcache")));
                 var selectedNotes = Selection.ToList();
                 var phrases = Part.renderPhrases.Where(phrase => selectedNotes.Any(note => phrase.notes.Any(rnote => rnote.position == Part.position + note.position - phrase.position && rnote.duration == note.duration)));
-                phrases.ForEach(phrase => phrase.DeleteCacheFiles());
+                foreach (var phrase in phrases)
+                {
+                    phrase.DeleteCacheFiles();
+                }
                 DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, ThemeManager.GetString("progress.cachecleared")));
             }
         }
 
-        private void SetPlayPos(int tick, bool waitingRendering) {
-            PlayPosWaitingRendering = waitingRendering;
-            if (waitingRendering) {
-                return;
+        public class PlayheadModeChangedEvent
+        {
+            public readonly bool UseModernPlayhead;
+            public PlayheadModeChangedEvent(bool useModernPlayhead)
+            {
+                UseModernPlayhead = useModernPlayhead;
             }
-            tick -= Part?.position ?? 0;
-            PlayPosX = TickToneToPoint(tick, 0).X;
-            TickToLineTick(tick, out int left, out int right);
-            PlayPosHighlightX = TickToneToPoint(left, 0).X;
-            PlayPosHighlightWidth = (right - left) * TickWidth;
         }
 
-        private void FocusNote(UNote note) {
+        private void SetPlayPos(int tick, bool waitingRendering)
+        {
+            PlayPosWaitingRendering = waitingRendering;
+            tick -= Part?.position ?? 0;
+            PlayPosX = TickToneToPoint(tick, 0).X;
+            UpdateHighlight();
+            this.RaisePropertyChanged(nameof(ShowThinPlayPosLine));
+        }
+
+        private void UpdateHighlight()
+        {
+            if (DocManager.Inst.rangeEndTick > DocManager.Inst.rangeStartTick)
+            {
+                int partPos = Part?.position ?? 0;
+                int left = DocManager.Inst.rangeStartTick - partPos;
+                int right = DocManager.Inst.rangeEndTick - partPos;
+                PlayPosHighlightX = TickToneToPoint(left, 0).X;
+                PlayPosHighlightWidth = (right - left) * TickWidth;
+            }
+            else if (!UseModernPlayhead)
+            {
+                TickToLineTick((int)(PlayPosX / TickWidth + TickOffset), out int left, out int right);
+                PlayPosHighlightX = TickToneToPoint(left, 0).X;
+                PlayPosHighlightWidth = (right - left) * TickWidth;
+            }
+            else
+            {
+                PlayPosHighlightX = PlayPosX - 1;
+                PlayPosHighlightWidth = 0;
+            }
+        }
+
+        private void FocusNote(UNote note)
+        {
             TickOffset = Math.Clamp(note.position + note.duration * 0.5 - ViewportTicks * 0.5, 0, HScrollBarMax);
             TrackOffset = Math.Clamp(ViewConstants.MaxTone - note.tone + 2 - ViewportTracks * 0.5, 0, VScrollBarMax);
         }
 
-        private void ScrollIntoView(UNote note) {
-            if (note.position < TickOffset || note.RightBound > TickOffset + ViewportTicks) {
+        private void ScrollIntoView(UNote note)
+        {
+            if (note.position < TickOffset || note.RightBound > TickOffset + ViewportTicks)
+            {
                 AutoScroll(TickToneToPoint(note.position, 0).X);
             }
             var toneMargin = 4;
             var noteOffset = ViewConstants.MaxTone - note.tone - 1;
-            if (noteOffset < TrackOffset + toneMargin) {
+            if (noteOffset < TrackOffset + toneMargin)
+            {
                 TrackOffset = Math.Max(noteOffset - toneMargin, 0);
-            } else if (noteOffset > TrackOffset + ViewportTracks - toneMargin) {
+            }
+            else if (noteOffset > TrackOffset + ViewportTracks - toneMargin)
+            {
                 TrackOffset = Math.Min(noteOffset + toneMargin - ViewportTracks, VScrollBarMax);
             }
         }
 
-        internal (UNote[], string[]) PrepareInsertLyrics() {
+        internal (UNote[], UNote[]) PrepareInsertLyrics()
+        {
             var first = Selection.FirstOrDefault();
-            var last = Selection.LastOrDefault();
-            if(Part == null){
-                return (new UNote[0], new string[0]);
+            if (Part == null)
+            {
+                return (Array.Empty<UNote>(), Array.Empty<UNote>());
             }
             //If no note is selected, InsertLyrics will apply to all notes in the part.
-            if (first == null || last == null) {
-                return (Part.notes.ToArray(), Part.notes.Select(n => n.lyric).ToArray());
+            if (first == null)
+            {
+                return (Part.notes.ToArray(), Array.Empty<UNote>());
             }
             List<UNote> notes = new List<UNote>();
             var note = first;
-            while (note != last) {
+            while (note.Next != null)
+            {
                 notes.Add(note);
                 note = note.Next;
             }
             notes.Add(note);
-            var lyrics = notes.Select(n => n.lyric).ToArray();
-            while (note.Next != null) {
-                note = note.Next;
-                notes.Add(note);
-            }
-            return (notes.ToArray(), lyrics);
+            return (notes.ToArray(), Selection.ToArray());
         }
 
-        bool IsExpSupported(string expKey) {
-            if (Project == null || Part == null || Project.tracks.Count <= Part.trackNo) {
+        bool IsExpSupported(string expKey)
+        {
+            if (Project == null || Part == null || Project.tracks.Count <= Part.trackNo)
+            {
                 return true;
             }
             var track = Project.tracks[Part.trackNo];
-            if (track.RendererSettings.Renderer == null) {
+            if (track.RendererSettings.Renderer == null)
+            {
                 return true;
             }
-            if (track.TryGetExpDescriptor(Project, expKey, out var descriptor)) {
+            if (track.TryGetExpDescriptor(Project, expKey, out var descriptor))
+            {
                 return track.RendererSettings.Renderer.SupportsExpression(descriptor);
             }
-            if (expKey == track.VoiceColorExp.abbr) {
+            if (expKey == track.VoiceColorExp.abbr)
+            {
                 return track.RendererSettings.Renderer.SupportsExpression(track.VoiceColorExp);
             }
             return true;
         }
 
-        public void OnNext(UCommand cmd, bool isUndo) {
-            if (cmd is UNotification notif) {
-                if (cmd is LoadPartNotification loadPart) {
+        public void OnNext(UCommand cmd, bool isUndo)
+        {
+            if (cmd is UNotification notif)
+            {
+                if (cmd is LoadPartNotification loadPart)
+                {
                     LoadPart(loadPart.part, loadPart.project);
                     double tickOffset = loadPart.tick - loadPart.part.position - Bounds.Width / TickWidth / 2;
                     TickOffset = Math.Clamp(tickOffset, 0, HScrollBarMax);
                     PrimaryKeyNotSupported = !IsExpSupported(PrimaryKey);
-                } else if (cmd is LoadProjectNotification) {
+                }
+                else if (cmd is LoadProjectNotification)
+                {
                     UnloadPart();
                     LoadPortrait(null, null);
                     PrimaryKeyNotSupported = !IsExpSupported(PrimaryKey);
-                } else if (cmd is SelectExpressionNotification selectExp) {
+                }
+                else if (cmd is SelectExpressionNotification selectExp)
+                {
                     SecondaryKey = PrimaryKey;
                     PrimaryKey = selectExp.ExpKey;
                     PrimaryKeyNotSupported = !IsExpSupported(PrimaryKey);
-                } else if (cmd is SetPlayPosTickNotification setPlayPosTick) {
+                }
+                else if (cmd is SetPlayPosTickNotification setPlayPosTick)
+                {
                     SetPlayPos(setPlayPosTick.playPosTick, setPlayPosTick.waitingRendering);
-                    if (!setPlayPosTick.pause || Preferences.Default.LockStartTime == 1) {
+                    if (!setPlayPosTick.pause || Preferences.Default.LockStartTime == 1)
+                    {
                         MaybeAutoScroll(PlayPosX);
                     }
-                } else if (cmd is FocusNoteNotification focusNote) {
-                    if (focusNote.part == Part) {
+                }
+                else if (cmd is SetRangeSelectionNotification)
+                {
+                    UpdateHighlight();
+                    RefreshPlaybackHighlightVisibility();
+                }
+                else if (cmd is FocusNoteNotification focusNote)
+                {
+                    if (focusNote.part == Part)
+                    {
                         FocusNote(focusNote.note);
-                        if (Selection.Count <= 1) {
+                        if (Selection.Count <= 1)
+                        {
                             SelectNote(focusNote.note);
                         }
                     }
-                } else if (cmd is ValidateProjectNotification || cmd is SingersRefreshedNotification) {
-                    if (Part != null) {
+                }
+                else if (cmd is ValidateProjectNotification || cmd is SingersRefreshedNotification)
+                {
+                    if (Part != null)
+                    {
                         LoadPortrait(Part, Project);
                     }
                     OnPartModified();
                     MessageBus.Current.SendMessage(new NotesRefreshEvent());
-                } else if (cmd is PhonemizedNotification) {
+                }
+                else if (cmd is PhonemizedNotification)
+                {
                     OnPartModified();
                     MessageBus.Current.SendMessage(new NotesRefreshEvent());
-                } else if (notif is PartRenderedNotification && notif.part == Part) {
+                }
+                else if (notif is WaveformReadyNotification)
+                {
                     MessageBus.Current.SendMessage(new WaveformRefreshEvent());
                 }
-            } else if (cmd is PartCommand partCommand) {
-                if (cmd is ReplacePartCommand replacePart) {
-                    if (!isUndo) {
+                else if (notif is PhraseRenderedNotification phraseRendered && phraseRendered.part == Part)
+                {
+                    MessageBus.Current.SendMessage(new WaveformRefreshEvent());
+                }
+                else if (notif is PartRenderedNotification && notif.part == Part)
+                {
+                    MessageBus.Current.SendMessage(new WaveformRefreshEvent());
+                }
+                else if (notif is RealCurvesUpdatedNotification && notif.part == Part)
+                {
+                    MessageBus.Current.SendMessage(new NotesRefreshEvent());
+                }
+            }
+            else if (cmd is PartCommand partCommand)
+            {
+                if (cmd is ReplacePartCommand replacePart)
+                {
+                    if (!isUndo)
+                    {
                         LoadPart(replacePart.newPart, replacePart.project);
-                    } else {
+                    }
+                    else
+                    {
                         LoadPart(replacePart.part, replacePart.project);
                     }
                 }
-                if (partCommand.part != Part) {
+                if (partCommand.part != Part)
+                {
                     return;
                 }
-                if (cmd is RemovePartCommand) {
-                    if (!isUndo) {
+                if (cmd is RemovePartCommand)
+                {
+                    if (!isUndo)
+                    {
                         UnloadPart();
                     }
-                } else if (cmd is AddPartCommand addPart) {
-                    if (isUndo && addPart.part == Part) {
+                }
+                else if (cmd is AddPartCommand addPart)
+                {
+                    if (isUndo && addPart.part == Part)
+                    {
                         UnloadPart();
                     }
-                } else if (cmd is ResizePartCommand) {
+                }
+                else if (cmd is ResizeVoicePartCommand)
+                {
                     OnPartModified();
-                } else if (cmd is MovePartCommand) {
+                }
+                else if (cmd is MovePartCommand)
+                {
                     OnPartModified();
-                } else if (cmd is RenamePartCommand) {
+                }
+                else if (cmd is RenamePartCommand)
+                {
                     LoadWindowTitle(Part, Project);
                 }
-            } else if (cmd is NoteCommand noteCommand) {
+            }
+            else if (cmd is NoteCommand noteCommand)
+            {
                 CleanupSelectedNotes();
-                if (noteCommand.Part == Part) {
+                if (noteCommand.Part == Part)
+                {
+                    RebuildPitchFollowPath();
                     MessageBus.Current.SendMessage(new NotesRefreshEvent());
 
-                    if (noteCommand is RemoveNoteCommand && isUndo) {
-                        if (Selection.Select(noteCommand.Notes)) {
+                    if (noteCommand is RemoveNoteCommand && isUndo)
+                    {
+                        if (Selection.Select(noteCommand.Notes))
+                        {
                             MessageBus.Current.SendMessage(new NotesSelectionEvent(Selection));
                         }
                     }
                 }
-            } else if (cmd is ExpCommand) {
+            }
+            else if (cmd is ExpCommand)
+            {
                 MessageBus.Current.SendMessage(new NotesRefreshEvent());
-            } else if (cmd is TrackCommand) {
-                if (cmd is RenameTrackCommand) {
+            }
+            else if (cmd is ShowPitchNotification)
+            {
+                ShowPitch = true;
+                ShowVibrato = true;
+                MessageBus.Current.SendMessage(new NotesRefreshEvent());
+            }
+            else if (cmd is TrackCommand)
+            {
+                if (cmd is RenameTrackCommand)
+                {
                     LoadWindowTitle(Part, Project);
                     return;
-                } else if (cmd is ChangeTrackColorCommand) {
+                }
+                else if (cmd is ChangeTrackColorCommand)
+                {
                     LoadTrackColor(Part, Project);
                     return;
-                } else if (cmd is RemoveTrackCommand removeTrack) {
-                    if (Part != null && removeTrack.removedParts.Contains(Part)) {
+                }
+                else if (cmd is RemoveTrackCommand removeTrack)
+                {
+                    if (Part != null && removeTrack.removedParts.Contains(Part))
+                    {
                         UnloadPart();
                     }
                 }
                 MessageBus.Current.SendMessage(new NotesRefreshEvent());
-                if (cmd is TrackChangeSingerCommand trackChangeSinger) {
-                    if (Part != null && trackChangeSinger.track.TrackNo == Part.trackNo) {
+                if (cmd is TrackChangeSingerCommand trackChangeSinger)
+                {
+                    if (Part != null && trackChangeSinger.track.TrackNo == Part.trackNo)
+                    {
                         LoadPortrait(Part, Project);
                     }
                 }
                 PrimaryKeyNotSupported = !IsExpSupported(PrimaryKey);
             }
+            else if (cmd is KeyCommand)
+            {
+                UpdateKey();
+            }
         }
 
-        private void MaybeAutoScroll(double positionX) {
+        private void MaybeAutoScroll(double positionX)
+        {
+            if (PlaybackManager.Inst.StartingToPlay || PlayPosWaitingRendering)
+            {
+                return;
+            }
             var autoScrollPreference = Convert.ToBoolean(Preferences.Default.PlaybackAutoScroll);
-            if (autoScrollPreference) {
+            if (autoScrollPreference)
+            {
                 AutoScroll(positionX);
             }
         }
 
-        private void AutoScroll(double positionX) {
+        private void AutoScroll(double positionX)
+        {
             double scrollDelta = GetScrollValueDelta(positionX);
-            TickOffset = Math.Clamp(TickOffset + scrollDelta, 0, HScrollBarMax);
+            if (Preferences.Default.PlaybackAutoScroll == 1)
+            {
+                bool playing = PlaybackManager.Inst.PlayingMaster || PlaybackManager.Inst.StartingToPlay;
+                if (!playing)
+                {
+                    smoothScrollTargetTickOffset = Math.Clamp(TickOffset + scrollDelta, 0, HScrollBarMax);
+                }
+            }
+            else
+            {
+                smoothScrollTargetTickOffset = null;
+                TickOffset = Math.Clamp(TickOffset + scrollDelta, 0, HScrollBarMax);
+            }
         }
 
-        private double GetScrollValueDelta(double positionX) {
+        /// <summary>Smooth stationary-cursor scroll; called from the piano roll render loop or timer fallback.</summary>
+        public void SmoothScrollStep(double deltaMs)
+        {
+            if (Part == null || Preferences.Default.PlaybackAutoScroll != 1)
+            {
+                return;
+            }
+            double? desiredTickOffset = GetStationaryCursorDesiredTickOffset();
+            if (!desiredTickOffset.HasValue)
+            {
+                return;
+            }
+            deltaMs = Math.Clamp(deltaMs, 0.5, 50);
+            double target = Math.Clamp(desiredTickOffset.Value, 0, HScrollBarMax);
+            double diff = target - TickOffset;
+            _inSmoothScrollStep = true;
+            try
+            {
+                if (Math.Abs(diff) < SmoothScrollSnapThreshold)
+                {
+                    TickOffset = target;
+                }
+                else
+                {
+                    double alpha = 1 - Math.Exp(-deltaMs / PitchFollowScrollMath.SmoothScrollTimeConstantMs);
+                    TickOffset = Math.Clamp(TickOffset + diff * alpha, 0, HScrollBarMax);
+                }
+            }
+            finally
+            {
+                _inSmoothScrollStep = false;
+            }
+        }
+
+        /// <summary>Fallback when the piano roll is not on a render loop (e.g. minimized).</summary>
+        public void SmoothScrollStepFallback()
+        {
+            if (pitchFollowRenderingActive)
+            {
+                return;
+            }
+            SmoothScrollStep(PitchFollowScrollMath.ReferenceStepMs);
+        }
+
+        double? GetStationaryCursorDesiredTickOffset()
+        {
+            if (Bounds.Width <= 0 || TickWidth <= 0)
+            {
+                return null;
+            }
+            if (IsLivePlaybackScrollActive())
+            {
+                stationaryCursorFollowedPlayback = true;
+                return ComputeStationaryCursorDesiredTickOffset(GetStationaryCursorPlayPosX());
+            }
+            var playback = PlaybackManager.Inst;
+            if (playback.PlayingMaster || playback.StartingToPlay)
+            {
+                return null;
+            }
+            if (stationaryCursorFollowedPlayback)
+            {
+                stationaryCursorFollowedPlayback = false;
+                smoothScrollTargetTickOffset = null;
+                return null;
+            }
+            if (!smoothScrollTargetTickOffset.HasValue)
+            {
+                return null;
+            }
+            return smoothScrollTargetTickOffset.Value;
+        }
+
+        /// <summary>True only while audio is audibly playing — not during pre-playback render or buffer wait.</summary>
+        bool IsLivePlaybackScrollActive()
+        {
+            var playback = PlaybackManager.Inst;
+            return playback.PlayingMaster
+                && playback.OutputActive
+                && !playback.StartingToPlay
+                && !PlayPosWaitingRendering;
+        }
+
+        double GetStationaryCursorPlayPosX()
+        {
+            if (Part != null && PlaybackManager.Inst.TryGetSmoothPlayTick(out double absTick))
+            {
+                double localTick = absTick - Part.position;
+                return (localTick - TickOffset) * TickWidth;
+            }
+            return PlayPosX;
+        }
+
+        double ComputeStationaryCursorDesiredTickOffset(double positionX)
+        {
+            double rightMargin = Preferences.Default.PlayPosMarkerMargin * Bounds.Width;
+            if (positionX <= rightMargin && positionX >= 0)
+            {
+                return TickOffset;
+            }
+            double localTick = TickOffset + positionX / TickWidth;
+            if (positionX > rightMargin)
+            {
+                return Math.Clamp(localTick - rightMargin / TickWidth, 0, HScrollBarMax);
+            }
+            return Math.Clamp(localTick, 0, HScrollBarMax);
+        }
+
+        void RebuildPitchFollowPath()
+        {
+            var prefs = Preferences.Default;
+            if (!prefs.PlaybackPitchFollowEnabled || Part == null)
+            {
+                ClearPitchFollowPath();
+                return;
+            }
+            pitchFollowPath.Build(
+                Part,
+                ViewportTracks,
+                VScrollBarMax,
+                prefs.PlaybackPitchFollowSemitoneThreshold,
+                prefs.PlaybackPitchFollowVerticalPosition,
+                Project.resolution);
+            RefreshPitchFollowPathPreview();
+        }
+
+        void ClearPitchFollowPath()
+        {
+            pitchFollowPath.Build(null, 0, 0, 0, 0, Project.resolution);
+            pitchFollowPathSamples.Clear();
+            this.RaisePropertyChanged(nameof(PitchFollowPathSamples));
+            this.RaisePropertyChanged(nameof(PitchFollowPathIsBuilt));
+            MessageBus.Current.SendMessage(new PitchFollowPathPreviewChangedEvent());
+        }
+
+        void RefreshPitchFollowPathPreview()
+        {
+            pitchFollowPathSamples.Clear();
+            if (Preferences.Default.PlaybackPitchFollowEnabled && pitchFollowPath.IsBuilt && Part != null)
+            {
+                pitchFollowPath.SampleSmoothedPoints(
+                    Preferences.Default.PlaybackPitchFollowFrameSmoothing,
+                    Project.resolution,
+                    pitchFollowPathSamples);
+            }
+            this.RaisePropertyChanged(nameof(PitchFollowPathSamples));
+            this.RaisePropertyChanged(nameof(PitchFollowPathIsBuilt));
+            MessageBus.Current.SendMessage(new PitchFollowPathPreviewChangedEvent());
+        }
+
+        /// <summary>Whether the preview overlay is drawn (playback still uses smoothed samples when follow is enabled).</summary>
+        static bool IsPitchFollowPathPreviewVisible()
+        {
+            var prefs = Preferences.Default;
+            return prefs.PlaybackPitchFollowEnabled && prefs.PlaybackPitchFollowShowPath;
+        }
+
+        public double EvaluatePitchFollowPath(double localTick)
+        {
+            if (pitchFollowPathSamples.Count > 0)
+            {
+                return pitchFollowPath.EvaluateSmoothedAtTick(pitchFollowPathSamples, localTick);
+            }
+            return pitchFollowPath.Evaluate(localTick);
+        }
+
+        public double GetPitchFollowCameraOffset(double localTick, bool playing)
+        {
+            if (playing && Preferences.Default.PlaybackPitchFollowEnabled
+                && !pitchFollowUserOverride && pitchFollowPath.IsBuilt)
+            {
+                return TrackOffset;
+            }
+            return EvaluatePitchFollowPath(localTick);
+        }
+
+        public bool PianoRollRenderingActive => pitchFollowRenderingActive;
+
+        public void NotifyPitchFollowRendering(bool active)
+        {
+            pitchFollowRenderingActive = active;
+        }
+
+        public void PitchFollowAnimationStep(double deltaMs)
+        {
+            bool playing = IsLivePlaybackScrollActive();
+            if (playing && !pitchFollowWasPlaying)
+            {
+                pitchFollowUserOverride = false;
+                pitchFollowLastStepUtc = DateTime.UtcNow;
+                RebuildPitchFollowPath();
+            }
+            pitchFollowWasPlaying = playing;
+
+            if (!playing || !Preferences.Default.PlaybackPitchFollowEnabled || Part == null
+                || pitchFollowUserOverride || !pitchFollowPath.IsBuilt)
+            {
+                return;
+            }
+
+            int localTick = DocManager.Inst.playPosTick - Part.position;
+            double target = EvaluatePitchFollowPath(localTick);
+            _inPitchFollowScrollStep = true;
+            try
+            {
+                TrackOffset = Math.Clamp(target, 0, VScrollBarMax);
+            }
+            finally
+            {
+                _inPitchFollowScrollStep = false;
+            }
+            pitchFollowLastStepUtc = DateTime.UtcNow;
+        }
+
+        /// <summary>Fallback when the piano roll is not on a render loop (e.g. minimized).</summary>
+        public void PitchFollowAnimationStepFallback()
+        {
+            if (pitchFollowRenderingActive)
+            {
+                return;
+            }
+            double deltaMs = PitchFollowScrollMath.ReferenceStepMs;
+            if (pitchFollowLastStepUtc != default)
+            {
+                deltaMs = Math.Clamp((DateTime.UtcNow - pitchFollowLastStepUtc).TotalMilliseconds, 0.5, 40);
+            }
+            PitchFollowAnimationStep(deltaMs);
+        }
+
+        private double GetScrollValueDelta(double positionX)
+        {
             var pageScroll = Preferences.Default.PlaybackAutoScroll == 2;
-            if (pageScroll) {
+            if (pageScroll)
+            {
                 return GetPageScrollScrollValueDelta(positionX);
             }
             return GetStationaryCursorScrollValueDelta(positionX);
         }
 
-        private double GetStationaryCursorScrollValueDelta(double positionX) {
+        private double GetStationaryCursorScrollValueDelta(double positionX)
+        {
             double rightMargin = Preferences.Default.PlayPosMarkerMargin * Bounds.Width;
-            if (positionX > rightMargin) {
+            if (positionX > rightMargin)
+            {
                 return (positionX - rightMargin) * playPosXToTickOffset;
-            } else if (positionX < 0) {
+            }
+            else if (positionX < 0)
+            {
                 return positionX * playPosXToTickOffset;
             }
             return 0;
         }
 
-        private double GetPageScrollScrollValueDelta(double positionX) {
+        private double GetPageScrollScrollValueDelta(double positionX)
+        {
             double leftMargin = (1 - Preferences.Default.PlayPosMarkerMargin) * Bounds.Width;
-            if (positionX > Bounds.Width) {
+            if (positionX > Bounds.Width)
+            {
                 return (Bounds.Width - leftMargin) * playPosXToTickOffset;
-            } else if (positionX < 0) {
+            }
+            else if (positionX < 0)
+            {
                 return (positionX - leftMargin) * playPosXToTickOffset;
             }
             return 0;
         }
+
+        void ApplyLivePitchModeFromPreferences()
+        {
+            livePitchSyncing = true;
+            var mode = (LivePitchMode)Preferences.Default.RealTimePitchMode;
+            LivePitchNormal = mode == LivePitchMode.Normal;
+            LivePitchSuperFast = mode == LivePitchMode.SuperFast;
+            livePitchSyncing = false;
+        }
+
+        void SetLivePitchMode(LivePitchMode mode)
+        {
+            livePitchSyncing = true;
+            LivePitchNormal = mode == LivePitchMode.Normal;
+            LivePitchSuperFast = mode == LivePitchMode.SuperFast;
+            Preferences.Default.RealTimePitchMode = (int)mode;
+            Preferences.Save();
+            livePitchSyncing = false;
+        }
     }
 }
+

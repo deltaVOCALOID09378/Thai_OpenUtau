@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Reactive.Disposables;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -8,68 +9,117 @@ using OpenUtau.Classic;
 using OpenUtau.Core;
 using Serilog;
 
-namespace OpenUtau.App.Views {
-    public partial class SplashWindow : Window {
-        public SplashWindow() {
+// ============================================================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.2 | Date: 2026-07-28
+// Description: เริ่มส่วนประกอบแบบขนานโดยไม่บล็อก UI และจัดการข้อผิดพลาดอย่างเป็นลำดับ
+// ============================================================================
+
+namespace OpenUtau.App.Views
+{
+    public partial class SplashWindow : Window, IDisposable
+    {
+        public SplashWindow()
+        {
             InitializeComponent();
-            if (ThemeManager.IsDarkMode) {
-                LogoTypeLight.IsVisible = false;
-                LogoTypeDark.IsVisible = true;
-            } else {
-                LogoTypeLight.IsVisible = true;
-                LogoTypeDark.IsVisible = false;
-            }
             this.Cursor = new Cursor(StandardCursorType.AppStarting);
             this.Opened += SplashWindow_Opened;
+            this.Closed += SplashWindow_Closed;
         }
 
-        private void SplashWindow_Opened(object? sender, EventArgs e) {
-            if (Screens.Primary == null && Screens.ScreenCount == 0) {
+        private readonly CompositeDisposable disposable = new();
+        private bool started;
+        private bool disposed;
+
+        public void Dispose()
+        {
+            if (disposed)
+            {
                 return;
             }
-
-            Start();
+            disposed = true;
+            Opened -= SplashWindow_Opened;
+            Closed -= SplashWindow_Closed;
+            disposable.Dispose();
         }
 
-        private void Start() {
+        private async void SplashWindow_Opened(object? sender, EventArgs e)
+        {
+            if (Screens.Primary == null && Screens.ScreenCount == 0)
+            {
+                return;
+            }
+            if (started)
+            {
+                return;
+            }
+            started = true;
+            Opened -= SplashWindow_Opened;
+            await StartAsync();
+        }
+
+        private void SplashWindow_Closed(object? sender, EventArgs e)
+        {
+            Dispose();
+        }
+
+        private async Task StartAsync()
+        {
             var mainThread = Thread.CurrentThread;
             var mainScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            Task.Run(() => {
+            try
+            {
                 Log.Information("Initializing OpenUtau.");
-                ToolsManager.Inst.Initialize();
-                SingerManager.Inst.Initialize();
-                DocManager.Inst.Initialize(mainThread, mainScheduler);
+                var initTheme = App.InitializeThemeAsync();
+                var initTools = Task.Run(() => ToolsManager.Inst.Initialize());
+                var initSingers = Task.Run(() => SingerManager.Inst.Initialize());
+                var initDocs = Task.Run(() => DocManager.Inst.Initialize(mainThread, mainScheduler));
+                await Task.WhenAll(initTheme, initTools, initSingers, initDocs);
                 DocManager.Inst.PostOnUIThread = action => Avalonia.Threading.Dispatcher.UIThread.Post(action);
                 Log.Information("Initialized OpenUtau.");
-                InitAudio();
-            }).ContinueWith(t => {
-                if (t.IsFaulted) {
-                    Log.Error(t.Exception?.Flatten(), "Failed to Start.");
-                    MessageBox.ShowError(this, t.Exception, "Failed to Start OpenUtau").ContinueWith(t1 => { Close(); });
-                    return;
-                }
-                if (App.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
+                await Task.Run(InitAudio);
+
+                if (App.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
                     var mainWindow = new MainWindow();
                     mainWindow.Show();
                     desktop.MainWindow = mainWindow;
                     mainWindow.InitProject();
+                    LoadingWindow.InitializeLoadingWindow();
                     Close();
                 }
-            }, CancellationToken.None, TaskContinuationOptions.None, mainScheduler);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Failed to start OpenUtau.");
+                await MessageBox.ShowError(this, exception, "Failed to Start OpenUtau");
+                Close();
+            }
         }
 
-        private static void InitAudio() {
+        private static void InitAudio()
+        {
             Log.Information("Initializing audio.");
-            if (!OS.IsWindows() || Core.Util.Preferences.Default.PreferPortAudio) {
-                try {
+            if (!OS.IsWindows() || Core.Util.Preferences.Default.PreferPortAudio)
+            {
+                try
+                {
                     PlaybackManager.Inst.AudioOutput = new Audio.MiniAudioOutput();
-                } catch (Exception e1) {
+                }
+                catch (Exception e1)
+                {
                     Log.Error(e1, "Failed to init MiniAudio");
                 }
-            } else {
-                try {
-                    PlaybackManager.Inst.AudioOutput = new Audio.NAudioOutput();
-                } catch (Exception e2) {
+            }
+            else
+            {
+                try
+                {
+                    PlaybackManager.Inst.AudioOutput = new NAudioOutput();
+                }
+                catch (Exception e2)
+                {
                     Log.Error(e2, "Failed to init NAudio");
                 }
             }

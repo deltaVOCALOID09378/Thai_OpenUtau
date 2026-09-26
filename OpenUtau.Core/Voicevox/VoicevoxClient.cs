@@ -1,50 +1,71 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using Serilog;
 
+// ============================================================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.2 | Date: 2026-07-28
+// Description: ใช้ HTTP client ร่วม ลดการเปิดซ็อกเก็ตซ้ำ และเข้ารหัสพารามิเตอร์ URL
+// ============================================================================
+
 namespace OpenUtau.Core.Voicevox {
     class VoicevoxClient : Util.SingletonBase<VoicevoxClient> {
+        private static readonly HttpClient client = new HttpClient {
+            Timeout = TimeSpan.FromSeconds(30),
+        };
+
         internal Tuple<string, byte[]> SendRequest(VoicevoxURL voicevoxURL) {
             try {
-                using (var client = new HttpClient()) {
-                    using (var request = new HttpRequestMessage(new HttpMethod(voicevoxURL.method.ToUpper()), this.RequestURL(voicevoxURL))) {
-                        request.Headers.TryAddWithoutValidation("accept", voicevoxURL.accept);
+                using var request = new HttpRequestMessage(
+                    new HttpMethod(voicevoxURL.method.ToUpperInvariant()),
+                    RequestURL(voicevoxURL));
+                request.Headers.TryAddWithoutValidation("accept", voicevoxURL.accept);
+                request.Content = new StringContent(
+                    voicevoxURL.body,
+                    Encoding.UTF8,
+                    "application/json");
 
-                        request.Content = new StringContent(voicevoxURL.body);
-                        request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-
-                        Log.Information($"VoicevoxProcess sending {request}");
-                        var response = client.SendAsync(request);
-                        Log.Information($"VoicevoxProcess received");
-                        string str = response.Result.Content.ReadAsStringAsync().Result;
-                        //May not fit json format
-                        if (!str.StartsWith("{") || !str.EndsWith("}")) {
-                            str = "{ \"json\":" + str + "}";
-                        }
-                        Log.Information($"VoicevoxResponse StatusCode :{response.Result.StatusCode}");
-                        return new Tuple<string, byte[]>(str, response.Result.Content.ReadAsByteArrayAsync().Result);
-                    }
+                Log.Information("Voicevox request: {Method} {Url}", request.Method, request.RequestUri);
+                using var response = client.SendAsync(request)
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+                byte[] responseBytes = response.Content.ReadAsByteArrayAsync()
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+                string responseText = Encoding.UTF8.GetString(responseBytes);
+                // May not fit JSON format.
+                if (!responseText.StartsWith("{") || !responseText.EndsWith("}")) {
+                    responseText = "{ \"json\":" + responseText + "}";
                 }
+                Log.Information("Voicevox response status: {StatusCode}", response.StatusCode);
+                return Tuple.Create(responseText, responseBytes);
             } catch (Exception ex) {
-                Log.Error($"{ex}");
+                Log.Error(ex, "Voicevox request failed.");
             }
-            return new Tuple<string, byte[]>("", new byte[0]);
+            return Tuple.Create(string.Empty, Array.Empty<byte>());
         }
 
         public string RequestURL(VoicevoxURL voicevoxURL) {
             StringBuilder queryStringBuilder = new StringBuilder();
             foreach (var parameter in voicevoxURL.query) {
-                queryStringBuilder.Append($"{parameter.Key}={parameter.Value}&");
+                queryStringBuilder.Append(Uri.EscapeDataString(parameter.Key));
+                queryStringBuilder.Append('=');
+                queryStringBuilder.Append(Uri.EscapeDataString(parameter.Value));
+                queryStringBuilder.Append('&');
             }
 
-            // Remove extra "&" at the end
-            string queryString = "?" + queryStringBuilder.ToString().TrimEnd('&');
+            string baseUrl = $"{voicevoxURL.protocol}{voicevoxURL.host}{voicevoxURL.path}";
+            if (queryStringBuilder.Length == 0) {
+                return baseUrl;
+            }
 
-            string str = $"{voicevoxURL.protocol}{voicevoxURL.host}{voicevoxURL.path}{queryString}";
-            return str;
+            // Remove the extra "&" at the end.
+            return $"{baseUrl}?{queryStringBuilder.ToString().TrimEnd('&')}";
         }
     }
     public class VoicevoxURL {

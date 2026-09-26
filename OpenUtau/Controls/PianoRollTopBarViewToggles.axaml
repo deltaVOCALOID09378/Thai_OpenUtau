@@ -1,0 +1,16 @@
+<!-- ชื่อไฟล์: PianoRollTopBarViewToggles.axaml -->
+<!-- ลำดับเวอร์ชัน: 0.1 -->
+<!-- Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT -->
+<!-- Original By OpenUtau Contributors -->
+<!-- หมายเหตุ: เพิ่ม Spacing ให้มีความพอดีกับโซน TopBar -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:OpenUtau.App.Controls"
+             x:Class="OpenUtau.App.Controls.PianoRollTopBarViewToggles">
+  <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="4,0">
+    <c:PianoRollMainViewToggles LayoutOrientation="Horizontal" ShowPitchOverwriteToggle="False"/>
+    <Border Width="1" Height="20" Margin="6,0" VerticalAlignment="Center"
+            Background="{DynamicResource TickLineBrushLow}" CornerRadius="1"/>
+    <c:PianoRollDiffSingerQualityToggles LayoutOrientation="Horizontal"/>
+  </StackPanel>
+</UserControl>

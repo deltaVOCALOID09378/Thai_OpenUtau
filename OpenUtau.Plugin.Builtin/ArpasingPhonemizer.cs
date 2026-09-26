@@ -1,4 +1,24 @@
-﻿using System;
+#pragma warning disable CS0618, CS0649, CS8632, CS0108
+// ==========================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by OpenUtau (stakira)
+// Version: v.1.2
+// History/Summary:
+// v.1.2 (Consonant Space Widening - ขยายพื้นที่พยัญชนะ):
+//   เพิ่ม ConsonantLength จาก 21 เป็น 40 ticks (~67% of default 60)
+//   เพื่อให้เสียงพยัญชนะนำ (leading consonant) มีพื้นที่กว้างพอที่จะออกเสียงได้ชัดเจนและเป็นธรรมชาติ
+//   ตาม DELTA SYNTH Standard § 10: ส่วนของเสียงพยัญชนะต้องกว้างจนร้องเพลงออกมามีความชัดเจน
+//   Widened ConsonantLength from 21 to 40 ticks so that leading consonants have enough
+//   space to articulate clearly and naturally, giving the voice a more natural singing feel.
+// v.1.1 (Stability/Balance fix - แก้บัค ปรับสมดุลการทำงาน):
+//   ลดพื้นที่เวลา (timing) ที่กลุ่มพยัญชนะ CC, CCV, R-C และ C_C ใช้ไปในแต่ละพยางค์
+//   ให้แคบลงจนเหลือพื้นที่รวมไม่เกินประมาณ 3% ของความยาวโน้ต แทนที่จะกินพื้นที่มากเกินไปจนเสียง
+//   ล่วงหน้า (transition) ยืดเยื้อ ทำให้จังหวะร้องดูอืดและไม่เป็นธรรมชาติ
+//   Narrowed the timing window reserved for consonant-cluster groups (CC, CCV, R-C, C_C) down to
+//   roughly 3% of note length overall, so consonant transitions no longer eat too much of the note
+//   and singing timing feels tighter and more natural.
+// ==========================================
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,10 +34,11 @@ namespace OpenUtau.Plugin.Builtin {
     /// See http://www.speech.cs.cmu.edu/cgi-bin/cmudict and https://arpasing.neocities.org/en/faq.html.
     /// </para>
     /// </summary>
-    [Phonemizer("English Arpasing Phonemizer", "EN ARPA", language: "EN")]
+    [Phonemizer("English Arpasing Phonemizer", "EN ARPA", language: "UTAU")]
     public class ArpasingPhonemizer : LatinDiphonePhonemizer {
         public ArpasingPhonemizer() {
             try {
+                ConsonantLength = 40; // v.1.2: Widened to ~67% of default (60) for clearer consonant articulation.
                 Initialize();
             } catch (Exception e) {
                 Log.Error(e, "Failed to initialize.");
@@ -58,5 +79,30 @@ namespace OpenUtau.Plugin.Builtin {
                 .Select(entry => entry.Split('='))
                 .ToDictionary(parts => parts[0], parts => parts[1].Split(','));
         }
+
+        protected override string GetPhonemeOrFallback(string prevSymbol, string symbol, int tone, string color, string alt) {
+            if (g2p != null && g2p.IsVowel(prevSymbol) && g2p.IsVowel(symbol)) {
+                prevSymbol = "-";
+            }
+            if (!string.IsNullOrEmpty(alt) && singer.TryGetMappedOto($"{prevSymbol} {symbol}{alt}", tone, color, out var oto)) {
+                return oto.Alias;
+            }
+            if (singer.TryGetMappedOto($"{prevSymbol} {symbol}", tone, color, out var oto1)) {
+                return oto1.Alias;
+            }
+            if (vowelFallback.TryGetValue(symbol, out string[] fallbacks)) {
+                foreach (var fallback in fallbacks) {
+                    if (singer.TryGetMappedOto($"{prevSymbol} {fallback}", tone, color, out var oto2)) {
+                        return oto2.Alias;
+                    }
+                }
+            }
+            // Only use the "- symbol" fallback if we are actually at the start of a phrase (prevSymbol == "-")
+            if (prevSymbol == "-" && singer.TryGetMappedOto($"- {symbol}", tone, color, out var oto3)) {
+                return oto3.Alias;
+            }
+            return $"{prevSymbol} {symbol}{alt}";
+        }
+
     }
 }

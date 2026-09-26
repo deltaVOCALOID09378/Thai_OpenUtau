@@ -1,4 +1,10 @@
-﻿using System;
+﻿// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai
+// Version: v.1.1
+// History/Summary: Added ShowPitchNotification, PageUp/PageDown track switching, and AutoPitchVibrato Batch Edit.
+using System;
+using System.Collections.Generic;
+using OpenUtau.Core.Render;
 using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.Core {
@@ -84,6 +90,10 @@ namespace OpenUtau.Core {
     }
 
     public class PhonemizedNotification : UNotification {
+        public readonly UVoicePart part;
+        public PhonemizedNotification(UVoicePart part) {
+            this.part = part;
+        }
         public override string ToString() => "Phonemized";
     }
 
@@ -113,6 +123,20 @@ namespace OpenUtau.Core {
         public override string ToString() => $"Set play position to tick {playPosTick}";
     }
 
+    /// <summary>
+    /// Notification for both views to sync time range selection.
+    /// </summary>
+    public class SetRangeSelectionNotification : UNotification {
+        public readonly int startTick;
+        public readonly int endTick;
+        public override bool Silent => true;
+        public SetRangeSelectionNotification(int startTick, int endTick) {
+            this.startTick = startTick;
+            this.endTick = endTick;
+        }
+        public override string ToString() => $"Set range selection {startTick}-{endTick}";
+    }
+
     // Notification for playback manager to change play position
     public class SeekPlayPosTickNotification : UNotification {
         public int playPosTick;
@@ -128,10 +152,13 @@ namespace OpenUtau.Core {
     public class ProgressBarNotification : UNotification {
         public double Progress;
         public string Info;
+        /// <summary>When &gt; 0, status text is cleared after this many seconds.</summary>
+        public double AutoClearSeconds;
         public override bool Silent => true;
-        public ProgressBarNotification(double progress, string info) {
+        public ProgressBarNotification(double progress, string info, double autoClearSeconds = 0) {
             Progress = progress;
             Info = info;
+            AutoClearSeconds = autoClearSeconds;
         }
         public override string ToString() => $"Set progress {Progress} {Info}";
     }
@@ -185,6 +212,11 @@ namespace OpenUtau.Core {
     public class VoiceColorRemappingNotification : UNotification {
         public int TrackNo;
         public bool Validate;
+        /// <summary>
+        /// Remap when the singer's voice color changes. Or use when the user intentionally wants to remap.
+        /// </summary>
+        /// <param name="trackNo">Track number for remapping the singer. When -1, checks whether remapping is required for all tracks.</param>
+        /// <param name="validate">When verifying if the color lineup has changed, set to true; when forcing remapping even if no changes occur, set to false.</param>
         public VoiceColorRemappingNotification(int trackNo, bool validate) {
             TrackNo = trackNo;
             Validate = validate;
@@ -228,6 +260,30 @@ namespace OpenUtau.Core {
         public override string ToString() => "Part rendered.";
     }
 
+    public class PhraseRenderedNotification : UNotification {
+        public readonly RenderPhrase phrase;
+        public readonly RenderResult result;
+        public readonly int trackNo;
+        public override bool Silent => true;
+        public PhraseRenderedNotification(UVoicePart part, RenderPhrase phrase, RenderResult result, int trackNo) {
+            this.part = part;
+            this.phrase = phrase;
+            this.result = result;
+            this.trackNo = trackNo;
+        }
+        public override string ToString() => "Phrase rendered.";
+    }
+
+    public class RealCurvesUpdatedNotification : UNotification {
+        public readonly IReadOnlyList<RealCurveUpdate> updates;
+        public override bool Silent => true;
+        public RealCurvesUpdatedNotification(UVoicePart part, IReadOnlyList<RealCurveUpdate> updates) {
+            this.part = part;
+            this.updates = updates;
+        }
+        public override string ToString() => "Real curves updated.";
+    }
+
     public class GotoOtoNotification : UNotification {
         public readonly USinger? singer;
         public readonly UOto? oto;
@@ -244,4 +300,8 @@ namespace OpenUtau.Core {
         }
         public override string ToString() => "Note preset changed.";
     }
+
+    public class ShowPitchNotification : UNotification {
+    }
 }
+

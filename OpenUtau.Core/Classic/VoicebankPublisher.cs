@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using Serilog;
 
 using OpenUtau.Core.Ustx;
 
@@ -43,7 +44,7 @@ namespace OpenUtau.Classic {
 
         private List<string> GetFilesToPack(string singerPath)
         {
-            List<string> fileList = Directory.EnumerateFiles(singerPath, "*.*", SearchOption.AllDirectories).ToList();
+            List<string> fileList = Directory.EnumerateFiles(singerPath, "*.*", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true }).ToList();
             List<string> packList = fileList.FindAll(x => !IsIgnored(System.IO.Path.GetRelativePath(singerPath, x)));
             return packList;
         }
@@ -63,7 +64,12 @@ namespace OpenUtau.Classic {
             //Write singer type into character.yaml
             try {
                 ModifyConfig(singer, config => config.SingerType = singer.SingerType.ToString().ToLower());
-            } catch (Exception e) {  }
+            } catch (Exception e) {
+                Log.Warning(
+                    e,
+                    "[VoicebankPublisher] Failed to update singer type in character.yaml for {Singer}. Continuing with the existing metadata.",
+                    singer.Name);
+            }
             var packList = GetFilesToPack(location);
             int index = 0;
             int fileCount = packList.Count();

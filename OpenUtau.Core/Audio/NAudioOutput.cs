@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NAudio.Wave;
 using OpenUtau.Core.Util;
 
@@ -11,7 +12,7 @@ namespace OpenUtau.Audio {
         const int Channels = 2;
 
         private readonly object lockObj = new object();
-        private WaveOutEvent waveOutEvent;
+        private DirectSoundOut directSoundOut;
         private int deviceNumber;
 
         public NAudioOutput() {
@@ -25,7 +26,7 @@ namespace OpenUtau.Audio {
         public PlaybackState PlaybackState {
             get {
                 lock (lockObj) {
-                    return waveOutEvent == null ? PlaybackState.Stopped : waveOutEvent.PlaybackState;
+                    return directSoundOut == null ? PlaybackState.Stopped : directSoundOut.PlaybackState;
                 }
             }
         }
@@ -34,48 +35,51 @@ namespace OpenUtau.Audio {
 
         public long GetPosition() {
             lock (lockObj) {
-                return waveOutEvent == null
+                return directSoundOut == null
                     ? 0
-                    : waveOutEvent.GetPosition() / Channels;
+                    : directSoundOut.GetPosition() / Channels;
             }
         }
 
         public void Init(ISampleProvider sampleProvider) {
             lock (lockObj) {
-                if (waveOutEvent != null) {
-                    waveOutEvent.Stop();
-                    waveOutEvent.Dispose();
+                if (directSoundOut != null) {
+                    directSoundOut.Stop();
+                    directSoundOut.Dispose();
                 }
-                waveOutEvent = new WaveOutEvent() {
-                    DeviceNumber = deviceNumber,
-                    DesiredLatency = 100
-                };
-                waveOutEvent.Init(sampleProvider);
+                var devices = new List<DirectSoundDeviceInfo>(DirectSoundOut.Devices);
+                Guid guid = new Guid();
+                if (deviceNumber < devices.Count) {
+                    guid = devices[deviceNumber].Guid;
+                }
+                
+                directSoundOut = new DirectSoundOut(guid, 100);
+                directSoundOut.Init(sampleProvider);
             }
         }
 
         public void Pause() {
             lock (lockObj) {
-                if (waveOutEvent != null) {
-                    waveOutEvent.Pause();
+                if (directSoundOut != null) {
+                    directSoundOut.Pause();
                 }
             }
         }
 
         public void Play() {
             lock (lockObj) {
-                if (waveOutEvent != null) {
-                    waveOutEvent.Play();
+                if (directSoundOut != null) {
+                    directSoundOut.Play();
                 }
             }
         }
 
         public void Stop() {
             lock (lockObj) {
-                if (waveOutEvent != null) {
-                    waveOutEvent.Stop();
-                    waveOutEvent.Dispose();
-                    waveOutEvent = null;
+                if (directSoundOut != null) {
+                    directSoundOut.Stop();
+                    directSoundOut.Dispose();
+                    directSoundOut = null;
                 }
             }
         }
@@ -84,15 +88,16 @@ namespace OpenUtau.Audio {
             Preferences.Default.PlaybackDevice = guid.ToString();
             Preferences.Default.PlaybackDeviceNumber = deviceNumber;
             Preferences.Save();
+            var list = new List<DirectSoundDeviceInfo>(DirectSoundOut.Devices);
             // Product guid may not be unique. Use device number first.
-            if (deviceNumber < WaveOut.DeviceCount && WaveOut.GetCapabilities(deviceNumber).ProductGuid == guid) {
+            if (deviceNumber < list.Count && list[deviceNumber].Guid == guid) {
                 this.deviceNumber = deviceNumber;
                 return;
             }
             // If guid does not match, device number may have changed. Search guid instead.
             this.deviceNumber = 0;
-            for (int i = 0; i < WaveOut.DeviceCount; ++i) {
-                if (WaveOut.GetCapabilities(i).ProductGuid == guid) {
+            for (int i = 0; i < list.Count; ++i) {
+                if (list[i].Guid == guid) {
                     this.deviceNumber = i;
                     break;
                 }
@@ -101,14 +106,16 @@ namespace OpenUtau.Audio {
 
         public List<AudioOutputDevice> GetOutputDevices() {
             var outDevices = new List<AudioOutputDevice>();
-            for (int i = 0; i < WaveOut.DeviceCount; ++i) {
-                var capability = WaveOut.GetCapabilities(i);
+            var devices = DirectSoundOut.Devices;
+            int i = 0;
+            foreach (var capability in devices) {
                 outDevices.Add(new AudioOutputDevice {
-                    api = "WaveOut",
-                    name = capability.ProductName,
+                    api = "DirectSound",
+                    name = capability.Description,
                     deviceNumber = i,
-                    guid = capability.ProductGuid,
+                    guid = capability.Guid,
                 });
+                i++;
             }
             return outDevices;
         }

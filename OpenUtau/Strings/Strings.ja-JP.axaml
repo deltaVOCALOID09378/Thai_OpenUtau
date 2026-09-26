@@ -4,14 +4,84 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+  <!--<system:String x:Key="button.apply">Apply</system:String>-->
+  <!--<system:String x:Key="button.cancel">Cancel</system:String>-->
+  <!--<system:String x:Key="button.no">No</system:String>-->
+  <!--<system:String x:Key="button.off">Off</system:String>-->
+  <!--<system:String x:Key="button.ok">Ok</system:String>-->
+  <!--<system:String x:Key="button.on">On</system:String>-->
+  <!--<system:String x:Key="button.open">Open</system:String>-->
+  <!--<system:String x:Key="button.remove">Remove</system:String>-->
+  <!--<system:String x:Key="button.reset">Reset</system:String>-->
+  <!--<system:String x:Key="button.save">Save</system:String>-->
+  <!--<system:String x:Key="button.select">Select</system:String>-->
+  <!--<system:String x:Key="button.yes">Yes</system:String>-->
+
+  <!--<system:String x:Key="command.batch.lyric">Lyrics batch edit</system:String>-->
+  <!--<system:String x:Key="command.batch.note">Notes batch edit</system:String>-->
+  <!--<system:String x:Key="command.batch.plugin">Apply plugin edit</system:String>-->
+  <!--<system:String x:Key="command.batch.reset">Batch reset</system:String>-->
+  <!--<system:String x:Key="command.exp.edit">Edit expression</system:String>-->
+  <!--<system:String x:Key="command.exp.paste">Paste expression curve</system:String>-->
+  <!--<system:String x:Key="command.exp.reset">Reset expression</system:String>-->
+  <!--<system:String x:Key="command.import.audio">Import audio</system:String>-->
+  <!--<system:String x:Key="command.import.track">Import track(s)</system:String>-->
+  <!--<system:String x:Key="command.note.add">Add note</system:String>-->
+  <!--<system:String x:Key="command.note.delete">Delete note(s)</system:String>-->
+  <!--<system:String x:Key="command.note.edit">Edit note(s)</system:String>-->
+  <!--<system:String x:Key="command.note.lyric">Edit lyric(s)</system:String>-->
+  <!--<system:String x:Key="command.note.move">Move note(s)</system:String>-->
+  <!--<system:String x:Key="command.note.paste">Paste note(s)</system:String>-->
+  <!--<system:String x:Key="command.note.split">Split note</system:String>-->
+  <!--<system:String x:Key="command.parameter.paste">Paste parameter(s)</system:String>-->
+  <!--<system:String x:Key="command.part.add">Add part</system:String>-->
+  <!--<system:String x:Key="command.part.delete">Delete part(s)</system:String>-->
+  <!--<system:String x:Key="command.part.edit">Edit part(s)</system:String>-->
+  <!--<system:String x:Key="command.part.fadein">Edit part fade in</system:String>-->
+  <!--<system:String x:Key="command.part.fadeout">Edit part fade out</system:String>-->
+  <!--<system:String x:Key="command.part.move">Move part(s)</system:String>-->
+  <!--<system:String x:Key="command.part.paste">Paste part(s)</system:String>-->
+  <!--<system:String x:Key="command.part.transcribe">Transcribe audio to create a note part</system:String>-->
+  <!--<system:String x:Key="command.phoneme.edit">Edit phoneme</system:String>-->
+  <!--<system:String x:Key="command.phoneme.reset">Reset phoneme</system:String>-->
+  <!--<system:String x:Key="command.pitch.add">Add pitch point</system:String>-->
+  <!--<system:String x:Key="command.pitch.delete">Delete pitch point</system:String>-->
+  <!--<system:String x:Key="command.pitch.draw">Draw pitch</system:String>-->
+  <!--<system:String x:Key="command.pitch.edit">Edit pitch</system:String>-->
+  <!--<system:String x:Key="command.pitch.editpoint">Edit pitch point</system:String>-->
+  <!--<system:String x:Key="command.pitch.reset">Reset pitch</system:String>-->
+  <!--<system:String x:Key="command.project.exp">Edit project expressions</system:String>-->
+  <!--<system:String x:Key="command.project.key">Change project key</system:String>-->
+  <!--<system:String x:Key="command.project.tempo">Edit tempo</system:String>-->
+  <!--<system:String x:Key="command.project.timesignature">Edit time signature</system:String>-->
+  <!--<system:String x:Key="command.property.edit">Edit note(s) property</system:String>-->
+  <!--<system:String x:Key="command.property.reset">Reset note(s) property</system:String>-->
+  <!--<system:String x:Key="command.track.add">Add track</system:String>-->
+  <!--<system:String x:Key="command.track.delete">Delete track</system:String>-->
+  <!--<system:String x:Key="command.track.duplicate">Duplicate track</system:String>-->
+  <!--<system:String x:Key="command.track.exp">Edit track expressions</system:String>-->
+  <!--<system:String x:Key="command.track.order">Edit track order</system:String>-->
+  <!--<system:String x:Key="command.track.remapvc">Remap voice color</system:String>-->
+  <!--<system:String x:Key="command.track.setting">Change track setting</system:String>-->
+  <!--<system:String x:Key="command.track.singer">Change track singer</system:String>-->
+  <!--<system:String x:Key="command.vibrato.edit">Edit vibrato</system:String>-->
+
   <system:String x:Key="context.note.clearcache">フレーズのキャッシュをクリア</system:String>
   <system:String x:Key="context.note.copy">音符をコピー</system:String>
   <system:String x:Key="context.note.delete">音符を削除</system:String>
   <system:String x:Key="context.note.pasteparameters">パラメータを選択して貼り付け</system:String>
+  <!--<system:String x:Key="context.part.applypitch">Apply pitch from...</system:String>-->
   <system:String x:Key="context.part.delete">パートを削除</system:String>
+  <!--<system:String x:Key="context.part.extractingpitch">Extracting pitch</system:String>-->
+  <!--<system:String x:Key="context.part.generateharmonies">Generate harmonies...</system:String>-->
   <system:String x:Key="context.part.gotofile">ファイルの場所を開く</system:String>
+  <!--<system:String x:Key="context.part.merge">Merge parts</system:String>-->
+  <!--<system:String x:Key="context.part.nopitchdetected">No pitch detected from the source wave part.</system:String>-->
+  <!--<system:String x:Key="context.part.nopitchregion">There is no overlapping region between the source wave part and the target note part.</system:String>-->
+  <!--<system:String x:Key="context.part.nopitchsource">No wave part available</system:String>-->
   <system:String x:Key="context.part.rename">パートの名前を変更</system:String>
   <system:String x:Key="context.part.replaceaudio">オーディオファイルを変更</system:String>
+  <!--<system:String x:Key="context.part.split">Split part at playhead</system:String>-->
   <system:String x:Key="context.part.transcribe">オーディオを解析してノートに変換</system:String>
   <system:String x:Key="context.part.transcribing">ノートに変換中</system:String>
   <system:String x:Key="context.pitch.easein">イーズイン</system:String>
@@ -21,6 +91,8 @@
   <system:String x:Key="context.pitch.pointadd">点を追加</system:String>
   <system:String x:Key="context.pitch.pointdel">点を削除</system:String>
   <system:String x:Key="context.pitch.pointsnapprev">前の音符にスナップ</system:String>
+  <!--<system:String x:Key="context.pitch.shape">Curve shape</system:String>-->
+  <!--<system:String x:Key="context.pitch.smooth">Smooth</system:String>-->
   <system:String x:Key="context.timeline.addtempo">{0}にテンポ変更を追加</system:String>
   <system:String x:Key="context.timeline.addtimesig">拍子変更を追加</system:String>
   <system:String x:Key="context.timeline.deltempo">{0}のテンポ変更を削除</system:String>
@@ -34,36 +106,93 @@
   <system:String x:Key="dialogs.about.message">
     OpenUtauはUTAUコミュニティのためのオープンソースなエディタであり、モダンなユーザー体験とインテリジェントな発音変換サポートを目指しています。Githubを中心に開発中です。
   </system:String>
+  <!--<system:String x:Key="dialogs.dropproject.caption">Open or import project</system:String>-->
+  <!--<system:String x:Key="dialogs.dropproject.import">Import tracks</system:String>-->
+  <!--<system:String x:Key="dialogs.dropproject.message">Do you want to open the dropped project file, or import its tracks into the current project?</system:String>-->
+  <!--<system:String x:Key="dialogs.dropproject.open">Open project</system:String>-->
   <system:String x:Key="dialogs.exitsave.caption">OpenUtauを終了</system:String>
   <system:String x:Key="dialogs.exitsave.message">保存されていない変更があります。保存しますか？</system:String>
   <system:String x:Key="dialogs.export.caption">エクスポート</system:String>
   <system:String x:Key="dialogs.export.savefirst">プロジェクトを保存してください。</system:String>
+  <!--<system:String x:Key="dialogs.exportds.caption">Export DiffSinger script</system:String>-->
+  <!--<system:String x:Key="dialogs.exportds.curves">Curves</system:String>-->
+  <!--<system:String x:Key="dialogs.exportds.notrendered">Please render all parts before exporting.</system:String>-->
+  <!--<system:String x:Key="dialogs.exportds.pitch">Pitch (f0)</system:String>-->
+  <!--<system:String x:Key="dialogs.exportds.variance">Variance parameters</system:String>-->
+  <!--<system:String x:Key="dialogs.exportds.variance.hint">Enable DiffSinger tensor cache in Preferences to export variance parameter curves.</system:String>-->
+  <!--<system:String x:Key="dialogs.harmony.caption">Generate Harmonies</system:String>-->
+  <!--<system:String x:Key="dialogs.harmony.description">Create new harmony tracks from the selected part. Notes are transposed diatonically in the chosen key.</system:String>-->
+  <!--<system:String x:Key="dialogs.harmony.hint">Each selected voice creates a new track below the source with transposed notes. Singer and settings are copied from the source track.</system:String>-->
+  <!--<system:String x:Key="dialogs.harmony.intervals">Harmony voices</system:String>-->
+  <!--<system:String x:Key="dialogs.harmony.key">Key</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.caption">Import project options</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.chinesepinyin">Chinese hanzi → Pinyin</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.defaultlyric">Default lyric</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.fillgaps">Fill short gaps</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.fillgaps.threshold">Max length to be processed (exclusive)</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.fillgaps.thresholditem">1/{0} note</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.japanese">Japanese lyrics</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.japanese.hiragana">Romaji → Hiragana</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.japanese.none">No conversion</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.japanese.romaji">Hiragana → Romaji</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.leadingpadding">Leading space before first note</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.leadingpadding.size">Padding when first note starts at clip beginning</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.lyricsmapping">Lyrics mapping (exact)</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.lyricsmapping.hint">One per line: from=to</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.lyricsreplace">Lyrics replacement</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.lyricsreplace.hint">from=&gt;to or /pattern/replacement/</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.lyricssection">Lyrics processing</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.message">Choose what to import from this file:</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.notes">Notes and lyrics</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.pitch">Pitch curve (PITD)</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.resolveoverlaps">Fix overlapping notes</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.tempo">Tempo markers</system:String>-->
+  <!--<system:String x:Key="dialogs.importproject.timesig">Time signatures</system:String>-->
   <system:String x:Key="dialogs.importtracks.caption">トラックのインポート</system:String>
   <system:String x:Key="dialogs.importtracks.importtempo">インポートされたプロジェクトには、以下のテンポマーカーが含まれています。使用しますか？</system:String>
   <system:String x:Key="dialogs.installdependency.caption">依存関係のインストール</system:String>
   <system:String x:Key="dialogs.installdependency.message">インストールします : </system:String>
   <system:String x:Key="dialogs.installdll.caption">Phonemizerのインストール</system:String>
   <system:String x:Key="dialogs.installdll.message">インストールします : </system:String>
-  <system:String x:Key="dialogs.messagebox.cancel">キャンセル</system:String>
+  <!--<system:String x:Key="dialogs.merge.caption">Merging Parts</system:String>-->
+  <!--<system:String x:Key="dialogs.merge.multitracks">Parts on different tracks cannot be merged.</system:String>-->
   <system:String x:Key="dialogs.messagebox.copy">エラーをクリップボードにコピー</system:String>
-  <system:String x:Key="dialogs.messagebox.no">いいえ</system:String>
-  <system:String x:Key="dialogs.messagebox.ok">OK</system:String>
-  <system:String x:Key="dialogs.messagebox.yes">はい</system:String>
   <system:String x:Key="dialogs.noresampler.caption">エンジンがありません</system:String>
   <system:String x:Key="dialogs.noresampler.message">エンジンが設定されていません！お好みのエンジンのEXEやDLLファイルをResamplerフォルダに入れて、環境設定でエンジンを選択してください！</system:String>
   <system:String x:Key="dialogs.recovery">前回異常終了しました。復旧しますか？</system:String>
   <system:String x:Key="dialogs.recovery.caption">プロジェクトの復旧</system:String>
   <system:String x:Key="dialogs.remaptimeaxis.message">このツールでは、音符の実際の位置と長さ（秒単位）を変えずに、プロジェクトのテンポを変更します。
 新しいBPM：</system:String>
+  <!--<system:String x:Key="dialogs.splitpart.caption">Splitting Part</system:String>-->
+  <!--<system:String x:Key="dialogs.splitpart.intheway">There are one or more note(s) overlapping with the playhead.
+Do you want to continue by splitting at the nearest position after current playhead with no notes in the way?</system:String>-->
   <system:String x:Key="dialogs.timesig.caption">拍子</system:String>
   <system:String x:Key="dialogs.tracksettings.caption">トラック設定</system:String>
   <system:String x:Key="dialogs.tracksettings.location">フォルダを開く</system:String>
   <system:String x:Key="dialogs.tracksettings.renderer">レンダラー</system:String>
   <system:String x:Key="dialogs.tracksettings.setasdefault">デフォルト設定として保存</system:String>
+  <!--<system:String x:Key="dialogs.transcribe.allnotfound">No transcription models are installed. Please install GAME via the Package Manager or download manually from {0}.</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.caption">Transcribe Audio</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.batchduration">Max Batch Duration (s)</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.batchsize">Batch Size</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.estthreshold">Score Threshold</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.language">Language</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.language.universal">[universal]</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.notfound">GAME is not installed.</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.options">GAME Options</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.segradius">Boundary Radius</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.segthreshold">Boundary Threshold</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.game.steps">Sampling Steps</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.longchunk.message">One or more audio segments are very long and may consume large amount of memory when transcribing. This usually happens when the audio contains accompaniment. Still proceed?</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.midialgorithm">Algorithm</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.rmvpe">Extract pitch using RMVPE</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.rmvpe.notfound">RMVPE is not installed. Install it from the Package Manager.</system:String>-->
+  <!--<system:String x:Key="dialogs.transcribe.some.notfound">SOME is not installed.</system:String>-->
   <system:String x:Key="dialogs.unsupportedfile.caption">使用できないフォーマット</system:String>
   <system:String x:Key="dialogs.unsupportedfile.message">サポートされていないファイルフォーマットです： </system:String>
   <system:String x:Key="dialogs.voicecolorremapping">Voice colorの再マッピング</system:String>
   <system:String x:Key="dialogs.voicecolorremapping.caption">このトラック内のすべての音符に適用されます：</system:String>
+  <!--<system:String x:Key="dialogs.voicecolorremapping.error">This singer has no voice color</system:String>-->
 
   <system:String x:Key="errors.caption">エラー</system:String>
   <system:String x:Key="errors.details">エラーの詳細</system:String>
@@ -75,6 +204,7 @@
   <system:String x:Key="errors.expression.abbrlong">パラメータの略称は1～4文字で入力してください</system:String>
   <system:String x:Key="errors.expression.abbrset">パラメータの略称を入力してください</system:String>
   <system:String x:Key="errors.expression.abbrunique">パラメータの略称が重複しています</system:String>
+  <!--<system:String x:Key="errors.expression.customDefault">Project/Track default value must be between min and max</system:String>-->
   <system:String x:Key="errors.expression.default">デフォルト値は最小値以上、最大値以下にしてください</system:String>
   <system:String x:Key="errors.expression.flagunique">フラグが重複しています</system:String>
   <system:String x:Key="errors.expression.marge">フラグが重複しているため、以下の表情は統合されました</system:String>
@@ -84,6 +214,8 @@
   <system:String x:Key="errors.failed.importaudio">オーディオのインポートに失敗しました</system:String>
   <system:String x:Key="errors.failed.importfiles">ファイルのインポートに失敗しました</system:String>
   <system:String x:Key="errors.failed.importmidi">MIDIのインポートに失敗しました</system:String>
+  <!--<system:String x:Key="errors.failed.importustandothers">Failed to open the projects. It contains a mix of ust and other file formats.</system:String>-->
+  <!--<system:String x:Key="errors.failed.importustflags">The following undefined flags within the project were not imported:</system:String>-->
   <system:String x:Key="errors.failed.installsinger">シンガーのインストールに失敗しました</system:String>
   <system:String x:Key="errors.failed.load">読み込みに失敗しました</system:String>
   <system:String x:Key="errors.failed.loadprefs">環境設定の読み込みに失敗しました。設定を初期化します。</system:String>
@@ -97,6 +229,8 @@
   <system:String x:Key="errors.failed.searchsinger">シンガーの取得に失敗しました</system:String>
   <system:String x:Key="errors.failed.synth.cutoffbeforeoffset">原音設定エラー：右ブランクが左ブランクよりも前にあります</system:String>
   <system:String x:Key="errors.failed.synth.cutoffexceedduration">原音設定エラー：右ブランクが前すぎます</system:String>
+  <!--<system:String x:Key="errors.failed.transcribe.rmvpe">Error loading RMVPE ONNX model. Install it from the Package Manager, or put rmvpe.onnx in {0}</system:String>-->
+  <!--<system:String x:Key="errors.failed.transcribe.some">Error loading SOME. Please download SOME from {0}</system:String>-->
   <system:String x:Key="errors.install.cpp">最新のVisual C++ランタイムをインストールしてください。 https://learn.microsoft.com/ja-JP/cpp/windows/latest-supported-vc-redist?view=msvc-170</system:String>
   <system:String x:Key="errors.lyrics.regex">正規表現に使用できない文字が含まれています</system:String>
   <system:String x:Key="errors.lyrics.regexpreview">- 正規表現エラー -</system:String>
@@ -104,16 +238,15 @@
   <system:String x:Key="exesetup.installing">{0} をインストールします...</system:String>
   <system:String x:Key="exesetup.linux">Linuxでresamplerやwavtoolのexeファイルを使うには、
 1. {0}からwineをインストールします
-2. 設定 > 高度な設定 > Wineの場所 でWineのパスを設定します</system:String>
+2. 設定 &gt; 高度な設定 &gt; Wineの場所 でWineのパスを設定します</system:String>
   <system:String x:Key="exesetup.mac">MacOSでresamplerやwavtoolのexeファイルを使うには、
 1. 以下のコマンドを使用してWineをインストールします
-2. 設定 > 高度な設定 > Wineの場所 でWineのパスを設定します</system:String>
+2. 設定 &gt; 高度な設定 &gt; Wineの場所 でWineのパスを設定します</system:String>
   <system:String x:Key="exesetup.resampler">resampler（エンジン）としてインストール</system:String>
   <system:String x:Key="exesetup.title">Exeファイルのインストール</system:String>
   <system:String x:Key="exesetup.wavtool">wavtoolとしてインストール</system:String>
 
   <system:String x:Key="exps.abbr">パラメータの略称</system:String>
-  <system:String x:Key="exps.apply">適用</system:String>
   <system:String x:Key="exps.caption">表情</system:String>
   <system:String x:Key="exps.defaultvalue">初期値</system:String>
   <system:String x:Key="exps.flag">フラグ</system:String>
@@ -123,11 +256,26 @@
   <system:String x:Key="exps.minvalue">最小</system:String>
   <system:String x:Key="exps.name">名前</system:String>
   <system:String x:Key="exps.optionvalues">カスタム値</system:String>
+  <!--<system:String x:Key="exps.project">Project Expressions</system:String>-->
+  <!--<system:String x:Key="exps.projectdefault">Project Default</system:String>-->
   <system:String x:Key="exps.sepbycomma">カスタム値は ','で区切ってください。</system:String>
+  <!--<system:String x:Key="exps.skipoutput">Skip flag output when the value is system default</system:String>-->
+  <!--<system:String x:Key="exps.systemdefault">System Default</system:String>-->
+  <!--<system:String x:Key="exps.track">Track Expressions (override)</system:String>-->
+  <!--<system:String x:Key="exps.trackdefault">Track Default</system:String>-->
   <system:String x:Key="exps.type">タイプ</system:String>
   <system:String x:Key="exps.type.curve">カーブ</system:String>
   <system:String x:Key="exps.type.numerical">数値</system:String>
   <system:String x:Key="exps.type.options">カスタム</system:String>
+
+  <!--<system:String x:Key="harmony.interval.fifthabove">5+</system:String>-->
+  <!--<system:String x:Key="harmony.interval.fifthbelow">5-</system:String>-->
+  <!--<system:String x:Key="harmony.interval.thirdabove">3+</system:String>-->
+  <!--<system:String x:Key="harmony.interval.thirdbelow">3-</system:String>-->
+
+  <!--<system:String x:Key="key.picker.all">All keys</system:String>-->
+  <!--<system:String x:Key="key.picker.analyzing">Analyzing...</system:String>-->
+  <!--<system:String x:Key="key.picker.suggested">Suggested keys</system:String>-->
 
   <system:String x:Key="languages.de">ドイツ語</system:String>
   <system:String x:Key="languages.en">英語</system:String>
@@ -147,12 +295,57 @@
   <system:String x:Key="languages.zh">中国語</system:String>
   <system:String x:Key="languages.zh-yue">広東語</system:String>
 
-  <system:String x:Key="lyrics.apply">適用</system:String>
-  <system:String x:Key="lyrics.cancel">キャンセル</system:String>
+  <!--<system:String x:Key="lunai.caption">Singer Hub</system:String>-->
+  <!--<system:String x:Key="lunai.col.action">Action</system:String>-->
+  <!--<system:String x:Key="lunai.col.installed">Installed</system:String>-->
+  <!--<system:String x:Key="lunai.col.name">Name</system:String>-->
+  <!--<system:String x:Key="lunai.col.version">Version</system:String>-->
+  <!--<system:String x:Key="lunai.company">LUNAI Project</system:String>-->
+  <!--<system:String x:Key="lunai.confirm.install.caption">Install Singer</system:String>-->
+  <!--<system:String x:Key="lunai.confirm.install.message">Install {0}?</system:String>-->
+  <!--<system:String x:Key="lunai.confirm.install.tos">This singer has terms of use. By clicking Yes you agree to these terms.</system:String>-->
+  <!--<system:String x:Key="lunai.confirm.uninstall.caption">Uninstall singer</system:String>-->
+  <!--<system:String x:Key="lunai.confirm.uninstall.message">Uninstall {0}?</system:String>-->
+  <!--<system:String x:Key="lunai.confirm.update.caption">Update singer</system:String>-->
+  <!--<system:String x:Key="lunai.confirm.update.message">Update {0} to version {1}?</system:String>-->
+  <!--<system:String x:Key="lunai.install">Install</system:String>-->
+  <!--<system:String x:Key="lunai.installed">Installed</system:String>-->
+  <!--<system:String x:Key="lunai.latest">Latest</system:String>-->
+  <!--<system:String x:Key="lunai.newversionavailable">New version available</system:String>-->
+  <!--<system:String x:Key="lunai.notinstalled">Not installed</system:String>-->
+  <!--<system:String x:Key="lunai.outdated">Outdated</system:String>-->
+  <!--<system:String x:Key="lunai.refresh">Refresh</system:String>-->
+  <!--<system:String x:Key="lunai.search">Search...</system:String>-->
+  <!--<system:String x:Key="lunai.section.installed">Installed</system:String>-->
+  <!--<system:String x:Key="lunai.section.notinstalled">Not installed</system:String>-->
+  <!--<system:String x:Key="lunai.section.updatesavailable">Updates available</system:String>-->
+  <!--<system:String x:Key="lunai.status.error">Error</system:String>-->
+  <!--<system:String x:Key="lunai.status.fetching">Fetching list...</system:String>-->
+  <!--<system:String x:Key="lunai.status.installfailed">Install failed</system:String>-->
+  <!--<system:String x:Key="lunai.status.installfinished">Install finished</system:String>-->
+  <!--<system:String x:Key="lunai.status.installing">Installing {0}...</system:String>-->
+  <!--<system:String x:Key="lunai.status.listing">Scanning installed...</system:String>-->
+  <!--<system:String x:Key="lunai.status.offline">Ready (cached list, network unavailable)</system:String>-->
+  <!--<system:String x:Key="lunai.status.ready">Ready</system:String>-->
+  <!--<system:String x:Key="lunai.status.uninstallfailed">Uninstall failed</system:String>-->
+  <!--<system:String x:Key="lunai.status.uninstallfinished">Uninstall finished</system:String>-->
+  <!--<system:String x:Key="lunai.status.uninstalling">Uninstalling {0}...</system:String>-->
+  <!--<system:String x:Key="lunai.status.updatefinished">Update finished</system:String>-->
+  <!--<system:String x:Key="lunai.status.updating">Updating {0}...</system:String>-->
+  <!--<system:String x:Key="lunai.tab.all">All</system:String>-->
+  <!--<system:String x:Key="lunai.tab.brapa">BRAPA</system:String>-->
+  <!--<system:String x:Key="lunai.tab.lunai">LUNAI</system:String>-->
+  <!--<system:String x:Key="lunai.tab.ufr">UFR</system:String>-->
+  <!--<system:String x:Key="lunai.uninstall">Uninstall</system:String>-->
+  <!--<system:String x:Key="lunai.unknownversion">unknown</system:String>-->
+  <!--<system:String x:Key="lunai.update">Update</system:String>-->
+  <!--<system:String x:Key="lunai.uptodate">Up to date</system:String>-->
+  <!--<system:String x:Key="lunai.website">Website</system:String>-->
+
+  <system:String x:Key="lyrics.applyselected">選択した音符のみ適用する</system:String>
   <system:String x:Key="lyrics.caption">歌詞を編集</system:String>
   <system:String x:Key="lyrics.livepreview">リアルタイムプレビュー</system:String>
-  <!--<system:String x:Key="lyrics.max">Max</system:String>-->
-  <system:String x:Key="lyrics.reset">リセット</system:String>
+  <system:String x:Key="lyrics.nonote">音符がありません！</system:String>
   <system:String x:Key="lyrics.selectnotes">音符を選択してください！</system:String>
   <system:String x:Key="lyrics.separators">区切り文字</system:String>
 
@@ -177,6 +370,7 @@
   <system:String x:Key="menu.edit.lockunselectednotes.pitchpoints">ピッチ点</system:String>
   <system:String x:Key="menu.edit.lockunselectednotes.vibrato">ビブラート</system:String>
   <system:String x:Key="menu.edit.paste">貼り付け</system:String>
+  <!--<system:String x:Key="menu.edit.pasteplainnotes">Paste as plain notes</system:String>-->
   <system:String x:Key="menu.edit.redo">やり直す</system:String>
   <system:String x:Key="menu.edit.selectall">全て選択</system:String>
   <system:String x:Key="menu.edit.undo">元に戻す</system:String>
@@ -184,8 +378,8 @@
   <system:String x:Key="menu.file.exit">OpenUtauを終了</system:String>
   <system:String x:Key="menu.file.exportaudio">音声をエクスポート</system:String>
   <system:String x:Key="menu.file.exportds">DiffSinger Scriptsをエクスポート...</system:String>
-  <system:String x:Key="menu.file.exportds.v2">DiffSinger Scriptsをエクスポート(v2)...</system:String>
-  <system:String x:Key="menu.file.exportds.v2withoutpitch">DiffSinger Scriptsをエクスポート(v2, ピッチカーブなし)...</system:String>
+  <!--<system:String x:Key="menu.file.exportds.v2">Export DiffSinger Scripts To (v2)</system:String>-->
+  <!--<system:String x:Key="menu.file.exportds.v2withoutpitch">Export DiffSinger Scripts To (v2, without pitch curve)</system:String>-->
   <system:String x:Key="menu.file.exportmidi">MIDIをエクスポート</system:String>
   <system:String x:Key="menu.file.exportmixdown">ミックスダウンしたWavファイルを出力</system:String>
   <system:String x:Key="menu.file.exportproject">プロジェクトファイルをエクスポート</system:String>
@@ -226,17 +420,21 @@
   <system:String x:Key="menu.tools.layout.hsplit11">横並び 1:1</system:String>
   <system:String x:Key="menu.tools.layout.hsplit12">横並び 1:2</system:String>
   <system:String x:Key="menu.tools.layout.hsplit13">横並び 1:3</system:String>
+  <!--<system:String x:Key="menu.tools.layout.reset">Reset Layout</system:String>-->
   <system:String x:Key="menu.tools.layout.vsplit11">縦並び 1:1</system:String>
   <system:String x:Key="menu.tools.layout.vsplit12">縦並び 1:2</system:String>
   <system:String x:Key="menu.tools.layout.vsplit13">縦並び 1:3</system:String>
+  <!--<system:String x:Key="menu.tools.packages">Packages...</system:String>-->
   <system:String x:Key="menu.tools.prefs">設定...</system:String>
   <system:String x:Key="menu.tools.singer.install">シンガーをインストール...</system:String>
   <!--<system:String x:Key="menu.tools.singer.installadv">Install Singer (Advanced)...</system:String>-->
+  <!--<system:String x:Key="menu.tools.singerhub">Singer Hub...</system:String>-->
   <system:String x:Key="menu.tools.singers">シンガー...</system:String>
   <system:String x:Key="menu.tools.wavtoolresampler.install">Wavtool/Resamplerをインストール(.exe)...</system:String>
   <system:String x:Key="menu.view">表示</system:String>
 
   <system:String x:Key="mergevoicebank.back">戻る</system:String>
+  <!--<system:String x:Key="mergevoicebank.error">Failed to merge singer.</system:String>-->
   <system:String x:Key="mergevoicebank.merge">統合</system:String>
   <system:String x:Key="mergevoicebank.next">次へ</system:String>
   <system:String x:Key="mergevoicebank.selectsinger">このツールでは、現在のボイスバンクに別のボイスバンクを統合し、新しいvoice colorとして設定します。
@@ -247,6 +445,18 @@
   <system:String x:Key="mergevoicebank.setvoicecolor">新しいvoice color名を設定します。これは表情の選択時に表示されます。</system:String>
   <system:String x:Key="mergevoicebank.title">音源の統合</system:String>
 
+  <system:String x:Key="mixfx.applyonexport">ミックスダウン書き出し時に適用</system:String>
+  <system:String x:Key="mixfx.caption">試聴エフェクト</system:String>
+  <system:String x:Key="mixfx.enabled">このトラックで有効化</system:String>
+  <system:String x:Key="mixfx.library">プリセットライブラリ</system:String>
+  <system:String x:Key="mixfx.library.default">既定</system:String>
+  <system:String x:Key="mixfx.library.delete">削除</system:String>
+  <system:String x:Key="mixfx.library.placeholder">保存済みプリセットを選択...</system:String>
+  <system:String x:Key="mixfx.library.save">保存...</system:String>
+  <system:String x:Key="mixfx.preset">プリセット</system:String>
+  <system:String x:Key="mixfx.recommended">既定設定を適用</system:String>
+  <system:String x:Key="mixfx.recommended.tip">Vocal Air + Gentle コンプ + Small Room</system:String>
+
   <system:String x:Key="notedefaults.lyric">歌詞</system:String>
   <system:String x:Key="notedefaults.lyric.enter">入力時</system:String>
   <system:String x:Key="notedefaults.lyric.knife">ナイフツール時</system:String>
@@ -255,9 +465,7 @@
   <system:String x:Key="notedefaults.portamento.start">開始</system:String>
   <system:String x:Key="notedefaults.preset">プリセット</system:String>
   <system:String x:Key="notedefaults.preset.namenew">プリセットに名前を付ける</system:String>
-  <system:String x:Key="notedefaults.preset.remove">削除</system:String>
   <system:String x:Key="notedefaults.preset.remove.tooltip">最後に割り当てたプリセットを削除します。</system:String>
-  <system:String x:Key="notedefaults.preset.save">保存</system:String>
   <system:String x:Key="notedefaults.preset.save.tooltip">現在の設定を新しいプリセットとして保存します。</system:String>
   <system:String x:Key="notedefaults.reset">すべての設定をリセット</system:String>
   <system:String x:Key="notedefaults.reset.tooltip">すべての値をリセットします。
@@ -275,12 +483,13 @@
   <system:String x:Key="notedefaults.vibrato.vollink">音量の連動</system:String>
 
   <system:String x:Key="noteproperty">音符のプロパティ</system:String>
-  <system:String x:Key="noteproperty.apply">適用</system:String>
   <system:String x:Key="noteproperty.basic">基本</system:String>
-  <system:String x:Key="noteproperty.cancel">キャンセル</system:String>
+  <!--<system:String x:Key="noteproperty.parent.phonemizer">Follows Parent Phonemizer</system:String>-->
+  <!--<system:String x:Key="noteproperty.phonemizer">Phonemizer</system:String>-->
   <system:String x:Key="noteproperty.set">セット</system:String>
   <system:String x:Key="noteproperty.setlongnote">長い音符のみセットする</system:String>
   <system:String x:Key="noteproperty.tone">音程</system:String>
+  <system:String x:Key="noteproperty.tuning">微分音</system:String>
   <system:String x:Key="noteproperty.vibratoenable">オン</system:String>
 
   <system:String x:Key="oto.alias">エイリアス</system:String>
@@ -301,14 +510,51 @@
   <system:String x:Key="oto.set">セット</system:String>
   <!--<system:String x:Key="oto.suffix">Suffix</system:String>-->
 
+  <!--<system:String x:Key="packages.caption">Packages</system:String>-->
+  <!--<system:String x:Key="packages.col.action">Action</system:String>-->
+  <!--<system:String x:Key="packages.col.developer">Developer</system:String>-->
+  <!--<system:String x:Key="packages.col.id">Id</system:String>-->
+  <!--<system:String x:Key="packages.col.installed">Installed</system:String>-->
+  <!--<system:String x:Key="packages.col.name">Name</system:String>-->
+  <!--<system:String x:Key="packages.col.version">Version</system:String>-->
+  <!--<system:String x:Key="packages.confirm.install.caption">Install package</system:String>-->
+  <!--<system:String x:Key="packages.confirm.install.message">Do you want to install {0}?</system:String>-->
+  <!--<system:String x:Key="packages.confirm.uninstall.caption">Uninstall package</system:String>-->
+  <!--<system:String x:Key="packages.confirm.uninstall.message">Do you want to uninstall {0}?</system:String>-->
+  <!--<system:String x:Key="packages.confirm.update.caption">Update package</system:String>-->
+  <!--<system:String x:Key="packages.confirm.update.message">Do you want to update {0} to version {1}?</system:String>-->
+  <!--<system:String x:Key="packages.errors.missing">Package {0} not found. Install it using the Package Manager.</system:String>-->
+  <!--<system:String x:Key="packages.install">Install</system:String>-->
+  <!--<system:String x:Key="packages.installed">Installed</system:String>-->
+  <!--<system:String x:Key="packages.installfromfile">Install From File (.oudep)...</system:String>-->
+  <!--<system:String x:Key="packages.openinstalllocation">Open Install Location</system:String>-->
+  <!--<system:String x:Key="packages.refresh">Refresh</system:String>-->
+  <!--<system:String x:Key="packages.status.error">Error</system:String>-->
+  <!--<system:String x:Key="packages.status.fetching">Fetching registry...</system:String>-->
+  <!--<system:String x:Key="packages.status.installfailed">Install failed</system:String>-->
+  <!--<system:String x:Key="packages.status.installfinished">Install finished</system:String>-->
+  <!--<system:String x:Key="packages.status.installing">Installing {0}...</system:String>-->
+  <!--<system:String x:Key="packages.status.listinginstalled">Listing installed...</system:String>-->
+  <!--<system:String x:Key="packages.status.ready">Ready</system:String>-->
+  <!--<system:String x:Key="packages.status.uninstallfailed">Uninstall failed</system:String>-->
+  <!--<system:String x:Key="packages.status.uninstallfinished">Uninstall finished</system:String>-->
+  <!--<system:String x:Key="packages.status.uninstalling">Uninstalling {0}...</system:String>-->
+  <!--<system:String x:Key="packages.uninstall">Uninstall</system:String>-->
+  <!--<system:String x:Key="packages.unknownversion">unknown version</system:String>-->
+  <!--<system:String x:Key="packages.update">Update</system:String>-->
+
+  <!--<system:String x:Key="phoneme.show.error">Alt + Click to view the full error</system:String>-->
+
   <system:String x:Key="phoneticassistant.caption">音素変換アシスタント</system:String>
   <system:String x:Key="phoneticassistant.copy">コピー</system:String>
 
   <system:String x:Key="pianoroll.key">キー（スケール表示）</system:String>
   <system:String x:Key="pianoroll.menu.batch">一括編集</system:String>
   <system:String x:Key="pianoroll.menu.batch.running">一括編集を実行中</system:String>
+  <!--<system:String x:Key="pianoroll.menu.external">External</system:String>-->
   <system:String x:Key="pianoroll.menu.lyrics">歌詞</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.dashtoplus">"-" を "+" に置き換え</system:String>
+  <!--<system:String x:Key="pianoroll.menu.lyrics.dashtoplustilda">Replace "-" with "+~"</system:String>-->
   <system:String x:Key="pianoroll.menu.lyrics.edit">歌詞を編集</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.hiraganatoromaji">ひらがな→ローマ字</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.insertslur">歌詞をスラー(+~)にする</system:String>
@@ -326,6 +572,8 @@
   <system:String x:Key="pianoroll.menu.notes.autolegato">音符の隙間を埋める</system:String>
   <system:String x:Key="pianoroll.menu.notes.bakepitch">ピッチ曲線（PITD）をピッチ点に変換</system:String>
   <system:String x:Key="pianoroll.menu.notes.clear.vibratos">ビブラートを削除</system:String>
+  <!--<system:String x:Key="pianoroll.menu.notes.commonnotecopy">Commonnote Copy</system:String>-->
+  <!--<system:String x:Key="pianoroll.menu.notes.commonnotepaste">Commonnote Paste</system:String>-->
   <system:String x:Key="pianoroll.menu.notes.fixoverlap">音符の重複を修正</system:String>
   <system:String x:Key="pianoroll.menu.notes.hanzitopinyin">漢字をピンインへ</system:String>
   <system:String x:Key="pianoroll.menu.notes.lengthencrossfade">クロスフェードを長くする</system:String>
@@ -333,6 +581,9 @@
   <system:String x:Key="pianoroll.menu.notes.octavedown">1オクターブ下げる</system:String>
   <system:String x:Key="pianoroll.menu.notes.octaveup">1オクターブ上げる</system:String>
   <system:String x:Key="pianoroll.menu.notes.quantize">グリッド幅にクオンタイズ</system:String>
+  <system:String x:Key="pianoroll.menu.notes.randomizeoffset">音素のタイミングをランダムにする</system:String>
+  <system:String x:Key="pianoroll.menu.notes.randomizetiming">ノートのタイミングをランダムにする</system:String>
+  <system:String x:Key="pianoroll.menu.notes.randomizetuning">微分音をランダムにする</system:String>
   <system:String x:Key="pianoroll.menu.notes.refreshrealcurves">表情パネルの実数値表示を更新（DiffSinger）</system:String>
   <system:String x:Key="pianoroll.menu.notes.removetaildash">末尾の"-"を削除</system:String>
   <system:String x:Key="pianoroll.menu.notes.removetailrest">末尾の"R"を削除</system:String>
@@ -344,7 +595,9 @@
   <system:String x:Key="pianoroll.menu.notes.reset.pitchbends">ピッチベンドをリセット</system:String>
   <system:String x:Key="pianoroll.menu.notes.reset.vibratos">ビブラートをリセット</system:String>
   <system:String x:Key="pianoroll.menu.part">パート</system:String>
+  <!--<system:String x:Key="pianoroll.menu.part.generateharmonies">Generate harmonies...</system:String>-->
   <system:String x:Key="pianoroll.menu.part.legacypluginexp">従来のプラグイン (試験中)</system:String>
+  <!--<system:String x:Key="pianoroll.menu.part.legacypluginexp.shortcuts">(legacy)</system:String>-->
   <system:String x:Key="pianoroll.menu.part.singer">シンガーと原音設定</system:String>
   <system:String x:Key="pianoroll.menu.plugin.openfolder">フォルダを開く</system:String>
   <system:String x:Key="pianoroll.menu.plugin.reload">再読み込み</system:String>
@@ -357,24 +610,38 @@
   <system:String x:Key="pianoroll.menu.searchnote.note">音符</system:String>
   <system:String x:Key="pianoroll.menu.searchnote.prev">前へ</system:String>
   <system:String x:Key="pianoroll.menu.searchnote.searchalias">エイリアスを検索</system:String>
+  <!--<system:String x:Key="pianoroll.menu.view.pianoroll">Piano Roll</system:String>-->
+  <!--<system:String x:Key="pianoroll.menu.view.pianoroll.detach">Detach</system:String>-->
+  <!--<system:String x:Key="pianoroll.menu.view.pianoroll.fullscreen">Expand piano roll in window</system:String>-->
+  <!--<system:String x:Key="pianoroll.menu.view.pianoroll.hide">Hide</system:String>-->
+  <!--<system:String x:Key="pianoroll.menu.view.tiktokmode">TikTok recording mode</system:String>-->
   <system:String x:Key="pianoroll.snapdiv">グリッド幅</system:String>
+  <!--<system:String x:Key="pianoroll.toggle.diffsinger.extralow">DiffSinger extra low quality (acoustic 1, variance 1, pitch 1)</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.diffsinger.fast">DiffSinger low quality (acoustic 10, variance 10, pitch 20)</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.diffsinger.medium">DiffSinger balanced (acoustic 20, variance 20, pitch 20)</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.diffsinger.quality">DiffSinger quality (acoustic 50, variance 50, pitch 20)</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.expressions">View Expressions (L)</system:String>-->
   <system:String x:Key="pianoroll.toggle.finalpitch">最終的なピッチを表示 (R)</system:String>
+  <!--<system:String x:Key="pianoroll.toggle.fullscreen">Expand piano roll in window</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.keyscale">Show key scale</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.livepitch">Live Pitch (DiffSinger)</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.livepitch.fast">Live Pitch Turbo (DiffSinger)</system:String>-->
   <system:String x:Key="pianoroll.toggle.noteparams">音符のパラメータを表示 (\)</system:String>
+  <!--<system:String x:Key="pianoroll.toggle.overwritepitch">Toggle Overwrite Pitch Mode</system:String>-->
   <system:String x:Key="pianoroll.toggle.phoneme">音素を表示 (O)</system:String>
+  <!--<system:String x:Key="pianoroll.toggle.phonemizer">View Phonemizer Tags</system:String>-->
   <system:String x:Key="pianoroll.toggle.pitch">ピッチ曲線を表示 (I)</system:String>
+  <!--<system:String x:Key="pianoroll.toggle.pitchfollow">Follow notes vertically during playback</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.realcurves">View Real Curves</system:String>-->
+  <!--<system:String x:Key="pianoroll.toggle.render">DiffSinger render settings</system:String>-->
   <system:String x:Key="pianoroll.toggle.snap">スナップを有効化 (P)</system:String>
   <system:String x:Key="pianoroll.toggle.snap.auto">自動</system:String>
   <system:String x:Key="pianoroll.toggle.snap.autotriplet">自動（三連符）</system:String>
   <system:String x:Key="pianoroll.toggle.tips">ヒントを表示 (T)</system:String>
   <system:String x:Key="pianoroll.toggle.tone">ガイド音を有効化 (Y)</system:String>
   <system:String x:Key="pianoroll.toggle.vibrato">ビブラートを表示 (U)</system:String>
+  <!--<system:String x:Key="pianoroll.toggle.view">View</system:String>-->
   <system:String x:Key="pianoroll.toggle.waveform">波形を表示 (W)</system:String>
-  <system:String x:Key="pianoroll.tool.drawlinepitch">ラインピッチ描画ツール (Shift + 4)
-    左クリックで直線を描画
-    右クリックでリセット
-    Ctrl長押しで選択
-    Alt長押しで線をなめらかにする
-  </system:String>
   <system:String x:Key="pianoroll.tool.drawpitch">ピッチ描画ツール (4)
     左クリックで描画
     右クリックでリセット
@@ -382,12 +649,6 @@
     Alt長押しで線をなめらかにする</system:String>
   <system:String x:Key="pianoroll.tool.eraser">消しゴムツール (3)</system:String>
   <system:String x:Key="pianoroll.tool.knife">ナイフツール (5)</system:String>
-  <system:String x:Key="pianoroll.tool.overwritepitch">ピッチ上書きツール (Ctrl + 4)
-    左クリックで描画（ビブラートやMOD+を上書き）
-    右クリックでリセット
-    Ctrl長押しで選択
-    Alt長押しで線をなめらかにする
-  </system:String>
   <system:String x:Key="pianoroll.tool.penplus">ペン+ツール (Ctrl + 2)
     左クリックで描画
     右クリックで削除
@@ -395,7 +656,29 @@
   <system:String x:Key="pianoroll.tool.penv2">ペンツール (2)
     左クリックで描画
     Ctrl長押しで選択</system:String>
+  <!--<system:String x:Key="pianoroll.tool.pitchesinewave">Pitch Sine Wave Tool (Shift + 3)
+    Drag to draw sine wave, release to enter adjusting mode
+    Move mouse to adjust wavelength and amplitude, click to apply
+    Right click to reset
+    Hold Ctrl to select</system:String>-->
+  <!--<system:String x:Key="pianoroll.tool.pitchline">Pitch Line Tool (Shift + 1)
+    Left click to draw straight line
+    Right click to reset
+    Hold Ctrl to select</system:String>-->
+  <!--<system:String x:Key="pianoroll.tool.pitchscurve">Pitch S-Curve Tool (Shift + 2)
+    Drag to draw S-curve, release to enter adjusting mode
+    Move mouse to tune S-curve strength, click to apply
+    Right click to reset
+    Hold Ctrl to select</system:String>-->
+  <!--<system:String x:Key="pianoroll.tool.pitchsmoothen">Pitch Smoothen Tool (Shift + 4)
+    Left click to smoothen pitch
+    Right click to reset
+    Hold Ctrl to select</system:String>-->
   <system:String x:Key="pianoroll.tool.selectionv2">選択ツール (1)</system:String>
+  <!--<system:String x:Key="pianoroll.tooltip.attack">Attack time delta</system:String>-->
+  <!--<system:String x:Key="pianoroll.tooltip.overlap">Overlap</system:String>-->
+  <!--<system:String x:Key="pianoroll.tooltip.preutter">Preutter</system:String>-->
+  <!--<system:String x:Key="pianoroll.tooltip.release">Release time delta</system:String>-->
 
   <system:String x:Key="prefs.advanced">高度な設定</system:String>
   <system:String x:Key="prefs.advanced.beta">ベータ版</system:String>
@@ -408,29 +691,84 @@
   <system:String x:Key="prefs.advanced.vlabelerpath">vLabelerの場所</system:String>
   <system:String x:Key="prefs.advanced.winepath">Wineの場所（Windows互換用の設定）</system:String>
   <system:String x:Key="prefs.appearance">表示</system:String>
+  <!--<system:String x:Key="prefs.appearance.classicscrollbars">Classic scrollbars (dedicated track area)</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.create.base">Base theme</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.create.basedark">Dark</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.create.baselight">Light</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.create.empty">Theme name cannot be empty.</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.create.exists">A theme with this name already exists.</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.create.prompt">Enter Theme Name</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.create.short">New</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.create.title">Create Custom Theme</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.delete.message">Are you sure you want to delete this theme?</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.delete.title">Delete Custom Theme</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtheme.edit.title">Edit Custom Theme</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.create.base">Base color</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.create.bright">Bright color</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.create.empty">Track color name cannot be empty.</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.create.exists">A track color with this name already exists.</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.create.prompt">Enter a name and pick the base and bright colors.</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.create.short">New</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.create.title">Create Custom Track Color</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.delete.message">Are you sure you want to delete this track color?</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.delete.title">Delete Custom Track Color</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.edit">Edit</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.customtrackcolor.edit.title">Edit Custom Track Color</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.defaulttrackcolor">Default track color for new tracks</system:String>-->
   <system:String x:Key="prefs.appearance.degree">スケールの表示</system:String>
   <system:String x:Key="prefs.appearance.degree.numbered">番号 (1 2 3 4 5 6 7)</system:String>
   <system:String x:Key="prefs.appearance.degree.off">なし</system:String>
   <system:String x:Key="prefs.appearance.degree.solfege">Solfège (ドレミファソラシ)</system:String>
   <system:String x:Key="prefs.appearance.diffsingerlangcodehide">音素に併記される言語コードを非表示</system:String>
   <system:String x:Key="prefs.appearance.lang">言語</system:String>
+  <!--<system:String x:Key="prefs.appearance.notecornerradius">Note corner radius</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.overlayscrollbars">Overlay scrollbars (thin, on top of content)</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.section.displaylines">Display lines</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.section.expressions">Expressions &amp; phonemes</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.section.grid">Grid &amp; scrolling</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.section.phonemepanel">Phoneme panel</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.section.pianoroll">Piano roll</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.section.playback">Playback</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.section.theme">Theme</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.section.trackcolors">Track colors</system:String>-->
   <system:String x:Key="prefs.appearance.showghostnotes">ピアノロール上に他トラックの音符を表示</system:String>
   <system:String x:Key="prefs.appearance.showicon">ピアノロールウィンドウにアイコンを表示</system:String>
+  <!--<system:String x:Key="prefs.appearance.shownoteborder">Show note outlines in the piano roll</system:String>-->
   <system:String x:Key="prefs.appearance.showportrait">ピアノロール上に背景イラストを表示</system:String>
+  <!--<system:String x:Key="prefs.appearance.solidexppanelgridlines">Solid default-value lines in expression panel</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.solidtickgridlines">Solid timeline grid lines (piano roll, tracks &amp; expression panel)</system:String>-->
   <system:String x:Key="prefs.appearance.sortorder">シンガー名の表示言語</system:String>
   <system:String x:Key="prefs.appearance.theme">テーマ</system:String>
+  <!--<system:String x:Key="prefs.appearance.theme.builtin">Built-in</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.theme.builtin.custom">Built-in presets</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.theme.custom">Custom</system:String>-->
   <system:String x:Key="prefs.appearance.theme.dark">ダーク</system:String>
   <system:String x:Key="prefs.appearance.theme.light">ライト</system:String>
+  <!--<system:String x:Key="prefs.appearance.theme.name.cold">Cold</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.theme.name.dark">Dark</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.theme.name.light">Light</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.theme.name.originaldark">Original Dark</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.theme.name.originallight">Original Light</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.theme.name.warm">Warm</system:String>-->
+  <!--<system:String x:Key="prefs.appearance.tintpianorollbackgroundwithtrackcolor">Tint piano roll background with track color</system:String>-->
   <system:String x:Key="prefs.appearance.trackcolor">UIにトラックカラーを使用する</system:String>
   <system:String x:Key="prefs.cache">キャッシュ</system:String>
   <system:String x:Key="prefs.cache.clearonquit">終了時にキャッシュを消去する</system:String>
   <system:String x:Key="prefs.cache.diffsingertensorcache">DiffSinger Tensor をキャッシュする</system:String>
   <system:String x:Key="prefs.caption">環境設定</system:String>
   <!--<system:String x:Key="prefs.diffsinger">DiffSinger</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.phonemepanel">DiffSinger-friendly phoneme panel</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.renderphraseboundaries">Show render phrase boundaries</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.section.cache">Cache</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.section.debug">Debug</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.section.general">General</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.section.pitch">Pitch &amp; F0</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.section.quality">Quality</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.section.renderquality">Render quality</system:String>-->
+  <!--<system:String x:Key="prefs.diffsinger.section.steps">Render steps</system:String>-->
   <system:String x:Key="prefs.editing">編集</system:String>
+  <!--<system:String x:Key="prefs.general">General</system:String>-->
   <system:String x:Key="prefs.note.restart">Note: この設定を変更した後は、OpenUtauを再起動してください。</system:String>
-  <system:String x:Key="prefs.off">オフ</system:String>
-  <system:String x:Key="prefs.on">オン</system:String>
   <system:String x:Key="prefs.otoeditor">原音設定</system:String>
   <system:String x:Key="prefs.otoeditor.select">デフォルトの原音設定エディタ</system:String>
   <system:String x:Key="prefs.otoeditor.setparampath">setParamの場所</system:String>
@@ -439,14 +777,11 @@
   <system:String x:Key="prefs.paths.addlsinger.install">シンガーの場所(追加)にインストール</system:String>
   <system:String x:Key="prefs.paths.detect">検出</system:String>
   <system:String x:Key="prefs.paths.loaddeepfolders">深い階層のフォルダも読み込む</system:String>
-  <system:String x:Key="prefs.paths.open">開く</system:String>
-  <system:String x:Key="prefs.paths.reset">リセット</system:String>
-  <system:String x:Key="prefs.paths.select">選択</system:String>
   <system:String x:Key="prefs.paths.singer">シンガーフォルダ</system:String>
-  <system:String x:Key="prefs.penplus">ペン+ツールをデフォルトで使用する</system:String>
   <system:String x:Key="prefs.playback">再生</system:String>
   <system:String x:Key="prefs.playback.autoscroll">自動スクロール</system:String>
   <system:String x:Key="prefs.playback.autoscrollmode">自動スクロールモード</system:String>
+  <!--<system:String x:Key="prefs.playback.autoscrollmode.off">Off</system:String>-->
   <system:String x:Key="prefs.playback.autoscrollmode.pagescroll">ページ毎</system:String>
   <system:String x:Key="prefs.playback.autoscrollmode.stationarycursor">カーソル追従</system:String>
   <system:String x:Key="prefs.playback.backend">オーディオバックエンド</system:String>
@@ -458,13 +793,26 @@
   <system:String x:Key="prefs.playback.lockstarttime.off">何もしない</system:String>
   <system:String x:Key="prefs.playback.lockstarttime.on">再生を開始した場所へカーソルと表示位置を戻す</system:String>
   <system:String x:Key="prefs.playback.lockstarttime.onlycursor">再生を開始した場所へカーソルだけを戻す</system:String>
+  <!--<system:String x:Key="prefs.playback.metronome">Metronome</system:String>-->
+  <!--<system:String x:Key="prefs.playback.modernplayhead">Modern playhead</system:String>-->
+  <!--<system:String x:Key="prefs.playback.pitchfollow">Pitch Follow Scroll</system:String>-->
+  <!--<system:String x:Key="prefs.playback.pitchfollow.enabled">Follow notes vertically during playback</system:String>-->
+  <!--<system:String x:Key="prefs.playback.pitchfollow.framesmoothing">Frame smoothing</system:String>-->
+  <!--<system:String x:Key="prefs.playback.pitchfollow.showpath">Show camera path preview</system:String>-->
+  <!--<system:String x:Key="prefs.playback.pitchfollow.threshold">Semitone threshold</system:String>-->
+  <!--<system:String x:Key="prefs.playback.pitchfollow.verticalposition">Note vertical position</system:String>-->
+  <!--<system:String x:Key="prefs.playback.systemdefault">Use system default device</system:String>-->
   <system:String x:Key="prefs.playback.test">再生テスト</system:String>
   <system:String x:Key="prefs.rendering">レンダリング</system:String>
   <system:String x:Key="prefs.rendering.defaultrenderer">Classic UTAU音源のデフォルトレンダラー</system:String>
   <!--<system:String x:Key="prefs.rendering.diffsingerdepth">DiffSinger Render Depth</system:String>-->
+  <!--<system:String x:Key="prefs.rendering.diffsingerpitchlocalretaking">DiffSinger Pitch Local Retaking</system:String>-->
+  <!--<system:String x:Key="prefs.rendering.diffsingershowacousticf0patchpreview">Show acoustic F0 patch preview on piano roll</system:String>-->
   <system:String x:Key="prefs.rendering.diffsingersteps">DiffSinger Render Steps：Acoustic</system:String>
   <system:String x:Key="prefs.rendering.diffsingerstepspitch">DiffSinger Render Steps：ピッチ</system:String>
   <system:String x:Key="prefs.rendering.diffsingerstepsvariance">DiffSinger Render Steps：Variance</system:String>
+  <!--<system:String x:Key="prefs.rendering.diffsingerunvoicedconsonantacousticf0interpolate">DiffSinger unvoiced consonant F0 interpolate (experimental)</system:String>-->
+  <!--<system:String x:Key="prefs.rendering.diffsingervariancelocalpitchpatch">DiffSinger Local Variance Update for Pitch Edits</system:String>-->
   <!--<system:String x:Key="prefs.rendering.onnxgpu">GPU</system:String>-->
   <system:String x:Key="prefs.rendering.onnxrunner">機械学習の実行</system:String>
   <system:String x:Key="prefs.rendering.phasecomp">位相補正</system:String>
@@ -485,13 +833,141 @@
   </system:String>
   <system:String x:Key="prefs.rendering.threads.numthreads">最大レンダースレッド数</system:String>
   <!--<system:String x:Key="prefs.rendering.wavtool">Wavtool</system:String>-->
+  <!--<system:String x:Key="prefs.shortcut.search.watermark">Search by name or key...</system:String>-->
+  <!--<system:String x:Key="prefs.shortcut.tooltip">Left click to change. Right click to reset.</system:String>-->
+  <!--<system:String x:Key="prefs.shortcuts">Keyboard Shortcuts</system:String>-->
+  <!--<system:String x:Key="prefs.shortcuts.duplicate">The shortcut '{0}' is already assigned to '{1}'.</system:String>-->
+  <!--<system:String x:Key="prefs.shortcuts.listening">Press keys...</system:String>-->
   <!--<system:String x:Key="prefs.utau">UTAU</system:String>-->
 
   <system:String x:Key="progress.cachecleared">キャッシュをクリアしました。</system:String>
   <system:String x:Key="progress.clearingcache">キャッシュをクリア中...</system:String>
+  <!--<system:String x:Key="progress.diffsinger.preset">DiffSinger {0} preset applied (acoustic {1}, variance {2}, pitch {3})</system:String>-->
   <system:String x:Key="progress.loadingsingers">シンガー読み込み中...</system:String>
   <system:String x:Key="progress.saved">プロジェクトを保存しました：{0:yyyy/MM/dd HH:mm:ss}</system:String>
   <system:String x:Key="progress.waitingrendering">レンダリング中</system:String>
+
+  <!--<system:String x:Key="shortcut.ClearSelection">Clear Selection</system:String>-->
+  <!--<system:String x:Key="shortcut.Copy">Copy</system:String>-->
+  <!--<system:String x:Key="shortcut.Cut">Cut</system:String>-->
+  <!--<system:String x:Key="shortcut.DeleteNotes">Delete Notes</system:String>-->
+  <!--<system:String x:Key="shortcut.DeselectAll">Deselect All</system:String>-->
+  <!--<system:String x:Key="shortcut.EditLyrics">Edit Lyrics</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect1">Select Expression 1</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect10">Select Expression 10</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect2">Select Expression 2</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect3">Select Expression 3</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect4">Select Expression 4</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect5">Select Expression 5</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect6">Select Expression 6</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect7">Select Expression 7</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect8">Select Expression 8</system:String>-->
+  <!--<system:String x:Key="shortcut.ExpSelect9">Select Expression 9</system:String>-->
+  <!--<system:String x:Key="shortcut.ExtendSelectionLeft">Extend Selection Left</system:String>-->
+  <!--<system:String x:Key="shortcut.ExtendSelectionRight">Extend Selection Right</system:String>-->
+  <!--<system:String x:Key="shortcut.FocusSelection">Focus Selection</system:String>-->
+  <!--<system:String x:Key="shortcut.FullScreen">Toggle Full Screen</system:String>-->
+  <!--<system:String x:Key="shortcut.HideDetachedWindow">Hide Detached Window</system:String>-->
+  <!--<system:String x:Key="shortcut.InsertNote">Insert Note</system:String>-->
+  <!--<system:String x:Key="shortcut.MergeNotes">Merge Selected Notes</system:String>-->
+  <!--<system:String x:Key="shortcut.MoveCursorLeft">Move Cursor Left</system:String>-->
+  <!--<system:String x:Key="shortcut.MoveCursorRight">Move Cursor Right</system:String>-->
+  <!--<system:String x:Key="shortcut.MoveNotesLeft">Move Notes Left</system:String>-->
+  <!--<system:String x:Key="shortcut.MoveNotesRight">Move Notes Right</system:String>-->
+  <!--<system:String x:Key="shortcut.MoveToNextPartDown">Move to Next Part (Down)</system:String>-->
+  <!--<system:String x:Key="shortcut.MoveToNextPartUp">Move to Next Part (Up)</system:String>-->
+  <!--<system:String x:Key="shortcut.MuteTrack">Mute Track</system:String>-->
+  <!--<system:String x:Key="shortcut.OpenPluginMenu">Open Plugin Menu</system:String>-->
+  <!--<system:String x:Key="shortcut.OpenSnapMenu">Open Snap Menu</system:String>-->
+  <!--<system:String x:Key="shortcut.Paste">Paste</system:String>-->
+  <!--<system:String x:Key="shortcut.PasteParameters">Paste Parameters</system:String>-->
+  <!--<system:String x:Key="shortcut.PastePlain">Paste as Plain Notes</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayOrPause">Play / Pause</system:String>-->
+  <!--<system:String x:Key="shortcut.PlaySelection">Play Selection</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayheadEnd">Move Playhead to End</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayheadHome">Move Playhead to Start</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayheadLeft">Move Playhead Left</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayheadRight">Move Playhead Right</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayheadToSelectionEnd">Move Playhead to Selection End</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayheadToSelectionStart">Move Playhead to Selection Start</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayheadToViewEnd">Move Playhead to View End</system:String>-->
+  <!--<system:String x:Key="shortcut.PlayheadToViewStart">Move Playhead to View Start</system:String>-->
+  <!--<system:String x:Key="shortcut.Redo">Redo</system:String>-->
+  <!--<system:String x:Key="shortcut.ResizeNotesLeft">Resize Notes Left</system:String>-->
+  <!--<system:String x:Key="shortcut.ResizeNotesRight">Resize Notes Right</system:String>-->
+  <!--<system:String x:Key="shortcut.SaveProject">Save Project</system:String>-->
+  <!--<system:String x:Key="shortcut.ScrollDown">Scroll Down</system:String>-->
+  <!--<system:String x:Key="shortcut.ScrollLeft">Scroll Left</system:String>-->
+  <!--<system:String x:Key="shortcut.ScrollRight">Scroll Right</system:String>-->
+  <!--<system:String x:Key="shortcut.ScrollUp">Scroll Up</system:String>-->
+  <!--<system:String x:Key="shortcut.SearchNote">Search Note</system:String>-->
+  <!--<system:String x:Key="shortcut.SelectAll">Select All</system:String>-->
+  <!--<system:String x:Key="shortcut.SelectToEnd">Extend Selection to End</system:String>-->
+  <!--<system:String x:Key="shortcut.SelectToStart">Extend Selection to Start</system:String>-->
+  <!--<system:String x:Key="shortcut.SoloTrack">Solo Track</system:String>-->
+  <!--<system:String x:Key="shortcut.ToggleExpressions">Toggle Expressions View</system:String>-->
+  <!--<system:String x:Key="shortcut.ToggleFinalPitch">Toggle Final Pitch View</system:String>-->
+  <!--<system:String x:Key="shortcut.ToggleNoteParams">Toggle Note Parameters View</system:String>-->
+  <!--<system:String x:Key="shortcut.TogglePhoneme">Toggle Phoneme View</system:String>-->
+  <!--<system:String x:Key="shortcut.TogglePitch">Toggle Pitch View</system:String>-->
+  <!--<system:String x:Key="shortcut.TogglePlayTone">Toggle Play Tone</system:String>-->
+  <!--<system:String x:Key="shortcut.ToggleSnap">Toggle Snap</system:String>-->
+  <!--<system:String x:Key="shortcut.ToggleTips">Toggle Tips View</system:String>-->
+  <!--<system:String x:Key="shortcut.ToggleVibrato">Toggle Vibrato View</system:String>-->
+  <!--<system:String x:Key="shortcut.ToggleWaveform">Toggle Waveform View</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelect1">Selection Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelect2Alt">Pen Tool (Alt)</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelect2Main">Pen Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelect3">Eraser Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelect4Main">Draw Pitch Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelect4Overwrite">Draw Pitch Tool (Overwrite)</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelect5">Knife Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelectPitchLine">Pitch Line Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelectPitchLineOverwrite">Pitch Line Tool (Overwrite)</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelectPitchSCurve">Pitch S-Curve Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelectPitchSine">Pitch Sine Wave Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.ToolSelectPitchSmoothen">Pitch Smoothen Tool</system:String>-->
+  <!--<system:String x:Key="shortcut.TransposeDown">Transpose Down</system:String>-->
+  <!--<system:String x:Key="shortcut.TransposeOctaveDown">Transpose Octave Down</system:String>-->
+  <!--<system:String x:Key="shortcut.TransposeOctaveUp">Transpose Octave Up</system:String>-->
+  <!--<system:String x:Key="shortcut.TransposeUp">Transpose Up</system:String>-->
+  <!--<system:String x:Key="shortcut.Undo">Undo</system:String>-->
+  <!--<system:String x:Key="shortcut.ZoomIn">Zoom In</system:String>-->
+  <!--<system:String x:Key="shortcut.ZoomOut">Zoom Out</system:String>-->
+
+  <!--<system:String x:Key="singererror.aliasfullwidthspaces">Alias contains full-width spaces.</system:String>-->
+  <!--<system:String x:Key="singererror.aliasisnfd">Alias is NFD.</system:String>-->
+  <!--<system:String x:Key="singererror.aliasmultiplespaces">Alias contains multiple spaces.</system:String>-->
+  <!--<system:String x:Key="singererror.aliasstartwithspace">Alias starts or ends with a space.</system:String>-->
+  <!--<system:String x:Key="singererror.bitdepth">Bit depth of the sound file is not 16bit.</system:String>-->
+  <!--<system:String x:Key="singererror.consonantoutofduration">Consonant out of sound file duration.</system:String>-->
+  <!--<system:String x:Key="singererror.consonantshort">Consonant must be &gt;= 0.</system:String>-->
+  <!--<system:String x:Key="singererror.cutoffconsonant">Cutoff must be to the right of consonant.</system:String>-->
+  <!--<system:String x:Key="singererror.cutoffoutofduration">Cutoff out of sound file duration.</system:String>-->
+  <!--<system:String x:Key="singererror.cutoffoverlap">Cutoff must be to the right of overlap.</system:String>-->
+  <!--<system:String x:Key="singererror.cutoffpreutter">Cutoff must be to the right of preutter.</system:String>-->
+  <!--<system:String x:Key="singererror.duplicatealias">There are duplicate aliases.{0}</system:String>-->
+  <!--<system:String x:Key="singererror.duplicatename">Duplicated file names found when ignoreing case in oto set "{0}": {1}.
+The voicebank may not work on another OS with case-sensitivity.</system:String>-->
+  <!--<system:String x:Key="singererror.failedload">Failed to load voicebank.</system:String>-->
+  <!--<system:String x:Key="singererror.invalidduration">Invalid duration {0}.</system:String>-->
+  <!--<system:String x:Key="singererror.invalidoto">Invalid oto format.</system:String>-->
+  <!--<system:String x:Key="singererror.mono">Sound file is not mono channel.</system:String>-->
+  <!--<system:String x:Key="singererror.offsetoutofduration">Offset out of sound file duration.</system:String>-->
+  <!--<system:String x:Key="singererror.offsetshort">Offset must be &gt;= 0.</system:String>-->
+  <!--<system:String x:Key="singererror.overlapoutofduration">Overlap out of sound file duration.</system:String>-->
+  <!--<system:String x:Key="singererror.preutteroutofduration">Preutter out of sound file duration.</system:String>-->
+  <!--<system:String x:Key="singererror.preuttershort">Preutter must be &gt;= 0.</system:String>-->
+  <!--<system:String x:Key="singererror.samplerate">Sample rate of the sound file is not 44100Hz.</system:String>-->
+  <!--<system:String x:Key="singererror.soundmissing">Sound file missing</system:String>-->
+  <!--<system:String x:Key="singererror.soundnotopened">Cannot open sound file.</system:String>-->
+  <!--<system:String x:Key="singererror.txtnotfound">character.txt not found.</system:String>-->
+  <!--<system:String x:Key="singererror.wavisnfd">Wav filename is NFD.</system:String>-->
+  <!--<system:String x:Key="singererror.wrongcase">Wrong case in file name:
+expected: {0}
+Actual: {1}
+The voicebank may not work on another OS.</system:String>-->
+  <!--<system:String x:Key="singererror.yamlnotfound">character.yaml not found.</system:String>-->
 
   <system:String x:Key="singers.caption">シンガー</system:String>
   <system:String x:Key="singers.editoto.editinsetparam">setParamで編集</system:String>
@@ -529,7 +1005,6 @@
   <system:String x:Key="singers.setimage">アイコンを設定</system:String>
   <system:String x:Key="singers.setportrait">背景イラストを設定</system:String>
   <system:String x:Key="singers.setsingertype">シンガータイプを設定</system:String>
-  <system:String x:Key="singers.subbanks.cancel">キャンセル</system:String>
   <system:String x:Key="singers.subbanks.clear">クリア</system:String>
   <!--<system:String x:Key="singers.subbanks.color">Color</system:String>-->
   <system:String x:Key="singers.subbanks.color.add">Colorを追加</system:String>
@@ -538,8 +1013,6 @@
   <system:String x:Key="singers.subbanks.edit">Voice Colorを編集</system:String>
   <system:String x:Key="singers.subbanks.export">prefix.mapをエクスポート</system:String>
   <system:String x:Key="singers.subbanks.import">prefix.mapをインポート</system:String>
-  <system:String x:Key="singers.subbanks.reset">リセット</system:String>
-  <system:String x:Key="singers.subbanks.save">保存</system:String>
   <system:String x:Key="singers.subbanks.selectall">すべて選択</system:String>
   <system:String x:Key="singers.subbanks.set">セット</system:String>
   <system:String x:Key="singers.subbanks.tone">音程</system:String>
@@ -550,12 +1023,23 @@
   <system:String x:Key="singersetup.archivefileencoding">アーカイブファイルのエンコード</system:String>
   <system:String x:Key="singersetup.archivefileencoding.prompt">ファイル名が文字化けしないエンコードを選択してください。</system:String>
   <system:String x:Key="singersetup.back">戻る</system:String>
+  <!--<system:String x:Key="singersetup.failed">Failed to install singer.</system:String>-->
   <system:String x:Key="singersetup.install">インストール</system:String>
   <system:String x:Key="singersetup.missinginfo">このボイスバンクのcharacter.yamlに以下の設定を追加します。</system:String>
   <system:String x:Key="singersetup.next">次へ</system:String>
   <system:String x:Key="singersetup.singertype">シンガーのタイプ</system:String>
+  <!--<system:String x:Key="singersetup.succeeded">Installation succeeded.</system:String>-->
   <system:String x:Key="singersetup.textfileencoding">テキストファイルのエンコード</system:String>
   <system:String x:Key="singersetup.textfileencoding.prompt">テキストが文字化けしないエンコードを選択してください。</system:String>
+  <!--<system:String x:Key="singersetup.title">Singer Setup</system:String>-->
+
+  <!--<system:String x:Key="themeditor.cancel">Cancel</system:String>-->
+  <!--<system:String x:Key="themeditor.save">Save</system:String>-->
+  <!--<system:String x:Key="themeditor.title">Theme Editor</system:String>-->
+
+  <!--<system:String x:Key="themeeditor.cancel">Cancel</system:String>-->
+  <!--<system:String x:Key="themeeditor.save">Save</system:String>-->
+  <!--<system:String x:Key="themeeditor.title">Theme Editor</system:String>-->
 
   <system:String x:Key="tip.aliasbox">エイリアスの手動指定</system:String>
   <system:String x:Key="tip.exps">数値、カスタムタイプ
@@ -592,6 +1076,7 @@
   <system:String x:Key="tracks.duplicatesettings">トラック設定を複製</system:String>
   <system:String x:Key="tracks.favorite">お気に入り</system:String>
   <system:String x:Key="tracks.installsinger">シンガーをインストール</system:String>
+  <system:String x:Key="tracks.mixfx">試聴エフェクト...</system:String>
   <system:String x:Key="tracks.more">さらに表示</system:String>
   <system:String x:Key="tracks.movedown">下へ</system:String>
   <system:String x:Key="tracks.moveup">上へ</system:String>
@@ -604,13 +1089,17 @@
   <system:String x:Key="tracks.opensingers">Singersフォルダを開く</system:String>
   <system:String x:Key="tracks.remove">削除</system:String>
   <system:String x:Key="tracks.rename">トラックの名前を変更</system:String>
+  <!--<system:String x:Key="tracks.rotateselectedtracksingers">Rotate singers across selected tracks</system:String>-->
   <system:String x:Key="tracks.selectrenderer">レンダラーを選択</system:String>
   <system:String x:Key="tracks.selectsinger">シンガーを選択</system:String>
+  <!--<system:String x:Key="tracks.singer.applytoalltracks.tooltip">Apply to all selected tracks</system:String>-->
+  <!--<system:String x:Key="tracks.singer.favorite.tooltip">Add singer to favorites</system:String>-->
   <system:String x:Key="tracks.singerdefault">（このシンガーのデフォルト） </system:String>
   <system:String x:Key="tracks.solo">ソロ</system:String>
   <system:String x:Key="tracks.solo.add">ソロ (他トラックのソロを解除しない)</system:String>
   <system:String x:Key="tracks.solo.only">ソロ (他トラックのソロを解除)</system:String>
   <system:String x:Key="tracks.solo.unsoloall">全トラックのソロを解除</system:String>
+  <!--<system:String x:Key="tracks.standardizesettings">Standardize Track Settings</system:String>-->
   <system:String x:Key="tracks.trackcolor">トラックカラーを変更</system:String>
   <system:String x:Key="tracks.tracksettings">トラック設定</system:String>
 
@@ -634,6 +1123,13 @@
   <system:String x:Key="welcome.open">開く</system:String>
   <system:String x:Key="welcome.open.description">ローカルファイルを開きます</system:String>
   <system:String x:Key="welcome.recent">最近使用したファイル</system:String>
+  <!--<system:String x:Key="welcome.singerhub.description">Install or update voice libraries from trusted sources</system:String>-->
+  <!--<system:String x:Key="welcome.singerhub.open">Open Singer Hub</system:String>-->
   <system:String x:Key="welcome.start">開始</system:String>
   <system:String x:Key="welcome.template">テンプレート</system:String>
+
+  <!--<system:String x:Key="workspace.panel.close">Close panel</system:String>-->
+  <!--<system:String x:Key="workspace.panel.render">Render</system:String>-->
+  <!--<system:String x:Key="workspace.panel.view">View</system:String>-->
+  <!--<system:String x:Key="workspace.tracks">Tracks</system:String>-->
 </ResourceDictionary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -15,9 +15,12 @@ using NWaves.FeatureExtractors.Options;
 using NWaves.Filters.Fda;
 using NWaves.Utils;
 
-namespace OpenUtau.App.Controls {
-    class OtoPlot : Control {
-        public struct OtoPlotTiming {
+namespace OpenUtau.App.Controls
+{
+    class OtoPlot : Control
+    {
+        public struct OtoPlotTiming
+        {
             public double cutoff;
             public double offset;
             public double consonant;
@@ -46,19 +49,23 @@ namespace OpenUtau.App.Controls {
                 o => o.Timing,
                 (o, v) => o.Timing = v);
 
-        public bool ZoomInMel {
+        public bool ZoomInMel
+        {
             get => zoomInMel;
             set => SetAndRaise(ZoomInMelProperty, ref zoomInMel, value);
         }
-        public WaveFile? WaveFile {
+        public WaveFile? WaveFile
+        {
             get => waveFile;
             set => SetAndRaise(WaveFileProperty, ref waveFile, value);
         }
-        public Tuple<int, double[]>? F0 {
+        public Tuple<int, double[]>? F0
+        {
             get => f0;
             set => SetAndRaise(F0Property, ref f0, value);
         }
-        public OtoPlotTiming Timing {
+        public OtoPlotTiming Timing
+        {
             get => timing;
             set => SetAndRaise(TimingProperty, ref timing, value);
         }
@@ -75,8 +82,8 @@ namespace OpenUtau.App.Controls {
         private byte[]? wavBitmapData;
         private WriteableBitmap? melBitmap;
 
-        private IBrush blueFill = new SolidColorBrush(Colors.LightBlue, 0.5);
-        private IBrush pinkFill = new SolidColorBrush(Colors.Pink, 0.5);
+        private IBrush blueFill = new SolidColorBrush(Avalonia.Media.Colors.LightBlue, 0.5);
+        private IBrush pinkFill = new SolidColorBrush(Avalonia.Media.Colors.Pink, 0.5);
         private IPen blueLine = new Pen(SolidColorBrush.Parse("#4EA6EA"), 2);
         private IPen limeLine = new Pen(Brushes.Lime);
         private IPen redLine = new Pen(Brushes.Red);
@@ -90,7 +97,8 @@ namespace OpenUtau.App.Controls {
         private Point panPosition;
         private Point lastPointerPos;
 
-        public OtoPlot() {
+        public OtoPlot()
+        {
             ClipToBounds = true;
             ovlText = new TextLayout(
                 "OVL",
@@ -107,29 +115,36 @@ namespace OpenUtau.App.Controls {
             PointerWheelChanged += OtoPlot_PointerWheelChanged;
         }
 
-        private void OtoPlot_PointerMoved(object? sender, PointerEventArgs e) {
+        private void OtoPlot_PointerMoved(object? sender, PointerEventArgs e)
+        {
             var point = e.GetCurrentPoint(this);
             lastPointerPos = point.Position;
-            if (point.Properties.IsLeftButtonPressed) {
+            if (point.Properties.IsLeftButtonPressed)
+            {
                 Pan((panPosition - point.Position).X / Bounds.Width);
                 panPosition = point.Position;
             }
         }
 
-        private void OtoPlot_PointerPressed(object? sender, PointerPressedEventArgs e) {
+        private void OtoPlot_PointerPressed(object? sender, PointerPressedEventArgs e)
+        {
             e.Pointer.Capture(this);
             var point = e.GetCurrentPoint(this);
-            if (point.Properties.IsLeftButtonPressed) {
+            if (point.Properties.IsLeftButtonPressed)
+            {
                 panPosition = point.Position;
             }
         }
 
-        private void OtoPlot_PointerReleased(object? sender, PointerReleasedEventArgs e) {
+        private void OtoPlot_PointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
             e.Pointer.Capture(null);
         }
 
-        public void Pan(double delta) {
-            if (WaveFile != null) {
+        public void Pan(double delta)
+        {
+            if (WaveFile != null)
+            {
                 delta *= xSpan;
                 double duration = WaveFile.Signals[0].Duration;
                 xStart += delta;
@@ -140,13 +155,16 @@ namespace OpenUtau.App.Controls {
             InvalidateVisual();
         }
 
-        private void OtoPlot_PointerWheelChanged(object? sender, PointerWheelEventArgs e) {
+        private void OtoPlot_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
+        {
             var point = e.GetCurrentPoint(this);
             Zoom(1.0 - 0.25 * Math.Sign(e.Delta.Y), point.Position.X / Bounds.Width);
         }
 
-        public void Zoom(double mult, double center) {
-            if (WaveFile != null) {
+        public void Zoom(double mult, double center)
+        {
+            if (WaveFile != null)
+            {
                 double duration = WaveFile.Signals[0].Duration;
                 double xCenter = xStart + xSpan * center;
                 xSpan *= mult;
@@ -159,38 +177,50 @@ namespace OpenUtau.App.Controls {
             InvalidateVisual();
         }
 
-        public double GetPointerMs() {
+        public double GetPointerMs()
+        {
             return (lastPointerPos.X / Bounds.Width * xSpan + xStart) * 1000.0;
         }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
             base.OnPropertyChanged(change);
-            if (change.Property == ZoomInMelProperty) {
+            if (change.Property == ZoomInMelProperty)
+            {
                 UpdateMel(WaveFile);
                 InvalidateVisual();
-            } else if (change.Property == WaveFileProperty) {
+            }
+            else if (change.Property == WaveFileProperty)
+            {
                 xStart = 0;
-                if (WaveFile != null) {
+                if (WaveFile != null)
+                {
                     xSpan = WaveFile.Signals[0].Duration;
                 }
                 UpdateMel(WaveFile);
                 InvalidateVisual();
-            } else if (change.Property == F0Property ||
-                change.Property == TimingProperty) {
+            }
+            else if (change.Property == F0Property ||
+                change.Property == TimingProperty)
+            {
                 InvalidateVisual();
             }
         }
 
-        public override void Render(DrawingContext context) {
+        public override void Render(DrawingContext context)
+        {
             context.DrawRectangle(Brushes.Transparent, null, Bounds.WithX(0).WithY(0));
             UpdateWav();
-            if (wavBitmap != null) {
+            if (wavBitmap != null)
+            {
                 context.DrawImage(wavBitmap,
                     new Rect(0, 0, wavBitmap.Size.Width, wavBitmap.Size.Height),
                     new Rect(0, 0, Bounds.Width, Bounds.Height / 3));
             }
-            if (melBitmap != null) {
-                if (WaveFile != null) {
+            if (melBitmap != null)
+            {
+                if (WaveFile != null)
+                {
                     double duration = WaveFile.Signals[0].Duration;
                     double srcX = melBitmap.Size.Width * xStart / duration;
                     double srcWidth = melBitmap.Size.Width * xSpan / duration;
@@ -203,12 +233,14 @@ namespace OpenUtau.App.Controls {
             DrawTiming(context);
         }
 
-        void UpdateWav() {
+        void UpdateWav()
+        {
             int width = (int)Bounds.Width;
             int height = (int)(Bounds.Height / 3);
             if (wavBitmap == null ||
                 wavBitmap.Size.Width != Bounds.Width ||
-                wavBitmap.Size.Height < Bounds.Height / 3) {
+                wavBitmap.Size.Height < Bounds.Height / 3)
+            {
                 wavBitmap?.Dispose();
                 wavBitmap = new WriteableBitmap(
                     new PixelSize(width, height),
@@ -217,11 +249,13 @@ namespace OpenUtau.App.Controls {
                     Avalonia.Platform.AlphaFormat.Unpremul);
                 wavBitmapData = new byte[width * height * 4];
             }
-            if (wavBitmapData == null) {
+            if (wavBitmapData == null)
+            {
                 return;
             }
             Array.Clear(wavBitmapData);
-            if (WaveFile != null) {
+            if (WaveFile != null)
+            {
                 var samples = WaveFile.Signals[0].Samples;
                 double duration = WaveFile.Signals[0].Duration;
                 int startSample = (int)Math.Clamp(
@@ -229,18 +263,22 @@ namespace OpenUtau.App.Controls {
                 int endSample = (int)Math.Clamp(
                     (xStart + xSpan) / duration * samples.Length, 0, samples.Length - 1);
                 double samplesPerPixel = (endSample - startSample) / width;
-                if (samplesPerPixel > 64) {
-                    for (int x = 0; x < width; ++x) {
+                if (samplesPerPixel > 64)
+                {
+                    for (int x = 0; x < width; ++x)
+                    {
                         double min = 0;
                         double max = 0;
                         for (int j = startSample + (int)(samplesPerPixel * x);
-                            j < startSample + (int)(samplesPerPixel * (x + 1)); ++j) {
+                            j < startSample + (int)(samplesPerPixel * (x + 1)); ++j)
+                        {
                             min = Math.Min(min, samples[j]);
                             max = Math.Max(max, samples[j]);
                         }
                         int maxY = (int)Math.Clamp((height - 1) * (0.5 - max / 2), 0, height - 1);
                         int minY = (int)Math.Clamp((height - 1) * (0.5 - min / 2), 0, height - 1);
-                        for (int y = maxY; y <= minY; ++y) {
+                        for (int y = maxY; y <= minY; ++y)
+                        {
                             int index = y * width + x;
                             wavBitmapData[index * 4] = 0;
                             wavBitmapData[index * 4 + 1] = 0;
@@ -248,25 +286,33 @@ namespace OpenUtau.App.Controls {
                             wavBitmapData[index * 4 + 3] = 0xFF;
                         }
                     }
-                } else {
+                }
+                else
+                {
                     double lastX = 0;
                     double lastY = 0;
-                    for (int i = startSample; i < endSample; ++i) {
+                    for (int i = startSample; i < endSample; ++i)
+                    {
                         double x = Math.Clamp((i - startSample) / samplesPerPixel, 0, width - 1);
                         double y = Math.Clamp((height - 1) * (0.5 - samples[i] / 2), 0, height - 1);
-                        if (i > startSample) {
+                        if (i > startSample)
+                        {
                             double dx;
                             double dy;
-                            if (x - lastX > Math.Abs(y - lastY)) {
+                            if (x - lastX > Math.Abs(y - lastY))
+                            {
                                 dx = 1;
                                 dy = (y - lastY) / (x - lastX);
-                            } else {
+                            }
+                            else
+                            {
                                 dx = (x - lastX) / Math.Abs(y - lastY);
                                 dy = Math.Sign(y - lastY);
                             }
                             double xx = lastX;
                             double yy = lastY;
-                            while (xx < x) {
+                            while (xx < x)
+                            {
                                 int index = (int)(Math.Round(yy) * width + Math.Round(xx));
                                 wavBitmapData[index * 4] = 0;
                                 wavBitmapData[index * 4 + 1] = 0;
@@ -281,15 +327,18 @@ namespace OpenUtau.App.Controls {
                     }
                 }
             }
-            using (var frameBuffer = wavBitmap.Lock()) {
+            using (var frameBuffer = wavBitmap.Lock())
+            {
                 Marshal.Copy(wavBitmapData, 0, frameBuffer.Address, wavBitmapData.Length);
             }
         }
 
-        void UpdateMel(WaveFile? waveFile) {
+        void UpdateMel(WaveFile? waveFile)
+        {
             melBitmap?.Dispose();
             melBitmap = null;
-            if (waveFile == null) {
+            if (waveFile == null)
+            {
                 return;
             }
             var colormap = new Viridis();
@@ -297,10 +346,13 @@ namespace OpenUtau.App.Controls {
             double min = mel.Cast<double>().Min();
             double range = mel.Cast<double>().Max() - min;
             byte[] bitmapData = new byte[mel.GetLength(1) * mel.GetLength(0) * 4];
-            if (range > 0) {
+            if (range > 0)
+            {
                 int index = 0;
-                for (int i = 0; i < mel.GetLength(0); ++i) {
-                    for (int j = 0; j < mel.GetLength(1); ++j) {
+                for (int i = 0; i < mel.GetLength(0); ++i)
+                {
+                    for (int j = 0; j < mel.GetLength(1); ++j)
+                    {
                         mel[i, j] = (mel[i, j] - min) / range;
                         byte intensity = (byte)Math.Clamp(mel[i, j] * 0xFF, 0, 0xFF);
                         var (r, g, b) = colormap.GetRGB(intensity);
@@ -316,19 +368,22 @@ namespace OpenUtau.App.Controls {
                 new Vector(96, 96),
                 Avalonia.Platform.PixelFormat.Rgba8888,
                 Avalonia.Platform.AlphaFormat.Unpremul);
-            using (var frameBuffer = melBitmap.Lock()) {
+            using (var frameBuffer = melBitmap.Lock())
+            {
                 Marshal.Copy(bitmapData, 0, frameBuffer.Address, bitmapData.Length);
             }
         }
 
-        static double[,] GetMel(WaveFile wav, bool zoomInMel) {
+        static double[,] GetMel(WaveFile wav, bool zoomInMel)
+        {
             int zoomIn = zoomInMel ? 8 : 1;
             var bands = FilterBanks.MelBands(
                 kMelSize, wav.WaveFmt.SamplingRate,
                 highFreq: wav.WaveFmt.SamplingRate / 2 / zoomIn);
             int fftSize = kFftSize * Math.Max(1, zoomIn / 4);
             var extractor = new FilterbankExtractor(
-               new FilterbankOptions {
+               new FilterbankOptions
+               {
                    SamplingRate = wav.WaveFmt.SamplingRate,
                    FrameSize = fftSize,
                    FftSize = fftSize,
@@ -340,16 +395,20 @@ namespace OpenUtau.App.Controls {
             var padded = new float[fftSize / 2].Concat(wav.Signals[0].Samples).Concat(new float[fftSize / 2]).ToArray();
             var mel = extractor.ComputeFrom(padded);
             var heatmap = new double[mel[0].Length, mel.Count];
-            for (int i = 0; i < mel.Count; i++) {
-                for (int j = 0; j < mel[i].Length; j++) {
+            for (int i = 0; i < mel.Count; i++)
+            {
+                for (int j = 0; j < mel[i].Length; j++)
+                {
                     heatmap[kMelSize - 1 - j, i] = Math.Log(Math.Max(mel[i][j], 1e-4));
                 }
             }
             return heatmap;
         }
 
-        void DrawF0(DrawingContext context) {
-            if (F0 == null || WaveFile == null || melBitmap == null) {
+        void DrawF0(DrawingContext context)
+        {
+            if (F0 == null || WaveFile == null || melBitmap == null)
+            {
                 f0Geometry = null;
                 return;
             }
@@ -359,7 +418,8 @@ namespace OpenUtau.App.Controls {
             double low = Scale.HerzToMel(0);
             var points = new List<Point>();
             points.Clear();
-            for (int i = 0; i < F0.Item2.Length; ++i) {
+            for (int i = 0; i < F0.Item2.Length; ++i)
+            {
                 double f0X = 1.0 * i * hopSize / WaveFile.WaveFmt.SamplingRate;
                 f0X = (f0X - xStart) * Bounds.Width / xSpan;
                 double f0Y = Bounds.Height - Scale.HerzToMel(F0.Item2[i]) / (high - low) * (Bounds.Height * 2 / 3);
@@ -369,12 +429,15 @@ namespace OpenUtau.App.Controls {
             context.DrawGeometry(null, whiteLine, f0Geometry);
         }
 
-        static int GetHopSize(int sampleRate) {
+        static int GetHopSize(int sampleRate)
+        {
             return sampleRate / 400;
         }
 
-        void DrawTiming(DrawingContext context) {
-            if (WaveFile == null) {
+        void DrawTiming(DrawingContext context)
+        {
+            if (WaveFile == null)
+            {
                 return;
             }
             int width = (int)Bounds.Width;
@@ -392,15 +455,18 @@ namespace OpenUtau.App.Controls {
             double overlapX = (Timing.offset + Timing.overlap) * msToX - xOffset;
             double cutoffX = cutoff * msToX - xOffset;
 
-            if (offsetX > 0) {
+            if (offsetX > 0)
+            {
                 context.DrawRectangle(blueFill, null,
                     new Rect(0, 0, offsetX, height));
             }
-            if (consonantX > offsetX) {
+            if (consonantX > offsetX)
+            {
                 context.DrawRectangle(pinkFill, null,
                     new Rect(offsetX, 0, consonantX - offsetX, height));
             }
-            if (cutoffX <= width) {
+            if (cutoffX <= width)
+            {
                 context.DrawRectangle(blueFill, null,
                     new Rect(cutoffX, 0, width - cutoffX, height));
             }
@@ -415,7 +481,8 @@ namespace OpenUtau.App.Controls {
             preText.Draw(context, new Point(preutterX, height));
         }
 
-        protected override void OnUnloaded(RoutedEventArgs e) {
+        protected override void OnUnloaded(RoutedEventArgs e)
+        {
             base.OnUnloaded(e);
             wavBitmap?.Dispose();
             melBitmap?.Dispose();

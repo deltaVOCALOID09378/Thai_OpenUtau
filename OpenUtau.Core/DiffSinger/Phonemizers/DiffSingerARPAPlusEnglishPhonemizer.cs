@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,14 +10,14 @@ using OpenUtau.Core.Ustx;
 using Serilog;
 
 namespace OpenUtau.Core.DiffSinger {
-    [Phonemizer("DiffSinger English+ Phonemizer", "DIFFS EN+", language: "EN", author: "Cadlaxa")]
+    [Phonemizer("DiffSinger English+ Phonemizer", "English+", language: "DiffSinger", author: "Cadlaxa")]
     public class DiffSingerARPAPlusEnglishPhonemizer : DiffSingerG2pPhonemizer
     // cadlaxa here, this diffsinger english phonemizer just uses the ARPA+ G2p so arpasing+ and this phonemizer
     // have same g2p mechanics such as triggering of glottal stop with ('), manual relaxed consonants
     // plus other ds features
     {
         protected override string GetDictionaryName() => "dsdict-en.yaml";
-        public override string GetLangCode() => "en";
+        protected override string GetLangCode() => "en";
         protected override IG2p LoadBaseG2p() => new ArpabetPlusG2p();
         protected override string[] GetBaseG2pVowels() => new string[] {
             "aa", "ae", "ah", "ao", "aw", "ax", "ay", "eh", "er",

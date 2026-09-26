@@ -1,0 +1,171 @@
+using System;
+
+using System.Linq;
+
+using Avalonia.Controls;
+
+using Avalonia.Interactivity;
+
+using Avalonia.Threading;
+
+using Avalonia.VisualTree;
+using OpenUtau.App.Controls;
+
+using OpenUtau.App.ViewModels;
+
+using ReactiveUI;
+
+
+
+namespace OpenUtau.App.Views
+{
+
+    public partial class ThemeEditorPane : UserControl
+    {
+
+        public event EventHandler<ThemeEditorFinishedEventArgs>? Finished;
+
+        int scrollStyleApplyGeneration;
+
+
+
+        public ThemeEditorPane()
+        {
+
+            InitializeComponent();
+
+            AttachedToVisualTree += (_, _) =>
+            {
+
+                ClosePanelButton.IsVisible = IsHostedInPianoRollDock();
+
+                ScheduleApplyScrollStyle();
+
+            };
+
+            DetachedFromVisualTree += (_, _) => scrollStyleApplyGeneration++;
+
+            MessageBus.Current.Listen<ScrollbarsStyleChangedEvent>()
+
+                .Subscribe(_ => ScheduleApplyScrollStyle());
+
+        }
+
+
+
+        public void LoadTheme(string customThemePath)
+        {
+
+            DataContext = new ThemeEditorViewModel(customThemePath);
+
+        }
+
+
+
+        bool IsHostedInPianoRollDock()
+        {
+
+            return this.GetVisualAncestors().OfType<PianoRoll>().Any();
+
+        }
+
+
+
+        void ScheduleApplyScrollStyle()
+        {
+
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
+            {
+
+                return;
+
+            }
+
+            int generation = ++scrollStyleApplyGeneration;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+
+                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this))
+                {
+
+                    return;
+
+                }
+
+                ApplyScrollStyle();
+
+            }, DispatcherPriority.Loaded);
+
+        }
+
+
+
+        void ApplyScrollStyle()
+        {
+
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
+            {
+
+                return;
+
+            }
+
+            WorkspaceScrollbarHelper.ApplyScrollViewer(ContentScroll, WorkspaceScrollbarHelper.UseClassicScrollbars);
+
+        }
+
+
+
+        void OnCloseDockedPanel(object? sender, RoutedEventArgs e)
+        {
+
+            MessageBus.Current.SendMessage(new CloseDockedThemeEditorEvent());
+
+        }
+
+
+
+        void OnCancel(object? sender, RoutedEventArgs e)
+        {
+
+            Finished?.Invoke(this, new ThemeEditorFinishedEventArgs(saved: false));
+
+        }
+
+
+
+        void OnSave(object? sender, RoutedEventArgs e)
+        {
+
+            (DataContext as ThemeEditorViewModel)?.Save();
+
+            MessageBus.Current.SendMessage(new ThemeEditorSavedEvent());
+
+            Finished?.Invoke(this, new ThemeEditorFinishedEventArgs(saved: true));
+
+        }
+
+    }
+
+
+
+    public class ThemeEditorFinishedEventArgs : EventArgs
+    {
+
+        public bool Saved { get; }
+
+
+
+        public ThemeEditorFinishedEventArgs(bool saved)
+        {
+
+            Saved = saved;
+
+        }
+
+    }
+
+}
+
+

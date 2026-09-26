@@ -10,7 +10,7 @@ using OpenUtau.Core.Ustx;
 using Serilog;
 
 namespace OpenUtau.Core.Enunu {
-    [Phonemizer("Enunu Korean Phonemizer", "ENUNU KO", "EX3", language:"KO")]
+    [Phonemizer("Enunu Korean Phonemizer", "Korean", "EX3", language: "ENUNU")]
     public class EnunuKoreanPhonemizer : EnunuPhonemizer {
         readonly string PhonemizerType = "ENUNU KO";
         public string semivowelSep;
@@ -525,13 +525,10 @@ namespace OpenUtau.Core.Enunu {
                     phonemes = phonemes_,
                 };
             }
-            return new Result {
-                phonemes = new Phoneme[] {
-                    new Phoneme {
-                        phoneme = "error",
-                    }
-                },
-            };
+            if (SetUpException != null) {
+                throw new Exception("Phonemizer failed to process.", SetUpException);
+            }
+            throw new Exception("Part result not found");
         }
 
         public override void CleanUp() {

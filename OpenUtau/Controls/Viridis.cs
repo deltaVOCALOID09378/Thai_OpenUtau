@@ -1,10 +1,13 @@
-﻿using System;
+using System;
 
-namespace OpenUtau.App.Controls {
-    public class Viridis {
+namespace OpenUtau.App.Controls
+{
+    public class Viridis
+    {
         public string Name => "Viridis";
 
-        public (byte r, byte g, byte b) GetRGB(byte value) {
+        public (byte r, byte g, byte b) GetRGB(byte value)
+        {
             byte[] bytes = BitConverter.GetBytes(rgb[value]);
             return (bytes[2], bytes[1], bytes[0]);
         }

@@ -1,0 +1,33 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="OpenUtau.App.Views.CreateCustomTrackColorDialog"
+        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Title="{DynamicResource prefs.appearance.customtrackcolor.create.title}"
+        Height="300" Width="380" WindowStartupLocation="CenterOwner">
+  <StackPanel Margin="{Binding $parent.WindowDecorationMargin}" Spacing="8">
+    <TextBlock Margin="12,12,12,0"
+               Text="{DynamicResource prefs.appearance.customtrackcolor.create.prompt}"
+               TextWrapping="Wrap"/>
+    <TextBox Name="NameBox" Margin="12,0"/>
+
+    <Grid Margin="12,0" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+      <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,0,8"
+                 Text="{DynamicResource prefs.appearance.customtrackcolor.create.base}"/>
+      <ColorPicker Name="BaseColorPicker" Grid.Row="0" Grid.Column="1"
+                   Color="#7266EE" ColorSpectrumShape="Ring" MinWidth="180" Margin="0,0,0,8"/>
+
+      <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                 Text="{DynamicResource prefs.appearance.customtrackcolor.create.bright}"/>
+      <ColorPicker Name="BrightColorPicker" Grid.Row="1" Grid.Column="1"
+                   Color="#B9B4F9" ColorSpectrumShape="Ring" MinWidth="180"/>
+    </Grid>
+
+    <StackPanel Orientation="Horizontal" Spacing="10" Margin="12,4,12,12" HorizontalAlignment="Right">
+      <Button Name="CancelButton" MinWidth="72" Content="{DynamicResource button.cancel}"/>
+      <Button Name="OkButton" MinWidth="72" Content="{DynamicResource button.apply}"/>
+    </StackPanel>
+  </StackPanel>
+</Window>

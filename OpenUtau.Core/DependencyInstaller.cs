@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,7 +15,7 @@ namespace OpenUtau.Core {
         public static string FileExt = ".oudep";
         public static void Install(string archivePath) {
             DependencyConfig dependencyConfig;
-            using (var archive = ArchiveFactory.Open(archivePath)) {
+            using (var archive = ArchiveFactory.OpenArchive(archivePath, new SharpCompress.Readers.ReaderOptions())) {
                 DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, "Installing dependency"));
                 var configEntry = archive.Entries.First(e => e.Key == "oudep.yaml");
                 if (configEntry == null) {

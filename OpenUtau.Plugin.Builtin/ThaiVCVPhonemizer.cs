@@ -4,8 +4,10 @@
 // ==========================================
 // Made And Checked By DELTA SYNTH & Gemini AI
 // Original by Patiphat Wongyai
-// Version: v.2.4
-// History/Summary: Implemented Safety Position Buffer (prevPos + 10) to prevent phoneme overlapping ("ghostly voice" bug). Multi-syllable + note support.
+// Version: v.2.5
+// History/Summary:
+// v.2.5 (Consonant Space Widening - ขยายพื้นที่พยัญชนะ): เพิ่มพื้นที่ VC transition จาก 75% เป็น 80%, ending C จาก 85% เป็น 88%, vcPosition buffer จาก 120 เป็น 100 ticks เพื่อเสียงพยัญชนะชัดขึ้น
+// v.2.4: Implemented Safety Position Buffer (prevPos + 10) to prevent phoneme overlapping ("ghostly voice" bug). Multi-syllable + note support.
 // ==========================================
 
 using System;
@@ -356,7 +358,7 @@ namespace OpenUtau.Plugin.Builtin {
                 if (aliases.Count == 0) aliases.Add(string.IsNullOrEmpty(syllable) ? "a" : syllable);
                 
                 bool firstHasVowel = aliases.Count > 0 && vowels.Any(v => aliases[0].Contains(v));
-                int vcPosition = Math.Max(0, noteDuration - 120);
+                int vcPosition = Math.Max(0, noteDuration - 100);
 
                 for (int i = 0; i < aliases.Count; i++) {
                     string alias = aliases[i];
@@ -367,13 +369,13 @@ namespace OpenUtau.Plugin.Builtin {
                         if (!firstHasVowel && i == 1) {
                             position = Math.Min((int)(noteDuration * 0.025), 20);
                         } else if (alias == "-") {
-                            position = Math.Max((int)(noteDuration * 0.85), noteDuration - 18);
+                            position = Math.Max((int)(noteDuration * 0.88), noteDuration - 18);
                         } else if (alias.EndsWith("-")) {
-                            position = Math.Max((int)(noteDuration * 0.85), noteDuration - 18);
+                            position = Math.Max((int)(noteDuration * 0.88), noteDuration - 18);
                         } else if (i == aliases.Count - 1 && aliases.Count >= 3) {
-                            position = Math.Max((int)(noteDuration * 0.75), vcPosition);
+                            position = Math.Max((int)(noteDuration * 0.80), vcPosition);
                         } else {
-                            position = Math.Max((int)(noteDuration * 0.75), vcPosition);
+                            position = Math.Max((int)(noteDuration * 0.80), vcPosition);
                         }
                     }
                     

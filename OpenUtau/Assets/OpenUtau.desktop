@@ -1,7 +1,29 @@
-[Desktop Entry]
+# ชื่อไฟล์: OpenUtau.desktop
+# ลำดับเวอร์ชัน: 0.1
+# Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT
+# Original By OpenUtau Contributors
 
+[Desktop Entry]
+# ระบุเวอร์ชันของข้อกำหนด Desktop Entry เพื่อความเข้ากันได้ของระบบ
+Version=1.0
+
+# ระบุประเภทของไฟล์นี้ว่าเป็น Application
 Type=Application
-Name=OpenUtau
+
+# ชื่อของแอปพลิเคชันที่จะแสดงผลบนหน้าจอให้ผู้ใช้เห็น
+Name=Thai OpenUtau
+
+# คำอธิบายโปรแกรมขนาดสั้น (Tooltip) เมื่อนำเมาส์ไปชี้ที่ไอคอน
 Comment=Singing voice synthesizer
-Icon=OpenUtau
-Categories=AudioVideo;Audio;Midi
+
+# คำสั่งหลักที่ใช้สำหรับรันโปรแกรม (จำเป็นต้องมีเพื่อให้แอปเปิดได้)
+Exec=openutau
+
+# ระบุชื่อไฟล์ไอคอนของแอป (ปรับให้ไม่มีช่องว่างเพื่อป้องกันบั๊กการแสดงผลบน Linux)
+Icon=Thai OpenUtau Logo
+
+# ระบุหมวดหมู่เพื่อให้แอปพลิเคชันถูกจัดกลุ่มในเมนู Start ได้อย่างถูกต้อง
+Categories=AudioVideo;Audio;Midi;voice
+
+# กำหนดเป็น false เพื่อระบุว่าไม่ต้องเปิดหน้าต่าง Terminal (Command Line) ค้างไว้เมื่อรันโปรแกรม
+Terminal=false

@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,16 +7,23 @@
         xmlns:c="clr-namespace:OpenUtau.App.Controls"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="OpenUtau.App.Views.PianoRollWindow"
-        Icon="/Assets/open-utau.ico"
+        Icon="/Assets/Thai OpenUtau Logo type.ico"
         Title="{Binding NotesViewModel.WindowTitle}" MinWidth="300" MinHeight="200" Closing="WindowClosing"
         Focusable="True"
         TransparencyLevelHint="None"
         Deactivated="WindowDeactivated">
   <Window.Styles>
     <StyleInclude Source="/Styles/PianoRollStyles.axaml"/>
+    <Style Selector="Button.recording">
+      <Setter Property="Background" Value="#D32F2F"/>
+      <Setter Property="BorderBrush" Value="#FF5252"/>
+    </Style>
+    <Style Selector="Button.recording:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#E53935"/>
+    </Style>
   </Window.Styles>
   <Border Grid.Row="1">
-    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="{Binding $parent[1].WindowDecorationMargin}"
+    <Grid x:Name="PianoRollRoot" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="{Binding $parent[1].WindowDecorationMargin}"
           PointerMoved="BackgroundPointerMoved">
       <Grid.RowDefinitions>
         <RowDefinition Height="24"/>
@@ -136,7 +143,7 @@
                         TickOffset="{Binding NotesViewModel.TickOffset}"
                         SnapDiv="{Binding NotesViewModel.SnapDiv, Mode=OneWay}"
                         SnapTicks="{Binding NotesViewModel.SnapTicks}"
-                        ShowBarNumber="True"/>
+                        ShowBar="True"/>
       <Image Grid.Row="3" Grid.RowSpan="3" Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,100,0"
              Source="{Binding NotesViewModel.Portrait}" OpacityMask="{Binding NotesViewModel.PortraitMask}" Stretch="None"/>
       <Border Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
@@ -347,7 +354,7 @@
             <Border Width="12"/>
             <ToggleButton Classes="toolbar" Margin="0" Padding="1" Height="20" Width="20"
                           IsChecked="{Binding NotesViewModel.CursorTool}"
-                          Command="{Binding NotesViewModel.SelectToolCommand}" CommandParameter="1"
+                          Command="{Binding SelectToolCommand}" CommandParameter="1"
                           ToolTip.Tip="{DynamicResource pianoroll.tool.selectionv2}">
               <Grid Width="18" Height="18">
                 <Path Classes="filled" Data="M10.07,14.27C10.57,14.03 11.16,14.25 11.4,14.75L13.7,19.74L15.5,18.89L13.19,13.91C12.95,13.41 13.17,12.81 13.67,12.58L13.95,12.5L16.25,12.05L8,5.12V15.9L9.82,14.43L10.07,14.27M13.64,21.97C13.14,22.21 12.54,22 12.31,21.5L10.13,16.76L7.62,18.78C7.45,18.92 7.24,19 7,19A1,1 0 0,1 6,18V3A1,1 0 0,1 7,2C7.24,2 7.47,2.09 7.64,2.23L7.65,2.22L19.14,11.86C19.57,12.22 19.62,12.85 19.27,13.27C19.12,13.45 18.91,13.57 18.7,13.61L15.54,14.23L17.74,18.96C18,19.46 17.76,20.05 17.26,20.28L13.64,21.97Z" >
@@ -362,7 +369,7 @@
             </ToggleButton>
             <ToggleButton Classes="toolbar" Margin="0" Padding="1" Height="20" Width="20"
                           IsChecked="{Binding NotesViewModel.PenTool}"
-                          Command="{Binding NotesViewModel.SelectToolCommand}" CommandParameter="2"
+                          Command="{Binding SelectToolCommand}" CommandParameter="2"
                           ToolTip.Tip="{DynamicResource pianoroll.tool.penv2}">
               <Grid Width="18" Height="18">
                 <Path Classes="filled" Data="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z" >
@@ -377,7 +384,7 @@
             </ToggleButton>
             <ToggleButton Classes="toolbar" Margin="0" Padding="1" Height="20" Width="20"
                           IsChecked="{Binding NotesViewModel.PenPlusTool}"
-                          Command="{Binding NotesViewModel.SelectToolCommand}" CommandParameter="2+"
+                          Command="{Binding SelectToolCommand}" CommandParameter="2+"
                           ToolTip.Tip="{DynamicResource pianoroll.tool.penplus}">
               <Grid Width="18" Height="18">
                 <Path Classes="filled" Data="M14.1,9L15,9.9L5.9,19H5V18.1L14.1,9M17.7,3C17.5,3 17.2,3.1 17,3.3L15.2,5.1L18.9,8.9L20.7,7C21.1,6.6 21.1,6 20.7,5.6L18.4,3.3C18.2,3.1 17.9,3 17.7,3M14.1,6.2L3,17.2V21H6.8L17.8,9.9L14.1,6.2M7,2V5H10V7H7V10H5V7H2V5H5V2H7Z" >
@@ -392,7 +399,7 @@
             </ToggleButton>
             <ToggleButton Classes="toolbar" Margin="0" Padding="1" Height="20" Width="20"
                           IsChecked="{Binding NotesViewModel.EraserTool}"
-                          Command="{Binding NotesViewModel.SelectToolCommand}" CommandParameter="3"
+                          Command="{Binding SelectToolCommand}" CommandParameter="3"
                           ToolTip.Tip="{DynamicResource pianoroll.tool.eraser}">
               <Grid Width="18" Height="18">
                 <Path Classes="filled" Data="M16.24,3.56L21.19,8.5C21.97,9.29 21.97,10.55 21.19,11.34L12,20.53C10.44,22.09 7.91,22.09 6.34,20.53L2.81,17C2.03,16.21 2.03,14.95 2.81,14.16L13.41,3.56C14.2,2.78 15.46,2.78 16.24,3.56M4.22,15.58L7.76,19.11C8.54,19.9 9.8,19.9 10.59,19.11L14.12,15.58L9.17,10.63L4.22,15.58Z" >
@@ -407,7 +414,7 @@
             </ToggleButton>
             <ToggleButton Classes="toolbar" Margin="0" Padding="1" Height="20" Width="20"
                           IsChecked="{Binding NotesViewModel.DrawPitchTool}"
-                          Command="{Binding NotesViewModel.SelectToolCommand}" CommandParameter="4"
+                          Command="{Binding SelectToolCommand}" CommandParameter="4"
                           ToolTip.Tip="{DynamicResource pianoroll.tool.drawpitch}">
               <Grid Width="18" Height="18">
                 <Path Classes="filled" Data="M9.75 20.85C11.53 20.15 11.14 18.22 10.24 17C9.35 15.75 8.12 14.89 6.88 14.06C6 13.5 5.19 12.8 4.54 12C4.26 11.67 3.69 11.06 4.27 10.94C4.86 10.82 5.88 11.4 6.4 11.62C7.31 12 8.21 12.44 9.05 12.96L10.06 11.26C8.5 10.23 6.5 9.32 4.64 9.05C3.58 8.89 2.46 9.11 2.1 10.26C1.78 11.25 2.29 12.25 2.87 13.03C4.24 14.86 6.37 15.74 7.96 17.32C8.3 17.65 8.71 18.04 8.91 18.5C9.12 18.94 9.07 18.97 8.6 18.97C7.36 18.97 5.81 18 4.8 17.36L3.79 19.06C5.32 20 7.88 21.47 9.75 20.85M20.84 5.25C21.06 5.03 21.06 4.67 20.84 4.46L19.54 3.16C19.33 2.95 18.97 2.95 18.76 3.16L17.74 4.18L19.82 6.26M11 10.92V13H13.08L19.23 6.85L17.15 4.77L11 10.92Z" >
@@ -422,7 +429,7 @@
             </ToggleButton>
             <ToggleButton Classes="toolbar" Margin="0" Padding="1" Height="20" Width="20"
                           IsChecked="{Binding NotesViewModel.OverwritePitchTool}"
-                          Command="{Binding NotesViewModel.SelectToolCommand}" CommandParameter="4+"
+                          Command="{Binding SelectToolCommand}" CommandParameter="4+"
                           ToolTip.Tip="{DynamicResource pianoroll.tool.overwritepitch}">
               <Grid Width="18" Height="18">
                 <Path Classes="filled" Data="M 19.540126 3.1598821 C 19.330126 2.9498825 18.969979 2.9502481 18.759981 3.1602475 L 17.740128 4.1801 L 19.820028 6.2599998 L 20.840246 5.2500134 C 21.060246 5.0300138 21.060246 4.6700018 20.840246 4.4600022 L 19.540126 3.1598821 Z  M 17.149995 4.7702332 L 11.000186 10.920042 L 11.000186 12.999942 L 13.080086 12.999942 L 19.229895 6.8501331 L 17.149995 4.7702332 Z  M 19.879589 13.222841 L 17.879714 13.222475 L 17.879714 16.222471 L 14.879718 16.222471 L 14.879718 18.222712 L 17.879714 18.222712 L 17.879714 21.222708 L 19.879955 21.222708 L 19.879955 18.222712 L 22.879951 18.222712 L 22.879585 16.222837 L 19.879589 16.222837 L 19.879589 13.222841 Z  M 10.059992 11.260237 C 8.4999952 10.230239 6.499898 9.3198861 4.6399018 9.0498865 C 3.5799038 8.8898869 2.4599531 9.1097532 2.0999539 10.259751 C 1.7799545 11.249749 2.2898688 12.249906 2.8698676 13.029906 C 4.2398648 14.859902 6.369998 15.739794 7.9599948 17.31979 C 8.2999942 17.64979 8.7100549 18.040057 8.9100545 18.500057 C 9.1200541 18.940055 9.0701879 18.969971 8.6001889 18.969971 C 7.3601913 18.969971 5.8099483 17.999985 4.7999503 17.359985 L 3.7899638 19.059861 C 5.3199608 19.999859 7.8801301 21.469991 9.7501265 20.849993 C 11.530123 20.149993 11.139771 18.220057 10.239773 17.000059 C 9.349774 15.750061 8.1202131 14.889988 6.8802155 14.05999 C 6.0002173 13.49999 5.1901443 12.79982 4.5401455 11.999822 C 4.2601461 11.669822 3.6901105 11.059774 4.2701093 10.939774 C 4.8601081 10.819776 5.880071 11.399798 6.40007 11.619798 C 7.3100682 11.999798 8.2100072 12.440113 9.0500056 12.960113 L 10.059992 11.260237 Z" >
@@ -437,7 +444,7 @@
             </ToggleButton>
             <ToggleButton Classes="toolbar" Margin="0" Padding="1" Height="20" Width="20"
                           IsChecked="{Binding NotesViewModel.DrawLinePitchTool}"
-                          Command="{Binding NotesViewModel.SelectToolCommand}" CommandParameter="4++"
+                          Command="{Binding SelectToolCommand}" CommandParameter="4++"
                           ToolTip.Tip="{DynamicResource pianoroll.tool.drawlinepitch}">
               <Grid Width="18" Height="18">
                 <Path Classes="filled" Data="m 1.9654432,15.883124 a 0.74547489,0.74547489 0 0 0 -0.00284,1.052361 l 4.9071522,4.946703 a 0.74547489,0.74547489 0 0 0 1.0555507,0.0035 L 22.513776,7.3542255 a 0.74547489,0.74547489 0 0 0 0.0024,-1.053823 L 17.585453,1.3481852 a 0.74547489,0.74547489 0 0 0 -1.05524,-0.00189 L 13.795097,4.077798 a 0.74547489,0.74547489 0 0 0 -0.01235,0.00583 l -2.970023,2.9664092 a 0.74547489,0.74547489 0 0 0 -0.0019,0.00148 L 7.8078572,10.05092 a 0.74547489,0.74547489 0 0 0 -4.549e-4,7.9e-5 l -2.9880739,2.98446 a 0.74547489,0.74547489 0 0 0 5.6e-5,3.19e-4 0.74547489,0.74547489 0 0 0 -8.034e-4,2.32e-4 z  m 1.5792305,0.530266 1.8022733,-1.799373 1.4875429,1.472969 9.4e-5,9.4e-5 a 0.74547489,0.74547489 0 0 0 1.0491324,-1.059188 l -1.879e-4,-1.87e-4 -0.00182,-0.0019 -1.4792147,-1.465706 1.9335572,-1.930656 1.5071022,1.492572 A 0.74547489,0.74547489 0 0 0 10.89214,12.062682 l -1.5009923,-1.48671 1.9421273,-1.9392277 1.470447,1.4883567 0.0033,0 2.85e-4,2.87e-4 A 0.74547489,0.74547489 0 0 0 13.868294,9.0814325 L 13.868009,9.0811469 12.38859,7.5827533 14.310718,5.6635241 15.799339,7.1434007 A 0.74547489,0.74547489 0 0 0 16.85022,6.0859614 l -1.480921,-1.472178 1.687093,-1.6841938 3.878195,3.89507 L 7.4011867,20.301022 Z" >
@@ -452,7 +459,7 @@
             </ToggleButton>
             <ToggleButton Classes="toolbar" Margin="0" Padding="1" Height="20" Width="20"
                           IsChecked="{Binding NotesViewModel.KnifeTool}"
-                          Command="{Binding NotesViewModel.SelectToolCommand}" CommandParameter="5"
+                          Command="{Binding SelectToolCommand}" CommandParameter="5"
                           ToolTip.Tip="{DynamicResource pianoroll.tool.knife}">
               <Grid Width="18" Height="18">
                 <Path Classes="filled" Data="M7.22,11.91C6.89,12.24 6.71,12.65 6.66,13.08L12.17,15.44L20.66,6.96C21.44,6.17 21.44,4.91 20.66,4.13L19.24,2.71C18.46,1.93 17.2,1.93 16.41,2.71L7.22,11.91M5,16V21.75L10.81,16.53L5.81,14.53L5,16M17.12,4.83C17.5,4.44 18.15,4.44 18.54,4.83C18.93,5.23 18.93,5.86 18.54,6.25C18.15,6.64 17.5,6.64 17.12,6.25C16.73,5.86 16.73,5.23 17.12,4.83Z" >
@@ -543,7 +550,7 @@
                          TextAlignment="Right" FontSize="10" FontFamily="monospace"
                          Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
               <Button.ContextMenu>
-                <ContextMenu Name="SnapDivMenu" Classes="WithCommand" PlacementMode="BottomEdgeAlignedLeft"
+                <ContextMenu Name="SnapDivMenu" Classes="WithCommand" Placement="BottomEdgeAlignedLeft"
                              ItemsSource="{Binding NotesViewModel.SnapDivs}" KeyDown="OnSnapDivKeyDown"/>
               </Button.ContextMenu>
             </Button>
@@ -553,7 +560,7 @@
                           TextAlignment="Right" FontSize="10" FontFamily="monospace"
                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
               <Button.ContextMenu>
-                <ContextMenu Name="KeyMenu" Classes="WithCommand" PlacementMode="BottomEdgeAlignedLeft"
+                <ContextMenu Name="KeyMenu" Classes="WithCommand" Placement="BottomEdgeAlignedLeft"
                              ItemsSource="{Binding NotesViewModel.Keys}" KeyDown="OnKeyKeyDown"/>
               </Button.ContextMenu>
             </Button>
@@ -697,6 +704,75 @@
         </Border>
       </Canvas>
       <ProgressBar Grid.Row="6" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Value="{Binding Progress}"/>
+      <!-- Piano Roll Capture & Recording Overlay (Bottom-Right) -->
+      <StackPanel Grid.Row="3" Grid.Column="1" Grid.RowSpan="3"
+                  HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                  Margin="0,0,16,16"
+                  Orientation="Horizontal"
+                  Spacing="6"
+                  ZIndex="200">
+        <!-- Status notification text -->
+        <Border Background="#40000000" CornerRadius="4" Padding="6,3"
+                VerticalAlignment="Center"
+                IsVisible="{Binding IsCaptureStatusVisible}">
+          <TextBlock Text="{Binding CaptureStatusText}"
+                     FontSize="11"
+                     Foreground="#80D8FF"
+                     Opacity="0.85"
+                     VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Countdown display (when countdown active) -->
+        <Border Background="#A0D32F2F" CornerRadius="4" Padding="8,3"
+                VerticalAlignment="Center"
+                IsVisible="{Binding IsCountdownActive}">
+          <TextBlock Text="{Binding CaptureCountdownValue}"
+                     FontSize="13"
+                     FontWeight="Bold"
+                     Foreground="#FFFFFF"
+                     VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Photo Capture Button (Compact camera icon) -->
+        <Button Width="32" Height="32"
+                CornerRadius="4"
+                Padding="0"
+                ToolTip.Tip="Capture Piano Roll Picture"
+                Command="{Binding CapturePictureCommand}"
+                CommandParameter="{Binding #PianoRollRoot}">
+          <Path Classes="filled"
+                Width="18" Height="18"
+                Stretch="Uniform"
+                Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                Data="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
+        </Button>
+
+        <!-- Video Record Button (Large video camera icon, turns red square when recording) -->
+        <Button Width="32" Height="32"
+                CornerRadius="4"
+                Padding="0"
+                Classes.recording="{Binding IsRecording}"
+                ToolTip.Tip="Record Piano Roll Video"
+                Command="{Binding ToggleRecordVideoCommand}"
+                CommandParameter="{Binding #PianoRollRoot}">
+          <Grid>
+            <!-- Large Video Camera Icon (when idle) -->
+            <Path Classes="filled"
+                  Width="18" Height="18"
+                  Stretch="Uniform"
+                  IsVisible="{Binding !IsRecording}"
+                  Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                  Data="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z"/>
+            <!-- Square Stop Icon (when recording) -->
+            <Path Classes="filled"
+                  Width="14" Height="14"
+                  Stretch="Uniform"
+                  IsVisible="{Binding IsRecording}"
+                  Fill="#FFFFFF"
+                  Data="M4,4H20V20H4V4Z"/>
+          </Grid>
+        </Button>
+      </StackPanel>
     </Grid>
   </Border>
 </Window>

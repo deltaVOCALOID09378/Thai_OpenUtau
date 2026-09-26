@@ -1,17 +1,124 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
+using OpenUtau.Api;
 using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
+using OpenUtau.Core.DiffSinger;
+using OpenUtau.Core.Render;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using ReactiveUI;
 
-namespace OpenUtau.App.Controls {
-    class NotesCanvas : Control {
+namespace OpenUtau.App.Controls
+{
+    class NotesCanvas : Control
+    {
+        /// <summary>Recognized 2–4 letter codes in phonemizer tags (e.g. "EN VCCV") or as standalone tokens.</summary>
+        static readonly HashSet<string> KnownLangCodes = new(StringComparer.OrdinalIgnoreCase) {
+            "EN", "JA", "ZH", "KO", "ES", "IT", "FR", "DE", "PT", "RU", "UA", "UK",
+            "TH", "FIL", "PL", "TR", "VI", "VIE", "MS", "ID", "NL", "SV", "NO", "DA",
+            "FI", "CS", "SK", "HU", "RO", "EL", "HE", "AR", "HI", "BN", "TL", "MNL",
+        };
+
+        /// <summary>Maps phonemizer display tags (DiffSinger second attr, etc.) to short codes when language attr is engine name.</summary>
+        static readonly Dictionary<string, string> PhonemizerTagToLangCode = BuildPhonemizerTagToLangCode();
+
+        static Dictionary<string, string> BuildPhonemizerTagToLangCode()
+        {
+            void reg(Dictionary<string, string> d, string key, string code)
+            {
+                var k = key.Replace(" ", "").ToLowerInvariant();
+                d[k] = code;
+            }
+            var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            reg(d, "English", "EN");
+            reg(d, "English+", "EN");
+            reg(d, "Japanese", "JA");
+            reg(d, "Chinese", "ZH");
+            reg(d, "Jyutping", "ZH");
+            reg(d, "Korean", "KO");
+            reg(d, "Korean+", "KO");
+            reg(d, "Spanish", "ES");
+            reg(d, "Italian", "IT");
+            reg(d, "French", "FR");
+            reg(d, "German", "DE");
+            reg(d, "Portuguese", "PT");
+            reg(d, "Portuguese BRAPA", "PT");
+            reg(d, "German Marzipan", "DE");
+            reg(d, "French Millefeuille", "FR");
+            reg(d, "Russian", "RU");
+            reg(d, "Ukrainian", "UA");
+            reg(d, "Thai", "TH");
+            reg(d, "Filipino", "FIL");
+            reg(d, "Polish", "PL");
+            reg(d, "Turkish", "TR");
+            reg(d, "Vietnamese", "VIE");
+            reg(d, "Default", "");
+            reg(d, "Rhythmizer", "DS");
+            return d;
+        }
+
+        /// <summary>Short language code for note badge (EN, JA, …), independent of engine-based sorting in <c>language</c> attr.</summary>
+        static string GetPhonemizerLanguageBadgeCode(PhonemizerFactory? factory)
+        {
+            if (factory == null)
+            {
+                return string.Empty;
+            }
+            var tag = factory.tag?.Trim() ?? "";
+            if (!string.IsNullOrEmpty(tag))
+            {
+                var parts = tag.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+                var first = parts.Length > 0 ? parts[0] : "";
+                if (first.Length >= 2 && first.Length <= 5 && first.All(c => char.IsLetter(c) || c == '-'))
+                {
+                    var up = first.ToUpperInvariant();
+                    if (up is not ("UTAU" or "DIFFSINGER" or "DEFAULT") && KnownLangCodes.Contains(up))
+                    {
+                        return up;
+                    }
+                }
+                var compact = new string(tag.Where(c => !char.IsWhiteSpace(c)).ToArray()).ToLowerInvariant();
+                if (PhonemizerTagToLangCode.TryGetValue(compact, out var fromMap) && !string.IsNullOrEmpty(fromMap))
+                {
+                    return fromMap;
+                }
+                foreach (Match m in Regex.Matches(tag.ToUpperInvariant(), @"\b[A-Z]{2,4}\b"))
+                {
+                    if (KnownLangCodes.Contains(m.Value))
+                    {
+                        return m.Value;
+                    }
+                }
+            }
+            var attr = factory.type.GetCustomAttribute<PhonemizerAttribute>();
+            var attrTag = attr?.Tag?.Trim() ?? "";
+            if (!string.IsNullOrEmpty(attrTag) && attrTag != tag)
+            {
+                var compactAttr = new string(attrTag.Where(c => !char.IsWhiteSpace(c)).ToArray()).ToLowerInvariant();
+                if (PhonemizerTagToLangCode.TryGetValue(compactAttr, out var fromAttr) && !string.IsNullOrEmpty(fromAttr))
+                {
+                    return fromAttr;
+                }
+            }
+            var lang = factory.language?.Trim() ?? "";
+            if (lang.Length >= 2 && lang.Length <= 5 && lang.All(char.IsLetter)
+                && !lang.Equals("UTAU", StringComparison.OrdinalIgnoreCase)
+                && !lang.Equals("DiffSinger", StringComparison.OrdinalIgnoreCase)
+                && KnownLangCodes.Contains(lang.ToUpperInvariant()))
+            {
+                return lang.ToUpperInvariant();
+            }
+            return string.Empty;
+        }
+
         public static readonly DirectProperty<NotesCanvas, double> TickWidthProperty =
             AvaloniaProperty.RegisterDirect<NotesCanvas, double>(
                 nameof(TickWidth),
@@ -52,38 +159,68 @@ namespace OpenUtau.App.Controls {
                 nameof(ShowVibrato),
                 o => o.ShowVibrato,
                 (o, v) => o.ShowVibrato = v);
+        public static readonly DirectProperty<NotesCanvas, bool> ShowPhonemizerTagsProperty =
+            AvaloniaProperty.RegisterDirect<NotesCanvas, bool>(
+                nameof(ShowPhonemizerTags),
+                o => o.ShowPhonemizerTags,
+                (o, v) => o.ShowPhonemizerTags = v);
+        public static readonly StyledProperty<bool> PitchFocusDimProperty =
+            AvaloniaProperty.Register<NotesCanvas, bool>(nameof(PitchFocusDim));
 
-        public double TickWidth {
+        const double PitchFocusNoteOpacity = 0.2;
+        const double PitchFocusFinalPitchThickness = 1.5;
+        const double PitchFocusPhonemeGuideOpacity = 0.2;
+        const double PitchFocusCenterLineOpacity = 0.5;
+
+        public double TickWidth
+        {
             get => tickWidth;
             private set => SetAndRaise(TickWidthProperty, ref tickWidth, value);
         }
-        public double TrackHeight {
+        public double TrackHeight
+        {
             get => trackHeight;
             private set => SetAndRaise(TrackHeightProperty, ref trackHeight, value);
         }
-        public double TickOffset {
+        public double TickOffset
+        {
             get => tickOffset;
             private set => SetAndRaise(TickOffsetProperty, ref tickOffset, value);
         }
-        public double TrackOffset {
+        public double TrackOffset
+        {
             get => trackOffset;
             private set => SetAndRaise(TrackOffsetProperty, ref trackOffset, value);
         }
-        public UVoicePart? Part {
+        public UVoicePart? Part
+        {
             get => part;
             set => SetAndRaise(PartProperty, ref part, value);
         }
-        public bool ShowPitch {
+        public bool ShowPitch
+        {
             get => showPitch;
             private set => SetAndRaise(ShowPitchProperty, ref showPitch, value);
         }
-        public bool ShowFinalPitch {
+        public bool ShowFinalPitch
+        {
             get => showFinalPitch;
             private set => SetAndRaise(ShowFinalPitchProperty, ref showFinalPitch, value);
         }
-        public bool ShowVibrato {
+        public bool ShowVibrato
+        {
             get => showVibrato;
             private set => SetAndRaise(ShowVibratoProperty, ref showVibrato, value);
+        }
+        public bool ShowPhonemizerTags
+        {
+            get => showPhonemizerTags;
+            private set => SetAndRaise(ShowPhonemizerTagsProperty, ref showPhonemizerTags, value);
+        }
+        public bool PitchFocusDim
+        {
+            get => GetValue(PitchFocusDimProperty);
+            set => SetValue(PitchFocusDimProperty, value);
         }
 
         private double tickWidth;
@@ -94,6 +231,7 @@ namespace OpenUtau.App.Controls {
         private bool showPitch = true;
         private bool showFinalPitch = true;
         private bool showVibrato = true;
+        private bool showPhonemizerTags = true;
         private PolylineGeometry polylineGeometry = new PolylineGeometry();
         private Points points = new Points();
 
@@ -103,14 +241,16 @@ namespace OpenUtau.App.Controls {
         private bool showGhostNotes = true;
         private List<UPart> otherPartsInView = new List<UPart>();
 
-        public NotesCanvas() {
+        public NotesCanvas()
+        {
             ClipToBounds = true;
             pointGeometry = new EllipseGeometry(new Rect(-2.5, -2.5, 5, 5));
 
             MessageBus.Current.Listen<NotesRefreshEvent>()
                 .Subscribe(_ => InvalidateVisual());
             MessageBus.Current.Listen<NotesSelectionEvent>()
-                .Subscribe(e => {
+                .Subscribe(e =>
+                {
                     selectedNotes.Clear();
                     selectedNotes.UnionWith(e.selectedNotes);
                     selectedNotes.UnionWith(e.tempSelectedNotes);
@@ -118,13 +258,17 @@ namespace OpenUtau.App.Controls {
                 });
             MessageBus.Current.Listen<PartRefreshEvent>()
                 .Subscribe(_ => RefreshGhostNotes());
+            MessageBus.Current.Listen<ThemeChangedEvent>()
+                .Subscribe(_ => InvalidateVisual());
             this.WhenAnyValue(x => x.Part)
                 .Subscribe(_ => RefreshGhostNotes());
         }
 
-        void RefreshGhostNotes() {
+        void RefreshGhostNotes()
+        {
             showGhostNotes = Convert.ToBoolean(Preferences.Default.ShowGhostNotes);
-            if (Part == null || !showGhostNotes) {
+            if (Part == null || !showGhostNotes)
+            {
                 return;
             }
             otherPartsInView = DocManager.Inst.Project.parts
@@ -134,118 +278,310 @@ namespace OpenUtau.App.Controls {
                 .ToList();
         }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
             base.OnPropertyChanged(change);
             InvalidateVisual();
         }
 
-        public override void Render(DrawingContext context) {
+        public override void Render(DrawingContext context)
+        {
             base.Render(context);
-            if (Part == null) {
+            if (Part == null)
+            {
                 return;
             }
             var viewModel = ((PianoRollViewModel?)DataContext)?.NotesViewModel;
-            if (viewModel == null) {
+            if (viewModel == null)
+            {
                 return;
             }
-            DrawBackgroundForHitTest(context);
             double leftTick = TickOffset - 480;
             double rightTick = TickOffset + Bounds.Width / TickWidth + 480;
             bool hidePitch = viewModel.TickWidth <= ViewConstants.PianoRollTickWidthShowDetails * 0.5;
+            double noteCornerRadius = Math.Clamp(Preferences.Default.NoteCornerRadius, 0, 12);
+            var pianoRollVm = DataContext as PianoRollViewModel;
+            bool pitchFocusDim = pianoRollVm?.PitchFocusDim ?? PitchFocusDim;
 
-            if (showGhostNotes) {
-                foreach (UPart otherPart in otherPartsInView) {
-                    if (otherPart is UVoicePart otherVoicePart) {
-                        var xOffset = otherVoicePart.position - Part.position;
-                        var brush = ThemeManager.NeutralAccentBrushSemi;
-                        if (otherVoicePart.trackNo >= 0) {
-                            var track = DocManager.Inst.Project.tracks[otherVoicePart.trackNo];
-                            brush = ThemeManager.GetTrackColor(track.TrackColor).AccentColorLightSemi;
-                        }
+            DrawBackgroundForHitTest(context);
 
-                        foreach (var note in otherVoicePart.notes) {
-                            if (note.LeftBound + xOffset >= rightTick || note.RightBound + xOffset <= leftTick) {
-                                continue;
-                            }
-                            RenderGhostNote(note, viewModel, context, xOffset, brush);
+            void RenderGhostNotes()
+            {
+                if (!showGhostNotes)
+                {
+                    return;
+                }
+                foreach (UPart otherPart in otherPartsInView)
+                {
+                    if (otherPart is not UVoicePart otherVoicePart)
+                    {
+                        continue;
+                    }
+                    var xOffset = otherVoicePart.position - Part.position;
+                    var brush = ThemeManager.NeutralAccentBrushSemi;
+                    if (otherVoicePart.trackNo >= 0)
+                    {
+                        var track = DocManager.Inst.Project.tracks[otherVoicePart.trackNo];
+                        brush = ThemeManager.GetTrackColor(track.TrackColor).AccentColorLightSemi;
+                    }
+                    foreach (var note in otherVoicePart.notes)
+                    {
+                        if (note.LeftBound + xOffset >= rightTick || note.RightBound + xOffset <= leftTick)
+                        {
+                            continue;
                         }
+                        RenderGhostNote(note, viewModel, context, xOffset, brush);
                     }
                 }
             }
 
-            foreach (var note in Part.notes) {
-                if (note.LeftBound >= rightTick || note.RightBound <= leftTick) {
-                    continue;
-                }
-                RenderNoteBody(note, viewModel, context);
-            }
-            if (ShowFinalPitch && !hidePitch) {
-                RenderFinalPitch(leftTick, rightTick, viewModel, context);
-            }
-            foreach (var note in Part.notes) {
-                if (note.LeftBound >= rightTick || note.RightBound <= leftTick) {
-                    continue;
-                }
-                if (ShowPitch && !hidePitch) {
-                    RenderPitchBend(note, viewModel, context);
-                }
-                if ((ShowPitch || ShowVibrato) && !hidePitch) {
-                    RenderVibrato(note, viewModel, context);
-                }
-                if (ShowVibrato && !note.Error && !hidePitch) {
-                    RenderVibratoToggle(note, viewModel, context);
-                    RenderVibratoControl(note, viewModel, context);
+            void RenderNoteBodies()
+            {
+                foreach (var note in Part.notes)
+                {
+                    if (note.LeftBound >= rightTick || note.RightBound <= leftTick)
+                    {
+                        continue;
+                    }
+                    RenderNoteBody(note, viewModel, context, noteCornerRadius);
                 }
             }
+
+            if (pitchFocusDim)
+            {
+                using (context.PushOpacity(PitchFocusNoteOpacity))
+                {
+                    RenderGhostNotes();
+                    RenderNoteBodies();
+                    if (ShowPitch && !hidePitch)
+                    {
+                        foreach (var note in Part.notes)
+                        {
+                            if (note.LeftBound >= rightTick || note.RightBound <= leftTick)
+                            {
+                                continue;
+                            }
+                            RenderPitchBend(note, viewModel, context);
+                        }
+                    }
+                }
+                RenderDiffSingerPhraseBoundaries(leftTick, rightTick, viewModel, context);
+                if (!hidePitch)
+                {
+                    RenderPhonemeTimingGuides(leftTick, rightTick, viewModel, context);
+                    using (context.PushOpacity(PitchFocusCenterLineOpacity))
+                    {
+                        foreach (var note in Part.notes)
+                        {
+                            if (note.LeftBound >= rightTick || note.RightBound <= leftTick)
+                            {
+                                continue;
+                            }
+                            RenderNotePitchCenterLine(note, viewModel, context);
+                        }
+                    }
+                    if (ShowFinalPitch)
+                    {
+                        RenderFinalPitch(leftTick, rightTick, viewModel, context, PitchFocusFinalPitchThickness);
+                    }
+                    RenderAcousticF0PatchPreview(leftTick, rightTick, viewModel, context);
+                }
+            }
+            else
+            {
+                RenderGhostNotes();
+                RenderNoteBodies();
+                RenderDiffSingerPhraseBoundaries(leftTick, rightTick, viewModel, context);
+                if (ShowFinalPitch && !hidePitch)
+                {
+                    RenderFinalPitch(leftTick, rightTick, viewModel, context);
+                }
+                RenderAcousticF0PatchPreview(leftTick, rightTick, viewModel, context);
+                foreach (var note in Part.notes)
+                {
+                    if (note.LeftBound >= rightTick || note.RightBound <= leftTick)
+                    {
+                        continue;
+                    }
+                    if (ShowPitch && !hidePitch)
+                    {
+                        RenderPitchBend(note, viewModel, context);
+                    }
+                    if ((ShowPitch || ShowVibrato) && !hidePitch)
+                    {
+                        RenderVibrato(note, viewModel, context);
+                    }
+                    if (ShowVibrato && !note.Error && !hidePitch)
+                    {
+                        RenderVibratoToggle(note, viewModel, context);
+                        RenderVibratoControl(note, viewModel, context);
+                    }
+                }
+                return;
+            }
+
         }
 
-        private void DrawBackgroundForHitTest(DrawingContext context) {
+        private void DrawBackgroundForHitTest(DrawingContext context)
+        {
             context.DrawRectangle(Brushes.Transparent, null, Bounds.WithX(0).WithY(0));
         }
 
-        private void RenderNoteBody(UNote note, NotesViewModel viewModel, DrawingContext context) {
-            Point leftTop = viewModel.TickToneToPoint(note.position, note.tone);
-            leftTop = leftTop.WithX(leftTop.X + 1).WithY(Math.Round(leftTop.Y + 1));
+        private void RenderNoteBody(UNote note, NotesViewModel viewModel, DrawingContext context, double cornerRadius)
+        {
+            List<string> triggerItems = new List<string> { "br", "-", "AP", "SP", "ap", "sp", "pau", "sil", "R", "cl", "vf", "hh", "exh", "'", "・", "息", ".sil", ".br", ".cl", ".hh" };
+            Point leftTop = viewModel.TickToneToPoint(note.position, note.AdjustedTone);
+            leftTop = leftTop.WithX(leftTop.X + 1).WithY(Math.Round(leftTop.Y));
             Size size = viewModel.TickToneToSize(note.duration, 1);
-            size = size.WithWidth(size.Width - 1).WithHeight(Math.Floor(size.Height - 2));
+            size = size.WithWidth(size.Width - 1).WithHeight(Math.Floor(size.Height));
             Point rightBottom = new Point(leftTop.X + size.Width, leftTop.Y + size.Height);
-            var brush = selectedNotes.Contains(note)
-                ? (note.Error ? ThemeManager.AccentBrush2Semi : ThemeManager.AccentBrush2)
-                : (note.Error ? ThemeManager.AccentBrush1Semi : ThemeManager.AccentBrush1);
-            context.DrawRectangle(brush, null, new Rect(leftTop, rightBottom), 2, 2);
-            if (TrackHeight < 10 || note.lyric.Length == 0) {
+            bool hasError = note.Error;
+            if (!hasError && Part != null && Part.phonemes != null)
+            {
+                int phonemeCount = 0;
+                foreach (var p in Part.phonemes)
+                {
+                    if (p.Parent == note)
+                    {
+                        phonemeCount++;
+                        if (p.Error)
+                        {
+                            hasError = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasError && Part.PhonemesUpToDate && phonemeCount == 0 && !note.lyric.StartsWith("+") && !note.lyric.StartsWith("-"))
+                {
+                    hasError = true;
+                }
+            }
+            bool showBorder = Preferences.Default.ShowNoteBorder;
+            if (triggerItems.Contains(note.lyric))
+            {
+                var brush1 = selectedNotes.Contains(note)
+                    ? ThemeManager.NoteBrushPressed
+                    : ThemeManager.NoteEmptyBrush;
+                IPen? pen = showBorder ? ThemeManager.NoteBorderPen : null;
+                context.DrawRectangle(brush1, pen, new Rect(leftTop, rightBottom), cornerRadius, cornerRadius);
+            }
+            else
+            {
+                var brush = hasError
+                    ? (selectedNotes.Contains(note) ? ThemeManager.NoteBrushPressed : ThemeManager.NoteEmptyBrush)
+                    : (selectedNotes.Contains(note) ? ThemeManager.NoteBrushPressed : ThemeManager.NoteBrush);
+                IPen? borderPen = !showBorder ? null
+                    : selectedNotes.Contains(note)
+                    ? ThemeManager.NoteBorderPenPressed
+                    : ThemeManager.NoteBorderPen;
+                context.DrawRectangle(brush, borderPen, new Rect(leftTop, rightBottom), cornerRadius, cornerRadius);
+            }
+            if (TrackHeight < 10 || note.lyric.Length == 0)
+            {
                 return;
+            }
+            // grey out the Phonemizer Transition Badges
+            if (ShowPhonemizerTags && TrackHeight >= 20)
+            {
+                string currentOver = note.PhonemizerOverride ?? "";
+                bool isCurrentDefault = string.IsNullOrEmpty(currentOver) || currentOver.Equals("Default", StringComparison.OrdinalIgnoreCase);
+                string currentPh = isCurrentDefault ? "Default" : currentOver;
+                string prevPh = "Default";
+                if (note.Prev != null)
+                {
+                    string prevOver = note.Prev.PhonemizerOverride ?? "";
+                    bool isPrevDefault = string.IsNullOrEmpty(prevOver) || prevOver.Equals("Default", StringComparison.OrdinalIgnoreCase);
+                    prevPh = isPrevDefault ? "Default" : prevOver;
+                }
+                bool isContinuation = note.lyric.StartsWith("+");
+                bool isTransition = !isContinuation && ((note.Prev == null && !isCurrentDefault) || (note.Prev != null && currentPh != prevPh));
+
+                if (isTransition)
+                {
+                    var badgeBrush = hasError
+                        ? ThemeManager.NeutralAccentBrushSemi
+                        : (selectedNotes.Contains(note) ? ThemeManager.NoteBrushPressed : ThemeManager.NoteBrush);
+
+                    if (isCurrentDefault)
+                    {
+                        double boxWidth = 16;
+                        double boxHeight = 16;
+                        double dotRadius = 3;
+                        Avalonia.Rect boxRect = new Avalonia.Rect(
+                            leftTop.X + 2,
+                            leftTop.Y - boxHeight - 4,
+                            boxWidth,
+                            boxHeight
+                        );
+                        Avalonia.Point center = new Avalonia.Point(
+                            boxRect.X + boxWidth / 2,
+                            boxRect.Y + boxHeight / 2
+                        );
+                        context.DrawRectangle(badgeBrush, null, boxRect, cornerRadius, cornerRadius);
+                        context.DrawEllipse(Brushes.White, null, center, dotRadius, dotRadius);
+
+                    }
+                    else
+                    {
+                        var factory = PhonemizerFactory.Get(currentPh) ?? PhonemizerFactory.GetAll().FirstOrDefault(f => f.name == currentPh || (currentPh.Length > 0 && f.name.EndsWith(currentPh)));
+                        string displayLang = GetPhonemizerLanguageBadgeCode(factory);
+                        if (!string.IsNullOrEmpty(displayLang))
+                        {
+                            var langLayout = TextLayoutCache.Get(displayLang, Avalonia.Media.Brushes.White, 10);
+                            double paddingX = 3;
+                            double paddingY = 1.5;
+                            Avalonia.Rect badgeRect = new Avalonia.Rect(
+                                leftTop.X + 2,
+                                leftTop.Y - langLayout.Height - (paddingY * 2) - 4,
+                                langLayout.Width + (paddingX * 2),
+                                langLayout.Height + (paddingY * 2)
+                            );
+                            context.DrawRectangle(badgeBrush, null, badgeRect, cornerRadius, cornerRadius);
+                            Avalonia.Point textPos = new Avalonia.Point(badgeRect.X + paddingX, badgeRect.Y + paddingY);
+                            using (var state = context.PushTransform(Avalonia.Matrix.CreateTranslation(textPos.X, textPos.Y)))
+                            {
+                                langLayout?.Draw(context, new Avalonia.Point());
+                            }
+                        }
+                    }
+                }
             }
             string displayLyric = note.lyric;
-            int txtsize = 12;
+            int txtsize = 14;
             var textLayout = TextLayoutCache.Get(displayLyric, Brushes.White, txtsize);
-            if (txtsize > size.Height) {
+            if (txtsize > size.Height)
+            {
                 return;
             }
-            if (textLayout.Height + 5 < size.Height) {
+            if (textLayout.Height + 5 < size.Height)
+            {
                 txtsize = (int)(12 * (size.Height / textLayout.Height));
                 textLayout = TextLayoutCache.Get(displayLyric, Brushes.White, txtsize);
             }
-            if (textLayout.Width + 5 > size.Width) {
+            if (textLayout.Width + 5 > size.Width)
+            {
                 displayLyric = displayLyric[0] + "..";
                 textLayout = TextLayoutCache.Get(displayLyric, Brushes.White, txtsize);
-                if (textLayout.Width + 5 > size.Width) {
+                if (textLayout.Width + 5 > size.Width)
+                {
                     return;
                 }
             }
             Point textPosition = leftTop.WithX(leftTop.X + 5)
                 .WithY(Math.Round(leftTop.Y + (size.Height - textLayout.Height) / 2));
-            using (var state = context.PushTransform(Matrix.CreateTranslation(textPosition.X, textPosition.Y))) {
+            using (var state = context.PushTransform(Matrix.CreateTranslation(textPosition.X, textPosition.Y)))
+            {
                 textLayout.Draw(context, new Point());
             }
         }
 
-        private void RenderGhostNote(UNote note, NotesViewModel viewModel, DrawingContext context, int partOffset, IBrush brush) {
+        private void RenderGhostNote(UNote note, NotesViewModel viewModel, DrawingContext context, int partOffset, IBrush brush)
+        {
             // REVIEW should ghost note be smaller?
             double relativeSize = 0.5d;
             double height = TrackHeight * relativeSize;
             double yOffset = Math.Floor(height * 0.5f);
-            Point leftTop = viewModel.TickToneToPoint(partOffset + note.position, note.tone);
+            Point leftTop = viewModel.TickToneToPoint(partOffset + note.position, note.AdjustedTone);
             leftTop = leftTop.WithX(leftTop.X + 1).WithY(Math.Round(leftTop.Y + 1 + yOffset));
 
             Size size = viewModel.TickToneToSize(note.duration, relativeSize);
@@ -253,61 +589,316 @@ namespace OpenUtau.App.Controls {
 
             Point rightBottom = new Point(leftTop.X + size.Width, leftTop.Y + size.Height);
 
+            // Fixed rounding for ghost strips (half-height); do not use main note corner radius preference.
             context.DrawRectangle(brush, null, new Rect(leftTop, rightBottom), 2, 2);
         }
 
-        private void RenderPitchBend(UNote note, NotesViewModel viewModel, DrawingContext context) {
+        void RenderNotePitchCenterLine(UNote note, NotesViewModel viewModel, DrawingContext context)
+        {
+            double y = note.AdjustedTone - 0.5;
+            var left = viewModel.TickToneToPoint(note.position, y);
+            var right = viewModel.TickToneToPoint(note.End, y);
+            context.DrawLine(ThemeManager.NoteBorderPenPressed, left, right);
+        }
+
+        void RenderPhonemeTimingGuides(
+            double leftTick, double rightTick, NotesViewModel viewModel, DrawingContext context)
+        {
+            if (!viewModel.ShowPhoneme || Part == null || Part.phonemes.Count == 0)
+            {
+                return;
+            }
+            double panelTop = Bounds.Height;
+            var guideBrush = ThemeManager.NoteBorderPenPressed.Brush;
+            if (guideBrush == null)
+            {
+                return;
+            }
+            var guidePen = new Pen(guideBrush, 1);
+            using (context.PushOpacity(PitchFocusPhonemeGuideOpacity))
+            {
+                foreach (var phoneme in Part.phonemes)
+                {
+                    if (phoneme.Parent.OverlapError)
+                    {
+                        continue;
+                    }
+                    double leftBound = viewModel.Project.timeAxis.MsPosToTickPos(phoneme.PositionMs - phoneme.preutter) - Part.position;
+                    if (leftBound > rightTick || phoneme.End < leftTick)
+                    {
+                        continue;
+                    }
+                    double x = viewModel.TickToneToPoint(phoneme.position, 0).X;
+                    context.DrawLine(guidePen, new Point(x, panelTop), new Point(x, 0));
+                }
+            }
+        }
+
+        private static readonly IDashStyle AcousticF0PatchPreviewDashStyle = new ImmutableDashStyle(new double[] { 6, 3 }, 0);
+        private static readonly IBrush AcousticF0PatchPreviewBrush = new ImmutableSolidColorBrush(Color.FromRgb(0xFF, 0xA5, 0x3A));
+
+        private void RenderAcousticF0PatchPreview(
+            double leftTick, double rightTick, NotesViewModel viewModel, DrawingContext context)
+        {
+            if (!Preferences.Default.DiffSingerUnvoicedConsonantAcousticF0Interpolate
+                || !Preferences.Default.DiffSingerShowAcousticF0PatchPreview)
+            {
+                return;
+            }
+            if (!TryGetDiffSingerRenderer(viewModel, out _))
+            {
+                return;
+            }
+            var pen = new Pen(AcousticF0PatchPreviewBrush, 2) { DashStyle = AcousticF0PatchPreviewDashStyle };
+            RenderPhrase[] phrases;
+            lock (Part!)
+            {
+                phrases = Part!.renderPhrases.ToArray();
+            }
+            int headFrames = DiffSingerUtils.headFrames;
+            foreach (var phrase in phrases)
+            {
+                if (phrase.position - Part!.position > rightTick || phrase.end - Part.position < leftTick)
+                {
+                    continue;
+                }
+                if (!DiffSingerRenderer.TryBuildAcousticF0PatchPreview(phrase, out float frameMs, out float[] acousticF0Hz))
+                {
+                    continue;
+                }
+                points.Clear();
+                double startMs = phrase.positionMs - headFrames * frameMs;
+                for (int i = 0; i < acousticF0Hz.Length; ++i)
+                {
+                    double posMs = startMs + i * frameMs;
+                    int tick = phrase.timeAxis.MsPosToTickPos(posMs) - Part.position;
+                    if (tick < leftTick - 480 || tick > rightTick + 480)
+                    {
+                        continue;
+                    }
+                    if (acousticF0Hz[i] <= 0f)
+                    {
+                        continue;
+                    }
+                    float pitch = (float)MusicMath.FreqToTone(acousticF0Hz[i]) * 100f;
+                    points.Add(viewModel.TickToneToPoint(tick, pitch / 100f - 0.5));
+                }
+                if (points.Count < 2)
+                {
+                    continue;
+                }
+                context.DrawGeometry(null, pen, new PolylineGeometry(points.ToArray(), false));
+            }
+        }
+
+        private static readonly IDashStyle PhraseBoundaryDashStyle = new ImmutableDashStyle(new double[] { 4, 2, 1, 2 }, 0);
+        private static readonly IBrush PhraseOverlapBrush = new ImmutableSolidColorBrush(Color.FromRgb(0xFF, 0x8C, 0x00));
+
+        private void RenderDiffSingerPhraseBoundaries(double viewLeftTick, double viewRightTick, NotesViewModel viewModel, DrawingContext context)
+        {
+            if (!Preferences.Default.DiffSingerShowRenderPhraseBoundaries)
+            {
+                return;
+            }
+            if (!TryGetDiffSingerRenderer(viewModel, out var renderer))
+            {
+                return;
+            }
+            var accent = ThemeManager.AccentBrush3;
+            var boundaryPen = new Pen(accent, 1) { DashStyle = PhraseBoundaryDashStyle };
+            var railPen = new Pen(accent, 2);
+            var overlapRailPen = new Pen(PhraseOverlapBrush, 2);
+            RenderPhrase[] phrases;
+            lock (Part!)
+            {
+                phrases = Part!.renderPhrases.ToArray();
+            }
+            var visible = new List<(double startTick, double endTick)>(phrases.Length);
+            foreach (var phrase in phrases)
+            {
+                var (startTick, endTick) = GetRenderedPhraseTickBounds(phrase, renderer);
+                if (startTick >= viewRightTick || endTick <= viewLeftTick)
+                {
+                    continue;
+                }
+                visible.Add((startTick, endTick));
+            }
+            foreach (var (startTick, endTick) in visible)
+            {
+                DrawPhraseBoundaryLine(context, boundaryPen, viewModel.TickToneToPoint(startTick, 0).X);
+                DrawPhraseBoundaryLine(context, boundaryPen, viewModel.TickToneToPoint(endTick, 0).X);
+            }
+            var events = new List<(double tick, int delta)>(visible.Count * 2);
+            foreach (var (startTick, endTick) in visible)
+            {
+                events.Add((startTick, +1));
+                events.Add((endTick, -1));
+            }
+            events.Sort((a, b) => a.tick.CompareTo(b.tick));
+            int coverage = 0;
+            double? segStart = null;
+            int i = 0;
+            while (i < events.Count)
+            {
+                double tick = events[i].tick;
+                if (segStart.HasValue && coverage > 0 && tick > segStart.Value)
+                {
+                    double startX = Math.Clamp(viewModel.TickToneToPoint(segStart.Value, 0).X, 0, Bounds.Width);
+                    double endX = Math.Clamp(viewModel.TickToneToPoint(tick, 0).X, 0, Bounds.Width);
+                    if (endX > startX)
+                    {
+                        var pen = coverage >= 2 ? overlapRailPen : railPen;
+                        context.DrawLine(pen, new Point(startX, 3.5), new Point(endX, 3.5));
+                    }
+                }
+                while (i < events.Count && events[i].tick == tick)
+                {
+                    coverage += events[i].delta;
+                    i++;
+                }
+                segStart = tick;
+            }
+        }
+
+        private void DrawPhraseBoundaryLine(DrawingContext context, IPen pen, double x)
+        {
+            if (Bounds.Width < 1 || x < 0 || x > Bounds.Width)
+            {
+                return;
+            }
+            double crispX = Math.Clamp(Math.Round(x) + 0.5, 0.5, Bounds.Width - 0.5);
+            context.DrawLine(pen, new Point(crispX, 0), new Point(crispX, Bounds.Height));
+        }
+
+        private bool TryGetDiffSingerRenderer(NotesViewModel viewModel, out IRenderer? renderer)
+        {
+            renderer = null;
+            if (Part == null || viewModel.Project == null || Part.trackNo < 0 || Part.trackNo >= viewModel.Project.tracks.Count)
+            {
+                return false;
+            }
+            var settings = viewModel.Project.tracks[Part.trackNo].RendererSettings;
+            renderer = settings?.Renderer;
+            return string.Equals(renderer?.ToString(), Renderers.DIFFSINGER, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(settings?.renderer, Renderers.DIFFSINGER, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private (double startTick, double endTick) GetRenderedPhraseTickBounds(RenderPhrase phrase, IRenderer? renderer)
+        {
+            if (Part == null)
+            {
+                return (0, 0);
+            }
+            try
+            {
+                var layout = renderer?.Layout(phrase);
+                if (layout != null)
+                {
+                    double startMs = layout.positionMs - layout.leadingMs;
+                    double endMs = startMs + layout.estimatedLengthMs;
+                    return (
+                        phrase.timeAxis.MsPosToTickPos(startMs) - Part.position,
+                        phrase.timeAxis.MsPosToTickPos(endMs) - Part.position);
+                }
+            }
+            catch
+            {
+                // Rendering invalid singers should not break piano roll painting.
+            }
+            return (phrase.position - phrase.leading - Part.position, phrase.end - Part.position);
+        }
+
+        private void RenderPitchBend(UNote note, NotesViewModel viewModel, DrawingContext context)
+        {
             var pitchExp = note.pitch;
             var pts = pitchExp.data;
             if (pts.Count < 2 || viewModel.Part == null) return;
 
             var project = viewModel.Project;
             double p0Tick = project.timeAxis.MsPosToTickPos(note.PositionMs + pts[0].X) - viewModel.Part.position;
-            double p0Tone = note.tone + pts[0].Y / 10.0;
+            double p0Tone = note.AdjustedTone + pts[0].Y / 10.0;
             Point p0 = viewModel.TickToneToPoint(p0Tick, p0Tone - 0.5);
+            Point p_1 = p0;
             points.Clear();
             points.Add(p0);
 
             var brush = note.pitch.snapFirst ? ThemeManager.AccentBrush3 : null;
             var pen = ThemeManager.AccentPen3;
-            using (var state = context.PushTransform(Matrix.CreateTranslation(p0.X, p0.Y))) {
+            using (var state = context.PushTransform(Matrix.CreateTranslation(p0.X, p0.Y)))
+            {
                 context.DrawGeometry(brush, pen, pointGeometry);
             }
 
-            for (int i = 1; i < pts.Count; i++) {
+            for (int i = 1; i < pts.Count; i++)
+            {
                 double p1Tick = project.timeAxis.MsPosToTickPos(note.PositionMs + pts[i].X) - viewModel.Part.position;
-                double p1Tone = note.tone + pts[i].Y / 10.0;
+                double p1Tone = note.AdjustedTone + pts[i].Y / 10.0;
                 Point p1 = viewModel.TickToneToPoint(p1Tick, p1Tone - 0.5);
+                CubicSplineSegment? curve = null;
 
+                if (pts.Count > 2 && pts[i - 1].shape == PitchPointShape.sp)
+                {
+                    var p2 = p1;
+                    if (i == 1)
+                    {
+                        if (note.pitch.data[0].X > 0)
+                        {
+                            p_1 = viewModel.TickToneToPoint(note.position, p0Tone - 0.5);
+                        }
+                    }
+                    if (i < pts.Count - 1)
+                    {
+                        double p2Tick = project.timeAxis.MsPosToTickPos(note.PositionMs + pts[i + 1].X) - viewModel.Part.position;
+                        double p2Tone = note.AdjustedTone + pts[i + 1].Y / 10.0;
+                        p2 = viewModel.TickToneToPoint(p2Tick, p2Tone - 0.5);
+                    }
+                    else if (pts[i].X < note.DurationMs)
+                    {
+                        p2 = viewModel.TickToneToPoint(note.End, note.AdjustedTone - 0.5);
+                    }
+                    curve = new CubicSplineSegment(
+                                p_1.X, p_1.Y,
+                                p0.X, p0.Y,
+                                p1.X, p1.Y,
+                                p2.X, p2.Y);
+                }
                 // Draw arc
                 double x0 = p0.X;
                 double y0 = p0.Y;
                 double x1 = p0.X;
                 double y1 = p0.Y;
-                if (p1.X - p0.X < 5) {
+                if (p1.X - p0.X < 5)
+                {
                     points.Add(p1);
-                } else {
+                }
+                else
+                {
                     points.Add(new Point(x0, y0));
-                    while (x0 < p1.X) {
+                    while (x0 < p1.X)
+                    {
                         x1 = Math.Min(x1 + 4, p1.X);
-                        y1 = MusicMath.InterpolateShape(p0.X, p1.X, p0.Y, p1.Y, x1, pts[i - 1].shape);
+                        y1 = curve?.GetY(x1) ?? MusicMath.InterpolateShape(p0.X, p1.X, p0.Y, p1.Y, x1, pts[i - 1].shape);
                         points.Add(new Point(x1, y1));
                         x0 = x1;
                         y0 = y1;
                     }
                 }
+                p_1 = p0;
                 p0 = p1;
-                using (var state = context.PushTransform(Matrix.CreateTranslation(p0.X, p0.Y))) {
+                using (var state = context.PushTransform(Matrix.CreateTranslation(p0.X, p0.Y)))
+                {
                     context.DrawGeometry(null, pen, pointGeometry);
                 }
             }
-            polylineGeometry.Points = points;
-            context.DrawGeometry(null, pen, polylineGeometry);
+            var polyline = new PolylineGeometry(points.ToArray(), false);
+            context.DrawGeometry(null, pen, polyline);
         }
 
-        private void RenderVibrato(UNote note, NotesViewModel viewModel, DrawingContext context) {
+        private void RenderVibrato(UNote note, NotesViewModel viewModel, DrawingContext context)
+        {
             var vibrato = note.vibrato;
-            if (vibrato == null || vibrato.length == 0) {
+            if (vibrato == null || vibrato.length == 0)
+            {
                 return;
             }
 
@@ -317,7 +908,8 @@ namespace OpenUtau.App.Controls {
             var point = vibrato.Evaluate(nPos, nPeriod, note);
             points.Clear();
             points.Add(viewModel.TickToneToPoint(point.X, point.Y - 0.5));
-            while (nPos < 1) {
+            while (nPos < 1)
+            {
                 nPos = Math.Min(1, nPos + nPeriod / 16);
                 point = vibrato.Evaluate(nPos, nPeriod, note);
                 points.Add(viewModel.TickToneToPoint(point.X, point.Y - 0.5));
@@ -327,19 +919,23 @@ namespace OpenUtau.App.Controls {
         }
 
         private readonly Geometry vibratoIcon = Geometry.Parse("M-6.5 1 L-6 1.5 L-4.5 0 L-2 2.5 L0.5 0 L3 2.5 L6.5 -1 L6 -1.5 L4.5 0 L2 -2.5 L-0.5 0 L-3 -2.5 Z");
-        private void RenderVibratoToggle(UNote note, NotesViewModel viewModel, DrawingContext context) {
+        private void RenderVibratoToggle(UNote note, NotesViewModel viewModel, DrawingContext context)
+        {
             var vibrato = note.vibrato;
             var togglePos = vibrato.GetToggle(note);
             Point icon = viewModel.TickToneToPoint(togglePos.X, togglePos.Y);
             var pen = ThemeManager.BarNumberPen;
-            using (var state = context.PushTransform(Matrix.CreateTranslation(icon.X - 10, icon.Y))) {
+            using (var state = context.PushTransform(Matrix.CreateTranslation(icon.X - 10, icon.Y)))
+            {
                 context.DrawGeometry(vibrato.length == 0 ? null : pen.Brush, pen, vibratoIcon);
             }
         }
 
-        private void RenderVibratoControl(UNote note, NotesViewModel viewModel, DrawingContext context) {
+        private void RenderVibratoControl(UNote note, NotesViewModel viewModel, DrawingContext context)
+        {
             var vibrato = note.vibrato;
-            if (vibrato.length == 0) {
+            if (vibrato.length == 0)
+            {
                 return;
             }
             var pen = ThemeManager.BarNumberPen!;
@@ -350,13 +946,16 @@ namespace OpenUtau.App.Controls {
             context.DrawLine(pen, start, fadeIn);
             context.DrawLine(pen, fadeIn, fadeOut);
             context.DrawLine(pen, fadeOut, end);
-            using (var state = context.PushTransform(Matrix.CreateTranslation(start))) {
+            using (var state = context.PushTransform(Matrix.CreateTranslation(start)))
+            {
                 context.DrawGeometry(pen.Brush, pen, pointGeometry);
             }
-            using (var state = context.PushTransform(Matrix.CreateTranslation(fadeIn))) {
+            using (var state = context.PushTransform(Matrix.CreateTranslation(fadeIn)))
+            {
                 context.DrawGeometry(pen.Brush, pen, pointGeometry);
             }
-            using (var state = context.PushTransform(Matrix.CreateTranslation(fadeOut))) {
+            using (var state = context.PushTransform(Matrix.CreateTranslation(fadeOut)))
+            {
                 context.DrawGeometry(pen.Brush, pen, pointGeometry);
             }
             vibrato.GetPeriodStartEnd(DocManager.Inst.Project, note, out var periodStartPos, out var periodEndPos);
@@ -370,24 +969,43 @@ namespace OpenUtau.App.Controls {
             context.DrawLine(pen, periodEnd, periodEnd + new Vector(0, height));
         }
 
-        private void RenderFinalPitch(double leftTick, double rightTick, NotesViewModel viewModel, DrawingContext context) {
-            var pen = ThemeManager.FinalPitchPen!;
-            lock (Part!) {
-                foreach (var phrase in Part!.renderPhrases) {
-                    if (phrase.position - Part.position > rightTick || phrase.end - Part.position < leftTick) {
+        private void RenderFinalPitch(
+            double leftTick, double rightTick, NotesViewModel viewModel, DrawingContext context,
+            double? thickness = null)
+        {
+            IPen pen = ThemeManager.FinalPitchPen!;
+            if (thickness.HasValue && pen.Brush != null)
+            {
+                pen = new Pen(pen.Brush, thickness.Value);
+            }
+            lock (Part!)
+            {
+                foreach (var phrase in Part!.renderPhrases)
+                {
+                    if (phrase.position - Part.position > rightTick || phrase.end - Part.position < leftTick)
+                    {
                         continue;
                     }
                     int pitchStart = phrase.position - phrase.leading - Part.position;
                     int startIdx = (int)Math.Max(0, (leftTick - pitchStart) / 5);
                     int endIdx = (int)Math.Min(phrase.pitches.Length, (rightTick - pitchStart) / 5 + 1);
+                    if (endIdx <= startIdx)
+                    {
+                        continue;
+                    }
                     points.Clear();
-                    for (int i = startIdx; i < endIdx; ++i) {
+                    for (int i = startIdx; i < endIdx; ++i)
+                    {
                         int t = pitchStart + i * 5;
                         float p = phrase.pitches[i];
                         points.Add(viewModel.TickToneToPoint(t, p / 100 - 0.5));
                     }
-                    polylineGeometry.Points = points;
-                    context.DrawGeometry(null, pen, polylineGeometry);
+                    if (points.Count < 2)
+                    {
+                        continue;
+                    }
+                    var polyline = new PolylineGeometry(points.ToArray(), false);
+                    context.DrawGeometry(null, pen, polyline);
                 }
             }
         }

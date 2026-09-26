@@ -1,0 +1,27 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OpenUtau.App.Views.AutoPitchRandomizerDialog"
+        Title="AutoPitch Randomizer"
+        Width="350" Height="250"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+  <StackPanel Margin="20" Spacing="15">
+    <TextBlock Text="Select Pitch/Vibrato Pattern:" FontWeight="Bold" FontSize="14"/>
+    <ComboBox Name="PatternComboBox" SelectedIndex="0" HorizontalAlignment="Stretch">
+      <ComboBoxItem Content="1. Wave / คลื่น"/>
+      <ComboBoxItem Content="2. Drunk Walk / เดินสุ่ม"/>
+      <ComboBoxItem Content="3. Drop / ลดระดับ"/>
+      <ComboBoxItem Content="4. Rise / ยกระดับ"/>
+      <ComboBoxItem Content="5. Triangle / สามเหลี่ยม"/>
+      <ComboBoxItem Content="6. Jitter / สั่นสุ่ม"/>
+    </ComboBox>
+    
+    <TextBlock Text="Intensity:" Margin="0,5,0,0"/>
+    <Slider Name="IntensitySlider" Minimum="0" Maximum="100" Value="50" TickFrequency="10" IsSnapToTickEnabled="True"/>
+    
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,15,0,0">
+      <Button Content="Cancel" Name="CancelBtn" Width="80" HorizontalContentAlignment="Center"/>
+      <Button Content="Apply" Name="ApplyBtn" Width="80" HorizontalContentAlignment="Center" Background="#CC2200" Foreground="#F0F0F0"/>
+    </StackPanel>
+  </StackPanel>
+</Window>

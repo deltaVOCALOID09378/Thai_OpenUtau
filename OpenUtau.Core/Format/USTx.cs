@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +10,7 @@ using Serilog;
 
 namespace OpenUtau.Core.Format {
     public class Ustx {
-        public static readonly Version kUstxVersion = new Version(0, 7);
+        public static readonly Version kUstxVersion = new Version(0, 9);
 
         public const string DYN = "dyn";
         public const string PITD = "pitd";
@@ -34,12 +34,13 @@ namespace OpenUtau.Core.Format {
         public const string SHFC = "shfc";
         public const string TENC = "tenc";
         public const string VOIC = "voic";
+        public const string OPEC = "opec";
 
         public static readonly string[] required = { DYN, PITD, CLR, ENG, VEL, VOL, ATK, DEC };
 
         public static void AddDefaultExpressions(UProject project) {
             project.RegisterExpression(new UExpressionDescriptor("dynamics (curve)", DYN, -240, 120, 0) { type = UExpressionType.Curve });
-            project.RegisterExpression(new UExpressionDescriptor("pitch deviation (curve)", PITD, -1200, 1200, 0) { type = UExpressionType.Curve });
+            project.RegisterExpression(new UExpressionDescriptor("pitch deviation (curve)", PITD, -8192, 8192, 0) { type = UExpressionType.Curve });
             project.RegisterExpression(new UExpressionDescriptor("voice color", CLR, false, new string[0]));
             project.RegisterExpression(new UExpressionDescriptor("resampler engine", ENG, false, new string[] { "", WorldlineResampler.name }));
             project.RegisterExpression(new UExpressionDescriptor("velocity", VEL, 0, 200, 100));

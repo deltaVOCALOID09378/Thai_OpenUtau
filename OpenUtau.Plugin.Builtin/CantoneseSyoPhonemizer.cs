@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿#pragma warning disable CS0618, CS0649, CS8632, CS0108
+#nullable enable
+#pragma warning disable CS8632
+using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Api;
 using OpenUtau.Core.Ustx;
@@ -10,7 +13,8 @@ namespace OpenUtau.Plugin.Builtin {
     /// Supports both full jyutping syllables as well as syllable fallbacks without a final consonant or falling diphthong.
     /// Supports hanzi and jyutping input.
     /// </summary>
-    [Phonemizer("Cantonese Syo-Style Phonemizer", "ZH-YUE SYO", "Lotte V", language: "ZH-YUE")]
+    [Phonemizer("Cantonese Syo-Style Phonemizer", "ZH-YUE SYO", "Lotte V", language: "UTAU")]
+    // Version: v
     public class CantoneseSyoPhonemizer : Phonemizer {
 
         /// <summary>
@@ -328,13 +332,11 @@ namespace OpenUtau.Plugin.Builtin {
 
             string color = attr.voiceColor ?? "";
             if (otos.Count > 0) {
-                if (otos.Any(otoCheck => (otoCheck.Color ?? string.Empty) == color)) {
-                    oto = otos.Find(otoCheck => (otoCheck.Color ?? string.Empty) == color);
-                    return true;
-                } else {
+                oto = otos.FirstOrDefault(oto => oto.IsColorMatch(color));
+                if (oto == null) {
                     oto = otos.First();
-                    return true;
                 }
+                return true;
             }
             return false;
         }
@@ -355,11 +357,9 @@ namespace OpenUtau.Plugin.Builtin {
 
             string color = attr.voiceColor ?? "";
             if (otos.Count > 0) {
-                if (otos.Any(otoCheck => (otoCheck.Color ?? string.Empty) == color)) {
-                    oto = otos.Find(otoCheck => (otoCheck.Color ?? string.Empty) == color);
+                oto = otos.FirstOrDefault(oto => oto.IsColorMatch(color));
+                if (oto != null) {
                     return true;
-                } else {
-                    return false;
                 }
             }
             return false;

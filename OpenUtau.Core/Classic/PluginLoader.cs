@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,7 +11,8 @@ namespace OpenUtau.Classic {
         public static Plugin[] LoadAll(string basePath) {
             Directory.CreateDirectory(basePath);
             var encoding = Encoding.GetEncoding("shift_jis");
-            return Directory.EnumerateFiles(basePath, "plugin.txt", SearchOption.AllDirectories)
+            return Directory.EnumerateFiles(basePath, "plugin.txt", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true })
+                .AsParallel()
                 .Select(filePath => ParsePluginTxt(filePath, encoding))
                 .ToArray();
         }

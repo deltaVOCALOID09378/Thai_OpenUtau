@@ -1,4 +1,3 @@
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,32 +5,38 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using ReactiveUI.Fody.Helpers;
+using DynamicData;
 using OpenUtau.Classic;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
-using SharpCompress;
-using DynamicData;
+using ReactiveUI.Fody.Helpers;
+using Serilog;
 
-namespace OpenUtau.App.ViewModels {
-    public class ConvertItem{
+namespace OpenUtau.App.ViewModels
+{
+    public class ConvertItem
+    {
         public string Name { get; set; }
         public string NewName { get; set; }
-        public ConvertItem(string name){
+        public ConvertItem(string name)
+        {
             Name = name;
             NewName = name;
         }
-        public ConvertItem(string name, string newName){
+        public ConvertItem(string name, string newName)
+        {
             Name = name;
             NewName = newName;
         }
-        public override string ToString(){
+        public override string ToString()
+        {
             return $"{Name} -> {NewName}";
         }
     }
-    public class MergeVoicebankViewModel : ViewModelBase {
+    public class MergeVoicebankViewModel : ViewModelBase
+    {
         [Reactive] public int Step { get; set; }
-        public List<ClassicSinger> Voicebanks{ get; set; }
+        public List<ClassicSinger> Voicebanks { get; set; }
         public ClassicSinger thisSinger;
         [Reactive] public ClassicSinger? OtherSinger { get; set; }
         List<string> existingDirs = new List<string>();
@@ -43,8 +48,9 @@ namespace OpenUtau.App.ViewModels {
         List<string> existingVoiceColors = new List<string>();
         [Reactive] public ObservableCollection<ConvertItem> VoiceColorRenames { get; set; }
         [Reactive] public string VoiceColorNameErrors { get; set; } = "";
-        string[] supportedAudioTypes = new string[]{".wav", ".flac", ".ogg", ".mp3", ".aiff", ".aif", ".aifc"};
-        public MergeVoicebankViewModel(ClassicSinger thisVoicebank) {
+        string[] supportedAudioTypes = new string[] { ".wav", ".flac", ".ogg", ".mp3", ".aiff", ".aif", ".aifc" };
+        public MergeVoicebankViewModel(ClassicSinger thisVoicebank)
+        {
             this.thisSinger = thisVoicebank;
             Step = 0;
             Voicebanks = SingerManager.Inst.SingerGroups[USingerType.Classic]
@@ -62,23 +68,29 @@ namespace OpenUtau.App.ViewModels {
         /// <param name="name">The name to suffix.</param>
         /// <param name="existingNames">The list of names to check against.</param>
         /// <returns>The suffixed name.</returns>
-        string autoSuffix(string name, IList<string> existingNames){
-            if(!existingNames.Contains(name)){
+        string autoSuffix(string name, IList<string> existingNames)
+        {
+            if (!existingNames.Contains(name))
+            {
                 return name;
             }
             int i = 1;
-            while(existingNames.Contains(name + "_" + i)){
+            while (existingNames.Contains(name + "_" + i))
+            {
                 i++;
             }
             return name + "_" + i;
         }
 
-        public void Next(){
-            if(OtherSinger == null){
+        public void Next()
+        {
+            if (OtherSinger == null)
+            {
                 return;
             }
             Step++;
-            if(Step == 1){
+            if (Step == 1)
+            {
                 FolderRenames.Clear();
                 string l = thisSinger.Location;
                 //For this voicebank, get all the directories and files in the voicebank's location (that file copied here can't use)
@@ -88,39 +100,50 @@ namespace OpenUtau.App.ViewModels {
                     .ToList();
                 //For the other voicebank, get all the subfolders that contain an oto.ini file directly or indirectly.
                 List<string> dirsToAdd = Directory.GetDirectories(OtherSinger.Location)
-                    .Where(d => Directory.EnumerateFiles(d, "oto.ini", SearchOption.AllDirectories).Any())
+                    .Where(d => Directory.EnumerateFiles(d, "oto.ini", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true }).Any())
                     .Select(d => Path.GetFileName(d))
                     .ToList();
-                if(File.Exists(Path.Join(OtherSinger.Location, "oto.ini"))){
+                if (File.Exists(Path.Join(OtherSinger.Location, "oto.ini")))
+                {
                     FolderRenames.Add(new ConvertItem(".", autoSuffix(Path.GetFileName(OtherSinger.Location), existingDirs)));
                 }
-                foreach(string dir in dirsToAdd){
+                foreach (string dir in dirsToAdd)
+                {
                     FolderRenames.Add(new ConvertItem(dir, autoSuffix(dir, existingDirs)));
                 }
-            } else if(Step == 2){
+            }
+            else if (Step == 2)
+            {
                 thisSinger.EnsureLoaded();
                 OtherSinger.EnsureLoaded();
                 SubbankRenames.Clear();
                 existingSubbanks = thisSinger.Subbanks.Select(b => $"{b.Prefix},{b.Suffix}").ToList();
                 List<string> subbanksToAdd = OtherSinger.Subbanks.Select(b => $"{b.Prefix},{b.Suffix}").ToList();
-                foreach(string subbank in subbanksToAdd){
+                foreach (string subbank in subbanksToAdd)
+                {
                     SubbankRenames.Add(new ConvertItem(subbank, autoSuffix(subbank, existingSubbanks)));
                 }
-            } else if(Step == 3){
+            }
+            else if (Step == 3)
+            {
                 VoiceColorRenames.Clear();
                 existingVoiceColors = thisSinger.Subbanks.Select(b => b.Color).Distinct().ToList();
                 List<string> voiceColorsToAdd = OtherSinger.Subbanks.Select(b => b.Color).Distinct().ToList();
-                foreach(string voiceColor in voiceColorsToAdd){
+                foreach (string voiceColor in voiceColorsToAdd)
+                {
                     VoiceColorRenames.Add(new ConvertItem(voiceColor, autoSuffix(voiceColor, existingVoiceColors)));
                 }
             }
         }
 
-        void ConvertOto(string fromPath, string toPath, List<Subbank> oldSubbanks, List<Subbank> newSubbanks){
-            if(OtherSinger == null){
+        void ConvertOto(string fromPath, string toPath, List<Subbank> oldSubbanks, List<Subbank> newSubbanks)
+        {
+            if (OtherSinger == null)
+            {
                 return;
             }
-            if(!File.Exists(fromPath)){
+            if (!File.Exists(fromPath))
+            {
                 Log.Error($"File {fromPath} does not exist");
                 return;
             }
@@ -128,48 +151,61 @@ namespace OpenUtau.App.ViewModels {
             var patterns = oldSubbanks.Select(subbank => new Regex($"^{Regex.Escape(subbank.Prefix)}(.*){Regex.Escape(subbank.Suffix)}$"))
                 .ToList();
             var otoSet = VoicebankLoader.ParseOtoSet(fromPath, OtherSinger.TextFileEncoding, OtherSinger.UseFilenameAsAlias);
-            foreach (var oto in otoSet.Otos){
-                if (!oto.IsValid) {
-                    if (!string.IsNullOrEmpty(oto.Error)) {
+            foreach (var oto in otoSet.Otos)
+            {
+                if (!oto.IsValid)
+                {
+                    if (!string.IsNullOrEmpty(oto.Error))
+                    {
                         Log.Error(oto.Error);
                     }
                     continue;
                 }
-                for (var i = 0; i < patterns.Count; i++) {
+                for (var i = 0; i < patterns.Count; i++)
+                {
                     var m = patterns[i].Match(oto.Alias);
-                    if (m.Success) {
+                    if (m.Success)
+                    {
                         oto.Alias = newSubbanks[i].Prefix + m.Groups[1].Value + newSubbanks[i].Suffix;
                         break;
                     }
                 }
             }
-            using (var stream = File.Open(toPath, FileMode.Create, FileAccess.Write)){
+            using (var stream = File.Open(toPath, FileMode.Create, FileAccess.Write))
+            {
                 VoicebankLoader.WriteOtoSet(otoSet, stream, thisSinger.TextFileEncoding);
             }
         }
 
-        Subbank ConvertSubBank(Subbank oldSubbank){
-            var newName = SubbankRenames.First(r=>r.Name == $"{oldSubbank.Prefix},{oldSubbank.Suffix}").NewName;
-            var newColor = VoiceColorRenames.First(r=>r.Name == oldSubbank.Color).NewName;
-            if(newName.Contains(",")){
+        Subbank ConvertSubBank(Subbank oldSubbank)
+        {
+            var newName = SubbankRenames.First(r => r.Name == $"{oldSubbank.Prefix},{oldSubbank.Suffix}").NewName;
+            var newColor = VoiceColorRenames.First(r => r.Name == oldSubbank.Color).NewName;
+            if (newName.Contains(","))
+            {
                 var n = newName.Split(",");
-                return new Subbank(){
+                return new Subbank()
+                {
                     Prefix = n[0],
                     Suffix = n[^1],
                     Color = newColor,
                     ToneRanges = oldSubbank.ToneRanges
                 };
-            } else {
-                return new Subbank(){
+            }
+            else
+            {
+                return new Subbank()
+                {
                     Prefix = "",
                     Suffix = newName,
                     Color = newColor,
-                    ToneRanges = oldSubbank.ToneRanges 
+                    ToneRanges = oldSubbank.ToneRanges
                 };
             }
         }
 
-        List<string> CheckForDuplicates(IList<ConvertItem> items, bool caseSensitive = true) {
+        List<string> CheckForDuplicates(IList<ConvertItem> items, bool caseSensitive = true)
+        {
             return items
                 .GroupBy(i => i.NewName, caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
                 .Where(g => g.Count() > 1)
@@ -177,7 +213,8 @@ namespace OpenUtau.App.ViewModels {
                 .ToList();
         }
 
-        List<string> CheckForConflicts(IList<ConvertItem> items, IList<string> existingNames, bool caseSensitive = true) {
+        List<string> CheckForConflicts(IList<ConvertItem> items, IList<string> existingNames, bool caseSensitive = true)
+        {
             return items
                 .Where(i => existingNames.Contains(i.NewName, caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase))
                 .Select(i => i.NewName)
@@ -186,8 +223,8 @@ namespace OpenUtau.App.ViewModels {
 
         public void CheckFolderNames()
         {
-            var duplicates = CheckForDuplicates(FolderRenames, caseSensitive:false);
-            var conflicts = CheckForConflicts(FolderRenames, existingDirs, caseSensitive:false);
+            var duplicates = CheckForDuplicates(FolderRenames, caseSensitive: false);
+            var conflicts = CheckForConflicts(FolderRenames, existingDirs, caseSensitive: false);
             FolderNameErrors = "";
             if (duplicates.Count > 0)
             {
@@ -199,24 +236,29 @@ namespace OpenUtau.App.ViewModels {
             }
         }
 
-        string resolveSubbankName(string name) {
-            if (!name.Contains(",")) {
+        string resolveSubbankName(string name)
+        {
+            if (!name.Contains(","))
+            {
                 return "," + name;
             }
             return name;
         }
 
-        public void CheckSubbankNames() {
+        public void CheckSubbankNames()
+        {
             var resolvedSubbankRenames = SubbankRenames
                 .Select(r => new ConvertItem(r.Name, resolveSubbankName(r.NewName)))
                 .ToList();
             var duplicates = CheckForDuplicates(resolvedSubbankRenames);
             var conflicts = CheckForConflicts(resolvedSubbankRenames, existingSubbanks);
             SubbankNameErrors = "";
-            if (duplicates.Count > 0) {
+            if (duplicates.Count > 0)
+            {
                 SubbankNameErrors += $"Duplicate subbank names: {string.Join(", ", duplicates)}\n";
             }
-            if (conflicts.Count > 0) {
+            if (conflicts.Count > 0)
+            {
                 SubbankNameErrors += $"Subbank names already existed: {string.Join(", ", conflicts)}\n";
             }
         }
@@ -287,9 +329,11 @@ namespace OpenUtau.App.ViewModels {
                         else
                         {
                             string currentFolder = Path.Join(OtherSinger.Location, folder.Name);
-                            Directory.EnumerateFiles(currentFolder, "oto.ini", SearchOption.AllDirectories)
-                                .Select(d => Path.GetDirectoryName(d)!)
-                                .ForEach(d => AddFolder(d, Path.Join(thisSinger.Location, folder.NewName, Path.GetRelativePath(currentFolder, d))));
+                            foreach (var d in Directory.EnumerateFiles(currentFolder, "oto.ini", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true })
+                                .Select(d => Path.GetDirectoryName(d)!))
+                            {
+                                AddFolder(d, Path.Join(thisSinger.Location, folder.NewName, Path.GetRelativePath(currentFolder, d)));
+                            }
                         }
                     }
                     var totalFiles = otosToConvert.Count + filesToCopy.Count;
@@ -309,14 +353,19 @@ namespace OpenUtau.App.ViewModels {
                     //Edit voice color of this singer
                     var yamlFile = Path.Combine(thisSinger.Location, "character.yaml");
                     VoicebankConfig? bankConfig = null;
-                    try {
+                    try
+                    {
                         // Load from character.yaml
-                        if (File.Exists(yamlFile)) {
-                            using (var stream = File.OpenRead(yamlFile)) {
+                        if (File.Exists(yamlFile))
+                        {
+                            using (var stream = File.OpenRead(yamlFile))
+                            {
                                 bankConfig = VoicebankConfig.Load(stream);
                             }
                         }
-                    } catch { 
+                    }
+                    catch
+                    {
                         Log.Error($"Voicebank merger: failed to load character.yaml from {yamlFile}");
                     }
                     if (bankConfig == null)
@@ -327,19 +376,25 @@ namespace OpenUtau.App.ViewModels {
                         .Select(s => s.subbank)
                         .Concat(newSubbanks)
                         .ToArray();
-                    foreach(var subbank in bankConfig.Subbanks) {
-                        if(subbank.ToneRanges == null || subbank.ToneRanges.Length == 0) {
+                    foreach (var subbank in bankConfig.Subbanks)
+                    {
+                        if (subbank.ToneRanges == null || subbank.ToneRanges.Length == 0)
+                        {
                             subbank.ToneRanges = ["C1-B7"];
                         }
                     }
-                    using (var stream = File.Open(yamlFile, FileMode.Create)) {
+                    using (var stream = File.Open(yamlFile, FileMode.Create))
+                    {
                         bankConfig.Save(stream);
                     }
-
-                } catch (Exception e) {
-                    var customEx = new MessageCustomizableException("Failed to merge voicebank", "<translate:errors.failed.merge>: voicebank", e);
+                }
+                catch (Exception e)
+                {
+                    var customEx = new MessageCustomizableException("Failed to merge singer", "<translate:mergevoicebank.error>", e);
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
-                } finally {
+                }
+                finally
+                {
                     new Task(() =>
                     {
                         DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, ""));

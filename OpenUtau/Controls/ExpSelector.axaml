@@ -1,3 +1,8 @@
+<!-- ชื่อไฟล์: ExpSelector.axaml -->
+<!-- ลำดับเวอร์ชัน: 0.1 -->
+<!-- Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT -->
+<!-- Original By OpenUtau Contributors -->
+<!-- หมายเหตุ: เพิ่มความโค้งมน (CornerRadius) ให้กับ ComboBox Border และปรับ Padding ให้ข้อความดูโปร่งขึ้น -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,10 +12,13 @@
   <Design.DataContext>
     <vm:ExpSelectorViewModel/>
   </Design.DataContext>
-  <Grid Height="22" Width="60" Background="{Binding Background}" PointerPressed="TextBlockPointerPressed">
-    <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" Height="22"
-              Focusable="False" Foreground="{Binding TagBrush}" Background="Transparent" Width="20"
+  <Grid Height="24" Width="64" Background="{Binding Background}" PointerPressed="TextBlockPointerPressed" Margin="0,2">
+    <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" Height="24"
+              Focusable="False" Foreground="{Binding TagBrush}" Background="Transparent" Width="24"
               SelectedItem="{Binding Descriptor}" ItemsSource="{Binding Descriptors}" SelectedIndex="{Binding SelectedIndex}">
+      <ComboBox.SelectionBoxItemTemplate>
+        <DataTemplate><Panel/></DataTemplate>
+      </ComboBox.SelectionBoxItemTemplate>
       <ComboBox.Styles>
         <Style Selector="ComboBox">
           <Setter Property="Padding" Value="{DynamicResource ComboBoxPadding}" />
@@ -29,11 +37,13 @@
             <ControlTemplate>
               <DataValidationErrors>
                 <Grid RowDefinitions="Auto, *, Auto"
-                      ColumnDefinitions="4,22">
+                      ColumnDefinitions="4,24">
+                  <!-- เพิ่ม CornerRadius 4 เพื่อความทันสมัย -->
                   <Border x:Name="Background"
                           Grid.Row="1"
                           Grid.Column="0"
                           Grid.ColumnSpan="2"
+                          CornerRadius="4" 
                           Background="{TemplateBinding Background}"
                           BorderBrush="{TemplateBinding BorderBrush}"
                           BorderThickness="{TemplateBinding BorderThickness}"
@@ -75,7 +85,7 @@
                             Margin="0,-1,0,-1"
                             Padding="{DynamicResource ComboBoxDropdownBorderPadding}"
                             HorizontalAlignment="Stretch"
-                            CornerRadius="{DynamicResource OverlayCornerRadius}">
+                            CornerRadius="6"> <!-- ปรับ CornerRadius ของ Dropdown -->
                       <ScrollViewer HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
                                     VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
                         <ItemsPresenter Name="PART_ItemsPresenter"
@@ -100,10 +110,8 @@
         </Style>
       </ComboBox.Styles>
     </ComboBox>
-    <Viewbox Margin="20,0,0,0" Height="22" Width="40">
-      <TextBlock Height="22" MinWidth="36" Margin="0,0,4,0" Padding="0,3,0,3"
-                 Foreground="{Binding TagBrush}"
-                 TextAlignment="Right" Text="{Binding Header}"/>
-    </Viewbox>
+    <TextBlock Margin="22,0,8,0" FontSize="12" VerticalAlignment="Center"
+               HorizontalAlignment="Right" Foreground="{Binding TagBrush}"
+               TextAlignment="Right" Text="{Binding Header}"/>
   </Grid>
 </UserControl>

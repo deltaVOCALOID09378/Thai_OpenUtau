@@ -2,13 +2,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ac="using:OpenUtau.App.Controls"
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.TypeInDialog"
-        Icon="/Assets/open-utau.ico"
-        Title="TypeInDialog" Height="120" Width="320" WindowStartupLocation="CenterOwner">
+        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Title="TypeInDialog" Height="120" Width="320" WindowStartupLocation="CenterOwner"
+        CanResize="False">
   <StackPanel VerticalAlignment="Center" Margin="{Binding $parent.WindowDecorationMargin}">
     <TextBlock Margin="20" Name="Prompt" IsVisible="False" TextWrapping="Wrap" MaxWidth="560"/>
-    <TextBox Name="TextBox" Margin="4"/>
-    <Button Name="OkButton" Content="OK" Margin="4" HorizontalAlignment="Stretch"/>
+    <ac:WorkspacePanelTextBox Name="TextBox" Classes="workspacePanelTextBox" Margin="4"/>
+    <Button Name="OkButton" Content="{DynamicResource button.ok}" Margin="4" HorizontalAlignment="Stretch"/>
   </StackPanel>
 </Window>

@@ -6,10 +6,10 @@ using OpenUtau.Core.G2p;
 using WanaKanaNet;
 
 namespace OpenUtau.Plugin.Builtin {
-    [Phonemizer("English to Japanese Phonemizer", "EN to JA", "Made And Checked By DELTA SYNTH & Gemini AI, TUBS", language: "EN")]
+    [Phonemizer("English to Japanese Phonemizer (DELTA SYNTH)", "EN to JA DELTA", "Made And Checked By DELTA SYNTH & Gemini AI, TUBS", language: "EN")]
     // เวอร์ชั่น 1.1 (V1.1)
     // ปรับสมดุลโค้ด เพิ่มพื้นที่พยัญชนะให้ร้องชัดเจนขึ้น และรองรับการเอื้อนเสียงช่วงปลายโน้ตอัตโนมัติ
-    public class ENtoJAPhonemizer : SyllableBasedPhonemizer {
+    public class DeltaENtoJAPhonemizer : SyllableBasedPhonemizer {
         protected override string[] GetVowels() => vowels;
         private static readonly string[] vowels =
             "a i u e o ay ey oy ow aw".Split();

@@ -1,26 +1,44 @@
+<!--
+  Made And Checked By DELTA SYNTH & Gemini AI
+  Original by Patiphat Wongyai (Delta)
+  Version: 1.4 | Date: 2026-08-05
+  History: UI Enhancement — Status Bar ProgressBar color fixed to DELTA SYNTH red (#CC2200),
+           Status Bar text size 11→12pt for better readability
+-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:OpenUtau.App.ViewModels"
         xmlns:c="clr-namespace:OpenUtau.App.Controls"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:views="clr-namespace:OpenUtau.App.Views"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
         x:Class="OpenUtau.App.Views.MainWindow"
-        Icon="/Assets/open-utau.ico"
-        Title="{Binding Title}" MinWidth="300" MinHeight="200"
-        KeyDown="OnKeyDown" PointerPressed="OnPointerPressed" Closing="WindowClosing"
-        Focusable="True" DragDrop.AllowDrop="True"
-        TransparencyLevelHint="None">
+        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Title="{Binding Title}" MinWidth="300" MinHeight="200" Width="{Binding Width}" Height="{Binding Height}"
+        Background="{DynamicResource WorkspaceCanvasBrush}"
+        Focusable="True" KeyDown="OnKeyDown" PointerPressed="OnPointerPressed" Closing="WindowClosing"
+        DragDrop.AllowDrop="True" TransparencyLevelHint="None">
   <Window.Styles>
     <Style Selector="Button,ToggleButton">
       <Setter Property="Focusable" Value="False"/>
     </Style>
   </Window.Styles>
-  <Grid>
+  <Grid Background="{DynamicResource WorkspaceCanvasBrush}">
     <Grid Name="MainGrid" Margin="{Binding $parent[1].WindowDecorationMargin}">
-      <Menu Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Left" Height="24"
-                Opened="OnMainMenuOpened" Closed="OnMainMenuClosed" PointerExited="OnMainMenuPointerLeave"
-                ZIndex="1">
+      <!-- DELTA SYNTH Logo Background -->
+      <Image Source="/Assets/logo_delta_synth.png" 
+             HorizontalAlignment="Center" VerticalAlignment="Center" 
+             Stretch="Uniform" Opacity="0.10" IsHitTestVisible="False" Grid.RowSpan="3" Margin="50"/>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <Border Grid.Row="0" Classes="workspaceCard workspaceDockTop appTopBar">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Menu Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                Opened="OnMainMenuOpened" Closed="OnMainMenuClosed" PointerExited="OnMainMenuPointerLeave">
           <MenuItem Header="{DynamicResource menu.file}" IsEnabled="{Binding Page}">
             <MenuItem Header="{DynamicResource menu.file.new}" InputGesture="Ctrl+N" Click="OnMenuNew"/>
             <MenuItem Header="{DynamicResource menu.file.newfromtemplate}" ItemsSource="{Binding OpenTemplatesMenuItems}" Classes="MenuItemWithSubMenu"/>
@@ -35,8 +53,6 @@
             <MenuItem Header="-" Height="1"/>
             <MenuItem Header="{DynamicResource menu.file.importtracks}" Click="OnMenuImportTracks"/>
             <MenuItem Header="{DynamicResource menu.file.importaudio}" Click="OnMenuImportAudio"/>
-            <MenuItem Header="{DynamicResource menu.file.importmidi}" Click="OnMenuImportMidi">
-            </MenuItem>
             <MenuItem Header="-" Height="1"/>
             <MenuItem Header="{DynamicResource menu.file.exportaudio}">
               <MenuItem Header="{DynamicResource menu.file.exportwav}" Click="OnMenuExportWav"/>
@@ -48,14 +64,13 @@
               <MenuItem Header="{DynamicResource menu.file.exportustto}" Click="OnMenuExportUstTo"/>
               <MenuItem Header="{DynamicResource menu.file.exportmidi}" Click="OnMenuExportMidi"/>
               <MenuItem Header="{DynamicResource menu.file.exportds}" Click="OnMenuExportDsTo"/>
-              <MenuItem Header="{DynamicResource menu.file.exportds.v2}" Click="OnMenuExportDsV2To"/>
-              <MenuItem Header="{DynamicResource menu.file.exportds.v2withoutpitch}" Click="OnMenuExportDsV2WithoutPitchTo"/>
             </MenuItem>
             <MenuItem Header="{DynamicResource menu.file.openexportlocation}" Click="OnMenuOpenProjectLocation"/>
+            <MenuItem Header="{DynamicResource menu.file.deleteexport}" Click="OnMenuDeleteExport"/>
           </MenuItem>
           <MenuItem Header="{DynamicResource menu.edit}" IsEnabled="{Binding Page}">
-            <MenuItem Header="{DynamicResource menu.edit.undo}" InputGesture="Ctrl+Z" Command="{Binding Undo}"/>
-            <MenuItem Header="{DynamicResource menu.edit.redo}" InputGesture="Ctrl+Y" Command="{Binding Redo}"/>
+            <MenuItem Header="{Binding UndoText}" InputGesture="Ctrl+Z" Command="{Binding Undo}" IsEnabled="{Binding CanUndo}"/>
+            <MenuItem Header="{Binding RedoText}" InputGesture="Ctrl+Y" Command="{Binding Redo}" IsEnabled="{Binding CanRedo}"/>
           </MenuItem>
           <MenuItem Header="{DynamicResource menu.project}" IsEnabled="{Binding Page}">
             <MenuItem Header="{DynamicResource menu.project.expressions}" Click="OnMenuExpressionss"/>
@@ -63,6 +78,7 @@
           </MenuItem>
           <MenuItem Header="{DynamicResource menu.tools}">
             <MenuItem Header="{DynamicResource menu.tools.layout}">
+              <MenuItem Header="{DynamicResource menu.tools.layout.reset}" Click="OnMenuLayoutReset"/>
               <MenuItem Header="{DynamicResource menu.tools.layout.vsplit11}" Click="OnMenuLayoutVSplit11"/>
               <MenuItem Header="{DynamicResource menu.tools.layout.vsplit12}" Click="OnMenuLayoutVSplit12"/>
               <MenuItem Header="{DynamicResource menu.tools.layout.vsplit13}" Click="OnMenuLayoutVSplit13"/>
@@ -76,8 +92,9 @@
             <MenuItem Header="{DynamicResource phoneticassistant.caption}" Click="OnMenuPhoneticAssistant"/>
             <MenuItem Header="{DynamicResource menu.tools.singers}" Click="OnMenuSingers"/>
             <MenuItem Header="{DynamicResource menu.tools.singer.install}" Click="OnMenuInstallSinger"/>
-            <MenuItem Header="{DynamicResource menu.tools.dependency.install}" Click="OnMenuInstallDependency"/>
             <MenuItem Header="{DynamicResource menu.tools.wavtoolresampler.install}" Click="OnMenuInstallWavtoolResampler"/>
+            <MenuItem Header="{DynamicResource menu.tools.packages}" Click="OnMenuPackageManager"/>
+            <MenuItem Header="{DynamicResource menu.tools.singerhub}" Click="OnMenuSingerHub"/>
             <MenuItem Header="{DynamicResource menu.tools.prefs}" Click="OnMenuPreferences"/>
           </MenuItem>
           <MenuItem Header="{DynamicResource menu.help}">
@@ -86,201 +103,337 @@
             <MenuItem Header="{DynamicResource menu.help.reportissue}" Click="OnMenuReportIssue"/>
             <MenuItem Header="{DynamicResource menu.help.logslocation}" Click="OnMenuLogsLocation"/>
           </MenuItem>
-        </Menu>
-      <Carousel SelectedIndex="{Binding Page}" >
-        <!--Welcome page-->
-        <Grid Margin="60,50,60,40" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,*">
-          <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="8">
-            <!--Create new project or open existing project-->
-            <TextBlock Text="{DynamicResource welcome.start}" FontSize="20"/>
-            <WrapPanel Margin="-4" Orientation="Horizontal">
-              <Button Margin="4" Click="OnMenuNew" Height="60" Padding="12">
-                <Grid ColumnDefinitions="Auto,*">
-                  <Viewbox
-                    Grid.RowSpan="2"
-                    Width="24"
-                    Height="24"
-                    Margin="8,4,12,4">
-                    <!--From https://github.com/microsoft/vscode-icons/blob/main/icons/light/new-file.svg-->
-                    <Path Classes="clear" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center"
-                      Data="M4.00024 7H3.00024V4H0.000244141V3H3.00024V0H4.00024V3H7.00024V4H4.00024V7ZM10.5002 1.09998L13.9003 4.59998L14.0002 5V13.5L13.5002 14H3.50024L3.00024 13.5V8H4.00024V13H13.0002V6H9.00024V2H5.00024V1H10.2002L10.5002 1.09998ZM10.0002 2V5H12.9003L10.0002 2Z"
-                      Fill="{StaticResource NeutralAccentBrush}"/>
-                  </Viewbox>
-
-                  <StackPanel Grid.Column="1"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center"
-                    Margin="0,0,8,0">
-
-                    <TextBlock HorizontalAlignment="Stretch"
-                      Text="{DynamicResource welcome.new}"
-                      FontSize="14"
-                      FontWeight="Normal"
-                      TextWrapping="Wrap" />
-
-                    <TextBlock HorizontalAlignment="Stretch"
-                      Text="{DynamicResource welcome.new.description}"
-                      FontSize="12"
-                      FontWeight="Normal"
-                      TextWrapping="Wrap" />
-                  </StackPanel>
-                </Grid>
+          </Menu>
+          <Border Grid.Column="1" Classes="appTopBarChrome" HorizontalAlignment="Center"
+                  IsVisible="{Binding Page}">
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <StackPanel Classes="appTopBarTransportStrip" Orientation="Horizontal" Spacing="4">
+              <Button Classes="transportChip seekStartChip"
+                      Command="{Binding PlaybackViewModel.SeekStart}">
+                <Viewbox>
+                  <Canvas Width="14" Height="14" RenderTransformOrigin="0.5,0.5">
+                    <Canvas.RenderTransform>
+                      <ScaleTransform ScaleX="1" ScaleY="1.08"/>
+                    </Canvas.RenderTransform>
+                    <Path Classes="filled"
+                          Data="M 2 2 L 5 2 L 5 12 L 2 12 Z M 5 7 L 12 2 L 12 12 Z"/>
+                  </Canvas>
+                </Viewbox>
               </Button>
-
-              <Button Margin="4" Click="OnMenuOpen" Height="60" Padding="12">
-                <Grid ColumnDefinitions="Auto,*">
-                  <Viewbox
-                    Grid.RowSpan="2"
-                    Width="24"
-                    Height="24"
-                    Margin="8,4,12,4">
-                    <!--From https://github.com/microsoft/vscode-icons/blob/main/icons/dark/go-to-file.svg-->
-                    <Path Classes="clear" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center"
-                      Data="M6 5.9142L8.06065 3.85356L8.06065 3.14645L5.91421 1L5.2071 1.70711L5.25 1.75L5.24998 1.75002L5.49997 2H5.5L6.49999 3H3.5C2.83696 3 2.20107 3.2634 1.73223 3.73224C1.26339 4.20108 1 4.83696 1 5.5C1 6.16305 1.26339 6.79893 1.73223 7.26777C2.20107 7.73661 2.83696 8 3.5 8H4V7H3.5C3.10218 7 2.72064 6.84197 2.43934 6.56066C2.15804 6.27936 2 5.89783 2 5.5C2 5.10218 2.15804 4.72065 2.43934 4.43934C2.72064 4.15804 3.10218 4 3.5 4H5V4.00003H5.49996L5.49999 4H6.49999L5.2071 5.29289L5.20711 5.29291L5.2071 5.29292L5.91421 6.00003L6 5.91423V5.9142ZM11 2H8.32838L7.32839 1H12L12.71 1.29L15.71 4.29L16 5V14L15 15H6L5 14V9.00003V6.50003L6 7.34699V14H15V6H11V2ZM12 2V5H15L12 2Z"
-                      Fill="{StaticResource NeutralAccentBrush}"/>
-                  </Viewbox>
-
-                  <StackPanel Grid.Column="1"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center"
-                    Margin="0,0,8,0">
-
-                    <TextBlock HorizontalAlignment="Stretch"
-                      Text="{DynamicResource welcome.open}"
-                      FontSize="14"
-                      FontWeight="Normal"
-                      TextWrapping="Wrap" />
-
-                    <TextBlock HorizontalAlignment="Stretch"
-                      Text="{DynamicResource welcome.open.description}"
-                      FontSize="12"
-                      FontWeight="Normal"
-                      TextWrapping="Wrap" />
-                  </StackPanel>
-                </Grid>
+              <Button Classes="transportChip playPauseChip"
+                      Classes.playing="{Binding PlaybackViewModel.IsPlaybackActive}"
+                      Click="OnPlayOrPause">
+                <Viewbox>
+                  <Canvas Width="14" Height="14" RenderTransformOrigin="0.5,0.5">
+                    <Canvas.RenderTransform>
+                      <ScaleTransform ScaleX="1" ScaleY="1.08"/>
+                    </Canvas.RenderTransform>
+                    <Path Classes="filled playIcon"
+                          Data="M 3 2 L 12 7 L 3 12 Z"/>
+                    <Path Classes="filled pauseIcon"
+                          Data="M 3.5 2 L 6.5 2 L 6.5 12 L 3.5 12 Z M 8.5 2 L 11.5 2 L 11.5 12 L 8.5 12 Z"/>
+                  </Canvas>
+                </Viewbox>
               </Button>
-            </WrapPanel>
+              <Button Classes="transportChip seekEndChip"
+                      Command="{Binding PlaybackViewModel.SeekEnd}">
+                <Viewbox>
+                  <Canvas Width="14" Height="14" RenderTransformOrigin="0.5,0.5">
+                    <Canvas.RenderTransform>
+                      <TransformGroup>
+                        <ScaleTransform ScaleX="1" ScaleY="1.08"/>
+                        <TranslateTransform X="-1"/>
+                      </TransformGroup>
+                    </Canvas.RenderTransform>
+                    <Path Classes="filled"
+                          Data="M 3 3 L 10 7 L 3 11 Z M 10 2 L 13 2 L 13 12 L 10 12 Z"/>
+                  </Canvas>
+                </Viewbox>
+              </Button>
+              <ToggleButton Classes="transportChip metronomeChip"
+                            IsChecked="{Binding PlaybackViewModel.MetronomeEnabled}">
+                <ToolTip.Tip>
+                  <TextBlock Text="{DynamicResource prefs.playback.metronome}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+                </ToolTip.Tip>
+                <Viewbox>
+                  <Canvas Width="14" Height="14">
+                    <Path Classes="filled"
+                          Data="M 5 1 C 6 1 7 1 8 1 L 11 5 L 11 13 L 2 13 L 2 5 Z M 6.5 4 A 1.5 1.5 0 1 1 6.5 7 A 1.5 1.5 0 1 1 6.5 4 Z M 6.5 5 L 12.5 0 L 12.5 1 L 6.5 6 Z"/>
+                  </Canvas>
+                </Viewbox>
+              </ToggleButton>
+              
+              <!-- Screen Record Buttons -->
+              <Button Classes="transportChip recordChip"
+                      Command="{Binding RecordCommand}">
+                <ToolTip.Tip>
+                  <TextBlock Text="{DynamicResource transport.record.start}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+                </ToolTip.Tip>
+                <Viewbox>
+                  <Canvas Width="14" Height="14" RenderTransformOrigin="0.5,0.5">
+                    <Ellipse Classes="filled" Fill="#CC2200" Width="10" Height="10" Canvas.Left="2" Canvas.Top="2"
+                             IsVisible="{Binding !IsRecording}"/>
+                    <Path Classes="filled" Fill="#CC2200" Data="M 3.5 2 L 6.5 2 L 6.5 12 L 3.5 12 Z M 8.5 2 L 11.5 2 L 11.5 12 L 8.5 12 Z"
+                          IsVisible="{Binding IsRecording}"/>
+                  </Canvas>
+                </Viewbox>
+              </Button>
+              <Button Classes="transportChip stopRecordChip"
+                      Command="{Binding StopRecordCommand}"
+                      IsEnabled="{Binding IsRecording}">
+                <ToolTip.Tip>
+                  <TextBlock Text="{DynamicResource transport.record.stop}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+                </ToolTip.Tip>
+                <Viewbox>
+                  <Canvas Width="14" Height="14" RenderTransformOrigin="0.5,0.5">
+                    <Rectangle Classes="filled" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="10" Height="10" Canvas.Left="2" Canvas.Top="2"/>
+                  </Canvas>
+                </Viewbox>
+              </Button>
+            </StackPanel>
+            <Border Classes="appTopBarValueStrip" MinWidth="200">
+              <Grid ColumnDefinitions="*,Auto,*,Auto,*">
+                <Border Grid.Column="0" Classes="transportStripCell appTopBarBpmCell" Cursor="Hand"
+                        PointerPressed="OnEditBpm">
+                  <TextBlock Classes="appTopBarLabel">
+                    <TextBlock.Text>
+                      <MultiBinding StringFormat="{}{0:#0.00}">
+                        <Binding Path="PlaybackViewModel.Bpm"/>
+                      </MultiBinding>
+                    </TextBlock.Text>
+                  </TextBlock>
+                </Border>
+                <Border Grid.Column="1" Classes="transportValueDivider"/>
+                <Border Grid.Column="2" Classes="transportStripCell appTopBarTimeSigCell" Cursor="Hand"
+                        PointerPressed="OnEditTimeSignature">
+                  <TextBlock Classes="appTopBarLabel">
+                    <TextBlock.Text>
+                      <MultiBinding StringFormat="{}{0}/{1}">
+                        <Binding Path="PlaybackViewModel.BeatPerBar"/>
+                        <Binding Path="PlaybackViewModel.BeatUnit"/>
+                      </MultiBinding>
+                    </TextBlock.Text>
+                  </TextBlock>
+                </Border>
+                <Border Grid.Column="3" Classes="transportValueDivider"/>
+                <Border Grid.Column="4" Classes="transportStripCell appTopBarKeyCell" Cursor="Hand"
+                        PointerPressed="OnEditKey">
+                  <TextBlock Classes="appTopBarLabel" Text="{Binding PlaybackViewModel.KeyName}"/>
+                </Border>
+              </Grid>
+            </Border>
+            <Border Classes="appTopBarValueStrip appTopBarTimerStrip" MinWidth="100">
+              <TextBlock Classes="appTopBarLabel" Margin="12,0"
+                         Text="{Binding Path=PlaybackViewModel.PlayPosTime, StringFormat={}{0:mm\\:ss\\.fff}}"/>
+            </Border>
           </StackPanel>
+          </Border>
+        </Grid>
+      </Border>
+      <Carousel Grid.Row="1" SelectedIndex="{Binding Page}" >
+        <!--Welcome page-->
+        <Grid Classes="workspaceLayout" Margin="8,0,8,8" ColumnDefinitions="*,8,380" RowDefinitions="*">
+          <Grid Grid.Column="0" RowDefinitions="Auto,8,*" ColumnDefinitions="*,8,*">
+            <Border Grid.Row="0" Grid.ColumnSpan="3" Classes="welcomeCard">
+              <StackPanel Spacing="8">
+                <Button Classes="welcomeRecoveryButton"
+                        Click="OnWelcomeRecovery" Content="{Binding RecoveryString}"
+                        IsVisible="{Binding HasRecovery}" Background="{DynamicResource WarningBrush}"/>
+                <Grid RowDefinitions="Auto,24,Auto">
+                  <TextBlock Grid.Row="0" Text="{DynamicResource welcome.start}" Classes="notePropsPanelTitle" VerticalAlignment="Center"/>
+                  <Grid Grid.Row="2" ColumnDefinitions="*,8,*">
+                  <Button Grid.Column="0" Classes="welcomeActionButton" Click="OnMenuNew" HorizontalAlignment="Stretch">
+                    <Grid ColumnDefinitions="Auto,*">
+                      <Viewbox Grid.Column="0" Width="22" Height="22" Margin="0,0,10,0" VerticalAlignment="Center">
+                        <Path Classes="clear welcomeActionIcon" Data="M4.00024 7H3.00024V4H0.000244141V3H3.00024V0H4.00024V3H7.00024V4H4.00024V7ZM10.5002 1.09998L13.9003 4.59998L14.0002 5V13.5L13.5002 14H3.50024L3.00024 13.5V8H4.00024V13H13.0002V6H9.00024V2H5.00024V1H10.2002L10.5002 1.09998ZM10.0002 2V5H12.9003L10.0002 2Z"/>
+                      </Viewbox>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Classes="welcomeActionTitle" Text="{DynamicResource welcome.new}"/>
+                        <TextBlock Classes="welcomeActionDescription" Text="{DynamicResource welcome.new.description}"/>
+                      </StackPanel>
+                    </Grid>
+                  </Button>
+                  <Button Grid.Column="2" Classes="welcomeActionButton" Click="OnMenuOpen" HorizontalAlignment="Stretch">
+                    <Grid ColumnDefinitions="Auto,*">
+                      <Viewbox Grid.Column="0" Width="22" Height="22" Margin="0,0,10,0" VerticalAlignment="Center">
+                        <Path Classes="clear welcomeActionIcon" Data="M6 5.9142L8.06065 3.85356L8.06065 3.14645L5.91421 1L5.2071 1.70711L5.25 1.75L5.24998 1.75002L5.49997 2H5.5L6.49999 3H3.5C2.83696 3 2.20107 3.2634 1.73223 3.73224C1.26339 4.20108 1 4.83696 1 5.5C1 6.16305 1.26339 6.79893 1.73223 7.26777C2.20107 7.73661 2.83696 8 3.5 8H4V7H3.5C3.10218 7 2.72064 6.84197 2.43934 6.56066C2.15804 6.27936 2 5.89783 2 5.5C2 5.10218 2.15804 4.72065 2.43934 4.43934C2.72064 4.15804 3.10218 4 3.5 4H5V4.00003H5.49996L5.49999 4H6.49999L5.2071 5.29289L5.20711 5.29291L5.2071 5.29292L5.91421 6.00003L6 5.91423V5.9142ZM11 2H8.32838L7.32839 1H12L12.71 1.29L15.71 4.29L16 5V14L15 15H6L5 14V9.00003V6.50003L6 7.34699V14H15V6H11V2ZM12 2V5H15L12 2Z"/>
+                      </Viewbox>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Classes="welcomeActionTitle" Text="{DynamicResource welcome.open}"/>
+                        <TextBlock Classes="welcomeActionDescription" Text="{DynamicResource welcome.open.description}"/>
+                      </StackPanel>
+                    </Grid>
+                  </Button>
+                  </Grid>
+                </Grid>
+              </StackPanel>
+            </Border>
 
-          <!-- Recent files -->
-          <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,24,0,8" Text="{DynamicResource welcome.recent}" FontSize="20"/>
-          <ListBox ItemsSource="{Binding RecentFiles}" Grid.Row="2" Grid.Column="0" Margin="0,0,15,0">
-            <ListBox.Styles>
-              <Style Selector="ListBoxItem">
-                <Setter Property="Height" Value="NaN" />
-                <Setter Property="MinHeight" Value="48" />
-                <Setter Property="Padding" Value="16,0" />
-                <Setter Property="VerticalContentAlignment" Value="Center" />
-              </Style>
-            </ListBox.Styles>
-            <ListBox.ItemTemplate>
-              <DataTemplate x:DataType="vm:RecentFileInfo">
-                <StackPanel Margin="0,4" PointerPressed="OnWelcomeRecent" Background="Transparent">
-                  <TextBlock FontSize="16" Text="{Binding Name}"/>
-                  <TextBlock FontSize="12" Text="{Binding Directory}" TextWrapping="Wrap"/>
-                </StackPanel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
+            <Border Grid.Row="2" Grid.Column="0" Classes="welcomeCard" VerticalAlignment="Stretch">
+              <Grid RowDefinitions="Auto,8,*">
+                <TextBlock Grid.Row="0" Text="{DynamicResource welcome.recent}" Classes="workspacePanelTitle"/>
+                <ScrollViewer Grid.Row="2" Classes="workspaceScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False">
+                  <ListBox ItemsSource="{Binding RecentFiles}" Classes="welcomeFileList" Background="Transparent">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:RecentFileInfo">
+                        <StackPanel PointerPressed="OnWelcomeRecent" Background="Transparent" Spacing="2">
+                          <TextBlock Classes="welcomeFileName" Text="{Binding Name}"/>
+                          <TextBlock Classes="welcomeFilePath" Text="{Binding Directory}"/>
+                        </StackPanel>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </ScrollViewer>
+              </Grid>
+            </Border>
 
-          <!-- Template files -->
-          <TextBlock Grid.Row="1" Grid.Column="1" Margin="15,24,0,8" Text="{DynamicResource welcome.template}" FontSize="20"/>
-          <ListBox ItemsSource="{Binding TemplateFiles}" Grid.Row="2" Grid.Column="1" Margin="15,0,0,0">
-            <ListBox.Styles>
-              <Style Selector="ListBoxItem">
-                <Setter Property="Height" Value="NaN" />
-                <Setter Property="MinHeight" Value="48" />
-                <Setter Property="Padding" Value="16,0" />
-                <Setter Property="VerticalContentAlignment" Value="Center" />
-              </Style>
-            </ListBox.Styles>
-            <ListBox.ItemTemplate>
-              <DataTemplate x:DataType="vm:RecentFileInfo">
-                <StackPanel Margin="0,4" PointerPressed="OnWelcomeTemplate" Background="Transparent">
-                  <TextBlock FontSize="16" Text="{Binding Name}"/>
-                </StackPanel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
+            <Border Grid.Row="2" Grid.Column="2" Classes="welcomeCard" VerticalAlignment="Stretch">
+              <Grid RowDefinitions="Auto,8,*">
+                <TextBlock Grid.Row="0" Text="{DynamicResource welcome.template}" Classes="workspacePanelTitle"/>
+                <ScrollViewer Grid.Row="2" Classes="workspaceScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False">
+                  <ListBox ItemsSource="{Binding TemplateFiles}" Classes="welcomeFileList" Background="Transparent">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:RecentFileInfo">
+                        <StackPanel PointerPressed="OnWelcomeTemplate" Background="Transparent">
+                          <TextBlock Classes="welcomeFileName" Text="{Binding Name}"/>
+                        </StackPanel>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </ScrollViewer>
+              </Grid>
+            </Border>
+          </Grid>
+
+          <!-- Singer Hub shell only; SingerHubPane content is unchanged -->
+          <Border Grid.Column="2" Classes="welcomeHubShell" VerticalAlignment="Stretch">
+            <Grid RowDefinitions="Auto,8,*">
+              <StackPanel Grid.Row="0" Spacing="4">
+                <TextBlock Text="{DynamicResource lunai.caption}" Classes="notePropsPanelTitle" VerticalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource welcome.singerhub.description}" Classes="welcomeActionDescription"/>
+              </StackPanel>
+              <views:SingerHubPane Grid.Row="2"/>
+            </Grid>
+          </Border>
         </Grid>
       
         <!--Main page-->
-        <Grid RowDefinitions="24,24,1*,20,4" ColumnDefinitions="300,*,24" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-          <Panel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="24">
-            <Border Classes="playback" Width="72" HorizontalAlignment="Left" Margin="4,0">
-              <Grid>
-                <TextBlock Width="28" HorizontalAlignment="Left"
-                          Background="Transparent" PointerPressed="OnEditTimeSignature">
-                  <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}/{1}">
-                      <Binding Path="PlaybackViewModel.BeatPerBar"/>
-                      <Binding Path="PlaybackViewModel.BeatUnit"/>
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
-                <TextBlock Width="42" HorizontalAlignment="Right"
-                            Background="Transparent" PointerPressed="OnEditBpm">
-                  <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0:#0.00}">
-                      <Binding Path="PlaybackViewModel.Bpm"/>
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
+        <Grid x:Name="WorkspaceTracksGrid" Classes="workspaceLayout" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding TracksViewModel.TrackHeaderColumnWidth, Mode=TwoWay}"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="16"/>
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition MinHeight="{Binding TracksRowMinHeight}"/>
+            <RowDefinition Height="{Binding PianoRollSplitterRowHeight}" MinHeight="0"/>
+            <RowDefinition Height="*" MinHeight="{Binding PianoRollMinHeight}"
+                           MaxHeight="{Binding PianoRollMaxHeight}"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="4"/>
+          </Grid.RowDefinitions>
+          <Border Grid.Row="0" Grid.ColumnSpan="3" Classes="workspaceCard workspaceDockTracks"
+                  IsVisible="{Binding ShowTracksArea}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding TracksViewModel.TrackHeaderColumnWidth, Mode=TwoWay}"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="*" MinHeight="0.01"/>
+                <RowDefinition Height="0"/>
+              </Grid.RowDefinitions>
+              <Grid Grid.Row="0" Grid.Column="0" ClipToBounds="True">
               </Grid>
-            </Border>
-            <Border Classes="playback" Width="88" HorizontalAlignment="Center">
-              <StackPanel Orientation="Horizontal">
-                <Button Command="{Binding PlaybackViewModel.SeekStart}">
-                  <Path Fill="{Binding $parent.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Data="M 0 0 L 2 0 L 2 9 L 0 9 Z M 2 4.5 L 7 0 L 7 9 Z"/>
-                </Button>
-                <Button Click="OnPlayOrPause">
-                  <Path Fill="{Binding $parent.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Data="M 0 0 L 7 6.5 L 0 13 Z"/>
-                </Button>
-                <Button Command="{Binding PlaybackViewModel.Pause}">
-                  <Path Fill="{Binding $parent.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Data="M 0 0 L 2 0 L 2 9 L 0 9 Z M 4 0 L 6 0 L 6 9 L 4 9 Z"/>
-                </Button>
-                <Button Command="{Binding PlaybackViewModel.SeekEnd}">
-                  <Path Fill="{Binding $parent.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Data="M 0 0 L 5 4.5 L 0 9 Z M 5 0 L 7 0 L 7 9 L 5 9 Z"/>
-                </Button>
-              </StackPanel>
-            </Border>
-            <Border Classes="playback" Width="72" HorizontalAlignment="Right" Margin="4,0">
-              <Grid>
-                <TextBlock Text="{Binding Path=PlaybackViewModel.PlayPosTime, StringFormat={}{0:mm\\:ss\\.fff}}"/>
-              </Grid>
-            </Border>
-          </Panel>
-          <ScrollBar Name="HScrollBar" Classes="music" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                    Margin="0,4,0,4" Orientation="Horizontal" AllowAutoHide="False"
-                    DataContext="{Binding TracksViewModel}"
-                    Maximum="{Binding HScrollBarMax, Mode=OneWay}"
-                    Value="{Binding TickOffset}"
-                    ViewportSize="{Binding ViewportTicks}"
-                    LargeChange="{Binding ViewportTicks}"
-                    SmallChange="{Binding SmallChangeX}" PointerWheelChanged="HScrollPointerWheelChanged"/>
-          <ScrollBar Name="VScrollBar" Classes="music" Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                    Margin="4,0,4,0" Orientation="Vertical" AllowAutoHide="False"
-                    DataContext="{Binding TracksViewModel}"
-                    Maximum="{Binding VScrollBarMax, Mode=OneWay}"
-                    Value="{Binding TrackOffset}"
-                    ViewportSize="{Binding ViewportTracks}"
-                    LargeChange="{Binding ViewportTracks}"
-                    SmallChange="{Binding SmallChangeY}" PointerWheelChanged="VScrollPointerWheelChanged"/>
-          <Canvas Name="TimelineCanvas" Grid.Row="1" Grid.Column="1"
+          <ScrollBar Name="TracksHScrollBar" Classes="overlay" Grid.Row="1" Grid.Column="1" ZIndex="400"
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                    Height="10" Margin="0,0,0,3" Orientation="Horizontal" AllowAutoHide="False"
+                    Padding="0" ClipToBounds="True"
+                    Maximum="{Binding TracksViewModel.HScrollBarMax, Mode=OneWay}"
+                    Value="{Binding TracksViewModel.TickOffset}"
+                    ViewportSize="{Binding TracksViewModel.ViewportTicks}"
+                    LargeChange="{Binding TracksViewModel.ViewportTicks}"
+                    SmallChange="{Binding TracksViewModel.SmallChangeX}" PointerWheelChanged="HScrollPointerWheelChanged">
+            <ScrollBar.Styles>
+              <Style Selector="Thumb">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Template">
+                  <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="PART_Border"
+                            Height="8"
+                            MinHeight="8"
+                            MaxHeight="8"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Stretch"
+                            Background="{DynamicResource ScrollBarThumbBrush}"
+                            Opacity="0.85"
+                            CornerRadius="4"
+                            BorderThickness="0"
+                            ClipToBounds="True"/>
+                  </ControlTemplate>
+                </Setter>
+              </Style>
+              <Style Selector="Thumb:pointerover /template/ Border#PART_Border">
+                <Setter Property="Opacity" Value="1" />
+                <Setter Property="Background" Value="#C4C4C4" />
+              </Style>
+              <Style Selector="Thumb:pressed /template/ Border#PART_Border">
+                <Setter Property="Opacity" Value="1" />
+                <Setter Property="Background" Value="#D9D9D9" />
+              </Style>
+            </ScrollBar.Styles>
+          </ScrollBar>
+          <ScrollBar Name="VScrollBar" Classes="overlay" Grid.Row="1" Grid.Column="1" ZIndex="400"
+                    HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                    Width="10" Margin="0,0,3,0" Orientation="Vertical" AllowAutoHide="False"
+                    Padding="0" ClipToBounds="True"
+                    Maximum="{Binding TracksViewModel.VScrollBarMax, Mode=OneWay}"
+                    Value="{Binding TracksViewModel.TrackOffset}"
+                    ViewportSize="{Binding TracksViewModel.ViewportTracks}"
+                    LargeChange="{Binding TracksViewModel.ViewportTracks}"
+                    SmallChange="{Binding TracksViewModel.SmallChangeY}" PointerWheelChanged="VScrollPointerWheelChanged">
+            <ScrollBar.Styles>
+              <Style Selector="Thumb">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Template">
+                  <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="PART_Border"
+                            Width="8"
+                            MinWidth="8"
+                            MaxWidth="8"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Stretch"
+                            Background="{DynamicResource ScrollBarThumbBrush}"
+                            Opacity="0.85"
+                            CornerRadius="4"
+                            BorderThickness="0"
+                            ClipToBounds="True"/>
+                  </ControlTemplate>
+                </Setter>
+              </Style>
+              <Style Selector="Thumb:pointerover /template/ Border#PART_Border">
+                <Setter Property="Opacity" Value="1" />
+                <Setter Property="Background" Value="#C4C4C4" />
+              </Style>
+              <Style Selector="Thumb:pressed /template/ Border#PART_Border">
+                <Setter Property="Opacity" Value="1" />
+                <Setter Property="Background" Value="#D9D9D9" />
+              </Style>
+            </ScrollBar.Styles>
+          </ScrollBar>
+          <Canvas Name="TimelineCanvas" Grid.Row="0" Grid.Column="1"
                   Background="Transparent" ClipToBounds="True"
                   PointerWheelChanged="TimelinePointerWheelChanged"
                   PointerPressed="TimelinePointerPressed"
                   PointerMoved="TimelinePointerMoved"
-                  PointerReleased="TimelinePointerReleased">
-            <Path Name="PlayPos"
-                  Canvas.Left="{Binding TracksViewModel.PlayPosX}"
-                  Canvas.Top="0" ZIndex="100" IsHitTestVisible="False"
-                  Fill="{DynamicResource NeutralAccentBrushSemi}"
-                  Data="M -6.5 0 L 6.5 0 L 6.5 3 L 0 9 L -6.5 3 Z"/>
+                  PointerReleased="TimelinePointerReleased"
+                  DoubleTapped="TimelineDoubleTapped">
             <Canvas.ContextMenu>
               <ContextMenu Name="TimelineContextMenu" ItemsSource="{Binding TimelineContextMenuItems}">
                 <ContextMenu.Styles>
@@ -294,19 +447,28 @@
               </ContextMenu>
             </Canvas.ContextMenu>
           </Canvas>
-          <c:TrackHeaderCanvas Grid.Row="2" Grid.Column="0" ClipToBounds="True" Background="Transparent"
+          <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" IsHitTestVisible="False"
+                  Background="{DynamicResource WorkspaceCanvasBrush}"/>
+          <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Left" Width="4" Background="Transparent" ZIndex="500"/>
+
+          <c:TrackHeaderCanvas Grid.Row="1" Grid.Column="0" ClipToBounds="True" Background="Transparent"
                               DataContext="{Binding TracksViewModel}"
                               TrackHeight="{Binding TrackHeight}"
                               TrackOffset="{Binding TrackOffset}"
                               Items="{Binding Tracks}"
-							  PointerWheelChanged="MainPagePointerWheelChanged"/>
-          <c:TrackBackground Grid.Row="2" Grid.Column="1" Margin="0" IsHitTestVisible="False"
+                              PointerWheelChanged="MainPagePointerWheelChanged"/>
+          <c:TrackBackground Grid.Row="1" Grid.Column="1" Margin="0" IsHitTestVisible="False"
+                            Background="{DynamicResource SystemRegionBrush}"
                             Foreground="{DynamicResource TrackBackgroundAltBrush}"
                             DataContext="{Binding TracksViewModel}"
                             Bounds="{Binding Bounds, Mode=OneWayToSource}"
                             TrackHeight="{Binding TrackHeight}"
-                            TrackOffset="{Binding TrackOffset}"/>
-          <c:TickBackground Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Margin="0" IsHitTestVisible="False"
+                            TrackOffset="{Binding TrackOffset}"
+                            PianoRollHighlightTrackNo="{Binding PianoRollHighlightTrackNo}"/>
+          <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Width="4"
+                        Background="Transparent" Focusable="False" Cursor="SizeWestEast"
+                        HorizontalAlignment="Right" ZIndex="1000"/>
+          <c:TickBackground Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="0" IsHitTestVisible="False"
                             Foreground="{DynamicResource TickLineBrush}"
                             Background="{DynamicResource TickLineBrushLow}"
                             Resolution="{Binding PlaybackViewModel.Resolution}"
@@ -314,13 +476,37 @@
                             TickOffset="{Binding TracksViewModel.TickOffset}"
                             SnapDiv="{Binding TracksViewModel.SnapDiv}"
                             SnapTicks="{Binding TracksViewModel.SnapTicks}"
-                            ShowBarNumber="True"/>
-          <c:PartsCanvas x:Name="partsCanvas" Grid.Row="2" Grid.Column="1" ClipToBounds="True" Background="Transparent"
+                            ShowBar="True"/>
+          <Canvas Name="PlayPosOverlay" Grid.Row="0" Grid.Column="1" ClipToBounds="True" IsHitTestVisible="False" ZIndex="200">
+            <Path Name="PlayPosClassic"
+                  Canvas.Left="{Binding TracksViewModel.PlayPosX}"
+                  Canvas.Top="0" IsHitTestVisible="False"
+                  Fill="{DynamicResource NeutralAccentBrushSemi}"
+                  IsVisible="{Binding TracksViewModel.ShowClassicPlayPosMarker, Mode=OneWay}"
+                  Data="M -6.5 0 L 6.5 0 L 6.5 3 L 0 9 L -6.5 3 Z"/>
+            <Path Name="PlayPosModern"
+                  Canvas.Left="{Binding TracksViewModel.PlayPosX}"
+                  Canvas.Top="0" IsHitTestVisible="False"
+                  Fill="{DynamicResource PlaybackLineMarkerBrush}"
+                  IsVisible="{Binding TracksViewModel.ShowModernPlayPosMarker, Mode=OneWay}"
+                  Data="M -5.5 0 L 6.5 0 L 6.5 3 L 0.5 9 L -5.5 3 Z"/>
+            <Rectangle Name="PlayPosTimelineLine"
+                       Canvas.Left="{Binding TracksViewModel.PlayPosX}"
+                       Canvas.Top="0" Width="1"
+                       Height="{Binding $parent.Bounds.Height, Mode=OneWay}"
+                       IsHitTestVisible="False"
+                       IsVisible="{Binding TracksViewModel.ShowThinPlayPosLine, Mode=OneWay}"
+                       Fill="{DynamicResource PlaybackLineSolidBrush}"/>
+          </Canvas>
+          <c:PartsCanvas x:Name="partsCanvas" Grid.Row="1" Grid.Column="1" ClipToBounds="True" Background="Transparent"
                         DataContext="{Binding TracksViewModel}"
                         TickWidth="{Binding TickWidth}"
                         TrackHeight="{Binding TrackHeight}"
                         TickOffset="{Binding TickOffset}"
                         TrackOffset="{Binding TrackOffset}"
+                        PianoRollOpenPart="{Binding PianoRollOpenPart}"
+                        PianoRollViewTickOffset="{Binding PianoRollViewTickOffset}"
+                        PianoRollViewViewportTicks="{Binding PianoRollViewViewportTicks}"
                         Items="{Binding Parts}"
                         PointerPressed="PartsCanvasPointerPressed"
                         PointerMoved="PartsCanvasPointerMoved"
@@ -333,7 +519,15 @@
                       Canvas.Left="{Binding PlayPosHighlightX, Mode=OneWay}"
                       Canvas.Top="0"
                       Fill="{DynamicResource NeutralAccentBrushSemi2}"
+                      IsVisible="{Binding TracksViewModel.ShowWidePlayPosBar, Mode=OneWay}"
                       IsHitTestVisible="False"/>
+            <Rectangle Name="PlayPosLine"
+                       Canvas.Left="{Binding PlayPosX}"
+                       Canvas.Top="0" Width="1"
+                       Height="{Binding $parent.Bounds.Height, Mode=OneWay}"
+                       ZIndex="99" IsHitTestVisible="False"
+                       IsVisible="{Binding TracksViewModel.ShowThinPlayPosLine, Mode=OneWay}"
+                       Fill="{DynamicResource PlaybackLineSolidBrush}"/>
             <Rectangle Name="SelectionBox" StrokeThickness="2"
                       Stroke="{DynamicResource SystemControlForegroundBaseHighBrush}"
                       Fill="{DynamicResource TickLineBrushLow}" ZIndex="1000"
@@ -353,35 +547,112 @@
                           IsVisible="{Binding IsWavePart}"
                           Command="{Binding PartReplaceAudioCommand}"
                           CommandParameter="{Binding Part}"/>
-                <MenuItem Header="{DynamicResource context.part.rename}"
-                          IsVisible="{Binding IsVoicePart}"
-                          Command="{Binding PartRenameCommand}"
-                          CommandParameter="{Binding Part}"/>
                 <MenuItem Header="{DynamicResource context.part.transcribe}"
                           IsVisible="{Binding IsWavePart}"
                           Command="{Binding PartTranscribeCommand}"
                           CommandParameter="{Binding Part}"/>
+                <MenuItem Header="{DynamicResource context.part.rename}"
+                          IsVisible="{Binding IsVoicePart}"
+                          Command="{Binding PartRenameCommand}"
+                          CommandParameter="{Binding Part}"/>
+                <MenuItem Header="{DynamicResource context.part.generateharmonies}"
+                          IsVisible="{Binding IsVoicePart}"
+                          Click="OnPartGenerateHarmonies"/>
                 <MenuItem Header="{DynamicResource context.part.merge}"
                           IsVisible="{Binding IsVoicePart}"
                           Command="{Binding PartMergeCommand}"
                           CommandParameter="{Binding Part}"/>
+                <MenuItem Header="{DynamicResource context.part.split}"
+                          IsVisible="{Binding IsVoicePart}"
+                          Command="{Binding PartSplitCommand}"
+                          CommandParameter="{Binding Part}"/>
+                <MenuItem Header="{DynamicResource context.part.applypitch}"
+                          IsVisible="{Binding IsVoicePart}"
+                          ItemsSource="{Binding PartApplyPitchMenuItems}"
+                          Classes="MenuItemWithSubMenu"/>
               </ContextMenu>
             </c:PartsCanvas.ContextMenu>
           </c:PartsCanvas>
-          <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"
-                  BoxShadow="inset 0 0 5 1 #3F000000" ClipToBounds="True" IsHitTestVisible="False">
-            <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                    IsVisible="{Binding TracksViewModel.PlayPosWaitingRendering}">
-              <TextBlock Text="{DynamicResource progress.waitingrendering}"/>
+          <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"
+                  ClipToBounds="True" IsHitTestVisible="False">
+            <Border HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,5"
+                    IsVisible="{Binding TracksViewModel.PlayPosWaitingRendering}" Background="{DynamicResource BackgroundBrushSemi}">
+              <TextBlock Text="{DynamicResource progress.waitingrendering}" FontSize="15"/>
             </Border>
           </Border>
-          <Border Grid.Row="1" Grid.Column="2" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0" Height="24" PointerWheelChanged="ViewScalerPointerWheelChanged">
+          <Border Grid.Row="0" Grid.Column="2" Background="Transparent" HorizontalAlignment="Left" VerticalAlignment="Center"
+                  Margin="0" Width="24" Height="24" PointerWheelChanged="ViewScalerPointerWheelChanged">
             <c:ViewScaler Name="VScaler" DataContext="{Binding TracksViewModel}" Value="{Binding TrackHeight}" Min="{Binding TrackHeightMin}" Max="{Binding TrackHeightMax}"/>
           </Border>
-          <TextBlock Grid.Row="3" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" Height="20" Margin="4,4,4,0" Text="{Binding ProgressText}"/>
-          <ProgressBar Grid.Row="4" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Value="{Binding Progress}"/>
+            </Grid>
+          </Border>
+          <GridSplitter x:Name="PianoRollHeightSplitter" Grid.Row="1" Grid.ColumnSpan="3"
+                        ResizeDirection="Rows"
+                        Height="8" MinHeight="8" MaxHeight="8"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                        Background="Transparent" Focusable="False" Cursor="SizeNorthSouth"
+                        IsVisible="{Binding ShowPianoRollSplitter}"/>
+          <Border Grid.Row="2" Grid.ColumnSpan="3" Classes="workspaceDockPianoHost"
+                  ClipToBounds="True" IsVisible="{Binding ShowPianoRoll}">
+            <ContentControl Name="PianoRollContainer"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+          </Border>
         </Grid>
       </Carousel>
+      
+      <!-- DELTA SYNTH Toast Notification v1.1 — toast-style มุมขวาล่าง โปร่งใส หายใน 1 วิ -->
+      <ItemsControl ItemsSource="{Binding Source={x:Static vm:ToastViewModel.Inst}, Path=Messages}"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="0,0,16,20" ZIndex="100"
+                    IsHitTestVisible="True"
+                    Grid.RowSpan="3">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <!-- MaxWidth 280px ตามมาตรฐาน DELTA SYNTH Toast — ไม่เกิน 280px ไม่บดบังพื้นที่ทำงาน -->
+            <StackPanel Spacing="6" VerticalAlignment="Bottom" MaxWidth="280"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <!-- Toast item: โปร่งใส CornerRadius 6 BoxShadow เบา MaxHeight 80px -->
+            <Border Background="{Binding Background}" Padding="10,6" CornerRadius="6"
+                    MaxHeight="80" BoxShadow="0 2 8 0 #60000000" Opacity="0.92">
+              <Grid ColumnDefinitions="*,Auto">
+                <!-- ข้อความ Toast: Leelawadee UI 11pt ตามมาตรฐานฟ้อนต์ไทย DELTA SYNTH -->
+                <TextBlock Grid.Column="0" Text="{Binding Message}" TextWrapping="Wrap"
+                           FontFamily="Leelawadee UI" FontSize="11"
+                           VerticalAlignment="Center"
+                           Foreground="{Binding Foreground}"/>
+                <!-- ปุ่มปิด X ขนาดเล็กลง (20x20) ไม่บดบังข้อความ -->
+                <Button Grid.Column="1" Content="X" Width="20" Height="20" Padding="0"
+                        Background="Transparent" Foreground="{Binding Foreground}"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Command="{Binding Source={x:Static vm:ToastViewModel.Inst}, Path=CloseMessage}"
+                        CommandParameter="{Binding}"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      
+      <!-- DELTA SYNTH Render Status Bar v1.2 (Thick Tube in bottom left) -->
+      <Grid Grid.RowSpan="3" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="300"
+            IsVisible="{Binding ProgressText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            IsHitTestVisible="False" ZIndex="200" Margin="0,0,0,4">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,0,0,14" Spacing="8">
+          <TextBlock Text="{Binding ProgressText}" FontFamily="Leelawadee UI" FontSize="12" Foreground="#F0F0F0" />
+          <TextBlock FontFamily="Leelawadee UI" FontSize="12" Foreground="#F0F0F0">
+            <TextBlock.Text>
+              <MultiBinding StringFormat="{}{0:0}%">
+                <Binding Path="Progress"/>
+              </MultiBinding>
+            </TextBlock.Text>
+          </TextBlock>
+        </StackPanel>
+        <ProgressBar Value="{Binding Progress}" Minimum="0" Maximum="100" Height="6" 
+                     VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="12,0,12,4"
+                     Foreground="{DynamicResource AccentBrush2}" Background="#44000000" CornerRadius="3" />
+      </Grid>
     </Grid>
   </Grid>
 </Window>

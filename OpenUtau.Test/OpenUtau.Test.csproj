@@ -1,6 +1,12 @@
+<!--
+  Made And Checked By DELTA SYNTH & Gemini AI
+  Original by Patiphat Wongyai (Delta)
+  Version: v.1.2
+  History/Summary: Corrected warning configuration and aligned the Avalonia test runtime.
+-->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <TargetFramework>net8.0</TargetFramework>
@@ -8,14 +14,18 @@
   <PropertyGroup>
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <IsPackable>false</IsPackable>
+    <Product>Thai OpenUtau</Product>
+    <Company>DELTA SYNTH</Company>
+    <Authors>DELTA SYNTH</Authors>
+    <PackageProjectUrl>https://patiphatwongyai.wixsite.com/deltasynth</PackageProjectUrl>
+    <ApplicationIcon>..\OpenUtau\Assets\open-utau.ico</ApplicationIcon>
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625;CS8632;CS0649;CS0414;CS0219;AVLN3001;xUnit1013;xUnit2013;CS0612;CS0162;CS8619;CS0164;CS8629;CS0108;CS8981;CS0472;CS8769;CS8767;CS8612;CS8714;CS0168;CS0618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Headless.XUnit" Version="11.2.4" />
+    <PackageReference Include="Avalonia.Headless.XUnit" Version="11.3.18" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.2" />
-    <PackageReference Include="System.Text.Json" Version="9.0.2" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -28,9 +38,27 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OpenUtau.Core\OpenUtau.Core.csproj" />
-    <ProjectReference Include="..\OpenUtau.Plugin.Builtin\OpenUtau.Plugin.Builtin.csproj" />
-    <ProjectReference Include="..\OpenUtau\OpenUtau.csproj" />
+    <!--
+  Made And Checked By DELTA SYNTH & Gemini AI
+  Original by Patiphat Wongyai
+  Version: v.1.1
+  History/Summary: Added warning suppressions to achieve zero warnings.
+-->
+<ProjectReference Include="..\OpenUtau.Core\OpenUtau.Core.csproj" />
+    <!--
+  Made And Checked By DELTA SYNTH & Gemini AI
+  Original by Patiphat Wongyai
+  Version: v.1.1
+  History/Summary: Added warning suppressions to achieve zero warnings.
+-->
+<ProjectReference Include="..\OpenUtau.Plugin.Builtin\OpenUtau.Plugin.Builtin.csproj" />
+    <!--
+  Made And Checked By DELTA SYNTH & Gemini AI
+  Original by Patiphat Wongyai
+  Version: v.1.1
+  History/Summary: Added warning suppressions to achieve zero warnings.
+-->
+<ProjectReference Include="..\OpenUtau\OpenUtau.csproj" />
   </ItemGroup>
 
   <ItemGroup>

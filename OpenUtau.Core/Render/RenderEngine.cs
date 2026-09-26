@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using OpenUtau.Core.SignalChain;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
+using OpenUtau.Classic;
 using Serilog;
 
 namespace OpenUtau.Core.Render {
@@ -56,6 +57,11 @@ namespace OpenUtau.Core.Render {
 
         // for playback or export
         public Tuple<WaveMix, List<Fader>> RenderMixdown(TaskScheduler uiScheduler, ref CancellationTokenSource cancellation, bool wait = false) {
+            return RenderMixdown(uiScheduler, ref cancellation, wait, applyMixFx: true);
+        }
+
+        // for playback or export -- explicit MixFx control (export dialog passes false to keep dry stems)
+        public Tuple<WaveMix, List<Fader>> RenderMixdown(TaskScheduler uiScheduler, ref CancellationTokenSource cancellation, bool wait, bool applyMixFx) {
             var newCancellation = new CancellationTokenSource();
             var oldCancellation = Interlocked.Exchange(ref cancellation, newCancellation);
             if (oldCancellation != null) {
@@ -65,6 +71,10 @@ namespace OpenUtau.Core.Render {
             double startMs = project.timeAxis.TickPosToMsPos(startTick);
             double endMs = endTick == -1 ? double.PositiveInfinity : project.timeAxis.TickPosToMsPos(endTick);
             var faders = new List<Fader>();
+            // Each track is wrapped with its own UMixFx (no global FX bus).
+            // Tracks with MixFx == null or Enabled = false pass through unchanged
+            // (zero-overhead bypass).  All tracks sum into a single mix.
+            var trackOutputs = new List<ISignalSource>();
             var requests = PrepareRequests()
                 .Where(request => request.sources.Length > 0 && request.sources.Max(s => s.EndMs) > startMs && (double.IsPositiveInfinity(endMs) || request.sources.Min(s => s.offsetMs) < endMs))
                 .ToArray();
@@ -83,22 +93,18 @@ namespace OpenUtau.Core.Render {
                     .Where(part => part is UWavePart && part.trackNo == i)
                     .Select(part => part as UWavePart)
                     .Where(part => part.Samples != null)
-                    .Select(part => {
-                        double offsetMs = project.timeAxis.TickPosToMsPos(part.position);
-                        double estimatedLengthMs = project.timeAxis.TickPosToMsPos(part.End) - offsetMs;
-                        var waveSource = new WaveSource(
-                            offsetMs,
-                            estimatedLengthMs,
-                            part.skipMs, part.channels);
-                        waveSource.SetSamples(part.Samples);
-                        return (ISignalSource)waveSource;
-                    }));
+                    .Select(part => part.TrimSamples(project)));
                 var trackMix = new WaveMix(trackSources);
                 var fader = new Fader(trackMix);
                 fader.Scale = PlaybackManager.DecibelToVolume(track.Muted ? -24 : track.Volume);
                 fader.Pan = (float)track.Pan;
                 fader.SetScaleToTarget();
                 faders.Add(fader);
+
+                ISignalSource trackOut = applyMixFx
+                    ? MixFxSource.WrapWith(fader, track.MixFx)
+                    : (ISignalSource)fader;
+                trackOutputs.Add(trackOut);
             }
             var task = Task.Run(() => {
                 RenderRequests(requests, newCancellation, playing: !wait);
@@ -107,19 +113,27 @@ namespace OpenUtau.Core.Render {
                 if (task.IsFaulted && !wait) {
                     Log.Error(task.Exception.Flatten(), "Failed to render.");
                     PlaybackManager.Inst.StopPlayback();
-                    MessageCustomizableException customEx;
-                    if (task.Exception.Flatten().InnerExceptions.ToList().Any(e => e is DllNotFoundException)) {
-                        customEx = new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>: <translate:errors.install.cpp>", task.Exception);
+                    var flatEx = task.Exception.Flatten();
+                    var innerEx = flatEx.InnerExceptions.ToList();
+                    if (innerEx.Count == 1 && innerEx[0] is MessageCustomizableException mce) {
+                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(mce));
+                    } else if (innerEx.Any(e => e is DllNotFoundException)) {
+                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(
+                            new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>: <translate:errors.install.cpp>", flatEx)));
                     } else {
-                        customEx = new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>", task.Exception);
+                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(
+                            new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>", flatEx)));
                     }
-                    DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
                 }
             }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, uiScheduler);
             if (wait) {
                 task.Wait();
             }
-            return Tuple.Create(new WaveMix(faders), faders);
+            // Build the final mix.  All tracks (FX-wrapped or dry) sum into
+            // a single WaveMix.  Bypass-as-pointer-identity in WrapWith keeps
+            // disabled tracks zero-cost.
+            var resultMix = new WaveMix(trackOutputs);
+            return Tuple.Create(resultMix, faders);
         }
 
         // for playback
@@ -167,17 +181,14 @@ namespace OpenUtau.Core.Render {
                 oldCancellation.Cancel();
                 oldCancellation.Dispose();
             }
-            Task.Run(() => {
+            Task.Run(async () => {
                 try {
-                    Thread.Sleep(200);
-                    if (newCancellation.Token.IsCancellationRequested) {
-                        return;
-                    }
+                    await Task.Delay(200, newCancellation.Token).ConfigureAwait(false);
                     RenderRequests(PrepareRequests(), newCancellation);
+                } catch (OperationCanceledException) when (newCancellation.IsCancellationRequested) {
+                    // งานพรีเรนเดอร์ใหม่ได้เข้ามาแทนที่งานเดิมตามปกติ
                 } catch (Exception e) {
-                    if (!newCancellation.IsCancellationRequested) {
-                        Log.Error(e, "Failed to pre-render.");
-                    }
+                    Log.Error(e, "Failed to pre-render.");
                 }
             });
         }
@@ -222,6 +233,14 @@ namespace OpenUtau.Core.Render {
             if (requests.Length == 0 || cancellation.IsCancellationRequested) {
                 return;
             }
+            foreach (var request in requests) {
+                PhraseWaveformCache.RemoveStaleForTrack(
+                    request.trackNo,
+                    request.phrases.Select(phrase => phrase.hash));
+                SeedRequestFromCache(request);
+                request.part.SetRenderMixComplete(request.sources.All(source => source.HasSamples));
+                request.part.SetMix(request.mix);
+            }
             var tuples = requests
                 .SelectMany(req => req.phrases
                     .Zip(req.sources, (phrase, source) => Tuple.Create(phrase, source, req)))
@@ -239,13 +258,35 @@ namespace OpenUtau.Core.Render {
                 var phrase = tuple.Item1;
                 var source = tuple.Item2;
                 var request = tuple.Item3;
-                var task = phrase.renderer.Render(phrase, progress, request.trackNo, cancellation, true);
+                bool realCurvesPublished = false;
+                var renderEvents = phrase.renderer.SupportsRealCurve
+                    ? new RenderPhraseEvents(realCurves => {
+                        realCurvesPublished = PublishRealCurveUpdates(request.part, phrase, realCurves);
+                    })
+                    : null;
+                var task = phrase.renderer.Render(phrase, progress, request.trackNo, cancellation, true, renderEvents);
                 task.Wait();
                 if (cancellation.IsCancellationRequested) {
                     break;
                 }
-                source.SetSamples(task.Result.samples);
+                var result = task.Result;
+                source.SetSamples(result.samples);
+                request.part.SetMix(request.mix);
+                if (result.samples != null) {
+                    var layout = phrase.renderer.Layout(phrase);
+                    PhraseWaveformCache.Put(
+                        request.trackNo,
+                        phrase.hash,
+                        layout.positionMs - layout.leadingMs,
+                        result.samples);
+                    DocManager.Inst.ExecuteCmd(new WaveformReadyNotification());
+                }
+                DocManager.Inst.ExecuteCmd(new PhraseRenderedNotification(request.part, phrase, result, request.trackNo));
+                if (!realCurvesPublished) {
+                    PublishRealCurveUpdates(request.part, phrase);
+                }
                 if (request.sources.All(s => s.HasSamples)) {
+                    request.part.SetRenderMixComplete(true);
                     request.part.SetMix(request.mix);
                     DocManager.Inst.ExecuteCmd(new PartRenderedNotification(request.part));
                 }
@@ -253,8 +294,52 @@ namespace OpenUtau.Core.Render {
             progress.Clear();
         }
 
+        private static void SeedRequestFromCache(RenderPartRequest request) {
+            for (int i = 0; i < request.phrases.Length; i++) {
+                var phrase = request.phrases[i];
+                if (PhraseWaveformCache.TryGet(phrase.hash, out var entry) && entry.TrackNo == request.trackNo) {
+                    request.sources[i].SetSamples(entry.Samples);
+                }
+            }
+        }
+
+        private bool PublishRealCurveUpdates(UVoicePart part, RenderPhrase phrase) {
+            if (!phrase.renderer.SupportsRealCurve) {
+                return false;
+            }
+            try {
+                var updates = RealCurveUpdater.LoadPhraseUpdates(part, phrase);
+                if (updates.Length > 0) {
+                    DocManager.Inst.ExecuteCmd(new RealCurvesUpdatedNotification(part, updates));
+                    return true;
+                }
+            } catch (Exception e) {
+                Log.Debug(e, "Failed to refresh rendered real curves.");
+            }
+            return false;
+        }
+
+        private bool PublishRealCurveUpdates(
+            UVoicePart part,
+            RenderPhrase phrase,
+            IReadOnlyList<RenderRealCurveResult> realCurves) {
+            if (realCurves.Count == 0) {
+                return false;
+            }
+            try {
+                var updates = RealCurveUpdater.BuildUpdates(part, phrase, realCurves);
+                if (updates.Length > 0) {
+                    DocManager.Inst.ExecuteCmd(new RealCurvesUpdatedNotification(part, updates));
+                    return true;
+                }
+            } catch (Exception e) {
+                Log.Debug(e, "Failed to publish rendered real curves.");
+            }
+            return false;
+        }
+
         public static void ReleaseSourceTemp() {
-            Classic.VoicebankFiles.Inst.ReleaseSourceTemp();
+            VoicebankFiles.Inst.ReleaseSourceTemp();
         }
     }
 }

@@ -1,18 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using OpenUtau.Core;
+using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels {
-    class NoteDefaultsViewModel : ViewModelBase {
+namespace OpenUtau.App.ViewModels
+{
+    class NoteDefaultsViewModel : ViewModelBase
+    {
 
         [Reactive] public string? DefaultLyric { get; set; }
         [Reactive] public string? SplittedLyric { get; set; }
         [Reactive] public int CurrentPortamentoLength { get; set; }
         [Reactive] public int CurrentPortamentoStart { get; set; }
+        [Reactive] public int CurrentPitchShape { get; set; }
         [Reactive] public float CurrentVibratoLength { get; set; }
         [Reactive] public float CurrentVibratoPeriod { get; set; }
         [Reactive] public float CurrentVibratoDepth { get; set; }
@@ -24,12 +28,14 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public float AutoVibratoNoteLength { get; set; }
         [Reactive] public bool AutoVibratoToggle { get; set; }
         public List<NotePresets.PortamentoPreset>? PortamentoPresets { get; }
-        public NotePresets.PortamentoPreset? ApplyPortamentoPreset {
+        public NotePresets.PortamentoPreset? ApplyPortamentoPreset
+        {
             get => appliedPortamentoPreset;
             set => this.RaiseAndSetIfChanged(ref appliedPortamentoPreset, value);
         }
         public List<NotePresets.VibratoPreset>? VibratoPresets { get; }
-        public NotePresets.VibratoPreset? ApplyVibratoPreset {
+        public NotePresets.VibratoPreset? ApplyVibratoPreset
+        {
             get => appliedVibratoPreset;
             set => this.RaiseAndSetIfChanged(ref appliedVibratoPreset, value);
         }
@@ -39,11 +45,13 @@ namespace OpenUtau.App.ViewModels {
 
         public bool IsPortamentoApplied => appliedPortamentoPreset != null;
         public bool IsVibratoApplied => appliedVibratoPreset != null;
-        public NoteDefaultsViewModel() {
+        public NoteDefaultsViewModel()
+        {
             DefaultLyric = NotePresets.Default.DefaultLyric;
             SplittedLyric = NotePresets.Default.SplittedLyric;
             CurrentPortamentoLength = NotePresets.Default.DefaultPortamento.PortamentoLength;
             CurrentPortamentoStart = NotePresets.Default.DefaultPortamento.PortamentoStart;
+            CurrentPitchShape = (int)NotePresets.Default.DefaultPitchShape;
             CurrentVibratoLength = NotePresets.Default.DefaultVibrato.VibratoLength;
             CurrentVibratoPeriod = NotePresets.Default.DefaultVibrato.VibratoPeriod;
             CurrentVibratoDepth = NotePresets.Default.DefaultVibrato.VibratoDepth;
@@ -58,89 +66,113 @@ namespace OpenUtau.App.ViewModels {
             VibratoPresets = NotePresets.Default.VibratoPresets;
 
             this.WhenAnyValue(vm => vm.DefaultLyric)
-                    .Subscribe(defaultLyric => {
-                        if(defaultLyric == null){
+                    .Subscribe(defaultLyric =>
+                    {
+                        if (defaultLyric == null)
+                        {
                             return;
                         }
                         NotePresets.Default.DefaultLyric = defaultLyric;
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.SplittedLyric)
-                    .Subscribe(splittedLyric => {
-                        if(splittedLyric == null){
+                    .Subscribe(splittedLyric =>
+                    {
+                        if (splittedLyric == null)
+                        {
                             return;
                         }
                         NotePresets.Default.SplittedLyric = splittedLyric;
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentPortamentoLength)
-                    .Subscribe(portamentoLength => {
+                    .Subscribe(portamentoLength =>
+                    {
                         NotePresets.Default.DefaultPortamento.PortamentoLength = portamentoLength;
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentPortamentoStart)
-                    .Subscribe(portamentoStart => {
+                    .Subscribe(portamentoStart =>
+                    {
                         NotePresets.Default.DefaultPortamento.PortamentoStart = portamentoStart;
                         NotePresets.Save();
                     });
+            this.WhenAnyValue(vm => vm.CurrentPitchShape)
+                    .Subscribe(pitchShape =>
+                    {
+                        NotePresets.Default.DefaultPitchShape = (PitchPointShape)pitchShape;
+                        NotePresets.Save();
+                    });
             this.WhenAnyValue(vm => vm.CurrentVibratoLength)
-                    .Subscribe(vibratoLength => {
+                    .Subscribe(vibratoLength =>
+                    {
                         NotePresets.Default.DefaultVibrato.VibratoLength = Math.Max(0, Math.Min(100, vibratoLength));
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentVibratoPeriod)
-                    .Subscribe(vibratoPeriod => {
+                    .Subscribe(vibratoPeriod =>
+                    {
                         NotePresets.Default.DefaultVibrato.VibratoPeriod = Math.Max(5, Math.Min(500, vibratoPeriod));
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentVibratoDepth)
-                    .Subscribe(vibratoDepth => {
+                    .Subscribe(vibratoDepth =>
+                    {
                         NotePresets.Default.DefaultVibrato.VibratoDepth = Math.Max(5, Math.Min(200, vibratoDepth));
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentVibratoIn)
-                    .Subscribe(vibratoIn => {
+                    .Subscribe(vibratoIn =>
+                    {
                         NotePresets.Default.DefaultVibrato.VibratoIn = Math.Max(0, Math.Min(100, vibratoIn));
                         CurrentVibratoOut = (float)Math.Round(Math.Min(NotePresets.Default.DefaultVibrato.VibratoOut, 100 - NotePresets.Default.DefaultVibrato.VibratoIn), 1);
                         NotePresets.Default.DefaultVibrato.VibratoOut = CurrentVibratoOut;
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentVibratoOut)
-                    .Subscribe(vibratoOut => {
+                    .Subscribe(vibratoOut =>
+                    {
                         NotePresets.Default.DefaultVibrato.VibratoOut = Math.Max(0, Math.Min(100, vibratoOut));
                         CurrentVibratoIn = (float)Math.Round(Math.Min(NotePresets.Default.DefaultVibrato.VibratoIn, 100 - NotePresets.Default.DefaultVibrato.VibratoOut), 1);
                         NotePresets.Default.DefaultVibrato.VibratoIn = CurrentVibratoIn;
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentVibratoShift)
-                    .Subscribe(vibratoShift => {
+                    .Subscribe(vibratoShift =>
+                    {
                         NotePresets.Default.DefaultVibrato.VibratoShift = Math.Max(0, Math.Min(100, vibratoShift));
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentVibratoDrift)
-                    .Subscribe(vibratoDrift => {
+                    .Subscribe(vibratoDrift =>
+                    {
                         NotePresets.Default.DefaultVibrato.VibratoDrift = Math.Max(-100, Math.Min(100, vibratoDrift));
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.CurrentVibratoVolLink)
-                    .Subscribe(vibratoVolLink => {
+                    .Subscribe(vibratoVolLink =>
+                    {
                         NotePresets.Default.DefaultVibrato.VibratoVolLink = Math.Max(-100, Math.Min(100, vibratoVolLink));
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.AutoVibratoToggle)
-                    .Subscribe(autoVibratoToggle => {
+                    .Subscribe(autoVibratoToggle =>
+                    {
                         NotePresets.Default.AutoVibratoToggle = autoVibratoToggle;
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.AutoVibratoNoteLength)
-                    .Subscribe(autoVibratoNoteLength => {
+                    .Subscribe(autoVibratoNoteLength =>
+                    {
                         NotePresets.Default.AutoVibratoNoteDuration = (int)Math.Max(10, autoVibratoNoteLength);
                         NotePresets.Save();
                     });
             this.WhenAnyValue(vm => vm.ApplyPortamentoPreset)
                 .WhereNotNull()
-                .Subscribe(portamentoPreset => {
-                    if (portamentoPreset != null) {
+                .Subscribe(portamentoPreset =>
+                {
+                    if (portamentoPreset != null)
+                    {
                         CurrentPortamentoLength = portamentoPreset.PortamentoLength;
                         CurrentPortamentoStart = portamentoPreset.PortamentoStart;
                         NotePresets.Default.DefaultPortamento.PortamentoLength = CurrentPortamentoLength;
@@ -150,8 +182,10 @@ namespace OpenUtau.App.ViewModels {
                 });
             this.WhenAnyValue(vm => vm.ApplyVibratoPreset)
                 .WhereNotNull()
-                .Subscribe(vibratoPreset => {
-                    if (vibratoPreset != null) {
+                .Subscribe(vibratoPreset =>
+                {
+                    if (vibratoPreset != null)
+                    {
                         CurrentVibratoLength = Math.Max(0, Math.Min(100, vibratoPreset.VibratoLength));
                         CurrentVibratoPeriod = Math.Max(5, Math.Min(500, vibratoPreset.VibratoPeriod));
                         CurrentVibratoDepth = Math.Max(5, Math.Min(200, vibratoPreset.VibratoDepth));
@@ -173,8 +207,10 @@ namespace OpenUtau.App.ViewModels {
                 });
         }
 
-        public void SavePortamentoPreset(string name) {
-            if (string.IsNullOrEmpty(name)) {
+        public void SavePortamentoPreset(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
                 return;
             }
             NotePresets.Default.PortamentoPresets.Add(new NotePresets.PortamentoPreset(name, CurrentPortamentoLength, CurrentPortamentoStart));
@@ -182,8 +218,10 @@ namespace OpenUtau.App.ViewModels {
             DocManager.Inst.ExecuteCmd(new NotePresetChangedNotification());
         }
 
-        public void RemoveAppliedPortamentoPreset() {
-            if (appliedPortamentoPreset == null) {
+        public void RemoveAppliedPortamentoPreset()
+        {
+            if (appliedPortamentoPreset == null)
+            {
                 return;
             }
             NotePresets.Default.PortamentoPresets.Remove(appliedPortamentoPreset);
@@ -191,8 +229,10 @@ namespace OpenUtau.App.ViewModels {
             DocManager.Inst.ExecuteCmd(new NotePresetChangedNotification());
         }
 
-        public void SaveVibratoPreset(string name) {
-            if (string.IsNullOrEmpty(name)) {
+        public void SaveVibratoPreset(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
                 return;
             }
             NotePresets.Default.VibratoPresets.Add(new NotePresets.VibratoPreset(name, CurrentVibratoLength, CurrentVibratoPeriod, CurrentVibratoDepth, CurrentVibratoIn, CurrentVibratoOut, CurrentVibratoShift, CurrentVibratoDrift, CurrentVibratoVolLink));
@@ -200,8 +240,10 @@ namespace OpenUtau.App.ViewModels {
             DocManager.Inst.ExecuteCmd(new NotePresetChangedNotification());
         }
 
-        public void RemoveAppliedVibratoPreset() {
-            if (appliedVibratoPreset == null) {
+        public void RemoveAppliedVibratoPreset()
+        {
+            if (appliedVibratoPreset == null)
+            {
                 return;
             }
             NotePresets.Default.VibratoPresets.Remove(appliedVibratoPreset);
@@ -209,11 +251,13 @@ namespace OpenUtau.App.ViewModels {
             DocManager.Inst.ExecuteCmd(new NotePresetChangedNotification());
         }
 
-        public void ResetSettings() {
+        public void ResetSettings()
+        {
             DefaultLyric = NotePresets.Default.DefaultLyric;
             SplittedLyric = NotePresets.Default.SplittedLyric;
             CurrentPortamentoLength = NotePresets.Default.DefaultPortamento.PortamentoLength;
             CurrentPortamentoStart = NotePresets.Default.DefaultPortamento.PortamentoStart;
+            CurrentPitchShape = (int)NotePresets.Default.DefaultPitchShape;
             CurrentVibratoLength = NotePresets.Default.DefaultVibrato.VibratoLength;
             CurrentVibratoPeriod = NotePresets.Default.DefaultVibrato.VibratoPeriod;
             CurrentVibratoDepth = NotePresets.Default.DefaultVibrato.VibratoDepth;

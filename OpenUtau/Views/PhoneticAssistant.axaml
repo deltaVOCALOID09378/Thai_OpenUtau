@@ -2,17 +2,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:c="using:OpenUtau.App.Controls"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="136"
         x:Class="OpenUtau.App.Views.PhoneticAssistant"
-        Icon="/Assets/open-utau.ico"
+        Icon="/Assets/Thai OpenUtau Logo type.ico"
         Title="{DynamicResource phoneticassistant.caption}"
         WindowStartupLocation="CenterScreen"
         Width="400" Height="136" CanResize="False">
   <Grid Margin="{Binding $parent.WindowDecorationMargin}">
     <StackPanel Margin="10">
-      <ComboBox HorizontalAlignment="Stretch" Margin="0,0,0,4" ItemsSource="{Binding G2ps}" SelectedItem="{Binding G2p}"/>
-      <TextBox HorizontalAlignment="Stretch" AcceptsReturn="False" AcceptsTab="False" Text="{Binding Grapheme}"/>
-      <TextBox Name="PhonemesText" HorizontalAlignment="Stretch" TextWrapping="Wrap" Height="40" IsReadOnly="True" Text="{Binding Phonemes}"></TextBox>
+      <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch" Margin="0,0,0,4" ItemsSource="{Binding G2ps}" SelectedItem="{Binding G2p}"/>
+      <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" HorizontalAlignment="Stretch" AcceptsReturn="False" AcceptsTab="False" Text="{Binding Grapheme}" Margin="0,0,0,4"/>
+      <c:WorkspacePanelTextBox Name="PhonemesText" Classes="workspacePanelTextBox" HorizontalAlignment="Stretch" TextWrapping="Wrap" Height="40" MinHeight="40" IsReadOnly="True" Text="{Binding Phonemes}" Margin="0,0,0,4"/>
       <Button HorizontalAlignment="Stretch" Content="{DynamicResource phoneticassistant.copy}" Click="OnCopy"/>
     </StackPanel>
   </Grid>

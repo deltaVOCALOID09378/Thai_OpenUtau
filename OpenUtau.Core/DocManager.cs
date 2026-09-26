@@ -1,14 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Threading;
 using System.Threading.Tasks;
 using OpenUtau.Api;
 using OpenUtau.Classic;
+using OpenUtau.Core.Editing;
 using OpenUtau.Core.Lib;
+using OpenUtau.Core.Render;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using Serilog;
@@ -30,6 +34,8 @@ namespace OpenUtau.Core {
         private TaskScheduler mainScheduler;
 
         public int playPosTick = 0;
+        public int rangeStartTick = 0;
+        public int rangeEndTick = 0;
 
         public TaskScheduler MainScheduler => mainScheduler;
         public Action<Action> PostOnUIThread { get; set; }
@@ -37,9 +43,11 @@ namespace OpenUtau.Core {
         public PhonemizerFactory[] PhonemizerFactories { get; private set; }
         public UProject Project { get; private set; }
         public bool HasOpenUndoGroup => undoGroup != null;
-        public List<UPart> PartsClipboard { get; set; }
-        public List<UNote> NotesClipboard { get; set; }
+        public List<UPart>? PartsClipboard { get; set; }
+        public List<UNote>? NotesClipboard { get; set; }
+        public CurveSelection? CurvesClipboard { get; set; }
         internal PhonemizerRunner PhonemizerRunner { get; private set; }
+        public List<Type> ExternalBatchEditTypes { get; private set; } = new List<Type>();
 
         public void Initialize(Thread mainThread, TaskScheduler mainScheduler) {
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler((sender, args) => {
@@ -50,6 +58,7 @@ namespace OpenUtau.Core {
             this.mainThread = mainThread;
             this.mainScheduler = mainScheduler;
             PhonemizerRunner = new PhonemizerRunner(mainScheduler);
+            RealTimePitchGenerationService.Inst.Initialize();
         }
 
         public void SearchAllLegacyPlugins() {
@@ -67,7 +76,6 @@ namespace OpenUtau.Core {
         public void SearchAllPlugins() {
             const string kBuiltin = "OpenUtau.Plugin.Builtin.dll";
             var stopWatch = Stopwatch.StartNew();
-            var phonemizerFactories = new List<PhonemizerFactory>();
             var files = new List<string>();
             try {
                 files.Add(Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), kBuiltin));
@@ -76,36 +84,196 @@ namespace OpenUtau.Core {
                 if (File.Exists(oldBuiltin)) {
                     File.Delete(oldBuiltin);
                 }
-                files.AddRange(Directory.EnumerateFiles(PathManager.Inst.PluginsPath, "*.dll", SearchOption.AllDirectories));
+                files.AddRange(Directory.EnumerateFiles(
+                    PathManager.Inst.PluginsPath,
+                    "*.dll",
+                    new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true }));
             } catch (Exception e) {
                 Log.Error(e, "Failed to search plugins.");
             }
+
+            var managedCandidates = new List<(string file, AssemblyName assemblyName, string identity)>();
             foreach (var file in files) {
-                Assembly assembly;
                 try {
                     if (!LibraryLoader.IsManagedAssembly(file)) {
-                        Log.Information($"Skipping {file}");
+                        Log.Information("Skipping unmanaged plugin candidate {File}.", file);
                         continue;
                     }
-                    assembly = Assembly.LoadFile(file);
-                    foreach (var type in assembly.GetExportedTypes()) {
-                        if (!type.IsAbstract && type.IsSubclassOf(typeof(Phonemizer))) {
-                            phonemizerFactories.Add(PhonemizerFactory.Get(type));
+                    var assemblyName = AssemblyName.GetAssemblyName(file);
+                    managedCandidates.Add((
+                        file,
+                        assemblyName,
+                        assemblyName.FullName ?? assemblyName.Name ?? file));
+                } catch (Exception e) {
+                    Log.Warning(e, "Failed to inspect plugin assembly {File}.", file);
+                }
+            }
+
+            var assembliesToLoad = new List<(string file, AssemblyName assemblyName)>();
+            foreach (var group in managedCandidates.GroupBy(
+                candidate => candidate.identity,
+                StringComparer.OrdinalIgnoreCase)) {
+                var first = group.First();
+                var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(assembly =>
+                        AssemblyName.ReferenceMatchesDefinition(
+                            assembly.GetName(),
+                            first.assemblyName));
+                if (loadedAssembly != null) {
+                    var builtIn = group.FirstOrDefault(candidate =>
+                        Path.GetFileName(candidate.file) == kBuiltin);
+                    if (!string.IsNullOrEmpty(builtIn.file)) {
+                        assembliesToLoad.Add((builtIn.file, builtIn.assemblyName));
+                    } else {
+                        foreach (var candidate in group) {
+                            Log.Information(
+                                "Skipping plugin assembly {AssemblyName} at {File} because it is already loaded.",
+                                candidate.identity,
+                                candidate.file);
                         }
                     }
-                } catch (Exception e) {
-                    Log.Warning(e, $"Failed to load {file}.");
                     continue;
+                }
+
+                (string file, AssemblyName assemblyName, string identity)? selected = null;
+                foreach (var candidate in group
+                    .OrderByDescending(candidate => File.GetLastWriteTimeUtc(candidate.file))
+                    .ThenBy(candidate => candidate.file, StringComparer.OrdinalIgnoreCase)) {
+                    if (CanInspectPluginAssembly(candidate.file, out string failure)) {
+                        selected = candidate;
+                        break;
+                    }
+                    Log.Warning(
+                        "Skipping incompatible plugin assembly {File}: {Failure}",
+                        candidate.file,
+                        failure);
+                }
+                if (selected.HasValue) {
+                    assembliesToLoad.Add((selected.Value.file, selected.Value.assemblyName));
+                    foreach (var duplicate in group.Where(candidate =>
+                        candidate.file != selected.Value.file)) {
+                        Log.Information(
+                            "Skipping duplicate plugin assembly {AssemblyName} at {File}.",
+                            duplicate.identity,
+                            duplicate.file);
+                    }
+                }
+            }
+
+            var typesAndFiles = assembliesToLoad.AsParallel().SelectMany(item => {
+                try {
+                    var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                        .FirstOrDefault(assembly =>
+                            AssemblyName.ReferenceMatchesDefinition(assembly.GetName(), item.assemblyName));
+                    var assembly = loadedAssembly
+                        ?? System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(item.file);
+                    return assembly.GetExportedTypes().Select(type => (type, file: item.file));
+                } catch (Exception e) {
+                    Log.Warning(e, "Failed to load plugin assembly {File}.", item.file);
+                    return Array.Empty<(Type type, string file)>();
+                }
+            }).ToList();
+
+            foreach (var item in typesAndFiles) {
+                var type = item.type;
+                var file = item.file;
+                if (!type.IsAbstract && type.IsSubclassOf(typeof(Phonemizer))) {
+                    try {
+                        PhonemizerFactory.Get(type);
+                    } catch (Exception e) {
+                        Log.Warning(
+                            e,
+                            "Skipping incompatible phonemizer type {Type} from {File}.",
+                            type.FullName,
+                            file);
+                        continue;
+                    }
+                }
+                if (Path.GetFileName(file) != kBuiltin
+                    && typeof(BatchEdit).IsAssignableFrom(type)
+                    && !type.IsInterface
+                    && !type.IsAbstract
+                    && type.GetConstructor(Type.EmptyTypes) != null) {
+                    ExternalBatchEditTypes.Add(type);
                 }
             }
             foreach (var type in GetType().Assembly.GetExportedTypes()) {
                 if (!type.IsAbstract && type.IsSubclassOf(typeof(Phonemizer))) {
-                    phonemizerFactories.Add(PhonemizerFactory.Get(type));
+                    PhonemizerFactory.Get(type);
                 }
             }
-            PhonemizerFactories = phonemizerFactories.OrderBy(factory => factory.tag).ToArray();
+            PhonemizerFactory.BuildList();
             stopWatch.Stop();
             Log.Information($"Search all plugins: {stopWatch.Elapsed}");
+        }
+
+        private static bool CanInspectPluginAssembly(string file, out string failure) {
+            try {
+                using var stream = File.OpenRead(file);
+                using var peReader = new PEReader(stream);
+                if (!peReader.HasMetadata) {
+                    failure = "The file does not contain managed metadata.";
+                    return false;
+                }
+
+                var metadata = peReader.GetMetadataReader();
+                var supportedConstructorSizes = typeof(PhonemizerAttribute)
+                    .GetConstructors()
+                    .Select(constructor => constructor.GetParameters().Length)
+                    .ToHashSet();
+                foreach (var attributeHandle in metadata.CustomAttributes) {
+                    var attribute = metadata.GetCustomAttribute(attributeHandle);
+                    if (attribute.Constructor.Kind != HandleKind.MemberReference) {
+                        continue;
+                    }
+                    var constructor = metadata.GetMemberReference(
+                        (MemberReferenceHandle)attribute.Constructor);
+                    if (!IsPhonemizerAttribute(metadata, constructor.Parent)) {
+                        continue;
+                    }
+
+                    var signature = metadata.GetBlobReader(constructor.Signature);
+                    var header = signature.ReadSignatureHeader();
+                    if (header.IsGeneric) {
+                        _ = signature.ReadCompressedInteger();
+                    }
+                    int parameterCount = signature.ReadCompressedInteger();
+                    if (!supportedConstructorSizes.Contains(parameterCount)) {
+                        failure =
+                            $"PhonemizerAttribute constructor has {parameterCount} parameters, " +
+                            $"but this OpenUtau build supports " +
+                            $"{string.Join(", ", supportedConstructorSizes.OrderBy(count => count))}.";
+                        return false;
+                    }
+                }
+                failure = string.Empty;
+                return true;
+            } catch (Exception e) {
+                failure = e.GetBaseException().Message;
+                return false;
+            }
+        }
+
+        private static bool IsPhonemizerAttribute(
+            MetadataReader metadata,
+            EntityHandle typeHandle) {
+            const string attributeNamespace = "OpenUtau.Api";
+            const string attributeName = nameof(PhonemizerAttribute);
+            return typeHandle.Kind switch {
+                HandleKind.TypeReference => IsMatchingType(
+                    metadata.GetTypeReference((TypeReferenceHandle)typeHandle)),
+                HandleKind.TypeDefinition => IsMatchingDefinition(
+                    metadata.GetTypeDefinition((TypeDefinitionHandle)typeHandle)),
+                _ => false,
+            };
+
+            bool IsMatchingType(TypeReference type) =>
+                metadata.GetString(type.Namespace) == attributeNamespace
+                && metadata.GetString(type.Name) == attributeName;
+
+            bool IsMatchingDefinition(TypeDefinition type) =>
+                metadata.GetString(type.Namespace) == attributeNamespace
+                && metadata.GetString(type.Name) == attributeName;
         }
 
         #region Command Queue
@@ -183,7 +351,7 @@ namespace OpenUtau.Core {
 
         public void ExecuteCmd(UCommand cmd) {
             if (mainThread != Thread.CurrentThread) {
-                if (!(cmd is ProgressBarNotification)) {
+                if (!(cmd is ProgressBarNotification) && !(cmd is WaveformReadyNotification)) {
                     Log.Warning($"{cmd} not on main thread");
                 }
                 PostOnUIThread(() => ExecuteCmd(cmd));
@@ -207,8 +375,17 @@ namespace OpenUtau.Core {
                     autosavedPoint = null;
                     Project = notification.project;
                     playPosTick = 0;
+                    rangeStartTick = 0;
+                    rangeEndTick = 0;
                 } else if (cmd is SetPlayPosTickNotification setPlayPosTickNotif) {
                     playPosTick = setPlayPosTickNotif.playPosTick;
+                } else if (cmd is SetRangeSelectionNotification setRange) {
+                    rangeStartTick = setRange.startTick;
+                    rangeEndTick = setRange.endTick;
+                } else if (cmd is RealCurvesUpdatedNotification realCurvesNotif) {
+                    if (realCurvesNotif.part is UVoicePart voicePart) {
+                        RealCurveUpdater.Apply(Project, voicePart, realCurvesNotif.updates);
+                    }
                 } else if (cmd is SingersChangedNotification) {
                     SingerManager.Inst.SearchAllSingers();
                 } else if (cmd is ValidateProjectNotification) {
@@ -242,15 +419,36 @@ namespace OpenUtau.Core {
             Publish(cmd);
             if (!undoGroup.DeferValidate) {
                 Project.Validate(cmd.ValidateOptions);
+                ScheduleRealCurveRefresh(cmd);
             }
         }
 
-        public void StartUndoGroup(bool deferValidate = false) {
+        void ScheduleRealCurveRefresh(UCommand cmd) {
+            if (cmd is not ExpCommand expCommand) {
+                return;
+            }
+            var part = expCommand.Part;
+            if (!Project.parts.Contains(part) ||
+                part.trackNo < 0 ||
+                part.trackNo >= Project.tracks.Count) {
+                return;
+            }
+            Project.tracks[part.trackNo].RendererSettings.Renderer
+                ?.ScheduleRealCurveRefresh(Project, part, cmd);
+        }
+
+        void ScheduleRealCurveRefresh(IEnumerable<UCommand> commands) {
+            foreach (var cmd in commands) {
+                ScheduleRealCurveRefresh(cmd);
+            }
+        }
+
+        public void StartUndoGroup(string? nameKey = null, bool deferValidate = false) {
             if (undoGroup != null) {
                 Log.Error("undoGroup already started");
                 EndUndoGroup();
             }
-            undoGroup = new UCommandGroup(deferValidate);
+            undoGroup = new UCommandGroup(nameKey, deferValidate);
             Log.Information("undoGroup started");
         }
 
@@ -270,6 +468,7 @@ namespace OpenUtau.Core {
                 Project.ValidateFull();
             }
             undoGroup.Merge();
+            ScheduleRealCurveRefresh(undoGroup.Commands);
             undoGroup = null;
             Log.Information("undoGroup ended");
             ExecuteCmd(new PreRenderNotification());
@@ -305,6 +504,7 @@ namespace OpenUtau.Core {
                 Publish(cmd, true);
             }
             redoQueue.AddToBack(group);
+            ScheduleRealCurveRefresh(group.Commands);
             ExecuteCmd(new PreRenderNotification());
         }
 
@@ -322,7 +522,27 @@ namespace OpenUtau.Core {
                 Publish(cmd);
             }
             undoQueue.AddToBack(group);
+            ScheduleRealCurveRefresh(group.Commands);
             ExecuteCmd(new PreRenderNotification());
+        }
+
+        public bool GetUndoState(out string? key) {
+            key = null;
+            if (undoQueue.Count > 0) {
+                key = undoQueue.Last().NameKey;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        public bool GetRedoState(out string? key) {
+            key = null;
+            if (redoQueue.Count > 0) {
+                key = redoQueue.Last().NameKey;
+                return true;
+            } else {
+                return false;
+            }
         }
 
         # endregion
@@ -353,6 +573,33 @@ namespace OpenUtau.Core {
                 foreach (var sub in subscribers) {
                     sub.OnNext(cmd, isUndo);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Apply commands without recording undo. Still notifies subscribers.
+        /// </summary>
+        public void ApplyTransient(IEnumerable<UCommand> commands, ValidateOptions? validateOptions = null, bool preRender = true) {
+            if (mainThread != Thread.CurrentThread) {
+                PostOnUIThread(() => ApplyTransient(commands, validateOptions, preRender));
+                return;
+            }
+            RealTimePitchGenerationService.SuppressCallbacks = true;
+            try {
+                foreach (var cmd in commands) {
+                    lock (Project) {
+                        cmd.Execute();
+                    }
+                    Publish(cmd);
+                }
+                if (validateOptions != null) {
+                    Project.Validate(validateOptions.Value);
+                    if (preRender) {
+                        ExecuteCmd(new PreRenderNotification());
+                    }
+                }
+            } finally {
+                RealTimePitchGenerationService.SuppressCallbacks = false;
             }
         }
 

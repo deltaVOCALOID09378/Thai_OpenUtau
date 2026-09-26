@@ -4,9 +4,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.TimeSignatureDialog"
-        Icon="/Assets/open-utau.ico"
+        Icon="/Assets/Thai OpenUtau Logo type.ico"
         Title="{DynamicResource dialogs.timesig.caption}"
-        Height="100" Width="320" WindowStartupLocation="CenterOwner">
+        Height="100" Width="320" WindowStartupLocation="CenterOwner"
+        CanResize="False">
   <StackPanel VerticalAlignment="Center" Margin="{Binding $parent.WindowDecorationMargin}">
     <Grid ColumnDefinitions="1*,1*" Margin="4,0">
       <ComboBox Grid.Column="0" Margin="4" HorizontalAlignment="Stretch"
@@ -16,7 +17,7 @@
                 ItemsSource="{Binding BeatUnits}"
                 SelectedItem="{Binding BeatUnit}"/>
     </Grid>
-    <Button Content="OK" Margin="8,4" HorizontalAlignment="Stretch"
+    <Button Content="{DynamicResource button.ok}" Margin="8,4" HorizontalAlignment="Stretch"
             Click="OnOkButtonClick"/>
   </StackPanel>
 </Window>

@@ -2,9 +2,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" SizeToContent="WidthAndHeight"
+        mc:Ignorable="d" 
+        SizeToContent="WidthAndHeight"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
         x:Class="OpenUtau.App.Views.ExeSetupDialog"
-        Icon="/Assets/open-utau.ico"
+        Icon="/Assets/Thai OpenUtau Logo type.ico"
         Title="{DynamicResource exesetup.title}">
   <Grid Margin="10">
     <Grid.RowDefinitions>
@@ -12,9 +15,17 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="50"/>
     </Grid.RowDefinitions>
-    <TextBlock Margin="20" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Name="Text" TextWrapping="Wrap" MaxWidth="560" Text="{Binding message}"/>
-    <TextBox Margin="30,0,30,20" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{OnPlatform False, macOS=True}" TextWrapping="Wrap" Height="36"
+
+    <!-- ข้อความแจ้งเตือนหลัก -->
+    <TextBlock Margin="20" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" 
+               Name="Text" TextWrapping="Wrap" MaxWidth="560" Text="{Binding message}"/>
+
+    <!-- คำสั่งติดตั้งสำหรับ macOS -->
+    <TextBox Margin="30,0,30,20" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" 
+             IsVisible="{OnPlatform False, macOS=True}" IsReadOnly="True" TextWrapping="Wrap" MinHeight="48"
              Text="% brew tap gcenx/wine&#x0a;% brew install --cask --no-quarantine wine-crossover" />
+
+    <!-- ปุ่มเลือกการติดตั้ง -->
     <StackPanel Grid.Row="2" HorizontalAlignment="Center" Orientation="Horizontal" Name="Buttons">
       <StackPanel.Styles>
         <Style Selector="Button">

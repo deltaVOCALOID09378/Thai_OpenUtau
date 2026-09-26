@@ -9,6 +9,8 @@ namespace OpenUtau.Core.SignalChain {
             this.sources = sources.ToList();
         }
 
+        internal IReadOnlyList<ISignalSource> Sources => sources;
+
         public bool IsReady(int position, int count) {
             return sources.Count == 0 || sources.All(source => source.IsReady(position, count));
         }

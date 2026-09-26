@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -47,15 +47,24 @@ namespace OpenUtau.Classic {
             if (!Directory.Exists(basePath)) {
                 return result;
             }
-            IEnumerable<string> files;
-            if (Preferences.Default.LoadDeepFolderSinger) {
-                files = Directory.EnumerateFiles(basePath, kCharTxt, SearchOption.AllDirectories);
-            } else {
-                // TopDirectoryOnly
-                files = Directory.GetDirectories(basePath)
-                    .SelectMany(path => Directory.EnumerateFiles(path, kCharTxt));
+            IEnumerable<string> files = new List<string>();
+            try {
+                if (Preferences.Default.LoadDeepFolderSinger) {
+                    files = Directory.EnumerateFiles(basePath, kCharTxt, new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true });
+                } else {
+                    // TopDirectoryOnly
+                    var topOptions = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = false };
+                    files = Directory.GetDirectories(basePath)
+                        .SelectMany(path => {
+                            try { return Directory.EnumerateFiles(path, kCharTxt, topOptions); }
+                            catch { return new string[0]; }
+                        });
+                }
+            } catch (Exception e) {
+                Log.Error(e, $"Failed to search singers in {basePath}");
             }
             result.AddRange(files
+                .AsParallel()
                 .Select(filePath => {
                     try {
                         var voicebank = new Voicebank();
@@ -414,12 +423,20 @@ namespace OpenUtau.Classic {
                 .ToDictionary(file => file.Normalize());
 
             foreach (var group in wavGroups) {
+                if (string.IsNullOrEmpty(group.Key) || group.Key == ".wav") {
+                    foreach (Oto oto in group) {
+                        oto.IsValid = false;
+                    }
+                    continue;
+                }
                 string path = Path.Combine(dir, group.Key);
                 if (!File.Exists(path)) {
                     if (NFDFiles.TryGetValue(group.Key.Normalize(), out string NFDFile)) {
-                        group.ForEach(oto => oto.Wav = NFDFile);
+                        foreach (var oto in group) {
+                            oto.Wav = NFDFile;
+                        }
                     } else {
-                        Log.Error($"Sound file missing. {path}");
+                        Log.Warning($"Sound file missing. {path}");
                         foreach (Oto oto in group) {
                             if (string.IsNullOrEmpty(oto.Error)) {
                                 oto.Error = $"Sound file missing. {path}";

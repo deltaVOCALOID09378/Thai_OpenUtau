@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS0618, CS0649, CS8632, CS0108
+using System;
 using System.Text.RegularExpressions;
 
 namespace OpenUtau.Plugin.Builtin.EnunuOnnx.nnmnkwii.python {

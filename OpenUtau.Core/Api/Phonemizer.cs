@@ -1,4 +1,10 @@
 ﻿using System;
+// ============================================================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.1 | Date: 2026-07-28
+// Description: รักษาความเข้ากันได้กับปลั๊กอิน Phonemizer แบบ 4 และ 5 พารามิเตอร์
+// ============================================================================
 using System.Collections.Generic;
 using System.Globalization;
 using OpenUtau.Core;
@@ -24,6 +30,20 @@ namespace OpenUtau.Api {
             Tag = tag;
             Author = author;
             Language = language;
+        }
+
+        /// <summary>
+        /// Compatibility overload for DELTA SYNTH phonemizer assemblies that were
+        /// emitted with a fifth nullable string argument. OpenUtau has no metadata
+        /// field for that historical argument, so it is intentionally ignored.
+        /// </summary>
+        public PhonemizerAttribute(
+            string name,
+            string tag,
+            string author,
+            string language,
+            string legacyMetadata)
+            : this(name, tag, author, language) {
         }
     }
 
@@ -127,6 +147,11 @@ namespace OpenUtau.Api {
             public int position;
 
             /// <summary>
+            /// Error from the phonemizer, if this phoneme represents an error.
+            /// </summary>
+            public Exception? error;
+
+            /// <summary>
             /// Suggested attributes. It may later be overwritten with a user-specified value.
             /// </summary>
             public List<PhonemeExpression> expressions;
@@ -147,6 +172,7 @@ namespace OpenUtau.Api {
         public string Name { get; set; }
         public string Tag { get; set; }
         public string Language { get; set; }
+        internal Exception? SetUpException { get; set; }
 
         protected double bpm;
         protected TimeAxis timeAxis;

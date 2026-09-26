@@ -28,6 +28,12 @@ namespace OpenUtau.Core.SignalChain {
             }
         }
 
+        public float[]? GetSamples() {
+            lock (lockObj) {
+                return data;
+            }
+        }
+
         public bool IsReady(int position, int count) {
             int copies = 2 / channels;
             return position + count <= offset * copies

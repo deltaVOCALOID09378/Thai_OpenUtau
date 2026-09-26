@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
@@ -109,10 +109,10 @@ namespace OpenUtau.App.Controls {
         }
 
         void RendererButtonClicked(object sender, RoutedEventArgs args) {
-            ViewModel?.RefreshRenderers();
-            if (ViewModel?.RenderersMenuItems?.Count > 0) {
-                RenderersMenu.Open();
-            }
+            // ViewModel?.RefreshRenderers();
+            // if (ViewModel?.RenderersMenuItems?.Count > 0) {
+            //     RenderersMenu.Open();
+            // }
             args.Handled = true;
         }
 

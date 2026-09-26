@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#pragma warning disable CS0618, CS0649, CS8632, CS0108
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -19,7 +20,7 @@ namespace OpenUtau.Plugin.Builtin.EnunuOnnx {
 
     public class Scaler : List<ScalerLine> {
 
-        public static Scaler load(string path,Encoding encoding = null) {
+        public static Scaler load(string path, Encoding encoding = null) {
             //Encoding is UTF-8 by default
             if (encoding == null) {
                 encoding = Encoding.UTF8;
@@ -30,15 +31,15 @@ namespace OpenUtau.Plugin.Builtin.EnunuOnnx {
 
         public void transform(IList<float> x) {
             //In-place transform a vector
-            for(int i = 0; i < this.Count; i++) {
+            for (int i = 0; i < this.Count; i++) {
                 x[i] = (x[i] - this[i].xmin) * this[i].scale;
             }
         }
 
-        
+
         public void transform(IEnumerable<IList<float>> xs) {
             //In-place transform a bunch of vectors
-            foreach(IList<float> x in xs) {
+            foreach (IList<float> x in xs) {
                 transform(x);
             }
         }

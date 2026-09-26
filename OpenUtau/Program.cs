@@ -1,5 +1,9 @@
+// ============================================================================
 // Made And Checked By DELTA SYNTH & Gemini AI
-// ต้นฉบับโดย OpenUtau Team (https://github.com/stakira/OpenUtau)
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.2.1 | Date: 2026-08-09
+// Description: ปิดโปรแกรมอย่างเป็นระเบียบและส่งคืนรหัสข้อผิดพลาดที่ถูกต้อง
+// ============================================================================
 
 using System;
 using System.Diagnostics;
@@ -8,7 +12,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -17,105 +20,95 @@ using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 using Serilog;
 
-namespace OpenUtau.App {
-    public class Program {
-        // ตัวแปร Mutex สำหรับตรวจสอบการทำงานซ้ำซ้อนแบบรวดเร็ว (Fast Single Instance Check)
-        private static Mutex appMutex;
-
-        // โค้ดเริ่มต้นการทำงาน ห้ามเรียกใช้ Avalonia หรือ API ภายนอกก่อนที่ AppMain จะถูกเรียก
+namespace OpenUtau.App
+{
+    public class Program
+    {
         [STAThread]
-        public static void Main(string[] args) {
-            // ลงทะเบียนผู้ให้บริการ Encoding เพื่อรองรับรหัสภาษาที่หลากหลาย
+        public static int Main(string[] args)
+        {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             InitLogging();
 
             string processName = Process.GetCurrentProcess().ProcessName;
-            
-            // [เข้าโปรแกรมไว] ใช้ Mutex ตรวจสอบการเปิดโปรแกรมซ้ำแทนการสแกน Process ซึ่งทำงานได้เร็วกว่ามาก
-            appMutex = new Mutex(true, "OpenUtau_SingleInstance_Mutex", out bool createdNew);
-            
-            if (processName != "dotnet" && !createdNew) {
-                Log.Information($"โปรเซส {processName} กำลังทำงานอยู่แล้ว ระบบกำลังดำเนินการปิดการทำงานที่ซ้ำซ้อนอย่างรวดเร็ว");
-                return; // ออกทันที
+            if (processName != "dotnet")
+            {
+                var exists = Process.GetProcessesByName(processName).Count() > 1;
+                if (exists)
+                {
+                    Log.Information($"Process {processName} already open. Exiting.");
+                    Log.CloseAndFlush();
+                    return 0;
+                }
             }
 
-            // บันทึกข้อมูลระบบลงใน Log เพื่อการตรวจสอบปัญหา
-            Log.Information($"ระบบปฏิบัติการ: {Environment.OSVersion}");
+            Log.Information($"{Environment.OSVersion}");
             Log.Information($"{RuntimeInformation.OSDescription} " +
                 $"{RuntimeInformation.OSArchitecture} " +
                 $"{RuntimeInformation.ProcessArchitecture}");
-            Log.Information($"OpenUtau เวอร์ชั่น: v{Assembly.GetEntryAssembly()?.GetName().Version} " +
-                $"{RuntimeInformation.RuntimeIdentifier}");
-            Log.Information($"ที่อยู่ข้อมูล (Data Path): {PathManager.Inst.DataPath}");
-            Log.Information($"ที่อยู่แคช (Cache Path): {PathManager.Inst.CachePath}");
-            Log.Information($"การเข้ารหัสระบบ: {Encoding.GetEncoding(0)?.WebName ?? "null"}");
 
-            try {
+            Log.Information($"Thai OpenUtau v{Assembly.GetEntryAssembly()?.GetName().Version} by DELTA SYNTH " +
+                $"{RuntimeInformation.RuntimeIdentifier}");
+
+            Log.Information($"Data path = {PathManager.Inst.DataPath}");
+            Log.Information($"Cache path = {PathManager.Inst.CachePath}");
+            Log.Information($"System encoding = {Encoding.GetEncoding(0)?.WebName ?? "null"}");
+
+            int exitCode = 0;
+            try
+            {
                 Run(args);
-                Log.Information($"กำลังปิดโปรแกรมอย่างปกติ");
-            } catch (Exception ex) {
-                Log.Fatal(ex, "เกิดข้อผิดพลาดร้ายแรงขณะรันโปรแกรม");
-            } finally {
-                if (!OS.IsMacOS()) {
-                    // ทำความสะอาดระบบเครือข่ายสำหรับ Windows/Linux แบบไม่รอ (Non-blocking)
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "A fatal error occurred during execution.");
+                exitCode = 1;
+            }
+            finally
+            {
+                if (!OS.IsMacOS())
+                {
                     NetMQ.NetMQConfig.Cleanup(/*block=*/false);
                 }
-                
-                // [ออกไว] บังคับให้เขียน Log ที่ค้างอยู่ลงไฟล์และปิดการทำงานของระบบ Log ทันที
+
+                Log.Information($"Exited.");
                 Log.CloseAndFlush();
-                
-                // คืนค่า Mutex เพื่อเคลียร์ทรัพยากรระบบอย่างสมบูรณ์
-                if (createdNew) {
-                    appMutex.ReleaseMutex();
-                    appMutex.Dispose();
-                }
             }
+
+            return exitCode;
         }
 
-        // การตั้งค่า Avalonia สำหรับส่วนติดต่อผู้ใช้ (UI)
-        public static AppBuilder BuildAvaloniaApp() {
+        public static AppBuilder BuildAvaloniaApp()
+        {
             FontManagerOptions fontOptions = new();
-            
-            // ปรับสมดุลการแสดงผลฟอนต์ภาษาไทยให้ครอบคลุมทุก OS
-            string thaiFonts = "Leelawadee UI, Tahoma, Sarabun, Ayuthaya, Thonburi, FreeSans";
+            if (OS.IsLinux())
+            {
+                using Process process = Process.Start(new ProcessStartInfo("fc-match")
+                {
+                    ArgumentList = { "-f", "%{family}" },
+                    RedirectStandardOutput = true
+                })!;
+                process.WaitForExit();
 
-            if (OS.IsLinux()) {
-                try {
-                    using Process process = Process.Start(new ProcessStartInfo("fc-match")
-                    {
-                        ArgumentList = { "-f", "%{family}" },
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false
-                    })!;
-                    
-                    // [เข้าโปรแกรมไว] ใส่ Timeout ป้องกันโปรแกรมค้างหากคำสั่ง fc-match ของ Linux ตอบสนองช้า
-                    if (process.WaitForExit(500)) { 
-                        string fontFamily = process.StandardOutput.ReadToEnd().Trim();
-                        if (!string.IsNullOrEmpty(fontFamily)) {
-                            string[] fontFamilies = fontFamily.Split(',');
-                            fontOptions.DefaultFamilyName = $"{fontFamilies[0]}, {thaiFonts}";
-                        }
-                    } else {
-                        // หากหมดเวลา ให้ข้ามไปใช้ค่า Default ทันที
-                        fontOptions.DefaultFamilyName = thaiFonts;
-                    }
-                } catch {
-                    fontOptions.DefaultFamilyName = thaiFonts; // Fallback เมื่อเกิด Error
+                string fontFamily = process.StandardOutput.ReadToEnd();
+                if (!string.IsNullOrEmpty(fontFamily))
+                {
+                    string[] fontFamilies = fontFamily.Split(',');
+                    fontOptions.DefaultFamilyName = fontFamilies[0];
                 }
-            } else if (OS.IsMacOS()) {
-                // สำหรับ macOS เน้นฟอนต์ที่แสดงผลภาษาไทยและญี่ปุ่นได้ชัดเจน
-                fontOptions.DefaultFamilyName = $"Hiragino Sans, {thaiFonts}, San Francisco, Helvetica Neue";
-            } else if (OS.IsWindows()) {
-                // สำหรับ Windows เน้น Leelawadee UI ซึ่งเป็นมาตรฐานของภาษาไทย
-                fontOptions.DefaultFamilyName = $"Segoe UI, {thaiFonts}";
+            }
+            else if (OS.IsMacOS())
+            {
+                fontOptions.DefaultFamilyName = "Hiragino Sans, Segoe UI, San Francisco, Helvetica Neue";
             }
 
             return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
                 .UseReactiveUI()
-                .With(fontOptions) // ใช้การตั้งค่าฟอนต์ที่เราปรับปรุงแล้ว
-                .With(new X11PlatformOptions { EnableIme = true }); // รองรับการพิมพ์ภาษาไทย (IME) บน Linux
+                .With(fontOptions)
+                .With(new X11PlatformOptions { EnableIme = true });
         }
 
         public static void Run(string[] args)
@@ -123,23 +116,58 @@ namespace OpenUtau.App {
                 .StartWithClassicDesktopLifetime(
                     args, ShutdownMode.OnMainWindowClose);
 
-        // ระบบบันทึก Log และการจัดการข้อผิดพลาดที่ไม่คาดคิด
-        public static void InitLogging() {
-            Log.Logger = new LoggerConfiguration()
+        public static void InitLogging()
+        {
+            string logFilePath = PathManager.Inst.LogFilePath;
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(logFilePath)!);
+            }
+            catch (Exception exception)
+            {
+                string fallbackLogsPath = Path.Combine(Path.GetTempPath(), "OpenUtau", "Logs");
+                Directory.CreateDirectory(fallbackLogsPath);
+                logFilePath = Path.Combine(fallbackLogsPath, "log.txt");
+                Console.Error.WriteLine(
+                    $"Unable to create the preferred log directory. Using {logFilePath}. {exception.Message}");
+            }
+
+            var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Debug()
                 .WriteTo.Logger(lc => lc
                     .MinimumLevel.Information()
-                    .WriteTo.File(PathManager.Inst.LogFilePath, rollingInterval: RollingInterval.Day, encoding: Encoding.UTF8))
+                    .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day, encoding: Encoding.UTF8))
                 .WriteTo.Logger(lc => lc
                     .MinimumLevel.ControlledBy(DebugViewModel.Sink.Inst.LevelSwitch)
                     .WriteTo.Sink(DebugViewModel.Sink.Inst))
-                .CreateLogger();
+                .WriteTo.Logger(lc => lc
+                    .MinimumLevel.Warning()
+                    .WriteTo.Sink(ToastLogSink.Inst));
 
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler((sender, args) => {
-                Log.Error((Exception)args.ExceptionObject, "พบข้อผิดพลาดที่ไม่สามารถจัดการได้ (Unhandled Exception)");
+            if (string.Equals(
+                Environment.GetEnvironmentVariable("OPENUTAU_CONSOLE_LOG"),
+                "1",
+                StringComparison.Ordinal))
+            {
+                loggerConfiguration.WriteTo.Console();
+            }
+
+            Log.Logger = loggerConfiguration.CreateLogger();
+
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler((sender, args) =>
+            {
+                if (args.ExceptionObject is Exception exception)
+                {
+                    Log.Error(exception, "Unhandled exception");
+                }
+                else
+                {
+                    Log.Error("Unhandled non-exception object: {ExceptionObject}", args.ExceptionObject);
+                }
             });
-            Log.Information("เริ่มต้นระบบบันทึกข้อมูลเรียบร้อยแล้ว");
+
+            Log.Information("Logging initialized.");
         }
     }
 }

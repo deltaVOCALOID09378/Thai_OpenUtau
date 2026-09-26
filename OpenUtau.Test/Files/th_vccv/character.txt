@@ -1,0 +1,5 @@
+name=A Voicebank Thai VCCV v.1.0
+sample=sample.wav
+web=https://patiphatwongyai.wixsite.com/deltasynth
+contact=DELTA SYNTH
+Youtube=DELTA SYNTH Official

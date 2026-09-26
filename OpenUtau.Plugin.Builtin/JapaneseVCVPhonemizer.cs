@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿#pragma warning disable CS0618, CS0649, CS8632, CS0108
+#nullable enable
+#pragma warning disable CS8632
+using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Api;
 using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.Plugin.Builtin {
-    [Phonemizer("Japanese VCV Phonemizer (legacy)", "JA VCV", language: "JA")]
+    [Phonemizer("Japanese VCV Phonemizer (legacy)", "JA VCV", language: "UTAU")]
+    // Version: v
     public class JapaneseVCVPhonemizer : Phonemizer {
         /// <summary>
         /// The lookup table to convert a hiragana to its tail vowel.
@@ -54,7 +58,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
 
             // The alias for no previous neighbour note. For example, "- な" for "な".
-            string[] tests = new string[] { $"- {currentLyric}" , currentLyric};
+            string[] tests = new string[] { $"- {currentLyric}", currentLyric };
             if (prevNeighbour != null) {
                 // If there is a previous neighbour note, first get its hint or lyric.
                 var prevLyric = prevNeighbour.Value.lyric.Normalize();
@@ -102,13 +106,11 @@ namespace OpenUtau.Plugin.Builtin {
             }
 
             if (otos.Count > 0) {
-                if (otos.Any(oto => (oto.Color ?? string.Empty) == color)) {
-                    oto = otos.Find(oto => (oto.Color ?? string.Empty) == color);
-                    return true;
-                } else {
+                oto = otos.FirstOrDefault(oto => oto.IsColorMatch(color));
+                if (oto == null) {
                     oto = otos.First();
-                    return true;
                 }
+                return true;
             }
             return false;
         }

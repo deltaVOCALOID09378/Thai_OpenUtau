@@ -9,7 +9,7 @@ using OpenUtau.Core.Ustx;
 using Serilog;
 
 namespace OpenUtau.Core.Enunu {
-    [Phonemizer("Enunu Phonemizer", "ENUNU")]
+    [Phonemizer("Enunu Phonemizer", "Default ENUNU", language: "ENUNU")]
     public class EnunuPhonemizer : Phonemizer {
         readonly string PhonemizerType = "ENUNU";
 
@@ -164,13 +164,10 @@ namespace OpenUtau.Core.Enunu {
                     }).ToArray(),
                 };
             }
-            return new Result {
-                phonemes = new Phoneme[] {
-                    new Phoneme {
-                        phoneme = "error",
-                    }
-                },
-            };
+            if (SetUpException != null) {
+                throw new Exception("Phonemizer failed to process.", SetUpException);
+            }
+            throw new Exception("Part result not found");
         }
 
         public override void CleanUp() {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS0618, CS0649, CS8632, CS0108
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,9 +13,10 @@ namespace OpenUtau.Plugin.Builtin {
     /// You could make a combined English-German diphonic bank, and it will work.
     /// Based on the German CMUSphinx dictionary, with some adjustments: https://sourceforge.net/projects/cmusphinx/files/Acoustic%20and%20Language%20Models/German/
     /// </summary>
-    [Phonemizer("German Diphone Phonemizer", "DE DIPHONE", "Lotte V", language: "DE")]
+    [Phonemizer("German Diphone Phonemizer", "DE DIPHONE", "Lotte V", language: "UTAU")]
+    // Version: v
     public class GermanDiphonePhonemizer : LatinDiphonePhonemizer {
-        
+
         public GermanDiphonePhonemizer() {
             try {
                 Initialize();

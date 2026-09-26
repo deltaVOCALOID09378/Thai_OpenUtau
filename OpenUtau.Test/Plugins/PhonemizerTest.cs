@@ -1,4 +1,7 @@
-﻿using System;
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by OpenUtau
+
+using System;
 using OpenUtau.Api;
 using OpenUtau.Classic;
 using OpenUtau.Core;
@@ -63,4 +66,12 @@ namespace OpenUtau.Plugins {
     public class JapaneseVCVPhonemizerTest : PhonemizerTest<JapaneseVCVPhonemizer> { }
     public class KoreanCVCPhonemizerTest : PhonemizerTest<KoreanCVCPhonemizer> { }
     public class KoreanCVVCPhonemizerTest : PhonemizerTest<KoreanCVVCPhonemizer> { }
+
+// ทดสอบสำหรับภาษาไทย (Thai Phonemizers Tests)
+    public class ThaiVCCVPhonemizerTest : PhonemizerTest<ThaiVCCVPhonemizer> { }
+    
+    // ปิดโค้ด 3 บรรทัดด้านล่างนี้ไว้ก่อน จนกว่าเราจะสร้างคลาสของพวกมันเสร็จ
+    // public class ThaiVCVPhonemizerTest : PhonemizerTest<ThaiVCVPhonemizer> { }
+    // public class ThaiArpasingPhonemizerTest : PhonemizerTest<ThaiArpasingPhonemizer> { }
+    // public class ThaiCVPhonemizerTest : PhonemizerTest<ThaiCVPhonemizer> { }
 }

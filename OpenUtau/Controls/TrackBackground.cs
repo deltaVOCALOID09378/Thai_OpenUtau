@@ -4,12 +4,16 @@ using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
+using Avalonia.Threading;
+using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 using OpenUtau.Core.Util;
 using ReactiveUI;
 
-namespace OpenUtau.App.Controls {
-    class TrackBackground : TemplatedControl {
+namespace OpenUtau.App.Controls
+{
+    class TrackBackground : TemplatedControl
+    {
         public static readonly DirectProperty<TrackBackground, double> TrackHeightProperty =
             AvaloniaProperty.RegisterDirect<TrackBackground, double>(
                 nameof(TrackHeight),
@@ -35,26 +39,61 @@ namespace OpenUtau.App.Controls {
                 nameof(Key),
                 o => o.Key,
                 (o, v) => o.Key = v);
+        public static readonly DirectProperty<TrackBackground, bool> KeyIsMajorProperty =
+            AvaloniaProperty.RegisterDirect<TrackBackground, bool>(
+                nameof(KeyIsMajor),
+                o => o.KeyIsMajor,
+                (o, v) => o.KeyIsMajor = v);
+        public static readonly DirectProperty<TrackBackground, bool> ShowKeyScaleProperty =
+            AvaloniaProperty.RegisterDirect<TrackBackground, bool>(
+                nameof(ShowKeyScale),
+                o => o.ShowKeyScale,
+                (o, v) => o.ShowKeyScale = v);
+        public static readonly DirectProperty<TrackBackground, int> PianoRollHighlightTrackNoProperty =
+            AvaloniaProperty.RegisterDirect<TrackBackground, int>(
+                nameof(PianoRollHighlightTrackNo),
+                o => o.PianoRollHighlightTrackNo,
+                (o, v) => o.PianoRollHighlightTrackNo = v);
 
-        public double TrackHeight {
+        public double TrackHeight
+        {
             get => _trackHeight;
             private set => SetAndRaise(TrackHeightProperty, ref _trackHeight, value);
         }
-        public double TrackOffset {
+        public double TrackOffset
+        {
             get => _trackOffset;
             private set => SetAndRaise(TrackOffsetProperty, ref _trackOffset, value);
         }
-        public bool IsPianoRoll {
+        public bool IsPianoRoll
+        {
             get => _isPianoRoll;
             set => SetAndRaise(IsPianoRollProperty, ref _isPianoRoll, value);
         }
-        public bool IsKeyboard {
+        public bool IsKeyboard
+        {
             get => _isKeyboard;
-            set => SetAndRaise(IsPianoRollProperty, ref _isKeyboard, value);
+            set => SetAndRaise(IsKeyboardProperty, ref _isKeyboard, value);
         }
-        public int Key {
+        public int Key
+        {
             get => _key;
             set => SetAndRaise(KeyProperty, ref _key, value);
+        }
+        public bool KeyIsMajor
+        {
+            get => _keyIsMajor;
+            set => SetAndRaise(KeyIsMajorProperty, ref _keyIsMajor, value);
+        }
+        public bool ShowKeyScale
+        {
+            get => _showKeyScale;
+            set => SetAndRaise(ShowKeyScaleProperty, ref _showKeyScale, value);
+        }
+        public int PianoRollHighlightTrackNo
+        {
+            get => _pianoRollHighlightTrackNo;
+            set => SetAndRaise(PianoRollHighlightTrackNoProperty, ref _pianoRollHighlightTrackNo, value);
         }
 
         private double _trackHeight;
@@ -62,34 +101,69 @@ namespace OpenUtau.App.Controls {
         private bool _isPianoRoll;
         private bool _isKeyboard;
         private int _key;
+        private bool _keyIsMajor = true;
+        private bool _showKeyScale;
+        private int _pianoRollHighlightTrackNo = -1;
+        const double KeyScaleLineOpacity = 0.5;
+        static readonly IPen KeyboardKeyHighlightPen =
+            new Pen(new SolidColorBrush(Color.FromArgb(42, 255, 255, 255)), 1);
+        static readonly IPen KeyboardKeySeparatorPen =
+            new Pen(new SolidColorBrush(Color.FromArgb(150, 0, 0, 0)), 1);
+        static readonly IPen KeyboardOuterEdgePen =
+            new Pen(new SolidColorBrush(Color.FromArgb(210, 0, 0, 0)), 1);
 
-        public TrackBackground() {
+        public TrackBackground()
+        {
             MessageBus.Current.Listen<ThemeChangedEvent>()
-                .Subscribe(e => InvalidateVisual());
+                .Subscribe(_ => RequestInvalidateVisual());
+            MessageBus.Current.Listen<PianorollRefreshEvent>()
+                .Subscribe(_ => RequestInvalidateVisual());
         }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
+        void RequestInvalidateVisual()
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                InvalidateVisual();
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(InvalidateVisual);
+            }
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
             base.OnPropertyChanged(change);
             if (change.Property == TrackHeightProperty ||
                 change.Property == TrackOffsetProperty ||
                 change.Property == ForegroundProperty ||
-                change.Property == KeyProperty) {
+                change.Property == BackgroundProperty ||
+                change.Property == KeyProperty ||
+                change.Property == KeyIsMajorProperty ||
+                change.Property == ShowKeyScaleProperty ||
+                change.Property == PianoRollHighlightTrackNoProperty)
+            {
                 InvalidateVisual();
             }
         }
 
-        int mod(int a, int b){
+        int mod(int a, int b)
+        {
             return (a % b + b) % b;
         }
 
-        public override void Render(DrawingContext context) {
-            if (TrackHeight == 0) {
+        public override void Render(DrawingContext context)
+        {
+            if (TrackHeight == 0)
+            {
                 return;
             }
             int track = (int)TrackOffset;
             double top = TrackHeight * (track - TrackOffset);
             string[] degreeNames;
-            switch(Preferences.Default.DegreeStyle){
+            switch (Preferences.Default.DegreeStyle)
+            {
                 case 1:
                     degreeNames = MusicMath.Solfeges;
                     break;
@@ -100,71 +174,176 @@ namespace OpenUtau.App.Controls {
                     degreeNames = Enumerable.Repeat("", 12).ToArray();
                     break;
             }
-            
-            // กำหนดฟอนต์มาตรฐานสากลที่สวยงามและรองรับภาษาไทยได้สมบูรณ์
-            Typeface customTypeface = new Typeface("Leelawadee UI, Tahoma, Sarabun, Arial");
-
-            while (top < Bounds.Height) {
+            while (top < Bounds.Height)
+            {
                 bool isAltTrack = IsAltTrack(track) ^ (ThemeManager.IsDarkMode && !IsKeyboard);
                 bool isCenterKey = IsKeyboard && IsCenterKey(track);
-                var brush = isCenterKey ? ThemeManager.CenterKeyBrush
-                    : IsKeyboard ? (isAltTrack ? ThemeManager.BlackKeyBrush : ThemeManager.WhiteKeyBrush)
-                    : isAltTrack ? Foreground : Background;
+                int tone = ViewConstants.MaxTone - 1 - track;
+                var musicalKey = new MusicalKey(Key, KeyIsMajor);
+                bool isScaleTone = IsPianoRoll && !IsKeyboard && ShowKeyScale && tone >= 0
+                    && KeySignatureHelper.IsInScale(tone, musicalKey);
+                var pianoRollBase = Background ?? ThemeManager.BackgroundBrush;
+                IBrush brush;
+                if (isCenterKey)
+                {
+                    brush = ThemeManager.CenterKeyBrush;
+                }
+                else if (IsKeyboard)
+                {
+                    brush = isAltTrack ? ThemeManager.BlackKeyBrush : ThemeManager.WhiteKeyBrush;
+                }
+                else if (!IsPianoRoll)
+                {
+                    brush = isAltTrack
+                        ? Foreground ?? ThemeManager.TrackBackgroundAltBrush
+                        : pianoRollBase;
+                }
+                else if (isAltTrack)
+                {
+                    var altBrush = Foreground ?? ThemeManager.TrackBackgroundAltBrush;
+                    brush = GetPianoRollBlackKeyTintedBrush(pianoRollBase, altBrush);
+                }
+                else
+                {
+                    brush = GetPianoRollWhiteKeyTintedBrush(pianoRollBase);
+                }
+                var rowRect = new Rect(0, (int)top, Bounds.Width, TrackHeight);
                 context.DrawRectangle(
                     brush,
                     null,
-                    new Rect(0, (int)top, Bounds.Width, TrackHeight));
-                
-                if (IsKeyboard && TrackHeight >= 12) {
+                    rowRect);
+                if (IsKeyboard)
+                {
+                    double topEdge = Math.Floor(top) + 0.5;
+                    double bottomEdge = Math.Floor(top + TrackHeight) - 0.5;
+                    context.DrawLine(
+                        KeyboardKeyHighlightPen,
+                        new Point(0, topEdge),
+                        new Point(Bounds.Width, topEdge));
+                    context.DrawLine(
+                        KeyboardKeySeparatorPen,
+                        new Point(0, bottomEdge),
+                        new Point(Bounds.Width, bottomEdge));
+                }
+                if (isScaleTone)
+                {
+                    double centerY = top + TrackHeight / 2;
+                    var lineStart = new Point(0, centerY);
+                    var lineEnd = new Point(Bounds.Width, centerY);
+                    using (context.PushOpacity(KeyScaleLineOpacity))
+                    {
+                        context.DrawLine(ThemeManager.NoteBorderPenPressed, lineStart, lineEnd);
+                    }
+                }
+                if (IsKeyboard && TrackHeight >= 12)
+                {
                     brush = isCenterKey ? ThemeManager.CenterKeyNameBrush
                         : isAltTrack ? ThemeManager.BlackKeyNameBrush
                             : ThemeManager.WhiteKeyNameBrush;
-                    int tone = ViewConstants.MaxTone - 1 - track;
                     string toneName = MusicMath.GetToneName(tone);
-                    
-                    // วาดชื่อตัวโน้ตด้วยฟอนต์ใหม่ (ขวา)
-                    var formattedTone = new FormattedText(
-                        toneName,
-                        System.Globalization.CultureInfo.CurrentCulture,
-                        FlowDirection.LeftToRight,
-                        customTypeface,
-                        12, // ขนาดฟอนต์ 12 กำลังสบายตา
-                        brush
-                    );
-                    var toneTextPosition = new Point(Bounds.Width - 4 - formattedTone.Width, (int)(top + (TrackHeight - formattedTone.Height) / 2));
-                    context.DrawText(formattedTone, toneTextPosition);
-
-                    // วาดชื่อระดับเสียง (องศา) ด้วยฟอนต์ใหม่ (ซ้าย)
+                    var toneTextLayout = TextLayoutCache.Get(toneName, brush, 12);
+                    var toneTextPosition = new Point(Bounds.Width - 4 - (int)toneTextLayout.Width, (int)(top + (TrackHeight - toneTextLayout.Height) / 2));
+                    using (var state = context.PushTransform(Matrix.CreateTranslation(toneTextPosition)))
+                    {
+                        toneTextLayout.Draw(context, new Point());
+                    }
+                    //scale degree display
                     int degree = mod(tone - Key, 12);
                     string degreeName = degreeNames[degree];
-                    var formattedDegree = new FormattedText(
-                        degreeName,
-                        System.Globalization.CultureInfo.CurrentCulture,
-                        FlowDirection.LeftToRight,
-                        customTypeface,
-                        12, // ขนาดฟอนต์ 12
-                        brush
-                    );
-                    var degreeTextPosition = new Point(4, (int)(top + (TrackHeight - formattedDegree.Height) / 2));
-                    context.DrawText(formattedDegree, degreeTextPosition);
+                    var degreeTextLayout = TextLayoutCache.Get(degreeName, brush, 12);
+                    var degreeTextPosition = new Point(4, (int)(top + (TrackHeight - degreeTextLayout.Height) / 2));
+                    using (var state = context.PushTransform(Matrix.CreateTranslation(degreeTextPosition)))
+                    {
+                        degreeTextLayout.Draw(context, new Point());
+                    }
                 }
                 track++;
                 top += TrackHeight;
             }
+            if (IsKeyboard && Bounds.Width > 0)
+            {
+                double rightEdge = Math.Floor(Bounds.Width) - 0.5;
+                context.DrawLine(
+                    KeyboardOuterEdgePen,
+                    new Point(rightEdge, 0),
+                    new Point(rightEdge, Bounds.Height));
+            }
         }
 
-        private bool IsAltTrack(int track) {
-            if (!IsPianoRoll) {
+        IBrush GetPianoRollWhiteKeyTintedBrush(IBrush backgroundBrush)
+        {
+            if (!IsPianoRoll
+                || !Preferences.Default.UseTrackColor
+                || !Preferences.Default.TintPianoRollBackgroundWithTrackColor)
+            {
+                return backgroundBrush;
+            }
+            if (backgroundBrush is not SolidColorBrush backgroundColorBrush
+                || ThemeManager.WorkspaceCardBrush is not SolidColorBrush cardBrush)
+            {
+                return backgroundBrush;
+            }
+            return new SolidColorBrush(BlendColors(backgroundColorBrush.Color, cardBrush.Color, 0.08));
+        }
+
+        IBrush GetPianoRollBlackKeyTintedBrush(IBrush backgroundBrush, IBrush altBrush)
+        {
+            if (!IsPianoRoll
+                || !Preferences.Default.UseTrackColor
+                || !Preferences.Default.TintPianoRollBackgroundWithTrackColor)
+            {
+                return altBrush;
+            }
+            if (backgroundBrush is not SolidColorBrush backgroundColorBrush
+                || altBrush is not SolidColorBrush altColorBrush
+                || ThemeManager.NoteBrush is not SolidColorBrush trackBrush)
+            {
+                return altBrush;
+            }
+            return new SolidColorBrush(BlendColors(
+                backgroundColorBrush.Color, altColorBrush.Color, trackBrush.Color,
+                0.75, 0.18, 0.07));
+        }
+
+        static Color BlendColors(Color baseColor, Color trackColor, double trackWeight)
+        {
+            double baseWeight = 1.0 - trackWeight;
+            return Color.FromArgb(
+                255,
+                (byte)Math.Clamp((int)Math.Round(baseColor.R * baseWeight + trackColor.R * trackWeight), 0, 255),
+                (byte)Math.Clamp((int)Math.Round(baseColor.G * baseWeight + trackColor.G * trackWeight), 0, 255),
+                (byte)Math.Clamp((int)Math.Round(baseColor.B * baseWeight + trackColor.B * trackWeight), 0, 255));
+        }
+
+        static Color BlendColors(Color backgroundColor, Color altColor, Color trackColor,
+            double backgroundWeight, double altWeight, double trackWeight)
+        {
+            return Color.FromArgb(
+                255,
+                (byte)Math.Clamp((int)Math.Round(
+                    backgroundColor.R * backgroundWeight + altColor.R * altWeight + trackColor.R * trackWeight), 0, 255),
+                (byte)Math.Clamp((int)Math.Round(
+                    backgroundColor.G * backgroundWeight + altColor.G * altWeight + trackColor.G * trackWeight), 0, 255),
+                (byte)Math.Clamp((int)Math.Round(
+                    backgroundColor.B * backgroundWeight + altColor.B * altWeight + trackColor.B * trackWeight), 0, 255));
+        }
+
+        private bool IsAltTrack(int track)
+        {
+            if (!IsPianoRoll)
+            {
                 return track % 2 == 1;
             }
             int tone = ViewConstants.MaxTone - 1 - track;
-            if (tone < 0) {
+            if (tone < 0)
+            {
                 return false;
             }
             return MusicMath.IsBlackKey(tone);
         }
 
-        private bool IsCenterKey(int track) {
+        private bool IsCenterKey(int track)
+        {
             int tone = ViewConstants.MaxTone - 1 - track;
             return MusicMath.IsCenterKey(tone);
         }

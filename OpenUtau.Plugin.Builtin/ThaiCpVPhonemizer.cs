@@ -4,8 +4,11 @@
 // ==========================================
 // Made And Checked By DELTA SYNTH & Gemini AI
 // Original by Patiphat Wongyai
-// Version: v.3.5
-// History/Summary: Implemented Safety Position Buffer (prevPos + 10) to prevent phoneme overlapping. Multi-syllable + note support.
+// Version: v.3.6
+// History/Summary:
+// v.3.6 (Consonant Space Widening - ขยายพื้นที่พยัญชนะ): CCV จาก 4% เป็น 7%, V start จาก 5% เป็น 9%
+//   เพื่อให้เสียงพยัญชนะออกมาชัดเจนขึ้น มีความเป็นธรรมชาติมากขึ้น
+// v.3.5: Implemented Safety Position Buffer (prevPos + 10) to prevent phoneme overlapping. Multi-syllable + note support.
 // ==========================================
 
 using System;
@@ -73,31 +76,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
         }
 
-        private Dictionary<string, string> CustomDictionary = new Dictionary<string, string> {
-            {"บวร", "bQ wQ n"},
-            {"ศร", "sQ n"},
-            {"โสน", "sa no"},
-            {"เบื้อง", "b3a N"},
-            {"คือ", "kh1"},
-            {"เรือ", "r6"},
-            {"บ่", "bQ"},
-            {"ก็", "kQ"},
-            {"เอื้อ", "q6"},
-            {"ตึก", "t1 k"},
-            {"ปู่", "pu"},
-            {"ครุธ", "khru t"},
-            {"ครุฑ", "khru t"},
-            {"สถิตย์", "sathi t"},
-            {"ธ", "thQ"},
-            {"ณ", "nQ"},
-            {"ฤาษี", "rvv sii"},
-            {"ฤทธิ์", "ri t"},
-            {"ฤกดิ์", "r3 k"},
-            {"ศักดิ์", "sa k"},
-            {"เพียง", "ph ia g"}, {"หลง", "l o g"}, {"เหี่ยว", "h ia w"}, {"เพรียว", "ph r ia w"}, // สระลดรูปและคำควบกล้ำเพิ่มเติม (v17.3)
-            {"เกิน", "k 3 n"}, {"เคย", "kh 3 y"}, {"เธอ", "th 3"}, {"เพ้อ", "ph 3"}, {"เจอ", "j 3"}, {"เดิน", "d 3 n"}, // สระลดรูปเพิ่มเติม (v17.3)
-            {"ฤดู", "r 1 d u"}, {"อยู่", "y u"}, {"หมด", "m o d"}, {"คง", "kh o g"}, {"หม่น", "m o n"} // สระลดรูปเพิ่มเติม (v17.3)
-        };
+        private Dictionary<string, string> CustomDictionary = new Dictionary<string, string>();
         private USinger? singer;
         private bool isDictLoaded = false;
         public override void SetSinger(USinger singer) {
@@ -202,27 +181,20 @@ namespace OpenUtau.Plugin.Builtin {
         private void LoadCustomDictionary() {
             if (isDictLoaded) return;
             try {
-                string[] dictPaths = {
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionaries", "dsdict-th.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th_dict.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "TH_VCCV_Dict.txt")
-                };
-
-                foreach (var path in dictPaths) {
-                    if (File.Exists(path)) {
-                        var lines = File.ReadAllLines(path, Encoding.UTF8);
-                        bool isTHVCCVDict = Path.GetFileName(path) == "TH_VCCV_Dict.txt";
-                        foreach (var line in lines) {
-                            if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
-                            var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                            if (parts.Length >= 2) {
-                                string word = parts[0].Trim();
-                                string phonemes = parts[1].Trim();
-                                if (isTHVCCVDict) {
-                                    phonemes = ConvertDiffsingerToSyllables(phonemes);
+                ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => ConvertDiffsingerToSyllables(phonemes));
+                
+                if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
+                    string[] singerDicts = { "dsdict-th.txt", "th_cpv_custom_dict.txt", "th_custom_dict.txt" };
+                    foreach (var dict in singerDicts) {
+                        string path = Path.Combine(singer.Location, dict);
+                        if (File.Exists(path)) {
+                            var lines = File.ReadAllLines(path, Encoding.UTF8);
+                            foreach (var line in lines) {
+                                if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+                                var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                if (parts.Length >= 2) {
+                                    CustomDictionary[parts[0].Trim()] = ConvertDiffsingerToSyllables(parts[1].Trim());
                                 }
-                                CustomDictionary[word] = phonemes;
                             }
                         }
                     }
@@ -336,13 +308,13 @@ namespace OpenUtau.Plugin.Builtin {
                     } else if (alias == "-") {
                         position = Math.Max((int)(noteDuration * 0.90), noteDuration - 18);
                     } else if (i == 1 && !vowels.Any(v => alias.Contains(v))) {
-                        // พยัญชนะควบตัวที่สอง (v17.3)
-                        position = Math.Min((int)(noteDuration * 0.04), 30);
+                        // พยัญชนะควบตัวที่สอง (v3.6: 4%→7%)
+                        position = Math.Min((int)(noteDuration * 0.07), 45);
                     } else if ((i == 1 || i == 2) && vowels.Any(v => alias.Contains(v))) {
-                        // สระ (V) เริ่มเร็วที่สุด เพื่อพื้นที่ V (70-90%) (v17.3)
-                        position = Math.Min((int)(noteDuration * 0.05), 40);
+                        // สระ (V) เริ่มเร็วยิ่งขึ้น เพื่อพื้นที่ V (v3.6: 5%→9%)
+                        position = Math.Min((int)(noteDuration * 0.09), 55);
                     } else if (i == aliases.Count - 1) {
-                        // C ท้าย เริ่มที่ 85% เพื่อให้ C กินพื้นที่แค่ 15-20% (v17.3)
+                        // C ท้าย เริ่มที่ 85% เพื่อให้ C กินพื้นที่แค่ 15-20% (v3.6)
                         position = Math.Max((int)(noteDuration * 0.85), noteDuration - 60);
                     } else {
                         // กรณีอื่นๆ ในคำ

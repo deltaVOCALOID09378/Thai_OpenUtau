@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -13,8 +13,10 @@ using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
-namespace OpenUtau.App.ViewModels {
-    public class SingerSetupViewModel : ViewModelBase {
+namespace OpenUtau.App.ViewModels
+{
+    public class SingerSetupViewModel : ViewModelBase
+    {
         [Reactive] public int Step { get; set; }
         public ObservableCollection<string> TextItems => textItems;
         [Reactive] public string ArchiveFilePath { get; set; } = string.Empty;
@@ -35,7 +37,8 @@ namespace OpenUtau.App.ViewModels {
 
         private ObservableCollectionExtended<string> textItems;
 
-        public SingerSetupViewModel() {
+        public SingerSetupViewModel()
+        {
 #if DEBUG
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
@@ -44,21 +47,27 @@ namespace OpenUtau.App.ViewModels {
             TextEncoding = Encodings[0];
             textItems = new ObservableCollectionExtended<string>();
             this.WhenAnyValue(vm => vm.ArchiveFilePath)
-                .Subscribe(_ => {
-                    if (!string.IsNullOrEmpty(ArchiveFilePath)) {
-                        if(IsEncrypted(ArchiveFilePath)) {
+                .Subscribe(_ =>
+                {
+                    if (!string.IsNullOrEmpty(ArchiveFilePath))
+                    {
+                        if (IsEncrypted(ArchiveFilePath))
+                        {
                             throw new MessageCustomizableException(
                                 "Encrypted archive file isn't supported",
-                                "<translate:errors.encryptedarchive>", 
+                                "<translate:errors.encryptedarchive>",
                                 new Exception("Encrypted archive file: " + ArchiveFilePath)
                             );
-                        }                        
+                        }
                         var config = LoadCharacterYaml(ArchiveFilePath);
                         MissingInfo = string.IsNullOrEmpty(config?.SingerType);
-                        if (!string.IsNullOrEmpty(config?.TextFileEncoding)) {
-                            try {
+                        if (!string.IsNullOrEmpty(config?.TextFileEncoding))
+                        {
+                            try
+                            {
                                 TextEncoding = Encoding.GetEncoding(config.TextFileEncoding);
-                            } catch { }
+                            }
+                            catch { }
                         }
                     }
                 });
@@ -68,107 +77,141 @@ namespace OpenUtau.App.ViewModels {
                 .Subscribe(_ => RefreshTextItems());
         }
 
-        public void Back() {
+        public void Back()
+        {
             Step--;
         }
 
-        public void Next() {
+        public void Next()
+        {
             Step++;
         }
 
-        private void RefreshArchiveItems() {
-            if (Step != 0) {
+        private void RefreshArchiveItems()
+        {
+            if (Step != 0)
+            {
                 return;
             }
-            if (string.IsNullOrEmpty(ArchiveFilePath)) {
+            if (string.IsNullOrEmpty(ArchiveFilePath))
+            {
                 textItems.Clear();
                 return;
             }
-            var readerOptions = new ReaderOptions {
+            var readerOptions = new ReaderOptions
+            {
                 ArchiveEncoding = new ArchiveEncoding { Forced = ArchiveEncoding },
             };
-            using (var archive = ArchiveFactory.Open(ArchiveFilePath, readerOptions)) {
+            using (var archive = ArchiveFactory.OpenArchive(ArchiveFilePath, readerOptions))
+            {
                 textItems.Clear();
                 textItems.AddRange(archive.Entries
-                    .Select(entry => entry.Key!)
+                    .Select(entry => entry.Key!.Replace("\\", "/"))
                     .ToArray());
             }
         }
 
-        private bool IsEncrypted(string archiveFilePath) {
-            using (var archive = ArchiveFactory.Open(archiveFilePath)) {
+        private bool IsEncrypted(string archiveFilePath)
+        {
+            using (var archive = ArchiveFactory.OpenArchive(archiveFilePath, new ReaderOptions()))
+            {
                 return archive.Entries.Any(e => e.IsEncrypted);
             }
         }
 
-        private VoicebankConfig? LoadCharacterYaml(string archiveFilePath) {
-            using (var archive = ArchiveFactory.Open(archiveFilePath)) {
-                var entry = archive.Entries.FirstOrDefault(e => Path.GetFileName(e.Key)=="character.yaml");
-                if (entry == null) {
+        private VoicebankConfig? LoadCharacterYaml(string archiveFilePath)
+        {
+            using (var archive = ArchiveFactory.OpenArchive(archiveFilePath, new ReaderOptions()))
+            {
+                var entry = archive.Entries.FirstOrDefault(e => Path.GetFileName(e.Key) == "character.yaml");
+                if (entry == null)
+                {
                     return null;
                 }
-                using (var stream = entry.OpenEntryStream()) {
+                using (var stream = entry.OpenEntryStream())
+                {
                     return VoicebankConfig.Load(stream);
                 }
             }
         }
 
-        private void RefreshTextItems() {
-            if (Step != 1) {
+        private void RefreshTextItems()
+        {
+            if (Step != 1)
+            {
                 return;
             }
-            if (string.IsNullOrEmpty(ArchiveFilePath)) {
+            if (string.IsNullOrEmpty(ArchiveFilePath))
+            {
                 textItems.Clear();
                 return;
             }
-            var readerOptions = new ReaderOptions {
+            var readerOptions = new ReaderOptions
+            {
                 ArchiveEncoding = new ArchiveEncoding { Forced = ArchiveEncoding },
             };
-            using (var archive = ArchiveFactory.Open(ArchiveFilePath, readerOptions)) {
-                try {
+            using (var archive = ArchiveFactory.OpenArchive(ArchiveFilePath, readerOptions))
+            {
+                try
+                {
                     textItems.Clear();
-                    foreach (var entry in archive.Entries.Where(entry => entry.Key!.EndsWith("character.txt") || entry.Key.EndsWith("oto.ini"))) {
-                        using (var stream = entry.OpenEntryStream()) {
+                    foreach (var entry in archive.Entries.Where(entry => entry.Key!.EndsWith("character.txt") || entry.Key.EndsWith("oto.ini")))
+                    {
+                        using (var stream = entry.OpenEntryStream())
+                        {
                             using var reader = new StreamReader(stream, TextEncoding);
-                            textItems.Add($"------ {entry.Key} ------");
+                            textItems.Add($"------ {entry.Key!.Replace("\\", "/")} ------");
                             int count = 0;
-                            while (count < 256 && !reader.EndOfStream) {
+                            while (count < 256 && !reader.EndOfStream)
+                            {
                                 string? line = reader.ReadLine();
-                                if (!string.IsNullOrWhiteSpace(line)) {
+                                if (!string.IsNullOrWhiteSpace(line))
+                                {
                                     textItems.Add(line);
                                     count++;
                                 }
                             }
-                            if (!reader.EndOfStream) {
+                            if (!reader.EndOfStream)
+                            {
                                 textItems.Add($"...");
                             }
                         }
                     }
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
                     Step--;
                 }
             }
         }
 
-        public Task Install() {
+        public Task Install()
+        {
             string archiveFilePath = ArchiveFilePath;
             var archiveEncoding = ArchiveEncoding;
             var textEncoding = TextEncoding;
-            return Task.Run(() => {
-                try {
+            return Task.Run(() =>
+            {
+                try
+                {
                     var basePath = PathManager.Inst.SingersInstallPath;
-                    var installer = new VoicebankInstaller(basePath, (progress, info) => {
+                    var installer = new VoicebankInstaller(basePath, (progress, info) =>
+                    {
                         DocManager.Inst.ExecuteCmd(new ProgressBarNotification(progress, info));
                     }, archiveEncoding, textEncoding);
                     installer.Install(archiveFilePath, SingerType);
 
-                    new Task(() => {
+                    new Task(() =>
+                    {
                         DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, ThemeManager.GetString("singersetup.succeeded")));
                         DocManager.Inst.ExecuteCmd(new SingersChangedNotification());
                     }).Start(DocManager.Inst.MainScheduler);
-                } catch {
-                    new Task(() => {
+                }
+                catch
+                {
+                    new Task(() =>
+                    {
                         DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, ThemeManager.GetString("singersetup.failed")));
                         DocManager.Inst.ExecuteCmd(new SingersChangedNotification());
                     }).Start(DocManager.Inst.MainScheduler);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,96 +8,101 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using OpenUtau.Core;
 using Serilog;
-using SharpCompress;
 
-namespace OpenUtau.App.Views {
-    public partial class MessageBox : Window {
-        public enum MessageBoxButtons { Ok, OkCancel, YesNo, YesNoCancel, OkCopy }
+namespace OpenUtau.App.Views
+{
+    public partial class MessageBox : Window
+    {
+        public enum MessageBoxButtons { Ok, OkCancel, YesNo, YesNoCancel, OkCopy, DropProjectOpenImportCancel, SaveDontSaveCancel }
         public enum MessageBoxResult { Ok, Cancel, Yes, No }
 
-        private static MessageBox? loadingDialog;
-
-        public MessageBox() {
+        public MessageBox()
+        {
             InitializeComponent();
         }
 
-        public void SetText(string text) {
-            Dispatcher.UIThread.Post(() => {
+        public void SetText(string text)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
                 Text.Text = text;
             });
         }
 
-        public static Task<MessageBoxResult> ShowError(Window parent, Exception? e, string message = "", bool fromNotif = false) {
+        public static Task<MessageBoxResult> ShowError(Window parent, Exception? e, string message = "", bool fromNotif = false)
+        {
             string text = message;
             string title = ThemeManager.GetString("errors.caption");
-            if (fromNotif) {
+            if (fromNotif)
+            {
                 IReadOnlyList<Window> dialogs = ((IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!).Windows;
-                foreach (var dialog in dialogs) {
-                    if (dialog.IsActive) {
+                foreach (var dialog in dialogs)
+                {
+                    if (dialog.IsActive)
+                    {
                         parent = dialog;
                         break;
                     }
                 }
             }
 
-            if (e is MessageCustomizableException mce) {
-                if (!string.IsNullOrEmpty(mce.TranslatableMessage)) {
-                    var matches = Regex.Matches(mce.TranslatableMessage, "<translate:(.*?)>");
-                    matches.ForEach(m => mce.TranslatableMessage = mce.TranslatableMessage.Replace(m.Value, ThemeManager.GetString(m.Groups[1].Value)));
-                    try {
-                        if (mce.Replaces != null && mce.Replaces.Length > 0) {
-                            text = string.Format(mce.TranslatableMessage, mce.Replaces);
-                        } else {
-                            text = mce.TranslatableMessage;
-                        }
-                    } catch {
-                        text = mce.TranslatableMessage;
-                    }
-                    e = mce.SubstanceException;
-                }
-
-                if (!mce.ShowStackTrace) {
-                    return Show(parent, text, title, MessageBoxButtons.Ok);
-                }
-            }
-
             var builder = new StringBuilder();
-            if (e != null) {
-                if (e is AggregateException ae) {
-                    ae = ae.Flatten();
-                    builder.AppendLine(ae.InnerExceptions.First().Message);
-                    builder.AppendLine();
-                    builder.Append(ae.ToString());
+            if (e != null)
+            {
+                if (e is AggregateException ae && ae.Flatten().InnerExceptions.Count == 1)
+                {
+                    e = ae.InnerExceptions.First();
+                }
 
-                    if (!string.IsNullOrWhiteSpace(text)) {
-                        text += "\n";
+                if (e is MessageCustomizableException mce)
+                {
+                    text = Translate(mce);
+                    builder.AppendLine(mce.SubstanceException.Message);
+                    builder.AppendLine();
+                    builder.Append(mce.SubstanceException.ToString());
+                    if (!mce.ShowStackTrace)
+                    {
+                        return Show(parent, text, title, MessageBoxButtons.Ok);
                     }
-                    if (ae.InnerExceptions.First() is MessageCustomizableException innnerMce) {
-                        if (!string.IsNullOrEmpty(innnerMce.TranslatableMessage)) {
-                            var matches = Regex.Matches(innnerMce.TranslatableMessage, "<translate:(.*?)>");
-                            matches.ForEach(m => innnerMce.TranslatableMessage = innnerMce.TranslatableMessage.Replace(m.Value, ThemeManager.GetString(m.Groups[1].Value)));
-                            try {
-                                if (innnerMce.Replaces != null && innnerMce.Replaces.Length > 0) {
-                                    text += string.Format(innnerMce.TranslatableMessage, innnerMce.Replaces);
-                                } else {
-                                    text += innnerMce.TranslatableMessage;
-                                }
-                            } catch {
-                                text = text += innnerMce.TranslatableMessage;
-                            }
-                        } else {
-                            text += ae.InnerExceptions.First().Message;
+                }
+                else if (e is AggregateException nestedAe)
+                {
+                    foreach (var ie in nestedAe.Flatten().InnerExceptions)
+                    {
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            text += "\n";
                         }
+                        if (ie is MessageCustomizableException innnerMce)
+                        {
+                            text += Translate(innnerMce);
+                            builder.AppendLine(innnerMce.SubstanceException.Message);
+                            builder.AppendLine();
+                            builder.Append(innnerMce.SubstanceException.ToString());
+                        }
+                        else
+                        {
+                            text += ie.Message;
+                            builder.AppendLine(ie.Message);
+                            builder.AppendLine();
+                            builder.AppendLine(ie.ToString());
+                        }
+                        builder.AppendLine();
                     }
-                } else {
+                }
+                else
+                {
                     builder.AppendLine(e.Message);
                     builder.AppendLine();
                     builder.Append(e.ToString());
-                    if (string.IsNullOrEmpty(text)) {
+                    if (string.IsNullOrEmpty(text))
+                    {
                         text = e.Message;
                     }
                 }
@@ -107,26 +112,74 @@ namespace OpenUtau.App.Views {
             builder.AppendLine(System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown Version");
 
             return Show(parent, text, title, MessageBoxButtons.OkCopy, builder.ToString());
+
+            string Translate(MessageCustomizableException mce)
+            {
+                string text;
+                if (string.IsNullOrWhiteSpace(mce.TranslatableMessage))
+                {
+                    text = mce.Message;
+                }
+                else
+                {
+                    text = mce.TranslatableMessage;
+                    try
+                    {
+                        var matches = Regex.Matches(mce.TranslatableMessage, "<translate:(.*?)>");
+                        foreach (Match match in matches)
+                        {
+                            if (ThemeManager.TryGetString(match.Groups[1].Value, out string translated))
+                            {
+                                text = text.Replace(match.Value, translated);
+                            }
+                            else
+                            {
+                                text = mce.Message;
+                                break;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        text = mce.Message;
+                    }
+                }
+
+                if (mce.Replaces != null && mce.Replaces.Length > 0)
+                {
+                    return string.Format(text, mce.Replaces);
+                }
+                else
+                {
+                    return text;
+                }
+            }
         }
 
-        public static Task<MessageBoxResult> Show(Window parent, string text, string title, MessageBoxButtons buttons, string? stackTrace = null) {
-            var msgbox = new MessageBox() {
+        public static Task<MessageBoxResult> Show(Window parent, string text, string title, MessageBoxButtons buttons, string? stackTrace = null)
+        {
+            var msgbox = new MessageBox()
+            {
                 Title = title
             };
             msgbox.Text.IsVisible = false;
-            msgbox.SetTextWithLink(text, msgbox.TextPanel);
-            if (stackTrace != null) {
+            var linkBrush = GetAccentBrush(parent);
+            msgbox.SetTextWithLink(text, msgbox.TextPanel, linkBrush);
+            if (stackTrace != null)
+            {
                 var stackTracePanel = new StackPanel();
                 var expander = new Expander() { Header = ThemeManager.GetString("errors.details"), Content = stackTracePanel };
                 msgbox.TextPanel.Children.Add(expander);
-                msgbox.SetTextWithLink(stackTrace, stackTracePanel);
+                msgbox.SetTextWithLink(stackTrace, stackTracePanel, null);
             }
 
             var res = MessageBoxResult.Ok;
 
-            void AddButton(string caption, MessageBoxResult r, bool def = false) {
+            void AddButton(string caption, MessageBoxResult r, bool def = false)
+            {
                 var btn = new Button { Content = caption };
-                btn.Click += (_, __) => {
+                btn.Click += (_, __) =>
+                {
                     res = r;
                     msgbox.Close();
                 };
@@ -136,20 +189,36 @@ namespace OpenUtau.App.Views {
             }
 
             if (buttons == MessageBoxButtons.Ok || buttons == MessageBoxButtons.OkCancel || buttons == MessageBoxButtons.OkCopy)
-                AddButton(ThemeManager.GetString("dialogs.messagebox.ok"), MessageBoxResult.Ok, true);
-            if (buttons == MessageBoxButtons.YesNo || buttons == MessageBoxButtons.YesNoCancel) {
-                AddButton(ThemeManager.GetString("dialogs.messagebox.yes"), MessageBoxResult.Yes);
-                AddButton(ThemeManager.GetString("dialogs.messagebox.no"), MessageBoxResult.No, true);
+                AddButton(ThemeManager.GetString("button.ok"), MessageBoxResult.Ok, true);
+            if (buttons == MessageBoxButtons.YesNo || buttons == MessageBoxButtons.YesNoCancel)
+            {
+                AddButton(ThemeManager.GetString("button.yes"), MessageBoxResult.Yes);
+                AddButton(ThemeManager.GetString("button.no"), MessageBoxResult.No, true);
+            }
+            if (buttons == MessageBoxButtons.DropProjectOpenImportCancel)
+            {
+                AddButton(ThemeManager.GetString("dialogs.dropproject.open"), MessageBoxResult.Yes);
+                AddButton(ThemeManager.GetString("dialogs.dropproject.import"), MessageBoxResult.No);
+                AddButton(ThemeManager.GetString("dialogs.messagebox.cancel"), MessageBoxResult.Cancel, true);
+            }
+            if (buttons == MessageBoxButtons.SaveDontSaveCancel)
+            {
+                AddButton(ThemeManager.GetString("dialogs.exitsave.save"), MessageBoxResult.Yes);
+                AddButton(ThemeManager.GetString("dialogs.exitsave.dontsave"), MessageBoxResult.No);
             }
 
-            if (buttons == MessageBoxButtons.OkCancel || buttons == MessageBoxButtons.YesNoCancel)
-                AddButton(ThemeManager.GetString("dialogs.messagebox.cancel"), MessageBoxResult.Cancel, true);
-            if (buttons == MessageBoxButtons.OkCopy) {
+            if (buttons == MessageBoxButtons.OkCancel || buttons == MessageBoxButtons.YesNoCancel || buttons == MessageBoxButtons.SaveDontSaveCancel)
+                AddButton(ThemeManager.GetString("button.cancel"), MessageBoxResult.Cancel, true);
+            if (buttons == MessageBoxButtons.OkCopy)
+            {
                 var btn = new Button { Content = ThemeManager.GetString("dialogs.messagebox.copy") };
-                btn.Click += (_, __) => {
-                    try {
+                btn.Click += (_, __) =>
+                {
+                    try
+                    {
                         GetTopLevel(parent)?.Clipboard?.SetTextAsync(text + "\n" + stackTrace);
-                    } catch { }
+                    }
+                    catch { }
                 };
                 msgbox.Buttons.Children.Add(btn);
             }
@@ -162,31 +231,15 @@ namespace OpenUtau.App.Views {
             return tcs.Task;
         }
 
-        public static MessageBox ShowModal(Window parent, string text, string title) {
-            var msgbox = new MessageBox() {
+        public static MessageBox ShowModal(Window parent, string text, string title)
+        {
+            var msgbox = new MessageBox()
+            {
                 Title = title
             };
             msgbox.Text.Text = text;
             msgbox.ShowDialog(parent);
             return msgbox;
-        }
-
-        public static void ShowLoading(Window parent) {
-            loadingDialog = new MessageBox() {
-                Title = "Loading"
-            };
-            loadingDialog.Text.Text = "Please wait...";
-            loadingDialog.ShowDialog(parent);
-        }
-
-        public static void CloseLoading() {
-            if (loadingDialog != null) {
-                loadingDialog.Close();
-            }
-        }
-
-        public static bool LoadingIsActive() {
-            return loadingDialog != null && loadingDialog.IsActive;
         }
 
         /// <summary>
@@ -204,13 +257,15 @@ namespace OpenUtau.App.Views {
         /// operations to be performed once the asynchronous action completes.
         /// </remarks>
         public static Task<MessageBoxResult> ShowProcessing(
-                Window parent, 
-                string text, 
-                string title, 
-                Action<MessageBox, 
+                Window parent,
+                string text,
+                string title,
+                Action<MessageBox,
                 CancellationToken> action,
-                Action<Task>? onFinished= null) {
-            var msgbox = new MessageBox() {
+                Action<Task>? onFinished = null)
+        {
+            var msgbox = new MessageBox()
+            {
                 Title = title
             };
             msgbox.Text.Text = text;
@@ -218,23 +273,28 @@ namespace OpenUtau.App.Views {
             var tokenSource = new CancellationTokenSource();
 
             var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            var task = Task.Run(() => {
+            var task = Task.Run(() =>
+            {
                 action.Invoke(msgbox, tokenSource.Token);
                 return res;
             }, tokenSource.Token);
-            task.ContinueWith(t => {
+            task.ContinueWith(t =>
+            {
                 msgbox.Close();
-                if (onFinished != null) {
+                if (onFinished != null)
+                {
                     onFinished(task);
                 }
             }, scheduler);
 
-            var btn = new Button { Content = ThemeManager.GetString("dialogs.messagebox.cancel") };
-            btn.Click += (_, __) => {
+            var btn = new Button { Content = ThemeManager.GetString("button.cancel") };
+            btn.Click += (_, __) =>
+            {
                 msgbox.Close();
             };
             msgbox.Buttons.Children.Add(btn);
-            msgbox.Closed += delegate {
+            msgbox.Closed += delegate
+            {
                 if (task.IsCompleted) return;
                 res = MessageBoxResult.Cancel;
                 tokenSource.Cancel();
@@ -244,30 +304,69 @@ namespace OpenUtau.App.Views {
             return task;
         }
 
-        private void SetTextWithLink(string text, StackPanel textPanel) {
-            // @"http(s)?://([\w-]+\.)+[\w-]+(/[A-Z0-9-.,_/?%&=]*)?"
-            var regex = new Regex(@"http(s)?://[^(\r\n|\n| )]+", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        private static IBrush? GetAccentBrush(Window? parent)
+        {
+            if (parent != null && parent.TryFindResource("AccentBrush1", out var res) && res is IBrush brush)
+                return brush;
+            if (Application.Current?.TryFindResource("AccentBrush1", out var appRes) == true && appRes is IBrush appBrush)
+                return appBrush;
+            return ThemeManager.AccentBrush1;
+        }
+
+        private static string TrimTrailingUrlPunctuation(string url)
+        {
+            return url.TrimEnd('.', ',', ';', '!', '?', ')', ']', '>', '"', '\'');
+        }
+
+        private void SetTextWithLink(string text, StackPanel textPanel, IBrush? linkBrush)
+        {
+            var regex = new Regex(@"https?://[^\s]+", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             var match = regex.Match(text);
-            if (match.Success) {
-                textPanel.Children.Add(new TextBlock { Text = text.Substring(0, match.Index) });
-                var hyperlink = new Button();
-                hyperlink.Content = match.Value.Trim();
+            if (match.Success)
+            {
+                textPanel.Children.Add(new TextBlock { Text = text.Substring(0, match.Index), TextAlignment = Avalonia.Media.TextAlignment.Center });
+                var rawUrl = match.Value;
+                var url = TrimTrailingUrlPunctuation(rawUrl);
+                var hyperlink = new Button
+                {
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Avalonia.Thickness(0),
+                    Padding = new Avalonia.Thickness(0),
+                    Cursor = new Cursor(StandardCursorType.Hand),
+                    Content = new TextBlock
+                    {
+                        Text = url,
+                        Foreground = linkBrush ?? ThemeManager.AccentBrush1,
+                        TextDecorations = TextDecorations.Underline
+                    },
+                    Tag = url
+                };
                 hyperlink.Click += OnUrlClick;
                 textPanel.Children.Add(hyperlink);
 
-                SetTextWithLink(text.Substring(match.Index + match.Length), textPanel);
-            } else {
-                if (!string.IsNullOrEmpty(text)) {
-                    textPanel.Children.Add(new TextBlock { Text = text });
+                var trailing = rawUrl.Substring(url.Length) + text.Substring(match.Index + match.Length);
+                SetTextWithLink(trailing, textPanel, linkBrush);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(text))
+                {
+                    textPanel.Children.Add(new TextBlock { Text = text, TextAlignment = Avalonia.Media.TextAlignment.Center });
                 }
             }
         }
-        private void OnUrlClick(object? sender, RoutedEventArgs e) {
-            try {
-                if (sender is Button button && button.Content is string url) {
+        private void OnUrlClick(object? sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is Button button && button.Tag is string url)
+                {
                     OS.OpenWeb(url);
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Log.Error(ex, "Failed to open url");
             }
         }

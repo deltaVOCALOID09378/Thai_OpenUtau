@@ -79,6 +79,16 @@ namespace OpenUtau.Core.G2p.Data {
                 return ((byte[])(obj));
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] g2p_brapa {
+            get {
+                object obj = ResourceManager.GetObject("g2p-brapa", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
@@ -106,6 +116,16 @@ namespace OpenUtau.Core.G2p.Data {
         internal static byte[] g2p_es {
             get {
                 object obj = ResourceManager.GetObject("g2p-es", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] g2p_fil {
+            get {
+                object obj = ResourceManager.GetObject("g2p-fil", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -176,6 +196,26 @@ namespace OpenUtau.Core.G2p.Data {
         internal static byte[] g2p_ru {
             get {
                 object obj = ResourceManager.GetObject("g2p-ru", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] g2p_th {
+            get {
+                object obj = ResourceManager.GetObject("g2p-th", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] g2p_uk {
+            get {
+                object obj = ResourceManager.GetObject("g2p-uk", resourceCulture);
                 return ((byte[])(obj));
             }
         }

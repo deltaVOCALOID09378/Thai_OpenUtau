@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OpenUtau.App.ViewModels"
+             mc:Ignorable="d"
+             x:Class="OpenUtau.App.Controls.TrackColorPickerControl"
+             x:Name="Root">
+  <UserControl.Styles>
+    <Style Selector="Border.trackColorSwatch">
+      <Setter Property="Width" Value="22"/>
+      <Setter Property="Height" Value="22"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="Padding" Value="1"/>
+      <Setter Property="CornerRadius" Value="11"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Border.trackColorSwatch:pointerover:not(.create)">
+      <Setter Property="Background" Value="{DynamicResource AppTopBarTransportHoverBrush}"/>
+    </Style>
+    <Style Selector="Border.trackColorSwatch.selected:not(:pointerover)">
+      <Setter Property="Background" Value="{DynamicResource TransportToolbarOffHoverBrush}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ItemsControl Name="ItemsHost" Background="Transparent">
+    <ItemsControl.ItemsPanel>
+      <ItemsPanelTemplate>
+        <WrapPanel Orientation="Horizontal"/>
+      </ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>
+    <ItemsControl.ItemTemplate>
+      <DataTemplate x:DataType="vm:TrackColorPickerItemViewModel">
+        <Border Classes="trackColorSwatch"
+                Classes.custom="{Binding IsCustom}"
+                Classes.create="{Binding IsCreateTile}"
+                Classes.selected="{Binding IsSelected}"
+                ToolTip.Tip="{Binding ToolTipName}"
+                PointerPressed="OnSwatchPointerPressed">
+          <Border.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="{DynamicResource prefs.appearance.customtrackcolor.edit}"
+                        IsVisible="{Binding IsCustom}"
+                        Click="OnContextEditClick"/>
+              <MenuItem Header="{DynamicResource menu.edit.delete}"
+                        IsVisible="{Binding IsCustom}"
+                        Click="OnContextDeleteClick"/>
+            </ContextMenu>
+          </Border.ContextMenu>
+          <Grid>
+            <Panel IsVisible="{Binding !IsCreateTile}">
+              <Ellipse Width="16" Height="16"
+                       Fill="{Binding Color.AccentColor}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              <Ellipse Width="20" Height="20"
+                       Fill="Transparent" Stroke="White" StrokeThickness="2"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       IsVisible="{Binding IsSelected}"/>
+            </Panel>
+            <Panel IsVisible="{Binding IsCreateTile}">
+              <Path Width="14" Height="14"
+                    Margin="-4,-4,0,0"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Fill="{DynamicResource MutedIconBrush}"
+                    Data="M8.43 3.33 a0.38 0.38 0 0 0 -0.38 0.38 v4.35 H3.7 a0.38 0.38 0 0 0 -0.38 0.38 v1.13 c0 0.23 0.19 0.38 0.38 0.38 h4.35 v4.35 c0 0.23 0.19 0.38 0.38 0.38 h1.13 a0.38 0.38 0 0 0 0.38 -0.38 V9.97 h4.35 a0.38 0.38 0 0 0 0.38 -0.38 v-1.13 a0.38 0.38 0 0 0 -0.38 -0.38 H9.97 V3.7 a0.38 0.38 0 0 0 -0.38 -0.38 h-1.13 z"/>
+            </Panel>
+          </Grid>
+        </Border>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
+</UserControl>

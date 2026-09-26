@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -13,25 +12,27 @@ using Avalonia.Styling;
 using OpenUtau.Api;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
+using OpenUtau.Core.DiffSinger;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 
-namespace OpenUtau.App.ViewModels {
-    public class TrackHeaderViewModel : ViewModelBase, IActivatableViewModel {
+namespace OpenUtau.App.ViewModels
+{
+    public class TrackHeaderViewModel : ViewModelBase, IActivatableViewModel
+    {
         public int TrackNo => track.TrackNo + 1;
         public USinger Singer => track.Singer;
         public Phonemizer Phonemizer => track.Phonemizer;
         public string PhonemizerTag => track.Phonemizer.Tag;
-        public Core.Render.IRenderer Renderer => track.RendererSettings.Renderer;
         public IReadOnlyList<MenuItemViewModel>? SingerMenuItems { get; set; }
         public ReactiveCommand<USinger, Unit> SelectSingerCommand { get; }
+        public ReactiveCommand<USinger?, Unit> AllSetSingerCommand { get; }
         public IReadOnlyList<MenuItemViewModel>? PhonemizerMenuItems { get; set; }
         public ReactiveCommand<PhonemizerFactory, Unit> SelectPhonemizerCommand { get; }
-        public IReadOnlyList<MenuItemViewModel>? RenderersMenuItems { get; set; }
-        public ReactiveCommand<string, Unit> SelectRendererCommand { get; }
+        public ReactiveCommand<PhonemizerFactory, Unit> AllSetPhonemizerCommand { get; }
         [Reactive] public string TrackName { get; set; } = string.Empty;
         [Reactive] public SolidColorBrush TrackAccentColor { get; set; } = ThemeManager.GetTrackColor("Blue").AccentColor;
         [Reactive] public TrackColor TrackColor { get; set; } = ThemeManager.GetTrackColor("Blue");
@@ -40,74 +41,88 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public bool Mute { get; set; }
         [Reactive] public bool Muted { get; set; }
         [Reactive] public bool Solo { get; set; }
+        [Reactive] public bool IsSelected { get; set; }
+        [Reactive] public bool IsOpenInPianoRoll { get; set; }
         [Reactive] public Bitmap? Avatar { get; set; }
+        [Reactive] public bool IsSingerVisible { get; set; }
+        [Reactive] public bool IsPhonemizerVisible { get; set; }
+        [Reactive] public bool IsTrackSettingsVisible { get; set; }
+        [Reactive] public bool MixFxEnabled { get; set; }
+        [Reactive] public IBrush HeaderBorderBrush { get; set; } = ThemeManager.NeutralAccentBrushSemi;
+        [Reactive] public IBrush HeaderBackgroundBrush { get; set; } = Brushes.Transparent;
 
         public ViewModelActivator Activator { get; }
 
         private readonly UTrack track;
-
         // Parameterless constructor for Avalonia preview only.
-        public TrackHeaderViewModel() {
+        public TrackHeaderViewModel()
+        {
             SelectSingerCommand = ReactiveCommand.Create<USinger>(_ => { });
+            AllSetSingerCommand = ReactiveCommand.Create<USinger?>(_ => { });
             SelectPhonemizerCommand = ReactiveCommand.Create<PhonemizerFactory>(_ => { });
-            SelectRendererCommand = ReactiveCommand.Create<string>(_ => { });
+            AllSetPhonemizerCommand = ReactiveCommand.Create<PhonemizerFactory>(_ => { });
             Activator = new ViewModelActivator();
             track = new UTrack(DocManager.Inst.Project);
+            SubscribeSelectionStyle();
+            RefreshSelectionStyle();
         }
 
-        public TrackHeaderViewModel(UTrack track) {
+        public TrackHeaderViewModel(UTrack track)
+        {
             this.track = track;
-            SelectSingerCommand = ReactiveCommand.Create<USinger>(singer => {
-                if (track.Singer != singer) {
-                    DocManager.Inst.StartUndoGroup();
-                    Log.Information($"Loading Singer: {singer.Name}");
-                    DocManager.Inst.ExecuteCmd(new TrackChangeSingerCommand(DocManager.Inst.Project, track, singer));
-                    if (!string.IsNullOrEmpty(singer?.Id) &&
-                        Preferences.Default.SingerPhonemizers.TryGetValue(Singer.Id, out var phonemizerName) &&
-                        TryChangePhonemizer(phonemizerName)) {
-                    } else if (!string.IsNullOrEmpty(singer?.DefaultPhonemizer)) {
-                        TryChangePhonemizer(singer.DefaultPhonemizer);
-                    }
-                    if (singer == null || !singer.Found) {
-                        var settings = new URenderSettings();
-                        DocManager.Inst.ExecuteCmd(new TrackChangeRenderSettingCommand(DocManager.Inst.Project, track, settings));
-                    } else if (singer.SingerType != track.RendererSettings.Renderer?.SingerType) {
-                        var settings = new URenderSettings {
-                            renderer = Core.Render.Renderers.GetDefaultRenderer(singer.SingerType),
-                        };
-                        DocManager.Inst.ExecuteCmd(new TrackChangeRenderSettingCommand(DocManager.Inst.Project, track, settings));
-                    }
+            SelectSingerCommand = ReactiveCommand.Create<USinger>(singer =>
+            {
+                if (track.Singer != singer)
+                {
+                    DocManager.Inst.StartUndoGroup("command.track.singer");
+                    ApplySingerToTrack(track, singer);
                     DocManager.Inst.ExecuteCmd(new VoiceColorRemappingNotification(track.TrackNo, true));
                     DocManager.Inst.EndUndoGroup();
-                    if (!string.IsNullOrEmpty(singer?.Id) && singer.Found) {
-                        Preferences.Default.RecentSingers.Remove(singer.Id);
-                        Preferences.Default.RecentSingers.Insert(0, singer.Id);
-                        if (Preferences.Default.RecentSingers.Count > 16) {
-                            Preferences.Default.RecentSingers.RemoveRange(
-                                16, Preferences.Default.RecentSingers.Count - 16);
-                        }
-                    }
+                    UpdateRecentSingers(singer);
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PianorollRefreshEvent("Part"));
                 }
+                MessageBus.Current.SendMessage(new TracksRefreshEvent());
                 this.RaisePropertyChanged(nameof(Singer));
-                this.RaisePropertyChanged(nameof(Renderer));
                 RefreshAvatar();
+                UpdateTrackSettingsVisibility();
             });
-            SelectPhonemizerCommand = ReactiveCommand.Create<PhonemizerFactory>(factory => {
-                if (track.Phonemizer.GetType() != factory.type) {
-                    DocManager.Inst.StartUndoGroup();
+            AllSetSingerCommand = ReactiveCommand.Create<USinger?>(singer =>
+            {
+                var targetTracks = GetBatchTargetTracks();
+                DocManager.Inst.StartUndoGroup("command.track.singer");
+                foreach (var targetTrack in targetTracks)
+                {
+                    ApplySingerToTrack(targetTrack, singer);
+                }
+                DocManager.Inst.ExecuteCmd(new VoiceColorRemappingNotification(-1, true));
+                DocManager.Inst.EndUndoGroup();
+                UpdateRecentSingers(singer);
+                Preferences.Save();
+                MessageBus.Current.SendMessage(new PianorollRefreshEvent("Part"));
+                MessageBus.Current.SendMessage(new TracksRefreshEvent());
+                this.RaisePropertyChanged(nameof(Singer));
+                RefreshAvatar();
+                UpdateTrackSettingsVisibility();
+            });
+            SelectPhonemizerCommand = ReactiveCommand.Create<PhonemizerFactory>(factory =>
+            {
+                if (track.Phonemizer.GetType() != factory.type)
+                {
+                    DocManager.Inst.StartUndoGroup("command.track.setting");
                     var phonemizer = factory.Create();
                     Log.Information($"Loading Phonemizer: {phonemizer.ToString()}");
                     DocManager.Inst.ExecuteCmd(new TrackChangePhonemizerCommand(DocManager.Inst.Project, track, phonemizer));
                     DocManager.Inst.EndUndoGroup();
                     var name = phonemizer.GetType().FullName!;
-                    if (!string.IsNullOrEmpty(Singer?.Id) && phonemizer != null) {
+                    if (!string.IsNullOrEmpty(Singer?.Id) && phonemizer != null)
+                    {
                         Preferences.Default.SingerPhonemizers[Singer.Id] = name;
                     }
                     Preferences.Default.RecentPhonemizers.Remove(name);
                     Preferences.Default.RecentPhonemizers.Insert(0, name);
-                    while (Preferences.Default.RecentPhonemizers.Count > 8) {
+                    while (Preferences.Default.RecentPhonemizers.Count > 8)
+                    {
                         Preferences.Default.RecentPhonemizers.RemoveRange(
                             8, Preferences.Default.RecentPhonemizers.Count - 8);
                     }
@@ -116,25 +131,43 @@ namespace OpenUtau.App.ViewModels {
                 this.RaisePropertyChanged(nameof(Phonemizer));
                 this.RaisePropertyChanged(nameof(PhonemizerTag));
             });
-            SelectRendererCommand = ReactiveCommand.Create<string>(name => {
-                var settings = new URenderSettings {
-                    renderer = name,
-                };
-                DocManager.Inst.StartUndoGroup();
-                DocManager.Inst.ExecuteCmd(new TrackChangeRenderSettingCommand(DocManager.Inst.Project, track, settings));
+            AllSetPhonemizerCommand = ReactiveCommand.Create<PhonemizerFactory>(factory =>
+            {
+                if (factory == null)
+                {
+                    return;
+                }
+                var name = factory.type.FullName!;
+                Log.Information($"Loading Phonemizer: {factory}");
+                var targetTracks = GetBatchTargetTracks();
+                DocManager.Inst.StartUndoGroup("command.track.setting");
+                foreach (var targetTrack in targetTracks)
+                {
+                    if (!IsPhonemizerAllowedForTrack(factory, targetTrack))
+                    {
+                        continue;
+                    }
+                    var phonemizer = factory.Create();
+                    if (phonemizer != null)
+                    {
+                        DocManager.Inst.ExecuteCmd(new TrackChangePhonemizerCommand(DocManager.Inst.Project, targetTrack, phonemizer));
+                    }
+                    var targetSingerId = targetTrack.Singer?.Id;
+                    if (!string.IsNullOrEmpty(targetSingerId) && targetTrack.Singer?.Found == true && phonemizer != null)
+                    {
+                        Preferences.Default.SingerPhonemizers[targetSingerId] = name;
+                    }
+                }
+                Preferences.Default.RecentPhonemizers.Remove(name);
+                Preferences.Default.RecentPhonemizers.Insert(0, name);
                 DocManager.Inst.EndUndoGroup();
-                this.RaisePropertyChanged(nameof(Renderer));
+                Preferences.Save();
+                MessageBus.Current.SendMessage(new PianorollRefreshEvent("Part"));
+                MessageBus.Current.SendMessage(new TracksRefreshEvent());
+                this.RaisePropertyChanged(nameof(Phonemizer));
+                this.RaisePropertyChanged(nameof(PhonemizerTag));
             });
-
             Activator = new ViewModelActivator();
-            this.WhenActivated((CompositeDisposable disposables) => {
-                Disposable.Create(() => {
-                    MessageBus.Current.Listen<TracksRefreshEvent>()
-                        .Subscribe(_ => {
-                            ManuallyRaise();
-                        }).DisposeWith(disposables);
-                });
-            });
 
             TrackName = track.TrackName;
             TrackAccentColor = ThemeManager.GetTrackColor(track.TrackColor).AccentColor;
@@ -146,214 +179,442 @@ namespace OpenUtau.App.ViewModels {
             Mute = track.Mute;
             Muted = track.Muted;
             Solo = track.Solo;
+            MixFxEnabled = track.MixFx?.Enabled ?? false;
             this.WhenAnyValue(x => x.Volume)
-                .Subscribe(volume => {
+                .Subscribe(volume =>
+                {
                     track.Volume = volume;
                     DocManager.Inst.ExecuteCmd(new VolumeChangeNotification(track.TrackNo, Muted ? -24 : volume));
                 });
             this.WhenAnyValue(x => x.Pan)
-                .Subscribe(pan => {
+                .Subscribe(pan =>
+                {
                     track.Pan = pan;
                     DocManager.Inst.ExecuteCmd(new PanChangeNotification(track.TrackNo, pan));
                 });
             this.WhenAnyValue(x => x.Mute)
-                .Subscribe(mute => {
+                .Subscribe(mute =>
+                {
                     track.Mute = mute;
                 });
             this.WhenAnyValue(x => x.Muted)
-                .Subscribe(muted => {
+                .Subscribe(muted =>
+                {
                     track.Muted = muted;
                     DocManager.Inst.ExecuteCmd(new VolumeChangeNotification(track.TrackNo, muted ? -24 : Volume));
                 });
             this.WhenAnyValue(x => x.Solo)
-                .Subscribe(solo => {
+                .Subscribe(solo =>
+                {
                     track.Solo = solo;
                 });
+            this.WhenAnyValue(x => x.MixFxEnabled)
+                .Subscribe(enabled =>
+                {
+                    if (track.MixFx != null)
+                    {
+                        track.MixFx.Enabled = enabled;
+                    }
+                    else if (enabled)
+                    {
+                        track.MixFx = new UMixFx { Enabled = true };
+                    }
+                });
+            SubscribeSelectionStyle();
 
             RefreshAvatar();
+            RefreshSelectionStyle();
+            UpdateTrackSettingsVisibility();
         }
 
-        public void ToggleSolo() {
+        void SubscribeSelectionStyle()
+        {
+            this.WhenAnyValue(x => x.IsOpenInPianoRoll)
+                .Subscribe(_ => RefreshSelectionStyle());
+            MessageBus.Current.Listen<ThemeChangedEvent>()
+                .Subscribe(_ => RefreshSelectionStyle());
+            MessageBus.Current.Listen<PianoRollOpenPartChangedEvent>()
+                .Subscribe(e => IsOpenInPianoRoll = e.Part?.trackNo == track.TrackNo);
+        }
+
+        public void RefreshSelectionStyle()
+        {
+            HeaderBackgroundBrush = IsOpenInPianoRoll
+                ? ThemeManager.TrackBackgroundAltBrush
+                : ThemeManager.WorkspaceCardBrush;
+        }
+
+        public void ToggleSolo()
+        {
             MessageBus.Current.SendMessage(new TracksSoloEvent(track.TrackNo, !track.Solo, false));
         }
 
-        public void SoloAdditionally() {
+        public void SoloAdditionally()
+        {
             MessageBus.Current.SendMessage(new TracksSoloEvent(track.TrackNo, !track.Solo, true));
         }
 
-        public void UnsoloAll() {
+        public void UnsoloAll()
+        {
             MessageBus.Current.SendMessage(new TracksSoloEvent(-1, false, false));
         }
 
-        public void ToggleMute() {
-            if (!Mute) {
+        public void ToggleMute()
+        {
+            if (!Mute)
+            {
                 Mute = true;
-            } else {
-                Mute = false;
             }
-            this.RaisePropertyChanged(nameof(Mute));
-            JudgeMuted();
-        }
-        public void ToggleMute(bool mute) {
-            if (mute) {
-                Mute = true;
-            } else {
+            else
+            {
                 Mute = false;
             }
             this.RaisePropertyChanged(nameof(Mute));
             JudgeMuted();
         }
 
-        public void MuteOnly() {
+        public void ToggleMute(bool mute)
+        {
+            if (mute)
+            {
+                Mute = true;
+            }
+            else
+            {
+                Mute = false;
+            }
+            this.RaisePropertyChanged(nameof(Mute));
+            JudgeMuted();
+        }
+
+        public void MuteOnly()
+        {
             MessageBus.Current.SendMessage(new TracksMuteEvent(-1, false));
             ToggleMute();
         }
 
-        public void MuteAllOthers() {
+        public void MuteAllOthers()
+        {
             MessageBus.Current.SendMessage(new TracksMuteEvent(-1, true));
             ToggleMute();
         }
 
-        public void UnmuteAll() {
+        public void UnmuteAll()
+        {
             MessageBus.Current.SendMessage(new TracksMuteEvent(-1, false));
         }
 
-        public void JudgeMuted() {
-            if (Solo) {
+        public void JudgeMuted()
+        {
+            if (Solo)
+            {
                 Muted = false;
-            } else if (Mute) {
+            }
+            else if (Mute)
+            {
                 Muted = true;
-            } else if (DocManager.Inst.Project.SoloTrackExist) {
+            }
+            else if (DocManager.Inst.Project.SoloTrackExist)
+            {
                 Muted = true;
-            } else {
+            }
+            else
+            {
                 Muted = false;
             }
             this.RaisePropertyChanged(nameof(Muted));
         }
 
-        private bool TryChangePhonemizer(string phonemizerName) {
-            try {
-                var factory = DocManager.Inst.PhonemizerFactories.FirstOrDefault(factory => factory.type.FullName == phonemizerName);
+        static bool IsTrackSelected(UTrack projectTrack)
+        {
+            var tracksViewModel = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
+                ?.MainWindow?.DataContext as MainWindowViewModel;
+            return tracksViewModel?.TracksViewModel.SelectedTracks.Contains(projectTrack) == true;
+        }
+
+        List<UTrack> GetBatchTargetTracks()
+        {
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count <= 1)
+            {
+                targetTracks = DocManager.Inst.Project.tracks.ToList();
+            }
+            return targetTracks;
+        }
+
+        private void ApplySingerToTrack(UTrack targetTrack, USinger? singer)
+        {
+            if (singer is USinger selectedSinger)
+            {
+                Log.Information($"Loading Singer: {selectedSinger.Name}");
+                DocManager.Inst.ExecuteCmd(new TrackChangeSingerCommand(DocManager.Inst.Project, targetTrack, selectedSinger));
+                if (!string.IsNullOrEmpty(selectedSinger.Id) &&
+                    Preferences.Default.SingerPhonemizers.TryGetValue(selectedSinger.Id, out var phonemizerName) &&
+                    TryChangePhonemizer(targetTrack, phonemizerName))
+                {
+                }
+                else if (!string.IsNullOrEmpty(selectedSinger.DefaultPhonemizer))
+                {
+                    TryChangePhonemizer(targetTrack, selectedSinger.DefaultPhonemizer);
+                }
+                if (!selectedSinger.Found || selectedSinger.SingerType != targetTrack.RendererSettings.Renderer?.SingerType)
+                {
+                    var settings = new URenderSettings();
+                    if (selectedSinger.Found)
+                    {
+                        settings = new URenderSettings
+                        {
+                            renderer = Core.Render.Renderers.GetDefaultRenderer(selectedSinger.SingerType),
+                        };
+                    }
+                    DocManager.Inst.ExecuteCmd(new TrackChangeRenderSettingCommand(DocManager.Inst.Project, targetTrack, settings));
+                }
+            }
+            else
+            {
+                DocManager.Inst.ExecuteCmd(new TrackChangeSingerCommand(DocManager.Inst.Project, targetTrack, USinger.CreateMissing(string.Empty)));
+                var settings = new URenderSettings();
+                DocManager.Inst.ExecuteCmd(new TrackChangeRenderSettingCommand(DocManager.Inst.Project, targetTrack, settings));
+            }
+        }
+
+        private void UpdateRecentSingers(USinger? singer)
+        {
+            if (!string.IsNullOrEmpty(singer?.Id) && singer.Found)
+            {
+                Preferences.Default.RecentSingers.Remove(singer.Id);
+                Preferences.Default.RecentSingers.Insert(0, singer.Id);
+                if (Preferences.Default.RecentSingers.Count > 16)
+                {
+                    Preferences.Default.RecentSingers.RemoveRange(
+                        16, Preferences.Default.RecentSingers.Count - 16);
+                }
+            }
+        }
+
+        private SingerMenuItemViewModel CreateSingerMenuItem(USinger singer)
+        {
+            return new SingerMenuItemViewModel()
+            {
+                Header = singer.LocalizedName,
+                Command = SelectSingerCommand,
+                SecondaryCommand = AllSetSingerCommand,
+                CommandParameter = singer,
+            };
+        }
+
+        private bool TryChangePhonemizer(UTrack targetTrack, string phonemizerName)
+        {
+            try
+            {
+                var factory = FindPhonemizerByName(phonemizerName);
+                if (!IsPhonemizerAllowedForTrack(factory, targetTrack))
+                {
+                    factory = null;
+                }
+                factory ??= GetFallbackPhonemizerFactory(targetTrack);
                 var phonemizer = factory?.Create();
-                if (phonemizer != null) {
-                    DocManager.Inst.ExecuteCmd(new TrackChangePhonemizerCommand(DocManager.Inst.Project, track, phonemizer));
+                if (phonemizer != null)
+                {
+                    DocManager.Inst.ExecuteCmd(new TrackChangePhonemizerCommand(DocManager.Inst.Project, targetTrack, phonemizer));
                     return true;
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Log.Error(e, $"Failed to load phonemizer {phonemizerName}");
             }
             return false;
         }
 
-        public void RefreshSingers() {
+        static bool IsDiffSingerTrack(UTrack targetTrack)
+        {
+            return targetTrack.Singer != null
+                && targetTrack.Singer.Found
+                && targetTrack.Singer.SingerType == USingerType.DiffSinger;
+        }
+
+        static bool IsPhonemizerAllowedForTrack(PhonemizerFactory? factory, UTrack targetTrack)
+        {
+            if (factory == null)
+            {
+                return false;
+            }
+            if (!IsDiffSingerTrack(targetTrack))
+            {
+                return !PhonemizerFactory.IsDiffSingerPhonemizer(factory);
+            }
+            return PhonemizerFactory.IsDiffSingerPhonemizer(factory);
+        }
+
+        static PhonemizerFactory? GetFallbackPhonemizerFactory(UTrack targetTrack)
+        {
+            if (!IsDiffSingerTrack(targetTrack))
+            {
+                return null;
+            }
+            if (!string.IsNullOrEmpty(targetTrack.Singer.DefaultPhonemizer))
+            {
+                var singerDefault = PhonemizerFactory.Get(targetTrack.Singer.DefaultPhonemizer);
+                if (singerDefault != null && PhonemizerFactory.IsDiffSingerPhonemizer(singerDefault))
+                {
+                    return singerDefault;
+                }
+            }
+            return PhonemizerFactory.Get(typeof(DiffSingerPhonemizer));
+        }
+
+        static MenuSeparatorViewModel SingerMenuSeparator() => new();
+
+        static MenuItemViewModel MenuLineSeparator() => new PhonemizerMenuSeparatorViewModel();
+
+        public void RefreshSingers()
+        {
             var items = new List<MenuItemViewModel>();
-            if (SingerManager.Inst.Singers.Count > 0) {
-                items.AddRange(Preferences.Default.RecentSingers
-                .Select(id => SingerManager.Inst.Singers.Values.FirstOrDefault(singer => singer.Id == id))
-                .OfType<USinger>()
-                .Select(singer => new SingerMenuItemViewModel() {
-                    Header = singer.LocalizedName,
-                    Command = SelectSingerCommand,
-                    CommandParameter = singer,
-                }));
-                items.Add(new SingerMenuItemViewModel() {
+            var groupItems = new List<MenuItemViewModel>();
+            if (SingerManager.Inst.Singers.Count > 0)
+            {
+                var recentItems = Preferences.Default.RecentSingers
+                    .Select(id => SingerManager.Inst.Singers.Values.FirstOrDefault(singer => singer.Id == id))
+                    .OfType<USinger>()
+                    .Select(CreateSingerMenuItem)
+                    .ToList();
+                items.AddRange(recentItems);
+
+                groupItems.Add(new MenuItemViewModel()
+                {
                     Header = ThemeManager.GetString("tracks.favorite") + " ...",
                     Items = Preferences.Default.FavoriteSingers
                         .Select(id => SingerManager.Inst.Singers.Values.FirstOrDefault(singer => singer.Id == id))
                         .OfType<USinger>()
                         .LocalizedOrderBy(singer => singer.LocalizedName)
-                        .Select(singer => new SingerMenuItemViewModel() {
-                            Header = singer.LocalizedName,
-                            Command = SelectSingerCommand,
-                            CommandParameter = singer,
-                        }).ToArray(),
+                        .Select(CreateSingerMenuItem).ToArray(),
                 });
                 var keys = SingerManager.Inst.SingerGroups.Keys.OrderBy(k => k);
-                foreach (var key in keys) {
-                    items.Add(new SingerMenuItemViewModel() {
+                foreach (var key in keys)
+                {
+                    groupItems.Add(new MenuItemViewModel()
+                    {
                         Header = $"{key} ...",
                         Items = SingerManager.Inst.SingerGroups[key]
-                            .Select(singer => new SingerMenuItemViewModel() {
-                                Header = singer.LocalizedName,
-                                Command = SelectSingerCommand,
-                                CommandParameter = singer,
-                            }).ToArray(),
+                            .Select(CreateSingerMenuItem).ToArray(),
                     });
                 }
-            } else {
-                items.Add(new MenuItemViewModel() {
+
+                if (groupItems.Count > 0)
+                {
+                    if (items.Count > 0)
+                    {
+                        items.Add(SingerMenuSeparator());
+                    }
+                    items.AddRange(groupItems);
+                }
+            }
+            else
+            {
+                items.Add(new MenuItemViewModel()
+                {
                     Header = ThemeManager.GetString("tracks.nosinger"),
                     IsEnabled = false
                 });
             }
 
-            items.Add(new MenuItemViewModel() { // Separator
-                Header = "-",
-                Height = 1
-            });
-            items.Add(new MenuItemViewModel() {
+            if (items.Count > 0)
+            {
+                items.Add(SingerMenuSeparator());
+            }
+            items.Add(new MenuItemViewModel()
+            {
                 Header = ThemeManager.GetString("tracks.installsinger"),
-                Command = ReactiveCommand.Create(async () => {
+                Command = ReactiveCommand.Create(async () =>
+                {
                     var mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
                         ?.MainWindow as MainWindow;
-                    if(mainWindow == null){
+                    if (mainWindow == null)
+                    {
                         return;
                     }
                     var file = await FilePicker.OpenFileAboutSinger(
                         mainWindow, "menu.tools.singer.install", FilePicker.ArchiveFiles);
-                    if (file == null) {
+                    if (file == null)
+                    {
                         return;
                     }
-                    try {
-                        if (file.EndsWith(Core.Vogen.VogenSingerInstaller.FileExt)) {
+                    try
+                    {
+                        if (file.EndsWith(Core.Vogen.VogenSingerInstaller.FileExt))
+                        {
                             Core.Vogen.VogenSingerInstaller.Install(file);
                             return;
                         }
-                        if (file.EndsWith(DependencyInstaller.FileExt)) {
-                            DependencyInstaller.Install(file);
+                        if (file.EndsWith(PackageManager.OudepExt))
+                        {
+                            await PackageManager.Inst.InstallFromFileAsync(file);
                             return;
                         }
 
-                        var setup = new SingerSetupDialog() {
-                            DataContext = new SingerSetupViewModel() {
+                        var setup = new SingerSetupDialog()
+                        {
+                            DataContext = new SingerSetupViewModel()
+                            {
                                 ArchiveFilePath = file,
                             },
                         };
                         _ = setup.ShowDialog(mainWindow);
-                        if (setup.Position.Y < 0) {
+                        if (setup.Position.Y < 0)
+                        {
                             setup.Position = setup.Position.WithY(0);
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         Log.Error(e, $"Failed to install singer {file}");
                         _ = await MessageBox.ShowError(mainWindow, new MessageCustomizableException($"Failed to install singer {file}", $"<translate:errors.failed.installsinger>: {file}", e));
                     }
                 })
             });
-            items.Add(new MenuItemViewModel() {
+            items.Add(new MenuItemViewModel()
+            {
                 Header = ThemeManager.GetString("tracks.opensingers"),
-                Command = ReactiveCommand.Create(() => {
-                    try {
+                Command = ReactiveCommand.Create(() =>
+                {
+                    try
+                    {
                         OS.OpenFolder(PathManager.Inst.SingersPath);
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
                     }
                 })
             });
-            if (!string.IsNullOrWhiteSpace(PathManager.Inst.AdditionalSingersPath) && Directory.Exists(PathManager.Inst.AdditionalSingersPath)) {
-                items.Add(new MenuItemViewModel() {
+            if (!string.IsNullOrWhiteSpace(PathManager.Inst.AdditionalSingersPath) && Directory.Exists(PathManager.Inst.AdditionalSingersPath))
+            {
+                items.Add(new MenuItemViewModel()
+                {
                     Header = ThemeManager.GetString("tracks.openaddsingers"),
-                    Command = ReactiveCommand.Create(() => {
-                        try {
+                    Command = ReactiveCommand.Create(() =>
+                    {
+                        try
+                        {
                             OS.OpenFolder(PathManager.Inst.AdditionalSingersPath);
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e)
+                        {
                             DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
                         }
                     })
                 });
             }
-            items.Add(new MenuItemViewModel() {
+            items.Add(SingerMenuSeparator());
+            items.Add(new MenuItemViewModel()
+            {
                 Header = ThemeManager.GetString("singers.refresh"),
-                Command = ReactiveCommand.Create(() => {
+                Command = ReactiveCommand.Create(() =>
+                {
                     DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(MainWindow), true, "singer"));
                     SingerManager.Inst.SearchAllSingers();
                     DocManager.Inst.ExecuteCmd(new SingersRefreshedNotification());
@@ -365,207 +626,481 @@ namespace OpenUtau.App.ViewModels {
             this.RaisePropertyChanged(nameof(SingerMenuItems));
         }
 
-        public string GetPhonemizerGroupHeader(string key){
-            if(key is null){
+        public string GetPhonemizerGroupHeader(string key)
+        {
+            if (key is null)
+            {
                 return "General";
             }
-            if(ThemeManager.TryGetString($"languages.{key.ToLowerInvariant()}", out var value)){
+            if (ThemeManager.TryGetString($"languages.{key.ToLowerInvariant()}", out var value))
+            {
                 return $"{key}: {value}";
             }
             return key;
         }
 
-        PhonemizerFactory? FindPhonemizerByName(string name){
-            return DocManager.Inst.PhonemizerFactories.FirstOrDefault(
-                factory => factory.type.FullName == name);
+        PhonemizerFactory? FindPhonemizerByName(string name)
+        {
+            return PhonemizerFactory.Get(name);
         }
 
-        public void RefreshPhonemizers() {
+        public void RefreshPhonemizers()
+        {
             var items = new List<MenuItemViewModel>();
+            var available = PhonemizerFactory.EnumerateForSinger(track.Singer).ToArray();
+            var availableTypes = available.Select(factory => factory.type).ToHashSet();
+            bool isDiffSinger = IsDiffSingerTrack(track);
             //Singer default
-            if (track != null && track.Singer != null && track.Singer.Found){
+            if (track.Singer != null && track.Singer.Found)
+            {
                 var factory = FindPhonemizerByName(track.Singer.DefaultPhonemizer);
-                if(factory != null){
-                    items.Add(new MenuItemViewModel() {
-                        Header = ThemeManager.GetString("tracks.singerdefault") + factory.ToString(),
-                        Command = SelectPhonemizerCommand,
-                        CommandParameter = factory,
-                    });
+                if (factory != null && availableTypes.Contains(factory.type))
+                {
+                    items.Add(new PhonemizerMenuItemViewModel(
+                        factory,
+                        SelectPhonemizerCommand,
+                        ThemeManager.GetString("tracks.singerdefault"),
+                        AllSetPhonemizerCommand));
                 }
             }
             //Recently used phonemizers
-            items.AddRange(Preferences.Default.RecentPhonemizers
+            var recentItems = Preferences.Default.RecentPhonemizers
                 .Select(name => FindPhonemizerByName(name))
-                .OfType<PhonemizerFactory>()
-                .OrderBy(factory => factory.tag)
-                .Select(factory => new MenuItemViewModel() {
-                    Header = factory.ToString(),
-                    Command = SelectPhonemizerCommand,
-                    CommandParameter = factory,
-                }));
-            //more phonemizers grouped by singing language
-            items.Add(new MenuItemViewModel() {
-                Header = $"{ThemeManager.GetString("tracks.more")} ...",
-                Items = DocManager.Inst.PhonemizerFactories.GroupBy(factory => factory.language)
-                .OrderBy(group => group.Key)
-                .Select(group => new MenuItemViewModel() {
-                    Header = GetPhonemizerGroupHeader(group.Key),
-                    Items = group.Select(factory => new MenuItemViewModel() {
-                        Header = factory.ToString(),
-                        Command = SelectPhonemizerCommand,
-                        CommandParameter = factory,
-                    }).ToArray(),
-                }).ToArray()
-            });
+                .Where(factory => factory != null && availableTypes.Contains(factory.type))
+                .OrderBy(factory => factory!.tag)
+                .Select(factory => new PhonemizerMenuItemViewModel(factory!, SelectPhonemizerCommand, null, AllSetPhonemizerCommand))
+                .ToArray();
+            items.AddRange(recentItems);
+            if (isDiffSinger)
+            {
+                var listed = items
+                    .Select(item => item.CommandParameter)
+                    .OfType<PhonemizerFactory>()
+                    .Select(factory => factory.type)
+                    .ToHashSet();
+                var remaining = available
+                    .Where(factory => !listed.Contains(factory.type))
+                    .OrderBy(factory => factory.tag)
+                    .ThenBy(factory => factory.name)
+                    .Select(factory => new PhonemizerMenuItemViewModel(factory, SelectPhonemizerCommand, null, AllSetPhonemizerCommand))
+                    .ToArray();
+                if (remaining.Length > 0 && items.Count > 0)
+                {
+                    items.Add(MenuLineSeparator());
+                }
+                items.AddRange(remaining);
+            }
+            else
+            {
+                //more phonemizers grouped by singing language
+                if (items.Count > 0)
+                {
+                    items.Add(MenuLineSeparator());
+                }
+                items.Add(new MenuItemViewModel()
+                {
+                    Header = $"{ThemeManager.GetString("tracks.more")} ...",
+                    Items = available.GroupBy(factory => factory.language)
+                    .OrderBy(group => group.Key)
+                    .Select(group => new MenuItemViewModel()
+                    {
+                        Header = GetPhonemizerGroupHeader(group.Key),
+                        Items = group.Select(factory => new PhonemizerMenuItemViewModel(factory, SelectPhonemizerCommand, null, AllSetPhonemizerCommand)).ToArray(),
+                    }).ToArray()
+                });
+            }
             PhonemizerMenuItems = items.ToArray();
             this.RaisePropertyChanged(nameof(PhonemizerMenuItems));
         }
 
-        public void RefreshRenderers() {
-            var items = new List<MenuItemViewModel>();
-            if (track != null && track.Singer != null && track.Singer.Found) {
-                items.AddRange(Core.Render.Renderers.GetSupportedRenderers(track.Singer.SingerType)
-                    .Select(name => new MenuItemViewModel() {
-                        Header = name,
-                        Command = SelectRendererCommand,
-                        CommandParameter = name,
-                    }));
-            }
-            RenderersMenuItems = items.ToArray();
-            this.RaisePropertyChanged(nameof(RenderersMenuItems));
-        }
-
-        public void RefreshAvatar() {
+        public void RefreshAvatar()
+        {
             var singer = track?.Singer;
-            if (singer == null || singer.AvatarData == null) {
-                Avatar = null;
+            if (singer == null || singer.AvatarData == null)
+            {
+                Avatar = new RenderTargetBitmap(new PixelSize(1, 1));
                 return;
             }
-            try {
-                using (var stream = new MemoryStream(singer.AvatarData)) {
-                    Avatar = new Bitmap(stream);
-                }
-            } catch (Exception e) {
+            try
+            {
+                using var stream = new MemoryStream(singer.AvatarData);
+                Avatar = new Bitmap(stream).CreateScaledBitmap(new PixelSize(100, 100));
+            }
+            catch (Exception e)
+            {
                 Avatar = null;
                 Log.Error(e, "Failed to decode avatar.");
             }
         }
 
-        public void ManuallyRaise() {
+        void UpdateTrackSettingsVisibility()
+        {
+            IsTrackSettingsVisible = track.Singer is { Found: true, SingerType: USingerType.Classic };
+        }
+
+        public void ManuallyRaise()
+        {
+            TrackName = track.TrackName;
+            TrackAccentColor = ThemeManager.GetTrackColor(track.TrackColor).AccentColor;
+            TrackColor = Preferences.Default.UseTrackColor
+                ? ThemeManager.GetTrackColor(track.TrackColor)
+                : ThemeManager.GetTrackColor("Blue");
+            Mute = track.Mute;
+            Muted = track.Muted;
+            Solo = track.Solo;
+            Volume = track.Volume;
+            Pan = track.Pan;
+            RefreshSelectionStyle();
             this.RaisePropertyChanged(nameof(Singer));
             this.RaisePropertyChanged(nameof(TrackNo));
+            this.RaisePropertyChanged(nameof(TrackName));
+            this.RaisePropertyChanged(nameof(TrackAccentColor));
+            this.RaisePropertyChanged(nameof(TrackColor));
             this.RaisePropertyChanged(nameof(Phonemizer));
             this.RaisePropertyChanged(nameof(PhonemizerTag));
-            this.RaisePropertyChanged(nameof(Renderer));
+            UpdateTrackSettingsVisibility();
             this.RaisePropertyChanged(nameof(Mute));
             this.RaisePropertyChanged(nameof(Muted));
             this.RaisePropertyChanged(nameof(Solo));
+            MixFxEnabled = track.MixFx?.Enabled ?? false;
+            this.RaisePropertyChanged(nameof(MixFxEnabled));
             this.RaisePropertyChanged(nameof(Volume));
             this.RaisePropertyChanged(nameof(Pan));
             RefreshAvatar();
         }
 
-        public void Remove() {
-            DocManager.Inst.StartUndoGroup();
-            DocManager.Inst.ExecuteCmd(new RemoveTrackCommand(DocManager.Inst.Project, track));
+        public void Remove()
+        {
+            DocManager.Inst.StartUndoGroup("command.track.delete");
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count < 2)
+            {
+                targetTracks = new List<UTrack> { track };
+            }
+            foreach (var target in targetTracks)
+            {
+                DocManager.Inst.ExecuteCmd(new RemoveTrackCommand(DocManager.Inst.Project, target));
+            }
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void MoveUp() {
-            if (track == DocManager.Inst.Project.tracks.First()) {
+        public void MoveUp()
+        {
+            if (track == DocManager.Inst.Project.tracks.First())
+            {
                 return;
             }
-            DocManager.Inst.StartUndoGroup();
-            DocManager.Inst.ExecuteCmd(new MoveTrackCommand(DocManager.Inst.Project, track, true));
+            DocManager.Inst.StartUndoGroup("command.track.order");
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count < 2)
+            {
+                targetTracks = new List<UTrack> { track };
+            }
+            else
+            {
+                targetTracks = targetTracks
+                    .Where(target => target != DocManager.Inst.Project.tracks.First())
+                    .OrderBy(target => target.TrackNo)
+                    .ToList();
+            }
+            foreach (var target in targetTracks)
+            {
+                DocManager.Inst.ExecuteCmd(new MoveTrackCommand(DocManager.Inst.Project, target, true));
+            }
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void MoveDown() {
-            if (track == DocManager.Inst.Project.tracks.Last()) {
+        public void MoveDown()
+        {
+            if (track == DocManager.Inst.Project.tracks.Last())
+            {
                 return;
             }
-            DocManager.Inst.StartUndoGroup();
-            DocManager.Inst.ExecuteCmd(new MoveTrackCommand(DocManager.Inst.Project, track, false));
+            DocManager.Inst.StartUndoGroup("command.track.order");
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count < 2)
+            {
+                targetTracks = new List<UTrack> { track };
+            }
+            else
+            {
+                targetTracks = targetTracks
+                    .Where(target => target != DocManager.Inst.Project.tracks.Last())
+                    .OrderByDescending(target => target.TrackNo)
+                    .ToList();
+            }
+            foreach (var target in targetTracks)
+            {
+                DocManager.Inst.ExecuteCmd(new MoveTrackCommand(DocManager.Inst.Project, target, false));
+            }
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void Rename() {
+        public void Rename()
+        {
             var dialog = new TypeInDialog();
             dialog.Title = ThemeManager.GetString("tracks.rename");
             dialog.SetText(track.TrackName);
-            dialog.onFinish = name => {
-                if (!string.IsNullOrWhiteSpace(name) && name != track.TrackName) {
-                    DocManager.Inst.StartUndoGroup();
-                    this.TrackName = name;
-                    DocManager.Inst.ExecuteCmd(new RenameTrackCommand(DocManager.Inst.Project, track, name));
+            dialog.onFinish = name =>
+            {
+                if (!string.IsNullOrWhiteSpace(name) && name != track.TrackName)
+                {
+                    DocManager.Inst.StartUndoGroup("command.track.setting");
+                    var targetTracks = DocManager.Inst.Project.tracks
+                        .Where(projectTrack => projectTrack != null)
+                        .Where(IsTrackSelected)
+                        .ToList();
+                    if (targetTracks.Count < 2)
+                    {
+                        TrackName = name;
+                        DocManager.Inst.ExecuteCmd(new RenameTrackCommand(DocManager.Inst.Project, track, name));
+                    }
+                    else
+                    {
+                        for (int i = 0; i < targetTracks.Count; i++)
+                        {
+                            string batchName = $"{name}_{i:000}";
+                            DocManager.Inst.ExecuteCmd(new RenameTrackCommand(DocManager.Inst.Project, targetTracks[i], batchName));
+                        }
+                    }
                     DocManager.Inst.EndUndoGroup();
                 }
             };
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
                 dialog.ShowDialog(desktop.MainWindow);
             }
         }
 
-        public async void SelectTrackColor() {
-            var dialog = new TrackColorDialog();
-            dialog.DataContext = new TrackColorViewModel(track);
-            
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
+        public async void SelectTrackColor()
+        {
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count < 2)
+            {
+                targetTracks = new List<UTrack> { track };
+            }
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
+                || desktop.MainWindow == null)
+            {
+                return;
+            }
+            foreach (var target in targetTracks)
+            {
+                var dialog = new TrackColorDialog
+                {
+                    DataContext = new TrackColorViewModel(target),
+                };
                 await dialog.ShowDialog(desktop.MainWindow);
-                TrackAccentColor = ThemeManager.GetTrackColor(track.TrackColor).AccentColor;
-                TrackColor = Preferences.Default.UseTrackColor
+            }
+            TrackAccentColor = ThemeManager.GetTrackColor(track.TrackColor).AccentColor;
+            TrackColor = Preferences.Default.UseTrackColor
                 ? ThemeManager.GetTrackColor(track.TrackColor)
                 : ThemeManager.GetTrackColor("Blue");
-            }
+            RefreshSelectionStyle();
         }
 
-        public void Duplicate() {
-            DocManager.Inst.StartUndoGroup();
-            //TODO
-            var newTrack = new UTrack(track.TrackName + "_copy") {
-                TrackNo = track.TrackNo + 1,
-                Singer = track.Singer,
-                Phonemizer = track.Phonemizer,
-                RendererSettings = track.RendererSettings,
-                Mute = track.Mute,
-                Muted = track.Muted,
-                Solo = false,
-                Volume = track.Volume,
-                Pan = track.Pan,
-                TrackColor = track.TrackColor
-            };
-            DocManager.Inst.ExecuteCmd(new AddTrackCommand(DocManager.Inst.Project, newTrack));
-            var parts = DocManager.Inst.Project.parts
-                .Where(part => part.trackNo == track.TrackNo)
-                .Select(part => part.Clone()).ToList();
-            foreach (var part in parts) {
-                part.trackNo = newTrack.TrackNo;
-                DocManager.Inst.ExecuteCmd(new AddPartCommand(DocManager.Inst.Project, part));
+        public void Duplicate()
+        {
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count < 2)
+            {
+                targetTracks = new List<UTrack> { track };
+            }
+            else
+            {
+                targetTracks = targetTracks
+                    .OrderByDescending(target => target.TrackNo)
+                    .ToList();
+            }
+            DocManager.Inst.StartUndoGroup("command.track.duplicate");
+            foreach (var source in targetTracks)
+            {
+                var sourceTrackNo = source.TrackNo;
+                var newTrack = new UTrack(source.TrackName + "_copy")
+                {
+                    TrackNo = sourceTrackNo + 1,
+                    Singer = source.Singer,
+                    Phonemizer = source.Phonemizer,
+                    RendererSettings = source.RendererSettings,
+                    Mute = source.Mute,
+                    Muted = source.Muted,
+                    Solo = false,
+                    Volume = source.Volume,
+                    Pan = source.Pan,
+                    TrackColor = source.TrackColor,
+                    TrackExpressions = source.TrackExpressions.Select(exp => exp.Clone()).ToList(),
+                };
+                DocManager.Inst.ExecuteCmd(new AddTrackCommand(DocManager.Inst.Project, newTrack));
+                var parts = DocManager.Inst.Project.parts
+                    .Where(part => part.trackNo == sourceTrackNo)
+                    .Select(part => part.Clone()).ToList();
+                foreach (var part in parts)
+                {
+                    part.trackNo = newTrack.TrackNo;
+                    DocManager.Inst.ExecuteCmd(new AddPartCommand(DocManager.Inst.Project, part));
+                }
             }
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void DuplicateSettings() {
-            DocManager.Inst.StartUndoGroup();
-            //TODO
-            DocManager.Inst.ExecuteCmd(new AddTrackCommand(DocManager.Inst.Project, new UTrack(track.TrackName + "_copy") {
-                TrackNo = track.TrackNo + 1,
-                Singer = track.Singer,
-                Phonemizer = track.Phonemizer,
-                RendererSettings = track.RendererSettings,
-                Mute = track.Mute,
-                Muted = track.Muted,
-                Solo = false,
-                Volume = track.Volume,
-                Pan = track.Pan,
-                TrackColor = track.TrackColor
-            }));
+        public void DuplicateSettings()
+        {
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count < 2)
+            {
+                targetTracks = new List<UTrack> { track };
+            }
+            else
+            {
+                targetTracks = targetTracks
+                    .OrderByDescending(target => target.TrackNo)
+                    .ToList();
+            }
+            DocManager.Inst.StartUndoGroup("command.track.duplicate");
+            foreach (var source in targetTracks)
+            {
+                DocManager.Inst.ExecuteCmd(new AddTrackCommand(DocManager.Inst.Project, new UTrack(source.TrackName + "_copy")
+                {
+                    TrackNo = source.TrackNo + 1,
+                    Singer = source.Singer,
+                    Phonemizer = source.Phonemizer,
+                    RendererSettings = source.RendererSettings,
+                    Mute = source.Mute,
+                    Muted = source.Muted,
+                    Solo = false,
+                    Volume = source.Volume,
+                    Pan = source.Pan,
+                    TrackColor = source.TrackColor,
+                    TrackExpressions = source.TrackExpressions.Select(exp => exp.Clone()).ToList(),
+                }));
+            }
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void VoiceColorRemapping() {
-            if (track.Singer != null && track.Singer.Found && track.VoiceColorExp != null) {
-                DocManager.Inst.ExecuteCmd(new VoiceColorRemappingNotification(track.TrackNo, false));
+        public void StandardizeSettings()
+        {
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count <= 1)
+            {
+                targetTracks = DocManager.Inst.Project.tracks.ToList();
+            }
+            var phonemizerFactory = PhonemizerFactory.Get(track.Phonemizer.GetType());
+            DocManager.Inst.StartUndoGroup("command.track.setting");
+            foreach (var targetTrack in targetTracks)
+            {
+                if (targetTrack == track)
+                {
+                    continue;
+                }
+                if (track.Singer != targetTrack.Singer)
+                {
+                    ApplySingerToTrack(targetTrack, track.Singer);
+                }
+                if (targetTrack.Phonemizer.GetType() != track.Phonemizer.GetType())
+                {
+                    var phonemizer = phonemizerFactory?.Create();
+                    if (phonemizer != null && IsPhonemizerAllowedForTrack(phonemizerFactory, targetTrack))
+                    {
+                        DocManager.Inst.ExecuteCmd(new TrackChangePhonemizerCommand(DocManager.Inst.Project, targetTrack, phonemizer));
+                    }
+                }
+                DocManager.Inst.ExecuteCmd(new TrackChangeRenderSettingCommand(
+                    DocManager.Inst.Project,
+                    targetTrack,
+                    track.RendererSettings.Clone()));
+                DocManager.Inst.ExecuteCmd(new TrackChangeSettingsCommand(
+                    DocManager.Inst.Project,
+                    targetTrack,
+                    track.Mute,
+                    track.Volume,
+                    track.Pan));
+                DocManager.Inst.ExecuteCmd(new ChangeTrackColorCommand(
+                    DocManager.Inst.Project,
+                    targetTrack,
+                    track.TrackColor));
+                DocManager.Inst.ExecuteCmd(new ConfigureExpressionsCommand(
+                    DocManager.Inst.Project,
+                    DocManager.Inst.Project.expressions.Values.ToArray(),
+                    targetTrack,
+                    track.TrackExpressions.Select(exp => exp.Clone()).ToArray()));
+            }
+            DocManager.Inst.EndUndoGroup();
+            MessageBus.Current.SendMessage(new TracksRefreshEvent());
+            MessageBus.Current.SendMessage(new PianorollRefreshEvent("TrackColor"));
+        }
+
+        public void RotateSelectedTrackSingers()
+        {
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .OrderBy(targetTrack => targetTrack.TrackNo)
+                .ToList();
+            if (targetTracks.Count <= 1)
+            {
+                targetTracks = DocManager.Inst.Project.tracks.ToList();
+            }
+            var singers = targetTracks
+                .Select(targetTrack => targetTrack.Singer)
+                .ToList();
+            DocManager.Inst.StartUndoGroup("command.track.singer");
+            for (int i = 0; i < targetTracks.Count; i++)
+            {
+                var singer = singers[(i + 1) % singers.Count];
+                ApplySingerToTrack(targetTracks[i], singer);
+            }
+            DocManager.Inst.EndUndoGroup();
+            DocManager.Inst.ExecuteCmd(new VoiceColorRemappingNotification(-1, true));
+            MessageBus.Current.SendMessage(new TracksRefreshEvent());
+            MessageBus.Current.SendMessage(new PianorollRefreshEvent("Part"));
+        }
+
+        public void VoiceColorRemapping()
+        {
+            var targetTracks = DocManager.Inst.Project.tracks
+                .Where(projectTrack => projectTrack != null)
+                .Where(IsTrackSelected)
+                .ToList();
+            if (targetTracks.Count < 2)
+            {
+                targetTracks = new List<UTrack> { track };
+            }
+            foreach (var target in targetTracks)
+            {
+                if (target.Singer != null && target.Singer.Found && target.VoiceColorExp != null)
+                {
+                    DocManager.Inst.ExecuteCmd(new VoiceColorRemappingNotification(target.TrackNo, false));
+                }
+            }
+        }
+
+        public void OpenMixFxDialog()
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                var dialog = new MixFxDialog(track);
+                dialog.ShowDialog(desktop.MainWindow);
             }
         }
     }

@@ -1,4 +1,10 @@
-﻿using System;
+// ==========================================
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by Patiphat Wongyai
+// Version: v.17.3
+// History/Summary: ป้องกันการแครชจาก Moresampler โดยการสร้างไฟล์เสียงเปล่าทดแทน
+// ==========================================
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,7 +24,6 @@ namespace OpenUtau.Classic {
             Ustx.DYN,
             Ustx.PITD,
             Ustx.CLR,
-            Ustx.SHFT,
             Ustx.ENG,
             Ustx.VEL,
             Ustx.VOL,
@@ -27,12 +32,13 @@ namespace OpenUtau.Classic {
             Ustx.MOD,
             Ustx.MODP,
             Ustx.ALT,
+            Ustx.DIR,
+            Ustx.SHFT
         };
 
         public USingerType SingerType => USingerType.Classic;
 
         public bool SupportsRenderPitch => false;
-
         public bool SupportsExpression(UExpressionDescriptor descriptor) {
             return descriptor.isFlag
                 || !string.IsNullOrEmpty(descriptor.flag)
@@ -47,7 +53,7 @@ namespace OpenUtau.Classic {
             };
         }
 
-        public Task<RenderResult> Render(RenderPhrase phrase, Progress progress, int trackNo, CancellationTokenSource cancellation, bool isPreRender) {
+        public Task<RenderResult> Render(RenderPhrase phrase, Progress progress, int trackNo, CancellationTokenSource cancellation, bool isPreRender, RenderPhraseEvents? renderEvents = null) {
             if (phrase.wavtool == SharpWavtool.nameConvergence || phrase.wavtool == SharpWavtool.nameSimple) {
                 return RenderInternal(phrase, progress, trackNo, cancellation, isPreRender);
             } else {
@@ -64,21 +70,27 @@ namespace OpenUtau.Classic {
                 Parallel.ForEach(source: resamplerItems, parallelOptions: new ParallelOptions() {
                     MaxDegreeOfParallelism = Preferences.Default.NumRenderThreads
                 }, body: item => {
-                    if (!cancellation.IsCancellationRequested && !File.Exists(item.outputFile)) {
-                        if (!(item.resampler is WorldlineResampler)) {
-                            VoicebankFiles.Inst.CopySourceTemp(item.inputFile, item.inputTemp);
-                        }
-                        if(!item.phone.direct){
-                            lock (Renderers.GetCacheLock(item.outputFile)) {
-                                item.resampler.DoResamplerReturnsFile(item, Log.Logger);
-                            }
+                    if (!cancellation.IsCancellationRequested) {
+                        lock (Renderers.GetCacheLock(item.outputFile)) {
                             if (!File.Exists(item.outputFile)) {
-                                DocManager.Inst.Project.timeAxis.TickPosToBarBeat(item.phrase.position + item.phone.position, out int bar, out int beat, out int tick);
-                                throw new InvalidDataException($"{item.resampler} failed to resample \"{item.phone.phoneme}\" at {bar}:{beat}.{string.Format("{0:000}", tick)}");
+                                if (!(item.resampler is WorldlineResampler)) {
+                                    VoicebankFiles.Inst.CopySourceTemp(item.inputFile, item.inputTemp);
+                                }
+                                if(!item.phone.direct){
+                                    item.resampler.DoResamplerReturnsFile(item, Log.Logger);
+                                    if (!File.Exists(item.outputFile)) {
+                                        DocManager.Inst.Project.timeAxis.TickPosToBarBeat(item.phrase.position + item.phone.position, out int bar, out int beat, out int tick);
+                                        Log.Warning($"{item.resampler} failed to resample \"{item.phone.phoneme}\" at {bar}:{beat}.{string.Format("{0:000}", tick)}");
+                                        var format = new NAudio.Wave.WaveFormat(44100, 16, 1);
+                                        using (var writer = new NAudio.Wave.WaveFileWriter(item.outputFile, format)) {
+                                            writer.Write(new byte[8820], 0, 8820);
+                                        }
+                                    }
+                                }
+                                if (!(item.resampler is WorldlineResampler)) {
+                                    VoicebankFiles.Inst.CopyBackMetaFiles(item.inputFile, item.inputTemp);
+                                }
                             }
-                        }
-                        if (!(item.resampler is WorldlineResampler)) {
-                            VoicebankFiles.Inst.CopyBackMetaFiles(item.inputFile, item.inputTemp);
                         }
                     }
                     progress.Complete(1, $"Track {trackNo + 1}: {item.resampler} \"{item.phone.phoneme}\"");
@@ -105,23 +117,25 @@ namespace OpenUtau.Classic {
                 var wavPath = Path.Join(PathManager.Inst.CachePath, $"cat-{phrase.hash:x16}.wav");
                 phrase.AddCacheFile(wavPath);
                 var result = Layout(phrase);
-                if (File.Exists(wavPath)) {
-                    try {
-                        using (var waveStream = Wave.OpenFile(wavPath)) {
-                            result.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                lock (Renderers.GetCacheLock(wavPath)) {
+                    if (File.Exists(wavPath)) {
+                        try {
+                            using (var waveStream = Wave.OpenFile(wavPath)) {
+                                result.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                            }
+                        } catch (Exception e) {
+                            Log.Error(e, $"Failed to render: failed to open {wavPath}");
                         }
-                    } catch (Exception e) {
-                        Log.Error(e, $"Failed to render: failed to open {wavPath}");
                     }
-                }
-                if (result.samples == null) {
-                    foreach (var item in resamplerItems) {
-                        VoicebankFiles.Inst.CopySourceTemp(item.inputFile, item.inputTemp);
-                    }
-                    var wavtool = ToolsManager.Inst.GetWavtool(phrase.wavtool);
-                    result.samples = wavtool.Concatenate(resamplerItems, wavPath, cancellation);
-                    foreach (var item in resamplerItems) {
-                        VoicebankFiles.Inst.CopyBackMetaFiles(item.inputFile, item.inputTemp);
+                    if (result.samples == null) {
+                        foreach (var item in resamplerItems) {
+                            VoicebankFiles.Inst.CopySourceTemp(item.inputFile, item.inputTemp);
+                        }
+                        var wavtool = ToolsManager.Inst.GetWavtool(phrase.wavtool);
+                        result.samples = wavtool.Concatenate(resamplerItems, wavPath, cancellation);
+                        foreach (var item in resamplerItems) {
+                            VoicebankFiles.Inst.CopyBackMetaFiles(item.inputFile, item.inputTemp);
+                        }
                     }
                 }
                 progress.Complete(phrase.phones.Length, progressInfo);

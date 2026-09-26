@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OpenUtau.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OpenUtau.App.Views.PreferencesRecordPane">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20,10,20,10" Spacing="10">
+      <TextBlock Text="The Video And Picture Record file" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+      
+      <StackPanel Spacing="5">
+        <TextBlock Text="Filename Format (applies to both picture and video)"/>
+        <TextBox Text="{Binding CaptureFilenameFormat}" Watermark="e.g. name-dd-mm-yy-hh:mm"/>
+      </StackPanel>
+
+      <StackPanel Spacing="5">
+        <TextBlock Text="Export Format (Video)"/>
+        <ComboBox SelectedIndex="{Binding CaptureVideoFormatIndex}" HorizontalAlignment="Stretch">
+          <ComboBoxItem Content="mp4"/>
+          <ComboBoxItem Content="avi"/>
+          <ComboBoxItem Content="gif"/>
+          <ComboBoxItem Content="mkv"/>
+        </ComboBox>
+      </StackPanel>
+
+      <StackPanel Spacing="5">
+        <TextBlock Text="Quality (Piano Roll only)"/>
+        <ComboBox SelectedIndex="{Binding CaptureResolutionIndex}" HorizontalAlignment="Stretch">
+          <ComboBoxItem Content="720p"/>
+          <ComboBoxItem Content="1080p"/>
+          <ComboBoxItem Content="2K"/>
+          <ComboBoxItem Content="4K"/>
+        </ComboBox>
+      </StackPanel>
+
+      <StackPanel Spacing="5">
+        <TextBlock Text="Export Location"/>
+        <Grid ColumnDefinitions="*, Auto">
+          <TextBox Grid.Column="0" Text="{Binding CaptureExportLocation}" Watermark="Directory path" IsReadOnly="True" />
+          <Button Grid.Column="1" Content="..." Margin="5,0,0,0" Click="OnSelectCaptureExportLocation"/>
+        </Grid>
+      </StackPanel>
+
+      <StackPanel Spacing="5">
+        <TextBlock Text="Countdown before recording (seconds)"/>
+        <ComboBox SelectedIndex="{Binding CaptureCountdownIndex}" HorizontalAlignment="Stretch">
+          <ComboBoxItem Content="0s"/>
+          <ComboBoxItem Content="3s"/>
+          <ComboBoxItem Content="5s"/>
+          <ComboBoxItem Content="10s"/>
+        </ComboBox>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

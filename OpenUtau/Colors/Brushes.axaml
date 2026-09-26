@@ -2,6 +2,96 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <SolidColorBrush x:Key="SystemRegionBrush"
                    Color="{DynamicResource BackgroundColor}"/>
+  <!-- Transport / piano-roll toolbar: unified hover (off), slightly lighter than panel pointer-over. -->
+  <SolidColorBrush x:Key="TransportToolbarOffHoverBrush"
+                   Color="{DynamicResource TransportToolbarOffHoverColor}"/>
+  <SolidColorBrush x:Key="SystemAccentColorDark1Brush"
+                   Color="{DynamicResource SystemAccentColorDark1}"/>
+  <SolidColorBrush x:Key="SystemAccentColorLight1Brush"
+                   Color="{DynamicResource SystemAccentColorLight1}"/>
+  <SolidColorBrush x:Key="TransportToolbarOffPressedBrush"
+                   Color="{DynamicResource BackgroundColorPressed}"/>
+  <!-- Hover on “on” (lit) toggles: slightly dimmer than ForegroundColor / icon white (ToolbarCheckedHoverColor per theme). -->
+  <SolidColorBrush x:Key="TransportToolbarOnHoverBrush"
+                   Color="{DynamicResource ToolbarCheckedHoverColor}"/>
+  <!-- Always white: string tips must not inherit placement-target foreground (e.g. checked toolbar toggles). -->
+  <SolidColorBrush x:Key="ToolTipForegroundBrush" Color="{DynamicResource ToolTipForegroundColor}"/>
+  <SolidColorBrush x:Key="WorkspaceCanvasBrush"
+                   Color="{DynamicResource WorkspaceCanvasColor}"/>
+  <SolidColorBrush x:Key="WorkspaceCanvasBrushSemi"
+                   Color="{DynamicResource WorkspaceCanvasColor}" Opacity="0.6"/>
+  <SolidColorBrush x:Key="WorkspaceCardBrush"
+                   Color="{DynamicResource WorkspaceCardColor}"/>
+  <SolidColorBrush x:Key="WorkspaceElevatedSurfaceBrush"
+                   Color="{DynamicResource WorkspaceElevatedSurfaceColor}"/>
+  <SolidColorBrush x:Key="MutedIconBrush"
+                   Color="{DynamicResource MutedIconColor}"/>
+  <SolidColorBrush x:Key="PianoRollToolbarStripBackgroundBrush"
+                   Color="{DynamicResource PianoRollToolbarStripColor}"/>
+  <SolidColorBrush x:Key="AppTopBarTransportStripBrush"
+                   Color="{DynamicResource AppTopBarTransportStripColor}"/>
+  <SolidColorBrush x:Key="AppTopBarTransportHoverBrush"
+                   Color="{DynamicResource AppTopBarTransportHoverColor}"/>
+  <!-- Main window transport chips -->
+  <SolidColorBrush x:Key="TransportChipIconOffBrush" Color="{DynamicResource MutedIconColor}"/>
+  <SolidColorBrush x:Key="TransportAccentPlayPauseBrush" Color="#4CBD6A"/>
+  <SolidColorBrush x:Key="TransportAccentMetronomeBrush" Color="#5EC8E8"/>
+  <!-- Track header -->
+  <SolidColorBrush x:Key="TrackHeaderSelectedBackgroundBrush" Color="{DynamicResource WorkspaceElevatedSurfaceColor}"/>
+  <SolidColorBrush x:Key="TrackHeaderBorderBrush"
+                   Color="{DynamicResource NeutralAccentColor}" Opacity="0.6"/>
+  <SolidColorBrush x:Key="TrackAccentMuteBrush" Color="#E85A5A"/>
+  <SolidColorBrush x:Key="TrackAccentMuteCheckedBrush" Color="#E85A5A" Opacity="0.08"/>
+  <SolidColorBrush x:Key="TrackAccentSoloBrush" Color="#4CBD6A"/>
+  <SolidColorBrush x:Key="TrackAccentSoloCheckedBrush" Color="#4CBD6A" Opacity="0.08"/>
+  <SolidColorBrush x:Key="AppTopBarValueStripBrush"
+                   Color="{DynamicResource AppTopBarValueStripColor}"/>
+  <SolidColorBrush x:Key="AppTopBarValueDividerBrush"
+                   Color="{DynamicResource AppTopBarValueDividerColor}"/>
+  <SolidColorBrush x:Key="PianoRollToolbarButtonHoverBrush"
+                   Color="{DynamicResource PianoRollToolbarButtonHoverColor}"/>
+  <SolidColorBrush x:Key="PianoRollTimelineStripFillBrush"
+                   Color="{DynamicResource PianoRollTimelineStripColor}"/>
+  <LinearGradientBrush x:Key="PianoRollTimelineStripBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+    <GradientStop Color="{DynamicResource PianoRollTimelineStripColor}" Offset="0"/>
+    <GradientStop Color="{DynamicResource WorkspaceCardColor}" Offset="1"/>
+  </LinearGradientBrush>
+  <!-- Piano roll left sidebar toggles -->
+  <SolidColorBrush x:Key="PianoRollSideIconOffBrush" Color="{DynamicResource MutedIconColor}"/>
+  <SolidColorBrush x:Key="PianoRollTopBarToolIconOffBrush" Color="{DynamicResource PianoRollTopBarToolIconOffColor}"/>
+  <SolidColorBrush x:Key="PianoRollSideHoverBackgroundBrush" Color="{DynamicResource AppTopBarTransportStripColor}"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentTipsBrush" Color="#8E9AAB"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPlayToneBrush" Color="#E5A84A"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentLivePitchBrush" Color="#52C4E8"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentLivePitchFastBrush" Color="#FF9F43"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentVibratoBrush" Color="#B87FD4"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPitchBrush" Color="#5BA8F2"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentFinalPitchBrush" Color="#4ABFA8"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPitchOverwriteBrush" Color="#E07A5F"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentWaveformBrush" Color="#6FA882"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPhonemeBrush" Color="#D48AAF"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentExpressionsBrush" Color="#E07855"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentRealCurvesBrush" Color="#A8B8D8"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentSnapBrush" Color="#7E94B2"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPhonemizerTagsBrush" Color="#9D8FDC"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPitchFollowBrush" Color="#58B8C8"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentKeyScaleBrush" Color="#D4B04A"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentTipsCheckedBrush" Color="#8E9AAB" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPlayToneCheckedBrush" Color="#E5A84A" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentLivePitchCheckedBrush" Color="#52C4E8" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentLivePitchFastCheckedBrush" Color="#FF9F43" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentVibratoCheckedBrush" Color="#B87FD4" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPitchCheckedBrush" Color="#5BA8F2" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentFinalPitchCheckedBrush" Color="#4ABFA8" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPitchOverwriteCheckedBrush" Color="#E07A5F" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentWaveformCheckedBrush" Color="#6FA882" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPhonemeCheckedBrush" Color="#D48AAF" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentExpressionsCheckedBrush" Color="#E07855" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentRealCurvesCheckedBrush" Color="#A8B8D8" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentSnapCheckedBrush" Color="#7E94B2" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPhonemizerTagsCheckedBrush" Color="#9D8FDC" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentPitchFollowCheckedBrush" Color="#58B8C8" Opacity="0.10"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentKeyScaleCheckedBrush" Color="#D4B04A" Opacity="0.10"/>
   <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush"
                    Color="{DynamicResource BackgroundColor}"/>
   <SolidColorBrush x:Key="BackgroundBrushSemi"
@@ -55,6 +145,10 @@
   <SolidColorBrush x:Key="SystemControlHighlightListLowBrush"
                    Color="{DynamicResource ForegroundColorPressed}" Opacity="0.25" />
   <!--text box disabled text-->
+  <SolidColorBrush x:Key="TextControlForegroundDisabled"
+                   Color="{DynamicResource ForegroundColorDisabled}" />
+  <SolidColorBrush x:Key="TextControlBorderBrushDisabled"
+                   Color="{DynamicResource TextControlBorderColorDisabled}" />
   <SolidColorBrush x:Key="SystemControlDisabledChromeDisabledLowBrush"
                    Color="{DynamicResource ForegroundColorDisabled}" />
   <!--text box disabled background-->
@@ -74,7 +168,11 @@
   <SolidColorBrush x:Key="ButtonBackgroundDisabled"
                    Color="{DynamicResource BackgroundColorDisabled}" />
   <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush"
-                   Color="{DynamicResource BorderColor}" />
+                   Color="{DynamicResource MutedIconColor}" />
+  <SolidColorBrush x:Key="ComboBoxBorderBrush"
+                   Color="{DynamicResource MutedIconColor}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush"
+                   Color="{DynamicResource MutedIconColor}" />
 
   <SolidColorBrush x:Key="TickLineBrush"
                    Color="{DynamicResource TickLineColor}" />
@@ -96,14 +194,27 @@
                    Color="{DynamicResource NeutralAccentColor}" />
   <SolidColorBrush x:Key="NeutralAccentBrushSemi"
                    Color="{DynamicResource NeutralAccentColor}" Opacity="0.5" />
+  <!-- Scrollbar thumb: single 50% tint (Fluent template must not stack extra opacity). -->
+  <SolidColorBrush x:Key="ScrollBarThumbBrush"
+                   Color="{DynamicResource NeutralAccentColor}" Opacity="0.5" />
   <SolidColorBrush x:Key="NeutralAccentBrushSemi2"
                    Color="{DynamicResource NeutralAccentColor}" Opacity="0.25" />
+  <SolidColorBrush x:Key="PlaybackLineMarkerBrush"
+                   Color="{DynamicResource ForegroundColor}" />
+  <SolidColorBrush x:Key="PlaybackLineSolidBrush"
+                   Color="{DynamicResource NeutralAccentColor}" Opacity="0.55" />
   <SolidColorBrush x:Key="NeutralAccentBrushPointerOver"
                    Color="{DynamicResource NeutralAccentColorPointerOver}" />
+  <!-- Piano-roll toolbar: icon on saturated accent (selected tool / toggle on). -->
+  <SolidColorBrush x:Key="ToolbarToolIconOnAccentBrush" Color="{DynamicResource ToolTipForegroundColor}" />
   <SolidColorBrush x:Key="AccentBrush1"
                    Color="{DynamicResource AccentColor1}" />
   <SolidColorBrush x:Key="AccentBrush1Semi"
                    Color="{DynamicResource AccentColor1}" Opacity="0.5" />
+  <SolidColorBrush x:Key="AccentBrush1Note"
+                   Color="{DynamicResource AccentColor1Note}" />
+  <SolidColorBrush x:Key="AccentBrush1NoteSemi"
+                   Color="{DynamicResource AccentColor1Note}" Opacity="0.5" />
   <SolidColorBrush x:Key="AccentBrush2"
                    Color="{DynamicResource AccentColor2}" />
   <SolidColorBrush x:Key="AccentBrush2Semi"
@@ -112,23 +223,38 @@
                    Color="{DynamicResource AccentColor3}" />
   <SolidColorBrush x:Key="AccentBrush3Semi"
                    Color="{DynamicResource AccentColor3}" Opacity="0.5" />
+  <SolidColorBrush x:Key="NoteBorderBrush"
+                   Color="{DynamicResource NoteBorderColor}" />
+  <SolidColorBrush x:Key="NoteBorderBrushPressed"
+                   Color="{DynamicResource NoteBorderColorPressed}" />
+  <SolidColorBrush x:Key="FinalPitchBrushTransparent"
+                   Color="{DynamicResource FinalPitchColor}" Opacity="0.5"/>
+  <!-- Piano-roll toolbar / selection chrome: follows theme primary accent, overridden per track color. -->
   <SolidColorBrush x:Key="SelectedTrackAccentBrush"
-                   Color="#4EA6EA" />
+                   Color="{DynamicResource AccentColor2}" />
+  <SolidColorBrush x:Key="SelectedTrackAccentBrushSemi"
+                   Color="{DynamicResource AccentColor2}" Opacity="0.5"/>
   <SolidColorBrush x:Key="SelectedTrackAccentLightBrush"
-                   Color="#90CAF9" />
+                   Color="{DynamicResource SystemAccentColorLight1}" />
   <SolidColorBrush x:Key="SelectedTrackAccentLightBrushSemi"
-                   Color="#90CAF9" Opacity="0.5"/>
+                   Color="{DynamicResource SystemAccentColorLight1}" Opacity="0.5"/>
   <SolidColorBrush x:Key="SelectedTrackAccentDarkBrush"
-                   Color="#1E88E5" />
+                   Color="{DynamicResource SystemAccentColorDark1}" />
+  <SolidColorBrush x:Key="MarqueeSelectionFillBrush"
+                   Color="{DynamicResource AccentColor2}" Opacity="0.16"/>
+  <SolidColorBrush x:Key="MarqueeSelectionBorderBrush"
+                   Color="{DynamicResource AccentColor2}"/>
   <SolidColorBrush x:Key="SelectedTrackCenterKeyBrush"
-                   Color="#C8E5FC" />
+                   Color="{DynamicResource CenterKeyColorRight}" />
+  <SolidColorBrush x:Key="WarningBrush"
+                   Color="{DynamicResource WarningColor}" />
 
   <LinearGradientBrush x:Key="WhiteKeyBrush" StartPoint="0%,50%" EndPoint="100%,50%">
     <LinearGradientBrush.GradientStops>
       <GradientStop Color="{DynamicResource WhiteKeyColorLeft}" Offset="0"/>
       <GradientStop Color="{DynamicResource WhiteKeyColorRight}" Offset="1"/>
     </LinearGradientBrush.GradientStops>
-  </LinearGradientBrush >
+  </LinearGradientBrush>
   <SolidColorBrush x:Key="WhiteKeyNameBrush"
                    Color="{DynamicResource WhiteKeyNameColor}"/>
   <LinearGradientBrush x:Key="CenterKeyBrush" StartPoint="0%,50%" EndPoint="100%,50%">
@@ -144,7 +270,7 @@
       <GradientStop Color="{DynamicResource BlackKeyColorLeft}" Offset="0"/>
       <GradientStop Color="{DynamicResource BlackKeyColorRight}" Offset="1"/>
     </LinearGradientBrush.GradientStops>
-  </LinearGradientBrush >
+  </LinearGradientBrush>
   <SolidColorBrush x:Key="BlackKeyNameBrush"
                    Color="{DynamicResource BlackKeyNameColor}"/>
 </ResourceDictionary>

@@ -1,0 +1,10 @@
+# Indonesian Custom Dictionary
+# Format: word=phonemes (space-separated or joined, handled by code)
+# Examples:
+# allah=a l a h
+# jumat=j u m a t
+allah=alah
+jumat=jumat
+quran=kuran
+khusus=xusus
+syarat=syarat

@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+ * Made And Checked By DELTA SYNTH & Gemini AI
+ * Original by OpenUtau Contributors
+ * Version: 1.0
+ */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -109,9 +115,22 @@ namespace OpenUtau.Classic {
 
             var phraseSamples = new float[0];
             foreach (var segment in segments) {
-                Array.Resize(ref phraseSamples, segment.posSamples + segment.correction + segment.samples.Length - segment.skipSamples);
+                // [DELTA SYNTH Optimization]: ป้องกัน Array Size ติดลบ และป้องกันการหั่นหางเสียงเดิมทิ้ง (Safe Resize & Anti-Truncation)
+                int targetSize = segment.posSamples + segment.correction + segment.samples.Length - segment.skipSamples;
+                int safeNewSize = Math.Max(phraseSamples.Length, Math.Max(0, targetSize));
+                
+                if (safeNewSize > phraseSamples.Length) {
+                    Array.Resize(ref phraseSamples, safeNewSize);
+                }
+
                 for (int i = Math.Max(0, -segment.skipSamples); i < segment.samples.Length - segment.skipSamples; i++) {
-                    phraseSamples[segment.posSamples + segment.correction + i] += segment.samples[segment.skipSamples + i];
+                    int writeIndex = segment.posSamples + segment.correction + i;
+                    int readIndex = segment.skipSamples + i;
+                    
+                    // [DELTA SYNTH Guard]: ตรวจสอบขอบเขตตัวแปร (Boundary Checking) ป้องกัน Crash ขั้นเด็ดขาด
+                    if (writeIndex >= 0 && writeIndex < phraseSamples.Length && readIndex >= 0 && readIndex < segment.samples.Length) {
+                        phraseSamples[writeIndex] += segment.samples[readIndex];
+                    }
                 }
             }
             return phraseSamples;

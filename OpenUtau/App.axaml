@@ -1,7 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:OpenUtau.App"
-             x:Class="OpenUtau.App.App" Name="OpenUtau">
+             x:Class="OpenUtau.App.App" Name="Thai OpenUtau">
   <Application.DataTemplates>
     <local:ViewLocator/>
   </Application.DataTemplates>
@@ -27,6 +27,7 @@
       <ResourceInclude x:Key="strings-th-TH" Source="/Strings/Strings.th-TH.axaml"/>
       <ResourceInclude x:Key="themes-dark" Source="/Colors/DarkTheme.axaml"/>
       <ResourceInclude x:Key="themes-light" Source="/Colors/LightTheme.axaml"/>
+      <ResourceInclude x:Key="themes-custom" Source="/Colors/CustomTheme.axaml"/>
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="/Colors/Brushes.axaml"/>
       </ResourceDictionary.MergedDictionaries>
@@ -35,7 +36,9 @@
   <Application.Styles>
     <FluentTheme />
     <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+    <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
     <StyleInclude Source="/Styles/Styles.axaml"/>
+    <StyleInclude Source="/Styles/WorkspaceSectionExpanderStyles.axaml"/>
   </Application.Styles>
   <NativeMenu.Menu>
     <NativeMenu/>

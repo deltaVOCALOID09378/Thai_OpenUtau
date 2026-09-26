@@ -5,8 +5,8 @@
 ManifestDPIAware true
 
 ; --- ข้อมูลพื้นฐานของโปรแกรม ---
-!define PRODUCT_NAME "OpenUtau"
-!define PRODUCT_PUBLISHER "stakira"
+!define PRODUCT_NAME "Thai OpenUtau"
+!define PRODUCT_PUBLISHER "DELTA SYNTH"
 !define PRODUCT_WEB_SITE "https://www.openutau.com"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
@@ -16,7 +16,7 @@ ManifestDPIAware true
 
 ; --- การตั้งค่าอินเทอร์เฟซ (MUI Settings) ---
 !define MUI_ABORTWARNING
-!define MUI_ICON "OpenUtau\Assets\open-utau.ico"
+!define MUI_ICON "OpenUtau\Assets\Thai OpenUtau Logo type.ico"
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 
 ; การตั้งค่าภาษาใน Registry
@@ -59,7 +59,7 @@ LangString UI_FINISH_MSG ${LANG_ENGLISH} "Installation of $(^Name) is complete."
 
 ; --- เริ่มการทำงานของสคริปต์ ---
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "OpenUtau-win-${ARCH}-v1.2.exe"
+OutFile "Thai-OpenUtau-win-${ARCH}-v1.2.exe"
 InstallDir "$PROGRAMFILES64\OpenUtau"
 ShowInstDetails show
 ShowUnInstDetails show
@@ -76,8 +76,8 @@ Section "ส่วนหลัก (MainSection)" SEC01
 SectionEnd
 
 Section "ทางลัด (Shortcuts)"
-  CreateShortCut "$SMPROGRAMS\OpenUtau.lnk" "$INSTDIR\OpenUtau.exe"
-  CreateShortCut "$DESKTOP\OpenUtau.lnk" "$INSTDIR\OpenUtau.exe"
+  CreateShortCut "$SMPROGRAMS\Thai OpenUtau.lnk" "$INSTDIR\OpenUtau.exe"
+  CreateShortCut "$DESKTOP\Thai OpenUtau.lnk" "$INSTDIR\OpenUtau.exe"
 SectionEnd
 
 Section "การลงทะเบียนระบบ (Registry & File Association)"

@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Api;
 
 namespace OpenUtau.Core.DiffSinger {
-    [Phonemizer("DiffSinger Japanese Phonemizer", "DIFFS JA", language: "JA")]
+    [Phonemizer("DiffSinger Japanese Phonemizer", "Japanese", language: "DiffSinger")]
     public class DiffSingerJapanesePhonemizer : DiffSingerBasePhonemizer {
         protected override string GetDictionaryName() => "dsdict-ja.yaml";
 
-        public override string GetLangCode() => "ja";
+        protected override string GetLangCode() => "ja";
 
         protected override string[] Romanize(IEnumerable<string> lyrics) {
             var lyricsArray = lyrics.ToArray();

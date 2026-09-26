@@ -1,4 +1,7 @@
-﻿using System;
+﻿#pragma warning disable CS0618, CS0649, CS8632, CS0108
+#nullable enable
+#pragma warning disable CS8632
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,9 +22,9 @@ using Serilog;
 //This phonemizer uses onnxruntime to run ML models. No Python needed. 
 
 namespace OpenUtau.Plugin.Builtin {
-    [Phonemizer("Enunu Onnx Phonemizer", "ENUNU X")]
+    [Phonemizer("Enunu Onnx Phonemizer", "Default Onnx ENUNU", language: "ENUNU")]
     public class EnunuOnnxPhonemizer : Phonemizer {
-        readonly string PhonemizerType = "ENUNU X";
+        // readonly string PhonemizerType = "ENUNU X";
 
         //singer-related informations used by this phonemizer
         //basic informations
@@ -42,7 +45,7 @@ namespace OpenUtau.Plugin.Builtin {
         int[] pitchIndices = new int[] { };
         Scaler durationInScaler = new Scaler();
         Scaler durationOutScaler = new Scaler();
-        
+
         //information used by openutau phonemizer
         protected IG2p g2p;
         EnunuOnnxConfig enunuOnnxConfig;
@@ -70,7 +73,7 @@ namespace OpenUtau.Plugin.Builtin {
                 var configTxt = File.ReadAllText(configPath);
                 RawEnunuConfig config = Yaml.DefaultDeserializer.Deserialize<RawEnunuConfig>(configTxt);
                 enuconfig = config.Convert();
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.Error(e, $"failed to load enuconfig from {configPath}");
                 return;
             }
@@ -124,13 +127,11 @@ namespace OpenUtau.Plugin.Builtin {
             }
             //Load g2p from enunux.yaml
             //g2p dict should be load after enunu dict
-            try
-            {
+            try {
                 this.g2p = LoadG2p(rootPath);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Log.Error(e, "failed to load g2p dictionary");
-                return; 
+                return;
             }
         }
 
@@ -149,7 +150,7 @@ namespace OpenUtau.Plugin.Builtin {
                             builder.AddSymbol(symbolData.symbol, symbolData.type);
                         }
                     }
-                    foreach(var grapheme in phoneDict.Keys) {
+                    foreach (var grapheme in phoneDict.Keys) {
                         builder.AddEntry(grapheme, phoneDict[grapheme]);
                     }
                     if (data.entries != null) {
@@ -161,7 +162,7 @@ namespace OpenUtau.Plugin.Builtin {
                     Log.Error(e, $"Failed to load Dictionary");
                 }
             }
-            foreach(var entry in phoneDict.Keys) {
+            foreach (var entry in phoneDict.Keys) {
                 builder.AddEntry(entry, phoneDict[entry]);
             }
             g2ps.Add(builder.Build());
@@ -265,7 +266,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
             // User has not provided hint, query g2p dictionary.
             var g2presult = g2p.Query(note.lyric.ToLowerInvariant());
-            if(g2presult != null) {
+            if (g2presult != null) {
                 return g2presult;
             }
             //not founded in g2p dictionary, treat lyric as phonetic hint
@@ -383,7 +384,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
             if (notes.Length < vowelIds.Count) {
                 notes = HandleNotEnoughNotes(notes, vowelIds);
-            } else if(notes.Length > vowelIds.Count) {
+            } else if (notes.Length > vowelIds.Count) {
                 notes = HandleExcessNotes(notes, vowelIds);
             }
             return (symbols, vowelIds.ToArray(), notes);
@@ -434,7 +435,7 @@ namespace OpenUtau.Plugin.Builtin {
                 }
             }
             syllables[^1].symbols.AddRange(ccs);
-            return syllables.Select(x=>makeHtsNote(x.symbols.ToArray(),x.notes,startTick)).ToArray();
+            return syllables.Select(x => makeHtsNote(x.symbols.ToArray(), x.notes, startTick)).ToArray();
         }
 
         HTSPhoneme[] HTSNoteToPhonemes(HTSNote htsNote) {
@@ -489,7 +490,7 @@ namespace OpenUtau.Plugin.Builtin {
 
             //Alignment
             for (int noteIndex = 0; noteIndex < phrase.Length; ++noteIndex) {
-                HTSNote[] Syllables = MakeSyllables(phrase[noteIndex],offsetTick);
+                HTSNote[] Syllables = MakeSyllables(phrase[noteIndex], offsetTick);
                 htsNotes.AddRange(Syllables);
                 foreach (var htsNote in Syllables) {
                     var notePhonemes = HTSNoteToPhonemes(htsNote);
@@ -536,9 +537,9 @@ namespace OpenUtau.Plugin.Builtin {
                 numericDict
             );
             //log_f0_conditioning
-            float lastMidi = 60;            
-            foreach(int idx in pitchIndices) {
-                foreach(var line in linguistic_features) {
+            float lastMidi = 60;
+            foreach (int idx in pitchIndices) {
+                foreach (var line in linguistic_features) {
                     if (line[idx] > 0) {
                         lastMidi = line[idx];
                     }

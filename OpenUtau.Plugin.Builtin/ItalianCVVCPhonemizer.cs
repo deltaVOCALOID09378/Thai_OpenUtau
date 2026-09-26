@@ -1,4 +1,7 @@
-﻿using System;
+﻿#pragma warning disable CS0618, CS0649, CS8632, CS0108
+#nullable enable
+#pragma warning disable CS8632
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Api;
@@ -6,7 +9,8 @@ using OpenUtau.Core.Ustx;
 using Serilog;
 
 namespace OpenUtau.Plugin.Builtin {
-    [Phonemizer("Italian CVVC Phonemizer", "IT CVVC", "DJ-001", language: "IT")]
+    [Phonemizer("Italian CVVC Phonemizer", "IT CVVC", "DJ-001", language: "UTAU")]
+    // Version: v
     public class ItalianCVVCPhonemizer : Phonemizer {
 
         /// <summary>

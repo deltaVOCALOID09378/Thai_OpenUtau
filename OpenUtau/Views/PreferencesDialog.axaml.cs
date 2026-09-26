@@ -1,117 +1,189 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 
-namespace OpenUtau.App.Views {
-    public partial class PreferencesDialog : Window {
-        private PreferencesViewModel? viewModel => this.DataContext as PreferencesViewModel;   
+namespace OpenUtau.App.Views
+{
+    public partial class PreferencesDialog : Window
+    {
+        private PreferencesViewModel? viewModel => this.DataContext as PreferencesViewModel;
 
-        public PreferencesDialog() {
+        public PreferencesDialog()
+        {
             InitializeComponent();
         }
 
-        void OpenSingersFolder(object sender, RoutedEventArgs e) {
-            try {
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (DataContext is PreferencesViewModel vm && vm.ActiveShortcut != null)
+            {
+                // If they hit escape without modifiers, cancel listening
+                if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
+                {
+                    vm.ActiveShortcut.IsListening = false;
+                    vm.ActiveShortcut.RefreshDisplay();
+                    vm.ActiveShortcut = null;
+                    e.Handled = true;
+                    return;
+                }
+
+                vm.AssignShortcut(e.Key, e.KeyModifiers);
+                e.Handled = true;
+                return;
+            }
+
+            base.OnKeyDown(e);
+        }
+
+        public void OnShortcutRightClick(object sender, PointerReleasedEventArgs e)
+        {
+            if (e.InitialPressMouseButton == MouseButton.Right &&
+                sender is Button btn &&
+                btn.DataContext is ShortcutItemViewModel item)
+            {
+
+                if (DataContext is PreferencesViewModel vm)
+                {
+                    vm.ResetShortcut(item);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        void OpenSingersFolder(object sender, RoutedEventArgs e)
+        {
+            try
+            {
                 Directory.CreateDirectory(viewModel!.SingerPath);
                 OS.OpenFolder(viewModel!.SingerPath);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
             }
         }
 
-        void OpenAddlSingersFolder(object sender, RoutedEventArgs e) {
-            try {
-                if (Directory.Exists(viewModel!.AdditionalSingersPath)) {
+        void OpenAddlSingersFolder(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (Directory.Exists(viewModel!.AdditionalSingersPath))
+                {
                     OS.OpenFolder(viewModel!.AdditionalSingersPath);
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
             }
         }
 
-        void ResetAddlSingersPath(object sender, RoutedEventArgs e) {
+        void ResetAddlSingersPath(object sender, RoutedEventArgs e)
+        {
             viewModel!.SetAddlSingersPath(string.Empty);
         }
 
-        async void SelectAddlSingersPath(object sender, RoutedEventArgs e) {
+        async void SelectAddlSingersPath(object sender, RoutedEventArgs e)
+        {
             var path = await FilePicker.OpenFolderAboutSinger(this, "prefs.paths.addlsinger");
-            if (string.IsNullOrEmpty(path)) {
+            if (string.IsNullOrEmpty(path))
+            {
                 return;
             }
-            if (Directory.Exists(path)) {
+            if (Directory.Exists(path))
+            {
                 viewModel!.SetAddlSingersPath(path);
             }
         }
 
-        async void ReloadSingers(object sender, RoutedEventArgs e) {
-            MessageBox.ShowLoading(this);
-            await Task.Run(() => {
+        async void ReloadSingers(object sender, RoutedEventArgs e)
+        {
+            LoadingWindow.BeginLoading(this);
+            await Task.Run(() =>
+            {
                 SingerManager.Inst.SearchAllSingers();
             });
             DocManager.Inst.ExecuteCmd(new SingersRefreshedNotification());
-            MessageBox.CloseLoading();
+            LoadingWindow.EndLoading();
         }
 
-        void ResetVLabelerPath(object sender, RoutedEventArgs e) {
+        void ResetVLabelerPath(object sender, RoutedEventArgs e)
+        {
             viewModel!.SetVLabelerPath(string.Empty);
         }
 
-        async void SelectVLabelerPath(object sender, RoutedEventArgs e) {
+        async void SelectVLabelerPath(object sender, RoutedEventArgs e)
+        {
             var type = OS.IsWindows() ? FilePicker.EXE : OS.IsMacOS() ? FilePicker.APP : FilePickerFileTypes.All;
             var path = await FilePicker.OpenFile(this, "prefs.advanced.vlabelerpath", type);
-            if (string.IsNullOrEmpty(path)) {
+            if (string.IsNullOrEmpty(path))
+            {
                 return;
             }
-            if (OS.AppExists(path)) {
+            if (OS.AppExists(path))
+            {
                 viewModel!.SetVLabelerPath(path);
             }
         }
 
-        void ResetSetParamPath(object sender, RoutedEventArgs e) {
+        void ResetSetParamPath(object sender, RoutedEventArgs e)
+        {
             viewModel!.SetSetParamPath(string.Empty);
         }
 
-        async void SelectSetParamPath(object sender, RoutedEventArgs e) {
+        async void SelectSetParamPath(object sender, RoutedEventArgs e)
+        {
             var path = await FilePicker.OpenFile(this, "prefs.otoeditor.setparampath", FilePicker.EXE);
-            if (string.IsNullOrEmpty(path)) {
+            if (string.IsNullOrEmpty(path))
+            {
                 return;
             }
-            if (File.Exists(path)) {
+            if (File.Exists(path))
+            {
                 viewModel!.SetSetParamPath(path);
             }
         }
 
-        void ResetWinePath(object sender, RoutedEventArgs e) {
+        void ResetWinePath(object sender, RoutedEventArgs e)
+        {
             ((PreferencesViewModel)DataContext!).SetWinePath(string.Empty);
         }
 
-        async void SelectWinePath(object sender, RoutedEventArgs e) {
+        async void SelectWinePath(object sender, RoutedEventArgs e)
+        {
             var path = await FilePicker.OpenFile(this, "prefs.advanced.winepath", FilePicker.UnixExecutable);
-            if (string.IsNullOrEmpty(path)) {
+            if (string.IsNullOrEmpty(path))
+            {
                 return;
             }
-            if (File.Exists(path)) {
+            if (File.Exists(path))
+            {
                 ((PreferencesViewModel)DataContext!).SetWinePath(path);
             }
         }
 
-        void DetectWinePath(object sender, RoutedEventArgs e) {
+        void DetectWinePath(object sender, RoutedEventArgs e)
+        {
             string[] wineNames = { "wine", "wine64", "wine32", "wine32on64" };
             string winePath = string.Empty;
 
-            foreach (string wineName in wineNames) {
+            foreach (string wineName in wineNames)
+            {
                 winePath = OS.WhereIs(wineName);
-                if (!string.IsNullOrEmpty(winePath)) {
+                if (!string.IsNullOrEmpty(winePath))
+                {
                     break;
                 }
             }
 
-            if (string.IsNullOrEmpty(winePath)) {
+            if (string.IsNullOrEmpty(winePath))
+            {
                 return;
             }
 

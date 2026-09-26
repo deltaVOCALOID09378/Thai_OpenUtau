@@ -1,19 +1,26 @@
+<!-- ชื่อไฟล์: NotePropertyExpression.axaml -->
+<!-- ลำดับเวอร์ชัน: 0.2 -->
+<!-- Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT -->
+<!-- Original By OpenUtau Contributors -->
+<!-- หมายเหตุ: อัปเดตโครงสร้าง Grid ให้สอดคล้องกับไฟล์ NotePropertiesControl.axaml เพื่อความเป็นหนึ่งเดียวของ UI -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:OpenUtau.App.ViewModels"
+             xmlns:c="using:OpenUtau.App.Controls"
              x:Class="OpenUtau.App.Controls.NotePropertyExpression">
-  <Grid ColumnDefinitions="143,7,50,20,*">
-    <Label Content="{Binding Name}" Grid.Column="0" VerticalAlignment="Center" FontWeight="{Binding NameFontWeight}"/>
-    <TextBox Text="{Binding Value, Mode=OneWay}" Grid.Column="2" IsVisible="{Binding IsNumerical}" VerticalAlignment="Center" IsEnabled="{Binding IsNoteSelected}"
-             GotFocus="OnTextBoxGotFocus" LostFocus="OnTextBoxLostFocus"/>
+  <!-- หมายเหตุ: ปรับช่องว่างคอลัมน์จาก 10 เป็น 12 เพื่อให้ตรงกับมาตรฐานใหม่ของ NotePropertiesControl -->
+  <Grid ColumnDefinitions="132,12,54,20,*">
+    <Label Content="{Binding Name}" Grid.Column="0" VerticalAlignment="Center" FontWeight="{Binding NameFontWeight}" Margin="0,0,12,0"/>
+    <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Text="{Binding Value, Mode=OneWay}" Grid.Column="2" IsVisible="{Binding IsNumerical}" VerticalAlignment="Center" IsEnabled="{Binding IsNoteSelected}"
+             GotFocus="OnTextBoxGotFocus" LostFocus="OnTextBoxLostFocus" CornerRadius="6"/>
     <Slider Grid.Column="4" Classes="fader" Value="{Binding Value}" Minimum="{Binding Min}" Maximum="{Binding Max}"
             TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="true" IsVisible="{Binding IsNumerical}" VerticalAlignment="Center" IsEnabled="{Binding IsNoteSelected}"
-            Name="slider"/>
-    <ComboBox Grid.Column="1" Grid.ColumnSpan="4" ItemsSource="{Binding Options}"
+            Name="slider" Margin="4,0"/>
+    <c:WorkspacePanelComboBox Grid.Column="1" Grid.ColumnSpan="4" Classes="workspacePanelCombo" ItemsSource="{Binding Options}"
               SelectedIndex="{Binding SelectedOption}" MinWidth="120" IsVisible="{Binding IsOptions}" VerticalAlignment="Center" IsEnabled="{Binding IsNoteSelected}"
               IsDropDownOpen="{Binding DropDownOpen, Mode=OneWayToSource}"
-              Name="comboBox"/>
+              Name="comboBox" CornerRadius="6"/>
   </Grid>
 </UserControl>

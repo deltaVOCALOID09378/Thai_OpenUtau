@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using DynamicData.Binding;
 using OpenUtau.Core;
@@ -7,8 +8,10 @@ using OpenUtau.Core.Ustx;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels {
-    class LyricsReplaceViewModel : ViewModelBase {
+namespace OpenUtau.App.ViewModels
+{
+    class LyricsReplaceViewModel : ViewModelBase
+    {
         [Reactive] public string OldValue { get; set; } = "";
         [Reactive] public string NewValue { get; set; } = "";
         [Reactive] public string Preview { get; set; } = "";
@@ -27,49 +30,64 @@ namespace OpenUtau.App.ViewModels {
         private UNote[] notes;
         private string[] startLyrics;
 
-        public LyricsReplaceViewModel(UVoicePart part, UNote[] notes, string[] lyrics) {
+        public LyricsReplaceViewModel(UVoicePart part, UNote[] notes)
+        {
             this.part = part;
             this.notes = notes;
-            startLyrics = (string[])lyrics.Clone();
-            Preview = string.Join(", ", lyrics);
-            Lyrics = lyrics;
+            startLyrics = notes.Select(n => n.lyric).ToArray();
+            Preview = string.Join(", ", startLyrics);
+            Lyrics = (string[])startLyrics.Clone();
 
             this.WhenAnyValue(x => x.OldValue, x => x.NewValue)
-                .Subscribe(t => {
-                    try {
+                .Subscribe(t =>
+                {
+                    try
+                    {
                         Preview = Replace();
-                    } catch {
+                    }
+                    catch
+                    {
                         Preview = ThemeManager.GetString("errors.lyrics.regexpreview");
                     }
                 });
             this.WhenValueChanged(x => SelectedPreset)
-                .Subscribe(p => {
-                    if (SelectedPreset != null) {
+                .Subscribe(p =>
+                {
+                    if (SelectedPreset != null)
+                    {
                         OldValue = SelectedPreset.OldValue;
                         NewValue = SelectedPreset.NewValue;
                     }
                 });
         }
 
-        public string Replace() {
+        public string Replace()
+        {
 
-            for (int i = 0; i < startLyrics.Length; i++) {
+            for (int i = 0; i < startLyrics.Length; i++)
+            {
                 Lyrics[i] = Regex.Replace(startLyrics[i], OldValue, NewValue);
             }
             return string.Join(", ", Lyrics);
         }
 
-        public bool Finish() {
-            try {
+        public bool Finish()
+        {
+            try
+            {
                 Replace();
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(new MessageCustomizableException("Character not allowed in regular expression.", "<translate:errors.lyrics.regex>", ex)));
                 return false;
             }
 
-            DocManager.Inst.StartUndoGroup();
-            for (int i = 0; i < Lyrics.Length && i < notes.Length; ++i) {
-                if (notes[i].lyric != Lyrics[i]) {
+            DocManager.Inst.StartUndoGroup("command.batch.lyric");
+            for (int i = 0; i < Lyrics.Length && i < notes.Length; ++i)
+            {
+                if (notes[i].lyric != Lyrics[i])
+                {
                     DocManager.Inst.ExecuteCmd(new ChangeNoteLyricCommand(part, notes[i], Lyrics[i]));
                 }
             }
@@ -78,22 +96,26 @@ namespace OpenUtau.App.ViewModels {
         }
     }
 
-    public class ReplacePreset {
+    public class ReplacePreset
+    {
         public string Name { get; private set; } = "";
         public string OldValue { get; private set; } = "";
         public string NewValue { get; private set; } = "";
 
-        public ReplacePreset() {
+        public ReplacePreset()
+        {
 
         }
 
-        public ReplacePreset(string name, string oldValue, string newValue) {
+        public ReplacePreset(string name, string oldValue, string newValue)
+        {
             Name = name;
             OldValue = oldValue;
             NewValue = newValue;
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return Name;
         }
     }

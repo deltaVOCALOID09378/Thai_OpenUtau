@@ -3,11 +3,11 @@ using OpenUtau.Core.G2p;
 
 namespace OpenUtau.Core.DiffSinger
 {
-    [Phonemizer("DiffSinger Portuguese Phonemizer", "DIFFS PT", language: "PT")]
+    [Phonemizer("DiffSinger Portuguese Phonemizer", "Portuguese", language: "DiffSinger")]
     public class DiffSingerPortuguesePhonemizer : DiffSingerG2pPhonemizer
     {
         protected override string GetDictionaryName()=>"dsdict-pt.yaml";
-        public override string GetLangCode()=>"pt";
+        protected override string GetLangCode()=>"pt";
         protected override IG2p LoadBaseG2p() => new PortugueseG2p();
         protected override string[] GetBaseG2pVowels() => new string[] {
             "E", "O", "a", "a~", "e", "e~", "i", "i~", "o", "o~", "u", "u~"

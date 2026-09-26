@@ -1,16 +1,32 @@
-﻿using ReactiveUI.Fody.Helpers;
+// Version: 0.1
+// Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT
+// Original By OpenUtau Contributors
 
-namespace OpenUtau.App.ViewModels {
-    public class ExeSetupViewModel : ViewModelBase {
+using ReactiveUI.Fody.Helpers;
+
+namespace OpenUtau.App.ViewModels
+{
+    public class ExeSetupViewModel : ViewModelBase
+    {
         public string filePath;
         [Reactive] public string message { get; set; }
-        public ExeSetupViewModel(string filePath) {
+        
+        public ExeSetupViewModel(string filePath)
+        {
             this.filePath = filePath;
-            message = string.Format(ThemeManager.GetString("exesetup.installing"), filePath);
-            if (OS.IsMacOS()) {
-                message += "\n\n" + ThemeManager.GetString("exesetup.mac");
-            } else if(OS.IsLinux()) {
-                message += "\n\n" + string.Format(ThemeManager.GetString("exesetup.linux"), "https://www.winehq.org/");
+            
+            // [DELTA SYNTH] Guard Null: ป้องกัน ArgumentNullException หากข้อมูลจาก ThemeManager ไม่ถูกโหลดขึ้นมา
+            string formatBase = ThemeManager.GetString("exesetup.installing") ?? "Installing \"{0}\"...";
+            message = string.Format(formatBase, filePath);
+            
+            if (OS.IsMacOS())
+            {
+                message += "\n\n" + (ThemeManager.GetString("exesetup.mac") ?? "Follow setup steps for Mac.");
+            }
+            else if (OS.IsLinux())
+            {
+                string formatLinux = ThemeManager.GetString("exesetup.linux") ?? "Use Wine: {0}";
+                message += "\n\n" + string.Format(formatLinux, "https://www.winehq.org/");
             }
         }
     }

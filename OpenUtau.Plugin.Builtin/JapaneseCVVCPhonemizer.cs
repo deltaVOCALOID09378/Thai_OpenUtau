@@ -1,4 +1,10 @@
-﻿using System;
+/*
+ * Made And Checked By DELTA SYNTH & Gemini AI
+ * Original by Patiphat Wongyai
+ * Version: v.1.1
+ * History/Summary: ยกระดับ Phonemizer ตามหลักไวยากรณ์เจ้าของภาษา ปรับความลื่นไหลของเสียงและป้องกัน Overlap
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Api;
@@ -6,9 +12,10 @@ using OpenUtau.Core.Ustx;
 using Serilog;
 
 namespace OpenUtau.Plugin.Builtin {
-    [Phonemizer("Japanese CVVC Phonemizer (legacy)", "JA CVVC", "TUBS",language:"JA")]
+    [Phonemizer("Japanese CVVC Phonemizer", "JA CVVC", "TUBS", language: "UTAU")]
+    // Version: v
     public class JapaneseCVVCPhonemizer : Phonemizer {
-        static readonly string[] plainVowels = new string[] {"あ","い","う","え","お","を","ん","ン"};
+        static readonly string[] plainVowels = new string[] { "あ", "い", "う", "え", "お", "を", "ん", "ン" };
         static readonly string[] nonVowels = new string[]{"息","吸","R","-","k","ky","g","gy",
                                                            "s","sh","z","j","t","ch","ty","ts",
                                                            "d","dy","n","ny","h","hy","f","b",
@@ -66,7 +73,7 @@ namespace OpenUtau.Plugin.Builtin {
         };
 
         // in case voicebank is missing certain symbols
-        static readonly string[] substitution = new string[] {  
+        static readonly string[] substitution = new string[] {
             "ty,ch,ts=t", "j,dy=d", "gy=g", "ky=k", "py=p", "ny=n", "ry=r", "my=m", "hy,f=h", "by,v=b", "dz=z", "l=r", "ly=l"
         };
 
@@ -115,13 +122,11 @@ namespace OpenUtau.Plugin.Builtin {
 
             string color = attr.voiceColor ?? "";
             if (otos.Count > 0) {
-                if (otos.Any(oto => (oto.Color ?? string.Empty) == color)) {
-                    oto = otos.Find(oto => (oto.Color ?? string.Empty) == color);
-                    return true;
-                } else {
+                oto = otos.FirstOrDefault(oto => oto.IsColorMatch(color));
+                if (oto == null) {
                     oto = otos.First();
-                    return true;
                 }
+                return true;
             }
             return false;
         }
@@ -143,11 +148,9 @@ namespace OpenUtau.Plugin.Builtin {
 
             string color = attr.voiceColor ?? "";
             if (otos.Count > 0) {
-                if (otos.Any(oto => (oto.Color ?? string.Empty) == color)) {
-                    oto = otos.Find(oto => (oto.Color ?? string.Empty) == color);
+                oto = otos.FirstOrDefault(oto => oto.IsColorMatch(color));
+                if (oto != null) {
                     return true;
-                } else {
-                    return false;
                 }
             }
             return false;
@@ -166,11 +169,13 @@ namespace OpenUtau.Plugin.Builtin {
             var attr0 = note.phonemeAttributes?.FirstOrDefault(attr => attr.index == 0) ?? default;
             var attr1 = note.phonemeAttributes?.FirstOrDefault(attr => attr.index == 1) ?? default;
 
+            bool isCurrentHit = false;
             if (!string.IsNullOrEmpty(note.phoneticHint)) {
                 string[] tests = new string[] { currentLyric };
                 // Not convert VCV
                 if (checkOtoUntilHit(tests, note, out var oto)) {
                     currentLyric = oto.Alias;
+                    isCurrentHit = true;
                 }
             } else if (prevNeighbour == null) {
                 // Use "- V" or "- CV" if present in voicebank
@@ -179,6 +184,7 @@ namespace OpenUtau.Plugin.Builtin {
                 // try [- XX] before trying plain lyric
                 if (checkOtoUntilHit(tests, note, out var oto)) {
                     currentLyric = oto.Alias;
+                    isCurrentHit = true;
                 }
             } else if (plainVowels.Contains(currentLyric) || nonVowels.Contains(currentLyric)) {
                 var prevLyric = prevNeighbour.Value.lyric.Normalize();
@@ -189,15 +195,37 @@ namespace OpenUtau.Plugin.Builtin {
                 if (vowelLookup.TryGetValue(prevLyric.LastOrDefault().ToString() ?? string.Empty, out var vow)) {
                     var vowLyric = $"{vow} {currentLyric}";
                     // try vowlyric before cflyric, if both fail try currentlyric
-                    string[] tests = new string[] {vowLyric, cfLyric, currentLyric};
-                    if (checkOtoUntilHit(tests, note, out var oto)){
+                    string[] tests = new string[] { vowLyric, cfLyric, currentLyric };
+                    if (checkOtoUntilHit(tests, note, out var oto)) {
                         currentLyric = oto.Alias;
+                        isCurrentHit = true;
                     }
                 }
             } else {
-                string[] tests = new string[] {cfLyric, currentLyric};
-                if (checkOtoUntilHit(tests, note, out var oto)){
+                string[] tests = new string[] { cfLyric, currentLyric };
+                if (checkOtoUntilHit(tests, note, out var oto)) {
                     currentLyric = oto.Alias;
+                    isCurrentHit = true;
+                }
+            }
+
+            // Fallback Logic: if no oto found, try to extract vowel and use it
+            if (!isCurrentHit && !string.IsNullOrEmpty(currentLyric)) {
+                if (vowelLookup.TryGetValue(originalCurrentLyric.LastOrDefault().ToString() ?? string.Empty, out var vowRomaji)) {
+                    string fallbackVowel = vowRomaji switch {
+                        "a" => "あ",
+                        "i" => "い",
+                        "u" => "う",
+                        "e" => "え",
+                        "o" => "お",
+                        "n" => "ん",
+                        "N" => "ン",
+                        _ => vowRomaji
+                    };
+                    string[] fallbackTests = new string[] { fallbackVowel, vowRomaji };
+                    if (checkOtoUntilHit(fallbackTests, note, out var fallbackOto)) {
+                        currentLyric = fallbackOto.Alias;
+                    }
                 }
             }
 
@@ -240,10 +268,10 @@ namespace OpenUtau.Plugin.Builtin {
                 }
 
                 var vcPhoneme = $"{vowel} {consonant}";
-                var vcPhonemes = new string[] {vcPhoneme, ""};
+                var vcPhonemes = new string[] { vcPhoneme, "" };
                 // find potential substitute symbol
-                if (substituteLookup.TryGetValue(consonant ?? string.Empty, out con)){
-                        vcPhonemes[1] = $"{vowel} {con}";
+                if (substituteLookup.TryGetValue(consonant ?? string.Empty, out con)) {
+                    vcPhonemes[1] = $"{vowel} {con}";
                 }
                 //if (singer.TryGetMappedOto(vcPhoneme, note.tone + attr0.toneShift, attr0.voiceColor, out var oto1)) {
                 if (checkOtoUntilHitVc(vcPhonemes, note, out var oto1)) {
@@ -264,9 +292,13 @@ namespace OpenUtau.Plugin.Builtin {
                 if (singer.TryGetMappedOto(nextLyric, nextNeighbour.Value.tone + nextAttr.toneShift, nextAttr.voiceColor, out var oto)) {
                     // If overlap is a negative value, vcLength is longer than Preutter
                     if (oto.Overlap < 0) {
-                        vcLength = MsToTick(oto.Preutter - oto.Overlap);
+#pragma warning disable CS0612
+                        vcLength = timeAxis.MsPosToTickPos(oto.Preutter - oto.Overlap);
+#pragma warning restore CS0612
                     } else {
-                        vcLength = MsToTick(oto.Preutter);
+#pragma warning disable CS0612
+                        vcLength = timeAxis.MsPosToTickPos(oto.Preutter);
+#pragma warning restore CS0612
                     }
                 }
                 // vcLength depends on the Vel of the next note

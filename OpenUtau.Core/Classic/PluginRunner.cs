@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 using Serilog;
@@ -19,7 +20,7 @@ namespace OpenUtau.Classic {
 
         private static Action<ReplaceNoteEventArgs> ReplaceNoteMethod(DocManager docManager) {
             return new Action<ReplaceNoteEventArgs>((args) => {
-                docManager.StartUndoGroup();
+                docManager.StartUndoGroup("command.batch.plugin");
                 docManager.ExecuteCmd(new RemoveNoteCommand(args.Part, args.ToRemove));
                 docManager.ExecuteCmd(new AddNoteCommand(args.Part, args.ToAdd));
                 docManager.EndUndoGroup();
@@ -44,25 +45,41 @@ namespace OpenUtau.Classic {
             OnError = onError;
         }
 
-        public void Execute(UProject project, UVoicePart part, UNote? first, UNote? last, IPlugin plugin) {
+        public async Task Execute(UProject project, UVoicePart part, UNote? first, UNote? last, IPlugin plugin) {
             if (first == null || last == null) {
                 return;
             }
+            string? tempFile = null;
             try {
-                var tempFile = Path.Combine(PathManager.CachePath, "temp.tmp");
+                Directory.CreateDirectory(PathManager.CachePath);
+                // Keep the exchange file outside CachePath. CachePath can be cleared from the UI
+                // while a plugin is running, and on Windows it may also be synchronized by OneDrive.
+                tempFile = Path.GetTempFileName();
                 var sequence = Ust.WritePlugin(project, part, first, last, tempFile, encoding: plugin.Encoding);
                 byte[]? beforeHash = HashFile(tempFile);
-                plugin.Run(tempFile);
+                await plugin.Run(tempFile);
                 byte[]? afterHash = HashFile(tempFile);
                 if (beforeHash == null || afterHash == null || Enumerable.SequenceEqual(beforeHash, afterHash)) {
                     Log.Information("Legacy plugin temp file has not changed.");
                     return;
                 }
                 Log.Information("Legacy plugin temp file has changed.");
-                var (toRemove, toAdd) = Ust.ParsePlugin(project, part, first, last, sequence, tempFile, encoding: plugin.Encoding);
+                
+                var (toRemove, toAdd) = await Task.Run(() => 
+                    Ust.ParsePlugin(project, part, first, last, sequence, tempFile, encoding: plugin.Encoding)
+                );
+                
                 OnReplaceNote(new ReplaceNoteEventArgs(part, toRemove, toAdd));
             } catch (Exception e) {
                 OnError(new PluginErrorEventArgs("Failed to execute plugin", e));
+            } finally {
+                if (tempFile != null && File.Exists(tempFile)) {
+                    try {
+                        File.Delete(tempFile);
+                    } catch (Exception e) {
+                        Log.Warning(e, "Failed to clean up legacy plugin temp file {TempFile}", tempFile);
+                    }
+                }
             }
         }
 

@@ -1,35 +1,48 @@
+# Version 0.1
 name: Crowdin Action
 
 on:
   workflow_dispatch: {}
   schedule:
-    # runs every day
+    # runs every day at 04:00 UTC
     - cron: '0 4 * * *'
+
+# Prevent concurrent workflow runs from causing conflicts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Explicit permissions required for GitHub Actions to commit and push changes
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   synchronize-with-crowdin:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history, replacing git pull --unshallow
 
-      - name: git config
+      - name: Configure Git user
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
       
       - name: Sync from official repo
         run: |
-          git pull --unshallow
           git remote add official https://github.com/stakira/OpenUtau
           git fetch official
           git merge --no-edit official/master
 
-      - run: ls -l OpenUtau/Strings
+      - name: Check Strings directory
+        run: ls -l OpenUtau/Strings || echo "OpenUtau/Strings directory not found."
       
-      - name: crowdin action
-        uses: crowdin/github-action@v2.5.0
+      - name: Synchronize with Crowdin
+        uses: crowdin/github-action@v2
         with:
           upload_sources: true
           upload_sources_args: --auto-update
@@ -38,12 +51,10 @@ jobs:
           localization_branch_name: crowdin-translated
           create_pull_request: false
         env:
-          # A classic GitHub Personal Access Token with the 'repo' scope selected (the user should have write access to the repository).
+          # A classic GitHub Personal Access Token with the 'repo' scope selected.
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          
           # A numeric ID, found at https://crowdin.com/project/<projectName>/tools/api
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
-
           # Visit https://crowdin.com/settings#api-key to create this token
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
 
@@ -52,26 +63,31 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout translated branch
         uses: actions/checkout@v4
         with:
           ref: crowdin-translated
+          fetch-depth: 0
+          
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
           
       - name: Run sync_strings.py
         run: python Misc/sync_strings.py
       
-      - name: git config
+      - name: Configure Git user
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-      - name: git commit
+      - name: Commit and Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git add .
-          git commit -m "sync strings"
-
-      - name: git push
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GH_TOKEN }}
-          branch: crowdin-translated
+          git status
+          :: Check if there are any changes to commit to avoid workflow failure
+          git diff --staged --quiet || git commit -m "chore: sync localized strings from Crowdin"
+          git push origin crowdin-translated

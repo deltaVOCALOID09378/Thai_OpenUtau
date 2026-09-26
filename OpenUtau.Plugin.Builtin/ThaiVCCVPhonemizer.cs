@@ -4,8 +4,10 @@
 // ==========================================
 // Made And Checked By DELTA SYNTH & Gemini AI
 // Original by Patiphat Wongyai
-// Version: v.17.2
-// History/Summary: ยกระดับ Phonemizer แก้ไขบัคสระไอ สระใอ สระเอา สระอำ ให้รองรับตัวสะกด ขยายพื้นที่พยัญชนะเพื่อความเป็นธรรมชาติ และเพิ่มเอื้อนจังหวะเร็ว
+// Version: v.17.3
+// History/Summary:
+// v.17.3 (Consonant Space Widening - ขยายพื้นที่พยัญชนะ): เพิ่มพื้นที่นำพยัญชนะจาก 12% เป็น 16%, ending C จาก 120 เป็น 150 ticks, VC จาก 70% เป็น 65%
+// v.17.2: ยกระดับ Phonemizer แก้ไขบัคสระไอ สระใอ สระเอา สระอำ ให้รองรับตัวสะกด ขยายพื้นที่พยัญชนะเพื่อความเป็นธรรมชาติ
 // พร้อมเพิ่มระบบแยกพยางค์ (สูงสุด 4 พยางค์) และรองรับการกระจายพยางค์ไปที่โน้ตเนื้อร้อง + โดยอัตโนมัติ
 // v.17.1: แก้บัค Auto-Melisma ที่เพิ่ม Vowel ซ้ำทั้งที่มีอยู่แล้วใน tests list ทำให้เสียงซ้ำ
 // v.17.2 (Stability/Balance fix - แก้บัค ปรับสมดุลการทำงาน ให้ออกเสียงภาษาไทยได้ครบเครื่องขึ้น):
@@ -84,42 +86,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
         }
 
-        private Dictionary<string, string> CustomDictionary = new Dictionary<string, string> {
-            {"เสมอ", "sa m3"},
-            {"สม่ำเสมอ", "sa mam sa m3"},
-            {"บวร", "bawQn"},
-            {"ศร", "sQn"},
-            {"โสน", "sano"},
-            {"เบื้อง", "b3aN"},
-            {"คือ", "kh1"},
-            {"เรือ", "r6"},
-            {"บ่", "bQ"},
-            {"ก็", "kQ"},
-            {"เอื้อ", "q6"},
-            {"ตึก", "t1k"},
-            {"ปู่", "pu"},
-            {"ครุธ", "khrut"},
-            {"ครุฑ", "khrut"},
-            {"สถิตย์", "sathit"},
-            {"ธ", "tha"},
-            {"ณ", "na"},
-            {"ฤาษี", "r1si"},
-            {"ฤทธิ์", "rit"},
-            {"ฤกดิ์", "r3k"},
-            {"ศักดิ์", "sak"},
-            {"พรรค", "phak"},
-            {"สวรรค์", "sawam"},
-            {"ธรรม", "tham"},
-            {"เปลี่ยน", "prian"},
-            {"จันทรา", "janthra"},
-            {"รับ", "rab"},
-            {"ตน", "ton"},
-            {"ปราถนา", "pradthana"},
-            {"ปรารถ", "prarod"},
-            {"ทวน", "thuan"},
-            {"ขวัญ", "khuan"},
-            {"อาทิตย์", "athid"}
-        };
+        private Dictionary<string, string> CustomDictionary = new Dictionary<string, string>();
         private bool isDictLoaded = false;
         private USinger? singer;
 
@@ -225,28 +192,20 @@ namespace OpenUtau.Plugin.Builtin {
         private void LoadCustomDictionary() {
             if (isDictLoaded) return;
             try {
-                string[] dictPaths = {
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionaries", "dsdict-th.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th_dict.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th_vccv.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "TH_VCCV_Dict.txt")
-                };
-
-                foreach (var path in dictPaths) {
-                    if (File.Exists(path)) {
-                        var lines = File.ReadAllLines(path, Encoding.UTF8);
-                        bool isTHVCCVDict = Path.GetFileName(path) == "TH_VCCV_Dict.txt";
-                        foreach (var line in lines) {
-                            if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
-                            var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                            if (parts.Length >= 2) {
-                                string word = parts[0].Trim();
-                                string phonemes = parts[1].Trim();
-                                if (isTHVCCVDict) {
-                                    phonemes = ConvertDiffsingerToSyllables(phonemes);
+                ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => ConvertDiffsingerToSyllables(phonemes));
+                
+                if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
+                    string[] singerDicts = { "dsdict-th.txt", "th_vccv_custom_dict.txt", "th_custom_dict.txt" };
+                    foreach (var dict in singerDicts) {
+                        string path = Path.Combine(singer.Location, dict);
+                        if (File.Exists(path)) {
+                            var lines = File.ReadAllLines(path, Encoding.UTF8);
+                            foreach (var line in lines) {
+                                if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+                                var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                if (parts.Length >= 2) {
+                                    CustomDictionary[parts[0].Trim()] = ConvertDiffsingerToSyllables(parts[1].Trim());
                                 }
-                                CustomDictionary[word] = phonemes;
                             }
                         }
                     }
@@ -441,7 +400,8 @@ namespace OpenUtau.Plugin.Builtin {
                         }
 
                         if (i < mainVowelIndex) {
-                            int offset = (mainVowelIndex - i) * Math.Max(100, (int)(noteDuration * 0.12));
+                            // v17.3: widened leading consonant offset from 12% to 16% for clearer articulation
+                            int offset = (mainVowelIndex - i) * Math.Max(120, (int)(noteDuration * 0.16));
                             position = -offset;
                         } else if (i == mainVowelIndex) {
                             position = 0;
@@ -449,15 +409,17 @@ namespace OpenUtau.Plugin.Builtin {
                             if (tests[i].EndsWith("-") && tests.Count > 1) {
                                 position = Math.Max((int)(noteDuration * 0.90), noteDuration - 18);
                             } else if (noteTh.EndingConsonant != null && i == tests.Count - 1) {
-                                int consLength = 120; // Default absolute length for ending consonant
+                                // v17.3: widened ending consonant from 120 to 150 ticks for clearer coda
+                                int consLength = 150; // Default absolute length for ending consonant
                                 if (noteDuration < consLength * 1.5) {
                                     consLength = (int)(noteDuration / 1.5);
                                 }
                                 position = noteDuration - consLength;
                             } else {
-                                position = Math.Max((int)(noteDuration * 0.70), vcPosition);
+                                // v17.3: VC position shifted from 70% to 65% for more space before coda
+                                position = Math.Max((int)(noteDuration * 0.65), vcPosition);
                                 if (tests.Count > 2 && i == tests.Count - 2 && tests[tests.Count - 1].EndsWith("-")) {
-                                    position = Math.Max((int)(noteDuration * 0.70), vcPosition - 80);
+                                    position = Math.Max((int)(noteDuration * 0.65), vcPosition - 80);
                                 }
                             }
                         }

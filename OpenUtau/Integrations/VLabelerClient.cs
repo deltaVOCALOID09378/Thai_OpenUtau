@@ -1,3 +1,7 @@
+// Version: 0.1
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by OpenUtau Contributors
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,43 +16,55 @@ using Newtonsoft.Json;
 using OpenUtau.Core;
 using Serilog;
 
-/*
- * Made And Checked By DELTA SYNTH & Gemini AI
- * Original Author: OpenUtau Team & Delta
- */
-
-namespace OpenUtau.Integrations {
-    /// <summary>
-    /// ระบบไคลเอนต์สำหรับเชื่อมต่อและสั่งการ vLabeler ผ่านโปรโตคอล Network
-    /// </summary>
-    internal class VLabelerClient : Core.Util.SingletonBase<VLabelerClient> {
-        
-        // --- โครงสร้างข้อมูลสำหรับการสื่อสาร JSON ---
-
-        class HeartbeatRequest {
+namespace OpenUtau.Integrations
+{
+    internal class VLabelerClient : Core.Util.SingletonBase<VLabelerClient>
+    {
+        class HeartbeatRequest
+        {
+#pragma warning disable CS0414
             public string type = "Heartbeat";
+#pragma warning restore CS0414
             public long sentAt = Epoch();
         }
 
-        class GotoEntryByName {
+        class GotoEntryByName
+        {
             public string parentFolderName;
             public string entryName;
-            public GotoEntryByName(string parentFolderName, string entryName) {
+            public GotoEntryByName(string parentFolderName, string entryName)
+            {
                 this.parentFolderName = parentFolderName;
                 this.entryName = entryName;
             }
         }
 
-        class TypedValue {
+        class GotoEntryByIndex
+        {
+            public string parentFolderName;
+            public string entryIndex;
+            public GotoEntryByIndex(string parentFolderName, string entryIndex)
+            {
+                this.parentFolderName = parentFolderName;
+                this.entryIndex = entryIndex;
+            }
+        }
+
+        class TypedValue
+        {
             public string type;
             public object value;
-            public TypedValue(string type, object value) {
+            public TypedValue(string type, object value)
+            {
                 this.type = type;
                 this.value = value;
             }
         }
 
-        class NewProjectArgs {
+        class NewProjectArgs
+        {
+#pragma warning disable 0649
+#pragma warning disable CS0414
             public string labelerName = "utau-singer.default";
             public string? sampleDirectory;
             public string? cacheDirectory;
@@ -58,54 +74,71 @@ namespace OpenUtau.Integrations {
             public string? inputFile;
             public string encoding = Encoding.UTF8.WebName;
             public bool autoExport;
+#pragma warning restore 0649
+#pragma warning restore CS0414
+
         }
 
-        class OpenOrCreateRequest {
+        class OpenOrCreateRequest
+        {
+#pragma warning disable CS0414
             public string type = "OpenOrCreate";
+#pragma warning restore CS0414
             public string projectFile = string.Empty;
             public GotoEntryByName? gotoEntryByName;
             public NewProjectArgs newProjectArgs = new NewProjectArgs();
             public long sentAt = Epoch();
         }
 
-        // --- ระบบคำนวณและตัวช่วยจัดการข้อมูล ---
-
-        private static long Epoch() {
-            return (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+        private static long Epoch()
+        {
+            return (long)(DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
         }
 
-        private static string HashHex(string s) {
+        private static string HashHex(string s)
+        {
             return $"{XXH32.DigestOf(Encoding.UTF8.GetBytes(s)):x8}";
         }
 
-        /// <summary>
-        /// ตรวจสอบการเชื่อมต่อกับ vLabeler (ส่งสัญญาณชีพ)
-        /// </summary>
-        private bool Heartbeat() {
-            try {
-                using (var client = new RequestSocket()) {
+        private bool Heartbeat()
+        {
+            try 
+            {
+                using (var client = new RequestSocket())
+                {
                     client.Connect("tcp://localhost:32342");
                     string reqStr = JsonConvert.SerializeObject(new HeartbeatRequest());
                     client.SendFrame(reqStr);
-                    return client.TryReceiveFrameString(TimeSpan.FromMilliseconds(500), out _);
+                    if (client.TryReceiveFrameString(TimeSpan.FromMilliseconds(1000), out string? respStr))
+                    {
+                        return true;
+                    }
+                    return false;
                 }
-            } catch {
+            } 
+            catch (Exception ex) 
+            {
+                Log.Warning(ex, "vLabeler heartbeat check failed.");
                 return false;
             }
         }
 
-        /// <summary>
-        /// สั่งให้ vLabeler เปิดโปรเจกต์เดิมหรือสร้างใหม่เพื่อแก้ไขเสียงที่เลือก
-        /// </summary>
-        private void OpenOrCreate(Core.Ustx.USinger singer, Core.Ustx.UOto? oto) {
-            var existingProjectName = Directory.GetFiles(singer.Location)
-                .Where(path => Path.GetExtension(path).ToLower() == ".lbp")
-                .OrderByDescending(File.GetLastWriteTimeUtc)
-                .FirstOrDefault();
+        private void OpenOrCreate(Core.Ustx.USinger singer, Core.Ustx.UOto? oto)
+        {
+            string? existingProjectName = null;
+            if (Directory.Exists(singer.Location)) 
+            {
+                existingProjectName = Directory.GetFiles(singer.Location)
+                    .Where(path => Path.GetExtension(path) == ".lbp")
+                    .OrderByDescending(File.GetLastWriteTimeUtc)
+                    .FirstOrDefault();
+            }
 
-            var request = new OpenOrCreateRequest() {
-                projectFile = Path.Combine(singer.Location, existingProjectName != null ? Path.GetFileName(existingProjectName) : "_vlabeler.lbp"),
-                newProjectArgs = new NewProjectArgs {
+            var request = new OpenOrCreateRequest()
+            {
+                projectFile = Path.Combine(singer.Location, existingProjectName ?? "_vlabeler.lbp"),
+                newProjectArgs = new NewProjectArgs
+                {
                     cacheDirectory = Path.Combine(PathManager.Inst.CachePath, $"vlabeler-{HashHex(singer.Id)}"),
                     labelerParams = new Dictionary<string, TypedValue> {
                         { "useRootDirectory", new TypedValue("boolean", true) }
@@ -115,70 +148,110 @@ namespace OpenUtau.Integrations {
                 },
             };
 
-            if (oto != null) {
-                // ปรับปรุง Path ให้รองรับมาตรฐาน vLabeler
+            if (oto != null)
+            {
                 request.gotoEntryByName = new GotoEntryByName(oto.Set.Replace("\\", "/"), oto.Alias);
             }
 
-            using (var client = new RequestSocket()) {
-                client.Connect("tcp://localhost:32342");
-                string reqStr = JsonConvert.SerializeObject(request);
-                client.SendFrame(reqStr);
-                if (!client.TryReceiveFrameString(TimeSpan.FromMilliseconds(2000), out _)) {
-                    Log.Warning($"[vLabeler] ไม่สามารถตอบสนองคำสั่ง OpenOrCreate ได้");
+            try 
+            {
+                using (var client = new RequestSocket())
+                {
+                    client.Connect("tcp://localhost:32342");
+                    string reqStr = JsonConvert.SerializeObject(request);
+                    client.SendFrame(reqStr);
+                    if (!client.TryReceiveFrameString(TimeSpan.FromMilliseconds(1000), out string? respStr))
+                    {
+                        Log.Warning($"Failed to OpenOrCreate with vLabeler");
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Exception thrown during OpenOrCreate with vLabeler");
             }
         }
 
-        /// <summary>
-        /// พยายามเริ่มต้นโปรแกรม vLabeler หากยังไม่ได้เปิดใช้งาน
-        /// </summary>
-        private Task<bool> TryStart() {
-            return Task.Run(() => {
-                if (Heartbeat()) return true;
-
-                var path = Core.Util.Preferences.Default.VLabelerPath;
-                if (!OS.AppExists(path)) {
-                    throw new FileNotFoundException($"ไม่พบไฟล์โปรแกรม vLabeler ที่ตำแหน่ง: {path}");
+        private Task<bool> TryStart()
+        {
+            return Task.Run(() =>
+            {
+                if (Heartbeat())
+                {
+                    return true;
                 }
-
-                using (var proc = new Process()) {
-                    if (OS.IsMacOS()) {
+                
+                var path = Core.Util.Preferences.Default.VLabelerPath;
+                if (!OS.AppExists(path))
+                {
+                    throw new FileNotFoundException($"Cannot find file {path}.");
+                }
+                
+                using (var proc = new Process())
+                {
+                    if (OS.IsMacOS())
+                    {
                         OS.OpenFolder(path);
-                    } else {
-                        proc.StartInfo = new ProcessStartInfo(path) {
-                            UseShellExecute = true,
-                            CreateNoWindow = false,
+                    }
+                    else
+                    {
+                        proc.StartInfo = new ProcessStartInfo(path)
+                        {
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
                         };
                         proc.Start();
                     }
-                    Log.Information("กำลังเริ่มต้นการทำงานของ vLabeler...");
+                    Log.Information("Starting vLabeler.");
                 }
-
-                // รอการเชื่อมต่อสูงสุด 5 วินาที
-                for (int i = 0; i < 50; i++) {
+                
+                for (int i = 0; i < 50; i++)
+                {
                     Task.Delay(100).Wait();
-                    if (Heartbeat()) {
-                        Log.Information("vLabeler พร้อมใช้งานแล้ว");
+                    if (Heartbeat())
+                    {
+                        Log.Information("vLabeler started.");
                         return true;
                     }
                 }
+                Log.Warning("Unable to start vLabeler.");
                 return false;
             });
         }
 
-        /// <summary>
-        /// คำสั่งหลักในการส่งข้อมูลนักร้องและตัวโน้ตไปยัง vLabeler
-        /// </summary>
-        public void GotoOto(Core.Ustx.USinger singer, Core.Ustx.UOto? oto) {
-            TryStart().ContinueWith(task => {
-                if (!task.IsFaulted && task.Result) {
+        public void GotoOto(Core.Ustx.USinger singer, Core.Ustx.UOto? oto)
+        {
+            TryStart().ContinueWith(task =>
+            {
+                if (!task.IsFaulted && task.Result)
+                {
                     OpenOrCreate(singer, oto);
-                } else {
-                    string errorMsg = task.IsFaulted ? task.Exception?.InnerException?.Message ?? "เกิดข้อผิดพลาดในการเปิดโปรแกรม" : "ไม่สามารถเริ่มต้น vLabeler ได้";
-                    DocManager.Inst.ExecuteCmd(new ErrorMessageNotification($"ข้อผิดพลาดของ vLabeler: {errorMsg}"));
                 }
-            }, TaskScheduler.Default);
+                else if (task.IsFaulted)
+                {
+                    if (task.Exception != null)
+                    {
+                        throw task.Exception;
+                    }
+                }
+                else
+                {
+                    throw new Exception("Failed to start vLabeler");
+                }
+            }).ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    if (task.Exception != null)
+                    {
+                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(task.Exception));
+                    }
+                    else
+                    {
+                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification("Failed to start vLabeler"));
+                    }
+                }
+            });
         }
     }
 }

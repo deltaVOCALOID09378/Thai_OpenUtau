@@ -1,0 +1,17 @@
+root = true
+
+[*.cs]
+# Core formatting
+indent_style = space
+indent_size = 4
+tab_width = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Remove unused usings automatically
+dotnet_diagnostic.IDE0005.severity = warning
+
+# Organize usings
+dotnet_sort_system_directives_first = true
