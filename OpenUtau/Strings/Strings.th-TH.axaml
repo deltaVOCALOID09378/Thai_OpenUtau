@@ -581,7 +581,7 @@
   <system:String x:Key="pianoroll.menu.lyrics.edit">✏️ แก้ไขเนื้อเพลงทั้งหมด</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.hiraganatoromaji">🔠 แปลงฮิรางานะ เป็น โรมาจิ</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.insertslur">〰️ แทรกสัญลักษณ์ร้องสเลอร์ (Slur lyric)</system:String>
-  <system:String x:Key="pianoroll.menu.lyrics.javcvtocv">🔄 เปลี่ยนระบบเสียง JP VCV เป็น CV</system:String>
+  <system:String x:Key="pianoroll.menu.lyrics.javcvtocv">🔄 เปลี่ยนเนื้อเพลง ของระบบเสียงจาก JP VCV เป็น CV</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.movesuffixtovoicecolor">🎨 โยกย้ายคำต่อท้าย (Suffix) ไปยังสีเสียง</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.removelettersuffix">🗑️ ลบตัวอักษรต่อท้าย (Letter Suffix)</system:String>
   <system:String x:Key="pianoroll.menu.lyrics.removephonetichint">🗑️ ลบคำใบ้การออกเสียง (Phonetic Hint)</system:String>
@@ -664,7 +664,7 @@
     กด Ctrl ค้างไว้: เลือกจุดที่วาดแล้ว</system:String>
   <system:String x:Key="pianoroll.tool.eraser">🧽 ยางลบลบโน้ต (3)</system:String>
   <system:String x:Key="pianoroll.tool.knife">🔪 มีดหั่นโน้ต (5)</system:String>
-  <system:String x:Key="pianoroll.tool.pitchline">📏 เครื่องมือวาด Pitch แบบเส้นตรง (Shift + 1)
+  <system:String x:Key="pianoroll.tool.pitchline">📏 เครื่องมือวาดเส้น Pitch แบบเส้นตรง (Shift + 1)
     คลิกซ้าย: ลากเส้นยาวตรงไปตรงมา
     คลิกขวา: คืนค่าเส้นกลับเป็นปกติ
     กด Ctrl ค้างไว้: เพื่อคลุมการเลือก</system:String>
