@@ -40,8 +40,8 @@ if sys.platform == 'win32':
     if appcast_ver is not None:
         if not is_safe_version(appcast_ver):
             raise ValueError("Unsafe APPVEYOR_BUILD_VERSION value")
-        os.system("git tag build/%s 2>&1" % (appcast_ver))
-        os.system("git push origin build/%s 2>&1" % (appcast_ver))
+        subprocess.run(["git", "tag", f"build/{appcast_ver}"], check=True)
+        subprocess.run(["git", "push", "origin", f"build/{appcast_ver}"], check=True)
 
     os.system("del *.xml 2>&1")
 
