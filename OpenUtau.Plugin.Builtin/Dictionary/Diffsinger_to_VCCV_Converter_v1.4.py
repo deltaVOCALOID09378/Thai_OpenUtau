@@ -134,12 +134,16 @@ def main():
         if not dir_name: # v1.4 - 2026-07-18 - กรณีที่รันผ่านบรรทัดคำสั่งโดยตรงและไม่มีพาธ
             dir_name = "." # v1.4 - 2026-07-18 - อ้างอิงโฟลเดอร์ปัจจุบันแทนที่
             
-        out_path = os.path.join(dir_name, "TH_VCCV_Dict.txt") # v1.4 - 2026-07-18 - สร้างพาธไฟล์ขาออกโดยรักษาชื่อตามมาตรฐาน VCCV อย่างแม่นยำ
+        out_path = os.path.abspath(os.path.normpath(os.path.join(dir_name, "TH_VCCV_Dict.txt"))) # v1.4 - 2026-07-18 - สร้างพาธไฟล์ขาออกและ normalize/abspath เพื่อความปลอดภัย
+        if os.path.commonpath([allowed_input_root, out_path]) != allowed_input_root: # v1.4 - 2026-07-18 - ป้องกันการเขียนไฟล์ออกนอกขอบเขตที่อนุญาต
+            print(f"[ERROR / ข้อผิดพลาด] Invalid output path / พาธปลายทางไม่ปลอดภัย: {out_path}")
+            error_count += 1
+            continue
         
-        print(f"[PROCESSING / กำลังดำเนินการ] Reading and Analyzing / กำลังวิเคราะห์ข้อมูล: {file_path}") # v1.4 - 2026-07-18 - แสดงสถานะกำลังอ่านและวิเคราะห์ไวยากรณ์
+        print(f"[PROCESSING / กำลังดำเนินการ] Reading and Analyzing / กำลังวิเคราะห์ข้อมูล: {normalized_file_path}") # v1.4 - 2026-07-18 - แสดงสถานะกำลังอ่านและวิเคราะห์ไวยากรณ์
         
         try:
-            with open(file_path, 'r', encoding='utf-8') as f: # v1.4 - 2026-07-18 - เปิดไฟล์อ่านด้วยการเข้ารหัส UTF-8 เพื่อรองรับอักษรไทยอย่างสมบูรณ์
+            with open(normalized_file_path, 'r', encoding='utf-8') as f: # v1.4 - 2026-07-18 - เปิดไฟล์อ่านด้วยการเข้ารหัส UTF-8 เพื่อรองรับอักษรไทยอย่างสมบูรณ์
                 lines = f.readlines() # v1.4 - 2026-07-18 - โหลดเนื้อหาทั้งหมดลงในหน่วยความจำชั่วคราว
                 
             out_data = [] # v1.4 - 2026-07-18 - เตรียมลิสต์ว่างสำหรับเก็บผลลัพธ์ที่ผ่านการจัดเรียงโครงสร้างแล้ว
