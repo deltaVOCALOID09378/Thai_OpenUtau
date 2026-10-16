@@ -126,8 +126,13 @@ def main():
             error_count += 1
             continue # v1.4 - 2026-07-18 - ข้ามการทำงานไปยังไฟล์ลำดับถัดไป
 
-        if not os.path.exists(normalized_file_path): # v1.4 - 2026-07-18 - ยืนยันการมีอยู่ของไฟล์บนหน่วยความจำอีกครั้ง
-            print(f"[ERROR / ข้อผิดพลาด] File not found / ไม่พบไฟล์อ้างอิง: {normalized_file_path}") # v1.4 - 2026-07-18 - แจ้งเตือนเมื่อไฟล์สูญหายระหว่างดำเนินการ
+        if not normalized_file_path.lower().endswith(".txt"): # v1.4 - 2026-07-18 - อนุญาตเฉพาะไฟล์พจนานุกรมชนิด .txt เพื่อลดความเสี่ยงจากพาธที่ไม่คาดคิด
+            print(f"[ERROR / ข้อผิดพลาด] Unsupported file type / ชนิดไฟล์ไม่รองรับ: {normalized_file_path}") # v1.4 - 2026-07-18 - แจ้งเตือนเมื่อชนิดไฟล์ไม่เป็นไปตามข้อกำหนด
+            error_count += 1
+            continue # v1.4 - 2026-07-18 - ข้ามการทำงานไปยังไฟล์ลำดับถัดไป
+
+        if not os.path.isfile(normalized_file_path): # v1.4 - 2026-07-18 - ยืนยันว่าเป็นไฟล์ปกติที่เข้าถึงได้จริง
+            print(f"[ERROR / ข้อผิดพลาด] File not found / ไม่พบไฟล์อ้างอิง: {normalized_file_path}") # v1.4 - 2026-07-18 - แจ้งเตือนเมื่อไฟล์สูญหายหรือไม่ใช่ไฟล์
             error_count += 1
             continue # v1.4 - 2026-07-18 - ข้ามการทำงานไปยังไฟล์ลำดับถัดไป
             
