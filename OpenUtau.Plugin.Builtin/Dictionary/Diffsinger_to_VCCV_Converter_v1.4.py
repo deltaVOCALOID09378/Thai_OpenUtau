@@ -107,8 +107,9 @@ def main():
     target_files = sys.argv[1:] # v1.4 - 2026-07-18 - รับรายการพาธของไฟล์ที่ถูกลากวางเข้ามาผ่านตัวรับอาร์กิวเมนต์
     
     if not target_files: # v1.4 - 2026-07-18 - ตรวจสอบว่ามีไฟล์ถูกส่งเข้ามาในระบบหรือไม่
-        if os.path.exists("words_th_dict.txt"): # v1.4 - 2026-07-18 - หากไม่มี ให้ค้นหาไฟล์พจนานุกรมตั้งต้นในระดับเดียวกัน
-            target_files = ["words_th_dict.txt"] # v1.4 - 2026-07-18 - ใช้ไฟล์ตั้งต้นเป็นเป้าหมายในการประมวลผล
+        default_dict_path = os.path.abspath(os.path.normpath(os.path.join(safe_base_dir, "words_th_dict.txt"))) # v1.4 - 2026-07-18 - ผูกไฟล์ตั้งต้นกับโฟลเดอร์ปลอดภัยของโปรแกรมโดยตรง
+        if os.path.exists(default_dict_path): # v1.4 - 2026-07-18 - หากไม่มีอินพุต ให้ค้นหาไฟล์พจนานุกรมตั้งต้นภายใต้ safe_base_dir เท่านั้น
+            target_files = [default_dict_path] # v1.4 - 2026-07-18 - ใช้พาธแบบเต็มที่ผ่านการทำมาตรฐานแล้วเป็นเป้าหมายในการประมวลผล
         else:
             print("[ERROR / ข้อผิดพลาด] No input files provided and 'words_th_dict.txt' not found.") # v1.4 - 2026-07-18 - แสดงข้อผิดพลาดกรณีไม่พบไฟล์ใดๆ (อังกฤษ)
             print("[ERROR / ข้อผิดพลาด] ไม่พบไฟล์ข้อมูล กรุณาตรวจสอบให้แน่ใจว่ามีไฟล์ที่ต้องการแปลง") # v1.4 - 2026-07-18 - แสดงข้อผิดพลาดด้วยภาษาไทยที่สละสลวยทางการ
@@ -117,7 +118,7 @@ def main():
             show_msg("Error - No File Found", "ไม่พบไฟล์ข้อมูล กรุณาลากไฟล์พจนานุกรมที่ต้องการแปลงมาวางทับลงบนไฟล์ .exe ครับ")
             return 1 # v1.4 - 2026-07-18 - ปิดโปรแกรมและส่งรหัสข้อผิดพลาดระดับ 1
             
-    allowed_input_root = os.path.abspath(os.getcwd()) # v1.4 - 2026-07-18 - กำหนดโฟลเดอร์รากที่อนุญาตสำหรับอินพุตจากผู้ใช้
+    allowed_input_root = safe_base_dir # v1.4 - 2026-07-18 - กำหนดโฟลเดอร์รากที่อนุญาตสำหรับอินพุตจากผู้ใช้ให้เป็นโฟลเดอร์ปลอดภัยของโปรแกรม
     for file_path in target_files: # v1.4 - 2026-07-18 - วนลูปอ่านรายชื่อไฟล์เป้าหมายทั้งหมดทีละไฟล์
         normalized_file_path = os.path.abspath(os.path.normpath(file_path)) # v1.4 - 2026-07-18 - ปรับรูปแบบพาธให้เป็นมาตรฐานก่อนตรวจสอบความปลอดภัย
         if os.path.commonpath([allowed_input_root, normalized_file_path]) != allowed_input_root: # v1.4 - 2026-07-18 - ป้องกัน path traversal ออกจากโฟลเดอร์ที่อนุญาต
