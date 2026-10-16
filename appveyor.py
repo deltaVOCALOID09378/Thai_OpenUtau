@@ -5,15 +5,24 @@ import shutil
 import zipfile
 import subprocess
 import urllib.request
+import re
 from pathlib import Path
 from datetime import datetime, timezone
 
 appcast_ver = os.environ.get('APPVEYOR_BUILD_VERSION', '0.0.0')
 
-def run_cmd(cmd: str) -> None:
+def _validate_appcast_ver(version: str) -> str:
+    """Allow only safe version/tag characters."""
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", version):
+        raise ValueError(f"Invalid APPVEYOR_BUILD_VERSION: {version!r}")
+    return version
+
+appcast_ver = _validate_appcast_ver(appcast_ver)
+
+def run_cmd(cmd: list[str]) -> None:
     """Helper function to execute system commands safely."""
-    print(f"[Command] {cmd}")
-    subprocess.run(cmd, shell=True, check=True)
+    print(f"[Command] {' '.join(cmd)}")
+    subprocess.run(cmd, shell=False, check=True)
 
 def cleanup_files(*patterns) -> None:
     """Helper function to remove files matching specific patterns."""
@@ -52,8 +61,8 @@ def write_appcast(appcast_os: str, appcast_rid: str, appcast_file: str) -> None:
 
 def build_windows():
     if appcast_ver != '0.0.0':
-        run_cmd(f"git tag build/{appcast_ver}")
-        run_cmd(f"git push origin build/{appcast_ver}")
+        run_cmd(["git", "tag", f"build/{appcast_ver}"])
+        run_cmd(["git", "push", "origin", f"build/{appcast_ver}"])
 
     cleanup_files('*.xml')
 
@@ -68,20 +77,20 @@ def build_windows():
         zip_ref.extractall(directml_dir)
 
     # Build for win-x86
-    run_cmd("dotnet restore OpenUtau -r win-x86")
-    run_cmd("dotnet publish OpenUtau -c Release -r win-x86 --self-contained true -o bin/win-x86")
+    run_cmd(["dotnet", "restore", "OpenUtau", "-r", "win-x86"])
+    run_cmd(["dotnet", "publish", "OpenUtau", "-c", "Release", "-r", "win-x86", "--self-contained", "true", "-o", "bin/win-x86"])
     plugin_src = Path("OpenUtau.Plugin.Builtin/bin/Release/netstandard2.1/OpenUtau.Plugin.Builtin.dll")
     shutil.copy2(plugin_src, Path("bin/win-x86/OpenUtau.Plugin.Builtin.dll"))
     write_appcast("windows", "win-x86", "OpenUtau-win-x86.zip")
 
     # Build for win-x64
-    run_cmd("dotnet restore OpenUtau -r win-x64")
-    run_cmd("dotnet publish OpenUtau -c Release -r win-x64 --self-contained true -o bin/win-x64")
+    run_cmd(["dotnet", "restore", "OpenUtau", "-r", "win-x64"])
+    run_cmd(["dotnet", "publish", "OpenUtau", "-c", "Release", "-r", "win-x64", "--self-contained", "true", "-o", "bin/win-x64"])
     shutil.copy2(plugin_src, Path("bin/win-x64/OpenUtau.Plugin.Builtin.dll"))
     write_appcast("windows", "win-x64", "OpenUtau-win-x64.zip")
 
     # Installer
-    run_cmd(f"makensis -DPRODUCT_VERSION={appcast_ver} OpenUtau.nsi")
+    run_cmd(["makensis", f"-DPRODUCT_VERSION={appcast_ver}", "OpenUtau.nsi"])
     write_appcast("windows", "win-x64-installer", "OpenUtau-win-x64.exe")
 
 def build_macos():
