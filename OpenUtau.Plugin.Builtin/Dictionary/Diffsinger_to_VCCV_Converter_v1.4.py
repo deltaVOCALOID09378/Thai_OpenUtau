@@ -118,11 +118,16 @@ def main():
             show_msg("Error - No File Found", "ไม่พบไฟล์ข้อมูล กรุณาลากไฟล์พจนานุกรมที่ต้องการแปลงมาวางทับลงบนไฟล์ .exe ครับ")
             return 1 # v1.4 - 2026-07-18 - ปิดโปรแกรมและส่งรหัสข้อผิดพลาดระดับ 1
             
-    allowed_input_root = safe_base_dir # v1.4 - 2026-07-18 - กำหนดโฟลเดอร์รากที่อนุญาตสำหรับอินพุตจากผู้ใช้ให้เป็นโฟลเดอร์ปลอดภัยของโปรแกรม
+    allowed_input_root = os.path.realpath(safe_base_dir) # v1.4 - 2026-07-18 - ใช้ canonical path ของโฟลเดอร์รากเพื่อลดความเสี่ยงจาก symlink escape
     for file_path in target_files: # v1.4 - 2026-07-18 - วนลูปอ่านรายชื่อไฟล์เป้าหมายทั้งหมดทีละไฟล์
-        normalized_file_path = os.path.abspath(os.path.normpath(file_path)) # v1.4 - 2026-07-18 - ปรับรูปแบบพาธให้เป็นมาตรฐานก่อนตรวจสอบความปลอดภัย
-        if os.path.commonpath([allowed_input_root, normalized_file_path]) != allowed_input_root: # v1.4 - 2026-07-18 - ป้องกัน path traversal ออกจากโฟลเดอร์ที่อนุญาต
-            print(f"[ERROR / ข้อผิดพลาด] Invalid path / พาธไม่ปลอดภัย: {file_path}") # v1.4 - 2026-07-18 - แจ้งเตือนเมื่อพบพาธที่อยู่นอกขอบเขตที่กำหนด
+        normalized_file_path = os.path.realpath(os.path.abspath(os.path.normpath(file_path))) # v1.4 - 2026-07-18 - ทำ canonical path ก่อนตรวจสอบเพื่อป้องกัน path traversal ผ่าน symlink
+        try:
+            if os.path.commonpath([allowed_input_root, normalized_file_path]) != allowed_input_root: # v1.4 - 2026-07-18 - ป้องกันพาธที่อยู่นอกขอบเขตที่อนุญาต
+                print(f"[ERROR / ข้อผิดพลาด] Invalid path / พาธไม่ปลอดภัย: {file_path}") # v1.4 - 2026-07-18 - แจ้งเตือนเมื่อพบพาธที่อยู่นอกขอบเขตที่กำหนด
+                error_count += 1
+                continue # v1.4 - 2026-07-18 - ข้ามการทำงานไปยังไฟล์ลำดับถัดไป
+        except ValueError:
+            print(f"[ERROR / ข้อผิดพลาด] Invalid path / พาธไม่ปลอดภัย: {file_path}") # v1.4 - 2026-07-18 - รองรับกรณีพาธผิดรูปแบบหรือคนละไดรฟ์ (Windows)
             error_count += 1
             continue # v1.4 - 2026-07-18 - ข้ามการทำงานไปยังไฟล์ลำดับถัดไป
 
