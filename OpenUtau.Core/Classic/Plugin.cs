@@ -26,32 +26,16 @@ namespace OpenUtau.Classic {
                 && (ext == ".exe" || ext == ".bat");
             string resolvedWinePath = string.Empty;
             if (useWine) {
-                string[] wineNames = { "wine", "wine64", "wine32", "wine32on64" };
-                foreach (string wineName in wineNames) {
-                    string candidate = OS.WhereIs(wineName);
-                    if (!string.IsNullOrEmpty(candidate)
-                        && Path.IsPathRooted(candidate)
-                        && File.Exists(candidate)
-                        && candidate.EndsWith(wineName, StringComparison.Ordinal)) {
-                        resolvedWinePath = Path.GetFullPath(candidate);
-                        break;
-                    }
-                }
-                if (string.IsNullOrEmpty(resolvedWinePath)) {
-                    throw new FileNotFoundException("Wine executable not found.");
+                resolvedWinePath = Path.GetFullPath(winePath);
+                if (!Path.IsPathRooted(resolvedWinePath) || !File.Exists(resolvedWinePath)) {
+                    throw new FileNotFoundException($"Wine executable {resolvedWinePath} not found.");
                 }
             }
-            var startInfo = new ProcessStartInfo() {
-                FileName = useWine ? resolvedWinePath : Executable,
-                Arguments = useWine ? $"\"{Executable}\" \"{tempFile}\"" : $"\"{tempFile}\"",
-                Environment = {{"LANG", "ja_JP.utf8"}},
-            string ext = Path.GetExtension(Executable).ToLower();
-            bool useWine = !OS.IsWindows() && !string.IsNullOrEmpty(winePath) && ( ext == ".exe" || ext == ".bat");
             var startInfo = new ProcessStartInfo() {
                 WorkingDirectory = Path.GetDirectoryName(Executable),
             };
             if (useWine) {
-                startInfo.FileName = winePath;
+                startInfo.FileName = resolvedWinePath;
                 startInfo.Arguments = $"\"{Executable}\" \"{tempFile}\"";
                 startInfo.UseShellExecute = false;
                 startInfo.Environment.Add("LANG", "ja_JP.utf8");
