@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using OpenUtau.Core.Util;
@@ -19,13 +20,22 @@ namespace OpenUtau.Classic {
                 throw new FileNotFoundException($"Executable {Executable} not found.");
             }
             string winePath = Preferences.Default.WinePath;
-            string ext = Path.GetExtension(Executable).ToLower();
-            bool useWine = !OS.IsWindows() && !string.IsNullOrEmpty(winePath) && ( ext == ".exe" || ext == ".bat");
+            string ext = Path.GetExtension(Executable).ToLowerInvariant();
+            bool useWine = !OS.IsWindows()
+                && !string.IsNullOrEmpty(winePath)
+                && (ext == ".exe" || ext == ".bat");
+            string resolvedWinePath = string.Empty;
+            if (useWine) {
+                resolvedWinePath = Path.GetFullPath(winePath);
+                if (!Path.IsPathRooted(resolvedWinePath) || !File.Exists(resolvedWinePath)) {
+                    throw new FileNotFoundException($"Wine executable {resolvedWinePath} not found.");
+                }
+            }
             var startInfo = new ProcessStartInfo() {
                 WorkingDirectory = Path.GetDirectoryName(Executable),
             };
             if (useWine) {
-                startInfo.FileName = winePath;
+                startInfo.FileName = resolvedWinePath;
                 startInfo.Arguments = $"\"{Executable}\" \"{tempFile}\"";
                 startInfo.UseShellExecute = false;
                 startInfo.Environment.Add("LANG", "ja_JP.utf8");
