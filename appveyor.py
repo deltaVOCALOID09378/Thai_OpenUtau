@@ -12,9 +12,15 @@ from datetime import datetime, timezone
 appcast_ver = os.environ.get('APPVEYOR_BUILD_VERSION', '0.0.0')
 
 def _validate_appcast_ver(version: str) -> str:
-    """Allow only safe version/tag characters."""
-    if not re.fullmatch(r"[A-Za-z0-9._-]+", version):
-        raise ValueError(f"Invalid APPVEYOR_BUILD_VERSION: {version!r}")
+    """Validate CI-provided version/tag to a safe, expected format."""
+    if not version:
+        raise ValueError("APPVEYOR_BUILD_VERSION must not be empty")
+    if version.startswith('-'):
+        raise ValueError(f"Invalid APPVEYOR_BUILD_VERSION (option-like): {version!r}")
+    if any(ch in version for ch in ('/', '\\')) or '..' in version or any(ch.isspace() for ch in version):
+        raise ValueError(f"Invalid APPVEYOR_BUILD_VERSION (path/whitespace): {version!r}")
+    if not re.fullmatch(r"\d+\.\d+\.\d+(?:[._-]?[A-Za-z0-9]+)*", version):
+        raise ValueError(f"Invalid APPVEYOR_BUILD_VERSION format: {version!r}")
     return version
 
 appcast_ver = _validate_appcast_ver(appcast_ver)
@@ -61,8 +67,8 @@ def write_appcast(appcast_os: str, appcast_rid: str, appcast_file: str) -> None:
 
 def build_windows():
     if appcast_ver != '0.0.0':
-        run_cmd(["git", "tag", f"build/{appcast_ver}"])
-        run_cmd(["git", "push", "origin", f"build/{appcast_ver}"])
+        run_cmd(["git", "tag", "--", f"build/{appcast_ver}"])
+        run_cmd(["git", "push", "origin", "--", f"build/{appcast_ver}"])
 
     cleanup_files('*.xml')
 
