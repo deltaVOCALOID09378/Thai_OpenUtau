@@ -965,22 +965,14 @@ namespace OpenUtau.Core.Editing {
         private readonly string name;
         private readonly string shapeMode;
 
+        public AutoPitchVibrato() : this("Random Mix", "pianoroll.menu.notes.autopitchvibrato") { }
+
         public AutoPitchVibrato(string shapeMode, string name) {
             this.shapeMode = shapeMode;
             this.name = name;
         }
 
         public void Run(UProject project, UVoicePart part, List<UNote> selectedNotes, DocManager docManager) {
-            var renderer = project.tracks[part.trackNo].RendererSettings.Renderer;
-            if (renderer == null || !renderer.SupportsRenderPitch) {
-                var e = new MessageCustomizableException(
-                    "Current renderer doesn't support generating pitch curve",
-                    "คลังเสียงปัจจุบันไม่รองรับการสร้างเส้นโค้งระดับเสียง กรุณาใช้คลังเสียง Diffsinger หรือ Enunu ครับ/ค่ะ",
-                    new Exception());
-                docManager.ExecuteCmd(new ErrorMessageNotification(e));
-                return;
-            }
-
             var notes = selectedNotes.Count > 0 ? selectedNotes : part.notes.ToList();
             if (notes.Count == 0) {
                 return;
@@ -1024,42 +1016,42 @@ namespace OpenUtau.Core.Editing {
             var pitch = new UPitch();
             pitch.snapFirst = true;
             
-            // Add a small jitter (-5 to +5) to Y values to make it look more natural
-            int jitter() => random.Next(-5, 6);
+            // Subtle micro-intonation jitter (-2 to +2 cents)
+            float jitter() => (float)(random.NextDouble() * 0.4 - 0.2);
 
             switch (shape) {
                 case "W-shape":
-                    pitch.data.Add(new PitchPoint(-50, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(-10, -20 + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(30, 0 + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(70, -20 + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(110, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(-40, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(-10, -1.5f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(25, 0.8f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(60, -1.2f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(90, 0, PitchPointShape.io));
                     break;
                 case "Thunderbolt":
-                    pitch.data.Add(new PitchPoint(-30, 0, PitchPointShape.l));
-                    pitch.data.Add(new PitchPoint(0, 15 + jitter(), PitchPointShape.l));
-                    pitch.data.Add(new PitchPoint(20, -15 + jitter(), PitchPointShape.l));
-                    pitch.data.Add(new PitchPoint(50, 0, PitchPointShape.l));
+                    pitch.data.Add(new PitchPoint(-30, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(0, 1.5f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(25, -1.0f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(55, 0, PitchPointShape.io));
                     break;
                 case "Pitch-drop/Rise":
-                    pitch.data.Add(new PitchPoint(-60, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(-30, -15 + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(0, 15 + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(30, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(-40, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(-15, -1.8f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(15, 1.2f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(45, 0, PitchPointShape.io));
                     break;
                 case "Slope":
-                    pitch.data.Add(new PitchPoint(-80, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(20, -15 + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(-50, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(30, 0, PitchPointShape.io));
                     break;
                 case "U pitch-drop":
-                    pitch.data.Add(new PitchPoint(-50, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(-10, -40 + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(30, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(-40, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(-5, -2.5f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(35, 0, PitchPointShape.io));
                     break;
                 case "Pitchdent":
                     pitch.data.Add(new PitchPoint(-20, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(-5, -50 + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(10, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(0, -1.8f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(20, 0, PitchPointShape.io));
                     break;
                 default:
                     pitch.data.Add(new PitchPoint(-40, 0, PitchPointShape.io));
@@ -1071,12 +1063,12 @@ namespace OpenUtau.Core.Editing {
 
         private static UVibrato CreateVibratoForShape(string shape) {
             var vibrato = new UVibrato();
-            if (shape == "W-shape") {
+            if (shape == "W-shape" || shape == "Slope" || shape == "Pitch-drop/Rise") {
                 vibrato.length = 65;
-                vibrato.period = 30;
-                vibrato.depth = 35;
-                vibrato.@in = 20;
-                vibrato.@out = 20;
+                vibrato.period = 18;
+                vibrato.depth = 28;
+                vibrato.@in = 25;
+                vibrato.@out = 15;
                 vibrato.shift = 0;
                 vibrato.drift = 0;
             } else {

@@ -9,19 +9,21 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 
 using Avalonia.VisualTree;
+
+using OpenUtau.App;
 using OpenUtau.App.Controls;
 
 using OpenUtau.App.ViewModels;
+
+using OpenUtau.Core.Util;
 
 using ReactiveUI;
 
 
 
-namespace OpenUtau.App.Views
-{
+namespace OpenUtau.App.Views {
 
-    public partial class ThemeEditorPane : UserControl
-    {
+    public partial class ThemeEditorPane : UserControl {
 
         public event EventHandler<ThemeEditorFinishedEventArgs>? Finished;
 
@@ -29,13 +31,11 @@ namespace OpenUtau.App.Views
 
 
 
-        public ThemeEditorPane()
-        {
+        public ThemeEditorPane() {
 
             InitializeComponent();
 
-            AttachedToVisualTree += (_, _) =>
-            {
+            AttachedToVisualTree += (_, _) => {
 
                 ClosePanelButton.IsVisible = IsHostedInPianoRollDock();
 
@@ -53,8 +53,7 @@ namespace OpenUtau.App.Views
 
 
 
-        public void LoadTheme(string customThemePath)
-        {
+        public void LoadTheme(string customThemePath) {
 
             DataContext = new ThemeEditorViewModel(customThemePath);
 
@@ -62,8 +61,7 @@ namespace OpenUtau.App.Views
 
 
 
-        bool IsHostedInPianoRollDock()
-        {
+        bool IsHostedInPianoRollDock() {
 
             return this.GetVisualAncestors().OfType<PianoRoll>().Any();
 
@@ -71,11 +69,9 @@ namespace OpenUtau.App.Views
 
 
 
-        void ScheduleApplyScrollStyle()
-        {
+        void ScheduleApplyScrollStyle() {
 
-            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
-            {
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this)) {
 
                 return;
 
@@ -83,11 +79,9 @@ namespace OpenUtau.App.Views
 
             int generation = ++scrollStyleApplyGeneration;
 
-            Dispatcher.UIThread.Post(() =>
-            {
+            Dispatcher.UIThread.Post(() => {
 
-                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this))
-                {
+                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this)) {
 
                     return;
 
@@ -101,11 +95,9 @@ namespace OpenUtau.App.Views
 
 
 
-        void ApplyScrollStyle()
-        {
+        void ApplyScrollStyle() {
 
-            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
-            {
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this)) {
 
                 return;
 
@@ -117,8 +109,7 @@ namespace OpenUtau.App.Views
 
 
 
-        void OnCloseDockedPanel(object? sender, RoutedEventArgs e)
-        {
+        void OnCloseDockedPanel(object? sender, RoutedEventArgs e) {
 
             MessageBus.Current.SendMessage(new CloseDockedThemeEditorEvent());
 
@@ -126,8 +117,7 @@ namespace OpenUtau.App.Views
 
 
 
-        void OnCancel(object? sender, RoutedEventArgs e)
-        {
+        void OnCancel(object? sender, RoutedEventArgs e) {
 
             Finished?.Invoke(this, new ThemeEditorFinishedEventArgs(saved: false));
 
@@ -135,8 +125,7 @@ namespace OpenUtau.App.Views
 
 
 
-        void OnSave(object? sender, RoutedEventArgs e)
-        {
+        void OnSave(object? sender, RoutedEventArgs e) {
 
             (DataContext as ThemeEditorViewModel)?.Save();
 
@@ -150,15 +139,13 @@ namespace OpenUtau.App.Views
 
 
 
-    public class ThemeEditorFinishedEventArgs : EventArgs
-    {
+    public class ThemeEditorFinishedEventArgs : EventArgs {
 
         public bool Saved { get; }
 
 
 
-        public ThemeEditorFinishedEventArgs(bool saved)
-        {
+        public ThemeEditorFinishedEventArgs(bool saved) {
 
             Saved = saved;
 

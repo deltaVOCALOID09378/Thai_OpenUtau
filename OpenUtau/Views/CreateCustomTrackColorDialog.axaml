@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.CreateCustomTrackColorDialog"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource prefs.appearance.customtrackcolor.create.title}"
         Height="300" Width="380" WindowStartupLocation="CenterOwner">
   <StackPanel Margin="{Binding $parent.WindowDecorationMargin}" Spacing="8">
@@ -31,3 +31,4 @@
     </StackPanel>
   </StackPanel>
 </Window>
+

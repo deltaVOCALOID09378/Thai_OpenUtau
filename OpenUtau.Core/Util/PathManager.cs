@@ -43,8 +43,12 @@ namespace OpenUtau.Core {
             } else {
                 string exePath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
                 IsInstalled = File.Exists(Path.Combine(exePath, "installed.txt"));
-                string dataHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-                DataPath = Path.Combine(dataHome, "OpenUtau");
+                if (!IsInstalled) {
+                    DataPath = exePath;
+                } else {
+                    string dataHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    DataPath = Path.Combine(dataHome, "OpenUtau");
+                }
                 CachePath = Path.Combine(DataPath, "Cache");
                 HomePathIsAscii = true;
                 var etor = StringInfo.GetTextElementEnumerator(DataPath);
@@ -70,17 +74,11 @@ namespace OpenUtau.Core {
             && !string.IsNullOrEmpty(Preferences.Default.AdditionalSingerPath)
                 ? AdditionalSingersPath
                 : SingersPath;
-        private string GetDocsOrRootPath(string folderName) {
-            string docsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OpenUtau", folderName);
-            if (Directory.Exists(docsPath)) return docsPath;
-            return Path.Combine(RootPath, folderName);
-        }
-
-        public string ResamplersPath => GetDocsOrRootPath("Resamplers");
-        public string WavtoolsPath => GetDocsOrRootPath("Wavtools");
+        public string ResamplersPath => Path.Combine(DataPath, "Resamplers");
+        public string WavtoolsPath => Path.Combine(DataPath, "Wavtools");
         public string DependencyPath => Path.Combine(DataPath, "Dependencies");
-        public string PluginsPath => GetDocsOrRootPath("Plugins");
-        public string DictionariesPath => Path.Combine(RootPath, "Dictionaries");
+        public string PluginsPath => Path.Combine(DataPath, "Plugins");
+        public string DictionariesPath => Path.Combine(DataPath, "Dictionaries");
         public string TemplatesPath => Path.Combine(DataPath, "Templates");
         public string LogsPath => Path.Combine(DataPath, "Logs");
         public string LogFilePath => Path.Combine(DataPath, "Logs", "log.txt");
@@ -152,7 +150,7 @@ namespace OpenUtau.Core {
                 return "0B";
             }
             var dir = new DirectoryInfo(CachePath);
-            double size = dir.EnumerateFiles("*", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true }).Sum(f => f.Length);
+            double size = dir.GetFiles("*", SearchOption.AllDirectories).Sum(f => f.Length);
             int order = 0;
             while (size >= 1024 && order < sizes.Length - 1) {
                 order++;

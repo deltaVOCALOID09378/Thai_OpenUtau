@@ -5,12 +5,12 @@
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.UpdaterDialog"
         Width="460" Height="360" CanResize="False" WindowStartupLocation="CenterScreen"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource updater.caption}" Closing="OnClosing">
   <Grid RowDefinitions="*, 70, 20, *, *">
     <Image Grid.Row="0" Margin="20" Width="110" Height="110"
            VerticalAlignment="Top" HorizontalAlignment="Center"
-           Source="/Assets/Thai OpenUtau Logo type.ico"/>
+           Source="/Assets/Thai OpenUtau Logo.ico"/>
     <Image Grid.Row="0" Height="60" Margin="0,150,0,15"
            VerticalAlignment="Top" HorizontalAlignment="Center"
            Source="/Assets/logotype.png" IsVisible="{Binding !IsDarkMode}"/>
@@ -32,3 +32,5 @@
     </StackPanel>
   </Grid>
 </Window>
+
+

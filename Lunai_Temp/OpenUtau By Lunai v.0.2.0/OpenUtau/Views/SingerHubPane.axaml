@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OpenUtau.App.ViewModels"
+             xmlns:c="using:OpenUtau.App.Controls"
+             mc:Ignorable="d"
+             x:Class="OpenUtau.App.Views.SingerHubPane">
+
+  <UserControl.DataContext>
+    <vm:SingerHubViewModel />
+  </UserControl.DataContext>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <TabControl Grid.Row="0" SelectedIndex="{Binding SelectedTabIndex}" Margin="0,0,0,10">
+      <TabItem Header="{DynamicResource lunai.tab.all}"><Panel/></TabItem>
+      <TabItem Header="{DynamicResource lunai.tab.lunai}"><Panel/></TabItem>
+      <TabItem Header="{DynamicResource lunai.tab.ufr}"><Panel/></TabItem>
+      <TabItem Header="{DynamicResource lunai.tab.brapa}"><Panel/></TabItem>
+    </TabControl>
+
+    <c:WorkspacePanelTextBox Grid.Row="1" Classes="workspacePanelTextBox" HorizontalAlignment="Stretch" Margin="0,0,0,10"
+                             Watermark="{DynamicResource lunai.search}" Text="{Binding SearchText}"/>
+
+    <ScrollViewer x:Name="ContentScroll" Grid.Row="2" Classes="workspaceScroll singerHubScroll" VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False" Padding="0">
+      <ItemsControl ItemsSource="{Binding Sections}" HorizontalAlignment="Stretch" Margin="0,0,8,0">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:SingerHubSectionViewModel">
+            <StackPanel Margin="0,0,0,16" HorizontalAlignment="Stretch">
+              <TextBlock Text="{Binding Header}" FontWeight="SemiBold" FontSize="13" Opacity="0.9" Margin="0,0,0,6"/>
+              <ItemsControl ItemsSource="{Binding Rows}" HorizontalAlignment="Stretch">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SingerHubRowViewModel">
+                    <Border Classes="singerHubRow" Margin="0,0,0,8" Padding="0,0,12,0" CornerRadius="6"
+                            HorizontalAlignment="Stretch"
+                            BorderThickness="0">
+                      <Grid ColumnDefinitions="Auto,*,52" RowDefinitions="Auto">
+                        <Border Grid.Column="0" Width="60" Height="60" CornerRadius="6" Margin="8"
+                                Background="{DynamicResource WorkspaceCardBrush}"
+                                ClipToBounds="True">
+                          <Image Source="{Binding IconBitmap}" Width="60" Height="60" Stretch="UniformToFill"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" MinWidth="0" VerticalAlignment="Center" Spacing="2" Margin="0,0,8,0">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding TypeDisplay}" FontSize="11" Opacity="0.75" VerticalAlignment="Center"/>
+                          </StackPanel>
+                          <ItemsControl ItemsSource="{Binding VersionStatusSegments}" FontSize="12" Opacity="0.9">
+                            <ItemsControl.ItemsPanel>
+                              <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="0"/>
+                              </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate x:DataType="vm:VersionStatusSegment">
+                                <TextBlock Text="{Binding Text}" FontWeight="{Binding SegmentFontWeight}"/>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                          <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Border Classes="singerHubCompanyChip" IsVisible="{Binding HasCompany}">
+                              <TextBlock Text="{Binding Company}" Opacity="0.75"/>
+                            </Border>
+                            <Button Classes="singerHubActionButton singerHubLinkButton"
+                                    Content="{DynamicResource lunai.website}"
+                                    Click="OnOpenWebsiteClick"
+                                    IsVisible="{Binding HasPageLink}"/>
+                          </StackPanel>
+                        </StackPanel>
+                        <Panel Grid.Column="2" Width="52" MinWidth="52" MaxWidth="52" VerticalAlignment="Center">
+                          <Button Classes="singerHubActionButton singerHubInstallButton"
+                                  Content="{DynamicResource lunai.install}" Click="OnPrimaryActionClick"
+                                  HorizontalAlignment="Center"
+                                  IsVisible="{Binding CanInstall}"/>
+                        </Panel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="12" Margin="0,10,0,0">
+      <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Opacity="0.9"/>
+      <Button Classes="singerHubActionButton" Content="{DynamicResource lunai.refresh}" Command="{Binding RefreshCommand}"/>
+    </StackPanel>
+  </Grid>
+</UserControl>
+

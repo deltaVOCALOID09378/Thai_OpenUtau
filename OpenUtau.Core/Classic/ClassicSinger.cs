@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -93,26 +93,26 @@ namespace OpenUtau.Classic {
                 Log.Error("Avatar can't be found");
             }
 
-            subbanks.Clear();
-            subbanks.AddRange(voicebank.Subbanks
+            var newSubbanks = new List<USubbank>();
+            newSubbanks.AddRange(voicebank.Subbanks
                 .OrderByDescending(subbank => subbank.Prefix.Length + subbank.Suffix.Length)
                 .Select(subbank => new USubbank(subbank)));
-            var groups = subbanks.GroupBy(subbank => $"^{Regex.Escape(subbank.Prefix)}(.*){Regex.Escape(subbank.Suffix)}$")
+            var groups = newSubbanks.GroupBy(subbank => $"^{Regex.Escape(subbank.Prefix)}(.*){Regex.Escape(subbank.Suffix)}$")
                 .Select(group => new KeyValuePair<Regex, USubbank[]>(new Regex(group.Key), group.ToArray()));
 
             var dummy = new USubbank[] { new USubbank(new Subbank()) };
-            otoSets.Clear();
-            otos.Clear();
-            otoMap.Clear();
-            errors.Clear();
+            var newOtoSets = new List<UOtoSet>();
+            var newOtos = new List<UOto>();
+            var newOtoMap = new Dictionary<string, UOto>();
+            var newErrors = new List<string>();
             
             foreach (var otoSet in voicebank.OtoSets) {
                 var uSet = new UOtoSet(otoSet, voicebank.BasePath);
-                otoSets.Add(uSet);
+                newOtoSets.Add(uSet);
                 foreach (var oto in otoSet.Otos) {
                     if (!oto.IsValid) {
                         if (!string.IsNullOrEmpty(oto.Error)) {
-                            errors.Add(oto.Error);
+                            newErrors.Add(oto.Error);
                         }
                         continue;
                     }
@@ -128,14 +128,20 @@ namespace OpenUtau.Classic {
                     if (uOto == null) {
                         uOto = new UOto(oto, uSet, dummy);
                     }
-                    otos.Add(uOto);
-                    if (!otoMap.ContainsKey(oto.Alias)) {
-                        otoMap.Add(oto.Alias, uOto);
+                    newOtos.Add(uOto);
+                    if (!newOtoMap.ContainsKey(oto.Alias)) {
+                        newOtoMap.Add(oto.Alias, uOto);
                     } else {
                         //Errors.Add($"oto conflict {Otos[oto.Alias].Set}/{oto.Alias} and {otoSet.Name}/{oto.Alias}");
                     }
                 }
             }
+
+            subbanks = newSubbanks;
+            otoSets = newOtoSets;
+            otos = newOtos;
+            otoMap = newOtoMap;
+            errors = newErrors;
 
             Task.Run(() => {
                 otoMap.Values

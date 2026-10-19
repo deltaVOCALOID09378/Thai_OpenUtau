@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using OpenUtau.App.ViewModels;
@@ -5,15 +7,14 @@ using OpenUtau.Core;
 using OpenUtau.Core.Editing;
 using OpenUtau.Core.Ustx;
 
-namespace OpenUtau.App.Views
-{
-    public partial class GenerateHarmonyDialog : Window
-    {
+namespace OpenUtau.App.Views {
+    public partial class GenerateHarmonyDialog : Window {
         readonly GenerateHarmonyViewModel viewModel;
         readonly UVoicePart sourcePart;
 
-        public GenerateHarmonyDialog(UVoicePart part)
-        {
+        public GenerateHarmonyDialog() : this(new UVoicePart()) { }
+
+        public GenerateHarmonyDialog(UVoicePart part) {
             sourcePart = part;
             viewModel = new GenerateHarmonyViewModel(part);
             InitializeComponent();
@@ -24,11 +25,9 @@ namespace OpenUtau.App.Views
 
         void OnCancel(object? sender, RoutedEventArgs e) => Close(false);
 
-        void OnOk(object? sender, RoutedEventArgs e)
-        {
+        void OnOk(object? sender, RoutedEventArgs e) {
             var intervals = viewModel.GetSelectedIntervals();
-            if (intervals.Count == 0)
-            {
+            if (intervals.Count == 0) {
                 return;
             }
             var key = viewModel.SelectedKeyOption?.Key ?? MusicalKey.FromProject(DocManager.Inst.Project);

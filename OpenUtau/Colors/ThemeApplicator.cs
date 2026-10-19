@@ -5,28 +5,21 @@ using OpenUtau.App;
 
 namespace OpenUtau.Colors;
 
-public static class ThemeApplicator
-{
-    public static void ApplyCustomBase()
-    {
-        if (Application.Current == null)
-        {
+public static class ThemeApplicator {
+    public static void ApplyCustomBase() {
+        if (Application.Current == null) {
             return;
         }
-        if (Application.Current.Resources["themes-custom"] is not IResourceDictionary custom)
-        {
+        if (Application.Current.Resources["themes-custom"] is not IResourceDictionary custom) {
             return;
         }
-        foreach (var item in custom)
-        {
+        foreach (var item in custom) {
             Application.Current.Resources[item.Key] = item.Value;
         }
     }
 
-    public static void Apply(ThemeYaml yaml)
-    {
-        if (Application.Current == null)
-        {
+    public static void Apply(ThemeYaml yaml) {
+        if (Application.Current == null) {
             return;
         }
         yaml.ApplyToResources();

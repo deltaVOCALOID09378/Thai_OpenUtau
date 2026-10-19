@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.ML.OnnxRuntime;
@@ -49,6 +49,9 @@ namespace OpenUtau.Core.G2p {
             byte[] data,
             Func<string, string> prepGrapheme = null,
             Func<string, string> prepPhoneme = null) {
+            if (data == null || data.Length == 0) {
+                return Tuple.Create((IG2p)G2pDictionary.NewBuilder().Build(), (InferenceSession)null);
+            }
             prepGrapheme = prepGrapheme ?? ((string s) => s);
             prepPhoneme = prepPhoneme ?? ((string s) => s);
             string[] hiraganaTxt = Zip.ExtractText(data, "hiragana.txt");
@@ -57,43 +60,53 @@ namespace OpenUtau.Core.G2p {
             string[] specialTxt = Zip.ExtractText(data, "special.txt");
             string[] phonesTxt = Zip.ExtractText(data, "phones.txt");
             var builder = G2pDictionary.NewBuilder();
-            phonesTxt.Select(line => line.Trim())
-                .Select(line => line.Split())
-                .Where(parts => parts.Length == 2)
-                .ToList()
-                .ForEach(parts => builder.AddSymbol(prepPhoneme(parts[0]), parts[1]));
-            hiraganaTxt.Where(line => !line.StartsWith(";;;"))
-                .Select(line => line.Trim())
-                .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
-                .Where(parts => parts.Length == 2)
-                .ToList()
-                .ForEach(parts => builder.AddEntry(
-                    prepGrapheme(parts[0]),
-                    parts[1].Split().Select(symbol => prepPhoneme(symbol))));
-            katakanaTxt.Where(line => !line.StartsWith(";;;"))
-                .Select(line => line.Trim())
-                .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
-                .Where(parts => parts.Length == 2)
-                .ToList()
-                .ForEach(parts => builder.AddEntry(
-                    prepGrapheme(parts[0]),
-                    parts[1].Split().Select(symbol => prepPhoneme(symbol))));
-            romajiTxt.Where(line => !line.StartsWith(";;;"))
-                .Select(line => line.Trim())
-                .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
-                .Where(parts => parts.Length == 2)
-                .ToList()
-                .ForEach(parts => builder.AddEntry(
-                    prepGrapheme(parts[0]),
-                    parts[1].Split().Select(symbol => prepPhoneme(symbol))));
-            specialTxt.Where(line => !line.StartsWith(";;;"))
-                .Select(line => line.Trim())
-                .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
-                .Where(parts => parts.Length == 2)
-                .ToList()
-                .ForEach(parts => builder.AddEntry(
-                    prepGrapheme(parts[0]),
-                    parts[1].Split().Select(symbol => prepPhoneme(symbol))));
+            if (phonesTxt != null) {
+                phonesTxt.Select(line => line.Trim())
+                    .Select(line => line.Split())
+                    .Where(parts => parts.Length == 2)
+                    .ToList()
+                    .ForEach(parts => builder.AddSymbol(prepPhoneme(parts[0]), parts[1]));
+            }
+            if (hiraganaTxt != null) {
+                hiraganaTxt.Where(line => !line.StartsWith(";;;"))
+                    .Select(line => line.Trim())
+                    .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
+                    .Where(parts => parts.Length == 2)
+                    .ToList()
+                    .ForEach(parts => builder.AddEntry(
+                        prepGrapheme(parts[0]),
+                        parts[1].Split().Select(symbol => prepPhoneme(symbol))));
+            }
+            if (katakanaTxt != null) {
+                katakanaTxt.Where(line => !line.StartsWith(";;;"))
+                    .Select(line => line.Trim())
+                    .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
+                    .Where(parts => parts.Length == 2)
+                    .ToList()
+                    .ForEach(parts => builder.AddEntry(
+                        prepGrapheme(parts[0]),
+                        parts[1].Split().Select(symbol => prepPhoneme(symbol))));
+            }
+            if (romajiTxt != null) {
+                romajiTxt.Where(line => !line.StartsWith(";;;"))
+                    .Select(line => line.Trim())
+                    .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
+                    .Where(parts => parts.Length == 2)
+                    .ToList()
+                    .ForEach(parts => builder.AddEntry(
+                        prepGrapheme(parts[0]),
+                        parts[1].Split().Select(symbol => prepPhoneme(symbol))));
+            }
+            if (specialTxt != null) {
+                specialTxt.Where(line => !line.StartsWith(";;;"))
+                    .Select(line => line.Trim())
+                    .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
+                    .Where(parts => parts.Length == 2)
+                    .ToList()
+                    .ForEach(parts => builder.AddEntry(
+                        prepGrapheme(parts[0]),
+                        parts[1].Split().Select(symbol => prepPhoneme(symbol))));
+            }
             var dict = builder.Build();
             return Tuple.Create((IG2p) dict, session);
         }

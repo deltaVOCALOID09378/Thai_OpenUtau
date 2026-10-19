@@ -240,10 +240,6 @@
                    Color="{DynamicResource SystemAccentColorLight1}" Opacity="0.5"/>
   <SolidColorBrush x:Key="SelectedTrackAccentDarkBrush"
                    Color="{DynamicResource SystemAccentColorDark1}" />
-  <SolidColorBrush x:Key="MarqueeSelectionFillBrush"
-                   Color="{DynamicResource AccentColor2}" Opacity="0.16"/>
-  <SolidColorBrush x:Key="MarqueeSelectionBorderBrush"
-                   Color="{DynamicResource AccentColor2}"/>
   <SolidColorBrush x:Key="SelectedTrackCenterKeyBrush"
                    Color="{DynamicResource CenterKeyColorRight}" />
   <SolidColorBrush x:Key="WarningBrush"
@@ -265,12 +261,8 @@
   </LinearGradientBrush >
   <SolidColorBrush x:Key="CenterKeyNameBrush"
                    Color="{DynamicResource CenterKeyNameColor}"/>
-  <LinearGradientBrush x:Key="BlackKeyBrush" StartPoint="0%,50%" EndPoint="100%,50%">
-    <LinearGradientBrush.GradientStops>
-      <GradientStop Color="{DynamicResource BlackKeyColorLeft}" Offset="0"/>
-      <GradientStop Color="{DynamicResource BlackKeyColorRight}" Offset="1"/>
-    </LinearGradientBrush.GradientStops>
-  </LinearGradientBrush>
+  <SolidColorBrush x:Key="BlackKeyBrush"
+                   Color="{DynamicResource BlackKeyColorLeft}"/>
   <SolidColorBrush x:Key="BlackKeyNameBrush"
                    Color="{DynamicResource BlackKeyNameColor}"/>
 </ResourceDictionary>

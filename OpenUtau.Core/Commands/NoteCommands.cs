@@ -1,4 +1,10 @@
-﻿using System;
+// NoteCommands.cs
+// OpenUtau.Core/Commands/NoteCommands.cs
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by OpenUtau Authors
+// Revision: 1.0
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Core.Ustx;
@@ -33,9 +39,9 @@ namespace OpenUtau.Core {
         }
         public AddNoteCommand(UVoicePart part, List<UNote> notes) : base(part, notes) {
             OldPartDuration = part.Duration;
-            var note = notes.LastOrDefault();
-            if (note != null) {
-                int minDurTick = part.GetMinDurTickForNoteEdit(DocManager.Inst.Project, note.End);
+            if (notes.Count > 0) {
+                int maxEnd = notes.Max(n => n.End);
+                int minDurTick = part.GetMinDurTickForNoteEdit(DocManager.Inst.Project, maxEnd);
                 if (part.Duration < minDurTick) {
                     NewPartDuration = minDurTick;
                 }
@@ -99,9 +105,9 @@ namespace OpenUtau.Core {
             DeltaPos = deltaPos;
             DeltaNoteNum = deltaNoteNum;
             OldPartDuration = part.Duration;
-            var note = notes.LastOrDefault();
-            if (note != null) {
-                int minDurTick = part.GetMinDurTickForNoteEdit(DocManager.Inst.Project, note.End + deltaPos);
+            if (notes.Count > 0) {
+                int maxEnd = notes.Max(n => n.End + deltaPos);
+                int minDurTick = part.GetMinDurTickForNoteEdit(DocManager.Inst.Project, maxEnd);
                 if (part.Duration < minDurTick) {
                     NewPartDuration = minDurTick;
                 }
@@ -149,9 +155,9 @@ namespace OpenUtau.Core {
         public ResizeNoteCommand(UVoicePart part, List<UNote> notes, int deltaDur) : base(part, notes) {
             DeltaDur = deltaDur;
             OldPartDuration = part.Duration;
-            var note = notes.LastOrDefault();
-            if (note != null) {
-                int minDurTick = part.GetMinDurTickForNoteEdit(DocManager.Inst.Project, note.End + deltaDur);
+            if (notes.Count > 0) {
+                int maxEnd = notes.Max(n => n.End + deltaDur);
+                int minDurTick = part.GetMinDurTickForNoteEdit(DocManager.Inst.Project, maxEnd);
                 if (part.Duration < minDurTick) {
                     NewPartDuration = minDurTick;
                 }

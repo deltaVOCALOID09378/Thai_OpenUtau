@@ -1,54 +1,53 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
-// ==========================================
-// Made And Checked By DELTA SYNTH & Gemini AI
-// Original by OpenUtau (stakira)
-// Version: v.1.2
-// History/Summary:
-// v.1.2 (Consonant Space Widening - ขยายพื้นที่พยัญชนะ):
-//   เพิ่ม ConsonantLength จาก 21 เป็น 40 ticks (~67% of default 60)
-//   เพื่อให้เสียงพยัญชนะนำ (leading consonant) มีพื้นที่กว้างพอที่จะออกเสียงได้ชัดเจนและเป็นธรรมชาติ
-//   ตาม DELTA SYNTH Standard § 10: ส่วนของเสียงพยัญชนะต้องกว้างจนร้องเพลงออกมามีความชัดเจน
-//   Widened ConsonantLength from 21 to 40 ticks so that leading consonants have enough
-//   space to articulate clearly and naturally, giving the voice a more natural singing feel.
-// v.1.1 (Stability/Balance fix - แก้บัค ปรับสมดุลการทำงาน):
-//   ลดพื้นที่เวลา (timing) ที่กลุ่มพยัญชนะ CC, CCV, R-C และ C_C ใช้ไปในแต่ละพยางค์
-//   ให้แคบลงจนเหลือพื้นที่รวมไม่เกินประมาณ 3% ของความยาวโน้ต แทนที่จะกินพื้นที่มากเกินไปจนเสียง
-//   ล่วงหน้า (transition) ยืดเยื้อ ทำให้จังหวะร้องดูอืดและไม่เป็นธรรมชาติ
-//   Narrowed the timing window reserved for consonant-cluster groups (CC, CCV, R-C, C_C) down to
-//   roughly 3% of note length overall, so consonant transitions no longer eat too much of the note
-//   and singing timing feels tighter and more natural.
-// ==========================================
+// ============================================================================
+// Made And Checked By DELTA SYNTH & All Agentic AI
+// Original by OpenUtau Contributors (stakira)
+// Version: 1.3
+// Description: ระบบ Phonemizer สำหรับภาษาอังกฤษ (English Arpasing) 
+// ที่ได้รับการปรับสมดุลการคำนวณพื้นที่พยัญชนะ (Consonant Space Widening) 
+// และระยะห่างตัวสะกด (VC & CC) ให้สอดคล้องกับมาตรฐาน DELTA SYNTH อย่างแม่นยำ
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using OpenUtau.Api;
 using OpenUtau.Core.G2p;
 using Serilog;
 
 namespace OpenUtau.Plugin.Builtin {
     /// <summary>
-    /// The English Arpasing Phonemizer.
+    /// ตัวจัดการหน่วยเสียงภาษาอังกฤษแบบ Arpasing (The English Arpasing Phonemizer)
     /// <para>
-    /// Arpasing is a system that uses CMUdict as dictionary to convert English words to phoneme symbols.
-    /// See http://www.speech.cs.cmu.edu/cgi-bin/cmudict and https://arpasing.neocities.org/en/faq.html.
+    /// Arpasing คือระบบที่ใช้ CMUdict เป็นพจนานุกรมในการแปลงคำศัพท์ภาษาอังกฤษให้เป็นสัญลักษณ์หน่วยเสียง
+    /// อ้างอิงจาก: http://www.speech.cs.cmu.edu/cgi-bin/cmudict และ https://arpasing.neocities.org/en/faq.html
     /// </para>
     /// </summary>
-    [Phonemizer("English Arpasing Phonemizer", "EN ARPA", language: "UTAU")]
+    [Phonemizer("English Arpasing Phonemizer", "EN ARPA", language: "EN")]
     public class ArpasingPhonemizer : LatinDiphonePhonemizer {
+        
+        // ชุดสระภาษาอังกฤษมาตรฐานของ Arpasing (Standard English Arpasing Vowels)
+        private static readonly HashSet<string> vowels = new HashSet<string> {
+            "aa", "ae", "ah", "ao", "aw", "ay", "eh", "er", "ey", "ih", "iy", "ow", "oy", "uh", "uw"
+        };
+
         public ArpasingPhonemizer() {
             try {
-                ConsonantLength = 40; // v.1.2: Widened to ~67% of default (60) for clearer consonant articulation.
+                // [DELTA SYNTH] ปรับความกว้างของพยัญชนะ (ConsonantLength) เป็น 40 ticks 
+                // เพื่อให้เสียงพยัญชนะนำมีพื้นที่ในการออกเสียงที่ชัดเจนเบื้องต้น
+                ConsonantLength = 40; 
                 Initialize();
             } catch (Exception e) {
-                Log.Error(e, "Failed to initialize.");
+                Log.Error(e, "เกิดข้อผิดพลาดในการเริ่มต้นระบบ (Failed to initialize).");
             }
         }
 
         protected override IG2p LoadG2p() {
             var g2ps = new List<IG2p>();
 
-            // Load dictionary from plugin folder.
+            // โหลดพจนานุกรมจากโฟลเดอร์ปลั๊กอิน (Load dictionary from plugin folder)
             string path = Path.Combine(PluginDir, "arpasing.yaml");
             if (!File.Exists(path)) {
                 Directory.CreateDirectory(PluginDir);
@@ -56,19 +55,19 @@ namespace OpenUtau.Plugin.Builtin {
             }
             g2ps.Add(G2pDictionary.NewBuilder().Load(File.ReadAllText(path)).Build());
 
-            // Load dictionary from singer folder.
+            // โหลดพจนานุกรมจากโฟลเดอร์ของนักร้อง (Load dictionary from singer folder)
             if (singer != null && singer.Found && singer.Loaded) {
                 string file = Path.Combine(singer.Location, "arpasing.yaml");
                 if (File.Exists(file)) {
                     try {
                         g2ps.Add(G2pDictionary.NewBuilder().Load(File.ReadAllText(file)).Build());
                     } catch (Exception e) {
-                        Log.Error(e, $"Failed to load {file}");
+                        Log.Error(e, $"ไม่สามารถโหลดไฟล์ได้ (Failed to load): {file}");
                     }
                 }
             }
 
-            // Load base g2p.
+            // โหลดระบบ G2P พื้นฐาน (Load base G2P)
             g2ps.Add(new ArpabetG2p());
 
             return new G2pFallbacks(g2ps.ToArray());
@@ -97,12 +96,87 @@ namespace OpenUtau.Plugin.Builtin {
                     }
                 }
             }
-            // Only use the "- symbol" fallback if we are actually at the start of a phrase (prevSymbol == "-")
+            // ใช้ค่าสำรอง "- symbol" เฉพาะเมื่อเริ่มต้นวลี (prevSymbol == "-") เท่านั้น
             if (prevSymbol == "-" && singer.TryGetMappedOto($"- {symbol}", tone, color, out var oto3)) {
                 return oto3.Alias;
             }
             return $"{prevSymbol} {symbol}{alt}";
         }
 
+        // ============================================================================
+        // [DELTA SYNTH] CUSTOM PHONEME ALIGNMENT FOR ENGLISH ARPASING
+        // Override the base Process method เพื่อปรับแต่งการจัดสรรพื้นที่พยัญชนะแบบละเอียด 100%
+        // ============================================================================
+        public override Result Process(Note[] notes, Note? prev, Note? next, Note? prevNeighbour, Note? nextNeighbour, Note[] prevNeighbours) {
+            // เรียกใช้ประมวลผลพื้นฐาน (Call base processing to get initial alignment)
+            var result = base.Process(notes, prev, next, prevNeighbour, nextNeighbour, prevNeighbours);
+            if (result.phonemes == null || result.phonemes.Length == 0) return result;
+
+            int noteDur = notes.Sum(n => n.duration);
+            
+            // กฎระยะห่างของ DELTA SYNTH (DELTA SYNTH Spacing Rules)
+            int cvMaxBack = (int)(noteDur * 0.05);     // แผ่ขยาย CV ไปที่โน้ตตัวก่อนหน้าสูงสุดไม่เกิน 5% (Max CV back-expansion <= 5%)
+            int vcStartPos = (int)(noteDur * 0.65);    // ตัวสะกด VC ให้จัดสรรพื้นที่ขั้นต่ำ 35% ดังนั้นต้องเริ่มที่ตำแหน่งไม่เกิน 65% ของโน้ต
+            int maxGap = (int)(noteDur * 0.05);        // ช่องว่างพยัญชนะชนพยัญชนะ (CC, C_C) กว้างสูงสุดไม่เกิน 5% (Max cluster gap <= 5%)
+
+            for (int i = 0; i < result.phonemes.Length; i++) {
+                var phoneme = result.phonemes[i];
+                string alias = phoneme.phoneme ?? "";
+                var parts = alias.Split(' ');
+
+                // ตรวจสอบโครงสร้างคู่เสียง Arpasing ปกติ ("X Y")
+                if (parts.Length == 2) {
+                    // กำจัดตัวเลขวรรณยุกต์ถ้ามีหลงมา (Strip numerical characters to match vowel list)
+                    string p1 = Regex.Replace(parts[0], @"\d+", "");
+                    string p2 = Regex.Replace(parts[1], @"\d+", "");
+                    
+                    bool isV1 = vowels.Contains(p1);
+                    bool isV2 = vowels.Contains(p2);
+                    
+                    if (p1 == "-" && !isV2) {
+                        // รูปแบบ [- C] : เริ่มต้นพยัญชนะ
+                        phoneme.position = Math.Max(phoneme.position, -cvMaxBack * 2);
+                    } 
+                    else if (!isV1 && isV2) {
+                        // รูปแบบ [C V] : กลุ่มพยัญชนะต้น (CV)
+                        // แผ่ขยายพื้นที่เสียงกลับไปโน้ตก่อนหน้าเล็กน้อย แต่ห้ามเกิน 5%
+                        phoneme.position = Math.Max(phoneme.position, -cvMaxBack);
+                    } 
+                    else if (isV1 && !isV2 && p2 != "-") {
+                        // รูปแบบ [V C] : สระชนตัวสะกด (VC)
+                        // บังคับให้เริ่มที่ตำแหน่งไม่เกิน 65% เพื่อรับประกันพื้นที่ของ VC ขั้นต่ำ 35% 
+                        if (phoneme.position > vcStartPos) {
+                            phoneme.position = vcStartPos;
+                        }
+                    } 
+                    else if (!isV1 && !isV2 && p1 != "-" && p2 != "-") {
+                        // รูปแบบ [C C] : พยัญชนะชนพยัญชนะ (CC, C_C, R_C, CCV)
+                        // รักษาระยะห่างให้แคบเพื่อความกระชับ เว้นกว้างไม่เกิน 5%
+                        if (i > 0 && phoneme.position > result.phonemes[i-1].position + maxGap) {
+                            phoneme.position = result.phonemes[i-1].position + maxGap;
+                        }
+                    }
+                    else if (!isV1 && p2 == "-") {
+                        // รูปแบบ [C -] : สิ้นสุดพยัญชนะ
+                        // รักษาระยะห่างให้แคบ เว้นกว้างไม่เกิน 5% จากตัวก่อนหน้า
+                        if (i > 0 && phoneme.position > result.phonemes[i-1].position + maxGap) {
+                            phoneme.position = result.phonemes[i-1].position + maxGap;
+                        }
+                    }
+                }
+                
+                // ระบบป้องกันเสียงผีสิง (Safety Position Buffer: Prevent overlapping bug)
+                if (i > 0 && phoneme.position <= result.phonemes[i-1].position) {
+                    phoneme.position = result.phonemes[i-1].position + 10;
+                }
+                
+                // ควบคุมไม่ให้หลุดขอบของตัวโน้ต (Boundary Guard)
+                phoneme.position = Math.Min(phoneme.position, noteDur - 10);
+                
+                result.phonemes[i] = phoneme;
+            }
+
+            return result;
+        }
     }
 }

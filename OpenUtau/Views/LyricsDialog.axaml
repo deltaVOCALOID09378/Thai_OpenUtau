@@ -5,7 +5,7 @@
         xmlns:c="using:OpenUtau.App.Controls"
         mc:Ignorable="d" MinWidth="400" MinHeight="200" Width="600" Height="300"
         x:Class="OpenUtau.App.Views.LyricsDialog" WindowStartupLocation="CenterOwner"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource lyrics.caption}"
         Opened="OnOpened">
   <Window.Styles>
@@ -24,7 +24,7 @@
       </TextBlock.Text>
     </TextBlock>
     <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
-      <TextBlock Text="{DynamicResource lyrics.separators}" Margin="0,2"/>
+      <TextBlock Text="{StaticResource lyrics.separators}" Margin="0,2"/>
       <Border CornerRadius="6"
               Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
         <TextBlock Text="⎵" Margin="0" Padding="4,2"/>
@@ -47,7 +47,7 @@
       </Border>
     </StackPanel>
     <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="{DynamicResource lyrics.livepreview}" Margin="0,8"/>
+      <TextBlock Text="{StaticResource lyrics.livepreview}" Margin="0,8"/>
       <ToggleSwitch Margin="0" IsChecked="{Binding LivePreview}">
         <ToggleSwitch.Styles>
           <Style Selector="TextBlock">
@@ -55,7 +55,7 @@
           </Style>
         </ToggleSwitch.Styles>
       </ToggleSwitch>
-      <TextBlock Text="{DynamicResource lyrics.applyselected}" Margin="0,8"/>
+      <TextBlock Text="{StaticResource lyrics.applyselected}" Margin="0,8"/>
       <ToggleSwitch Margin="0" IsChecked="{Binding ApplySelection}">
         <ToggleSwitch.Styles>
           <Style Selector="TextBlock">
@@ -71,3 +71,4 @@
     </StackPanel>
   </Grid>
 </Window>
+

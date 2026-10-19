@@ -2,10 +2,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 
-namespace OpenUtau.App.Controls
-{
-    public partial class PianoRollMainViewToggles : UserControl
-    {
+namespace OpenUtau.App.Controls {
+    public partial class PianoRollMainViewToggles : UserControl {
         public static readonly StyledProperty<bool> ShowDiffSingerToolbarProperty =
             AvaloniaProperty.Register<PianoRollMainViewToggles, bool>(
                 nameof(ShowDiffSingerToolbar), true);
@@ -14,14 +12,12 @@ namespace OpenUtau.App.Controls
             AvaloniaProperty.Register<PianoRollMainViewToggles, bool>(
                 nameof(ShowPitchOverwriteToggle), true);
 
-        public bool ShowDiffSingerToolbar
-        {
+        public bool ShowDiffSingerToolbar {
             get => GetValue(ShowDiffSingerToolbarProperty);
             set => SetValue(ShowDiffSingerToolbarProperty, value);
         }
 
-        public bool ShowPitchOverwriteToggle
-        {
+        public bool ShowPitchOverwriteToggle {
             get => GetValue(ShowPitchOverwriteToggleProperty);
             set => SetValue(ShowPitchOverwriteToggleProperty, value);
         }
@@ -30,14 +26,12 @@ namespace OpenUtau.App.Controls
             AvaloniaProperty.Register<PianoRollMainViewToggles, Orientation>(
                 nameof(LayoutOrientation), Orientation.Vertical);
 
-        public Orientation LayoutOrientation
-        {
+        public Orientation LayoutOrientation {
             get => GetValue(LayoutOrientationProperty);
             set => SetValue(LayoutOrientationProperty, value);
         }
 
-        public PianoRollMainViewToggles()
-        {
+        public PianoRollMainViewToggles() {
             InitializeComponent();
         }
     }

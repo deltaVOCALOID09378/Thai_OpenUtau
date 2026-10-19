@@ -1,7 +1,5 @@
-namespace OpenUtau.App.Controls
-{
-    public static class WorkspaceDockPanelMetrics
-    {
+namespace OpenUtau.App.Controls {
+    public static class WorkspaceDockPanelMetrics {
         public const double DefaultWidth = 300;
         public const double MinWidth = 300;
         public const double MaxWidth = 450;
@@ -19,8 +17,7 @@ namespace OpenUtau.App.Controls
             System.Math.Clamp(width, MinWidth, MaxWidth);
     }
 
-    public static class NotePropsPanelMetrics
-    {
+    public static class NotePropsPanelMetrics {
         public const double DefaultWidth = 350;
         public const double MinWidth = 350;
         public const double MaxWidth = 450;

@@ -1,8 +1,3 @@
-<!-- ชื่อไฟล์: LyricBox.axaml -->
-<!-- ลำดับเวอร์ชัน: 0.1 -->
-<!-- Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT -->
-<!-- Original By OpenUtau Contributors -->
-<!-- หมายเหตุ: ปรับเงา (BoxShadow) ให้นุ่มขึ้น และเพิ่ม CornerRadius เป็น 12 เพื่อให้กล่องดูทันสมัยและโดดเด่นขึ้น -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,17 +6,17 @@
              mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="300"
              x:Class="OpenUtau.App.Controls.LyricBox" Focusable="False"
              IsVisible="{Binding IsVisible}" IsEnabled="{Binding IsVisible}">
-  <Border CornerRadius="12" ClipToBounds="False"
+  <Border CornerRadius="8" ClipToBounds="False"
           Background="{DynamicResource WorkspaceCardBrush}"
-          BoxShadow="0 4 20 0 #40000000"> <!-- ปรับเงาให้ดูนุ่มนวลและมีมิติสมจริงมากขึ้น -->
-    <Grid RowDefinitions="26,Auto,Auto" HorizontalAlignment="Stretch" Margin="4"> <!-- เพิ่ม Margin เล็กน้อยให้ขอบ -->
-      <TextBlock Classes="tips" Grid.Row="0" Margin="6,4,4,4" HorizontalAlignment="Left" Text="{DynamicResource tip.lyricbox.prev}" IsVisible="{Binding !IsAliasBox, Mode=OneWay}"/>
-      <TextBlock Classes="tips" Grid.Row="0" Margin="4,4,6,4" HorizontalAlignment="Right" Text="{DynamicResource tip.lyricbox.next}" IsVisible="{Binding !IsAliasBox, Mode=OneWay}"/>
+          BoxShadow="0 0 14 0 #66000000">
+    <Grid RowDefinitions="22,Auto,Auto" HorizontalAlignment="Stretch">
+      <TextBlock Classes="tips" Grid.Row="0" Margin="4" HorizontalAlignment="Left" Text="{DynamicResource tip.lyricbox.prev}" IsVisible="{Binding !IsAliasBox, Mode=OneWay}"/>
+      <TextBlock Classes="tips" Grid.Row="0" Margin="4" HorizontalAlignment="Right" Text="{DynamicResource tip.lyricbox.next}" IsVisible="{Binding !IsAliasBox, Mode=OneWay}"/>
       <TextBlock Classes="tips" Grid.Row="0" Margin="4" HorizontalAlignment="Center" Text="{DynamicResource tip.aliasbox}" IsVisible="{Binding IsAliasBox, Mode=OneWay}"/>
-      <ac:WorkspacePanelTextBox Name="PART_Box" Grid.Row="1" Classes="workspacePanelTextBox" Margin="4,2"
-               Text="{Binding Text}" Focusable="True" CornerRadius="6" 
+      <ac:WorkspacePanelTextBox Name="PART_Box" Grid.Row="1" Classes="workspacePanelTextBox" Margin="0"
+               Text="{Binding Text}" Focusable="True"
                GotFocus="Box_GotFocus" LostFocus="Box_LostFocus" KeyDown="Box_KeyDown"/>
-      <Border Grid.Row="2" CornerRadius="6" ClipToBounds="True">
+      <Border Grid.Row="2">
         <ListBox Name="PART_Suggestions" Grid.Row="2" MaxHeight="240"
                  VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                  BorderThickness="0" Background="Transparent"
@@ -30,16 +25,14 @@
                  Focusable="True" KeyDown="ListBox_KeyDown">
           <ListBox.Styles>
             <Style Selector="ListBoxItem">
-              <Setter Property="Padding" Value="4"/> <!-- เพิ่มพื้นที่คลิกให้สบายตาขึ้น -->
-              <Setter Property="CornerRadius" Value="4"/>
-              <Setter Property="Margin" Value="2"/>
+              <Setter Property="Padding" Value="0"/>
             </Style>
           </ListBox.Styles>
           <ListBox.ItemTemplate>
             <DataTemplate>
-              <DockPanel Margin="2" HorizontalAlignment="Stretch" Background="Transparent" PointerPressed="ListBox_PointerPressed" ToolTip.Tip="{Binding Source}">
-                <TextBlock Margin="6,2" DockPanel.Dock="Left" IsHitTestVisible="False" Text="{Binding Alias}" FontWeight="Medium"/>
-                <TextBlock Margin="6,2" DockPanel.Dock="Right" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" FontSize="11" VerticalAlignment="Center" Text="{Binding Source}" Opacity="0.7"/>
+              <DockPanel Margin="0" HorizontalAlignment="Stretch" Background="Transparent" PointerPressed="ListBox_PointerPressed" ToolTip.Tip="{Binding Source}">
+                <TextBlock Margin="4" DockPanel.Dock="Left" IsHitTestVisible="False" Text="{Binding Alias}"/>
+                <TextBlock Margin="4" DockPanel.Dock="Right" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" FontSize="10" VerticalAlignment="Center" Text="{Binding Source}"/>
               </DockPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>

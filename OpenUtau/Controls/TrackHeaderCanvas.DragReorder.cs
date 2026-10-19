@@ -1,14 +1,13 @@
 using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 
-namespace OpenUtau.App.Controls
-{
-    partial class TrackHeaderCanvas
-    {
+namespace OpenUtau.App.Controls {
+    partial class TrackHeaderCanvas {
         const double DragThreshold = 4;
 
         UTrack? dragTrack;
@@ -21,10 +20,8 @@ namespace OpenUtau.App.Controls
         bool suppressCaptureLostCancel;
         Border? insertIndicator;
 
-        public void BeginTrackReorder(UTrack track, TrackHeader header, PointerPressedEventArgs e)
-        {
-            if (dragActive || track == null || !trackHeaders.TryGetValue(track, out var existing) || existing != header)
-            {
+        public void BeginTrackReorder(UTrack track, TrackHeader header, PointerPressedEventArgs e) {
+            if (dragActive || track == null || !trackHeaders.TryGetValue(track, out var existing) || existing != header) {
                 return;
             }
             dragTrack = track;
@@ -38,44 +35,34 @@ namespace OpenUtau.App.Controls
             e.Handled = true;
         }
 
-        protected override void OnPointerMoved(PointerEventArgs e)
-        {
+        protected override void OnPointerMoved(PointerEventArgs e) {
             base.OnPointerMoved(e);
-            if (dragHeader != null)
-            {
+            if (dragHeader != null) {
                 UpdateTrackReorder(dragHeader, e);
             }
         }
 
-        protected override void OnPointerReleased(PointerReleasedEventArgs e)
-        {
+        protected override void OnPointerReleased(PointerReleasedEventArgs e) {
             base.OnPointerReleased(e);
-            if (dragHeader != null)
-            {
+            if (dragHeader != null) {
                 EndTrackReorder(dragHeader, e);
             }
         }
 
-        protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
-        {
+        protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e) {
             base.OnPointerCaptureLost(e);
-            if (!suppressCaptureLostCancel && dragHeader != null)
-            {
+            if (!suppressCaptureLostCancel && dragHeader != null) {
                 FinishTrackReorder(commit: false);
             }
         }
 
-        public void UpdateTrackReorder(TrackHeader header, PointerEventArgs e)
-        {
-            if (dragTrack == null || dragHeader != header)
-            {
+        public void UpdateTrackReorder(TrackHeader header, PointerEventArgs e) {
+            if (dragTrack == null || dragHeader != header) {
                 return;
             }
             var point = e.GetPosition(this);
-            if (!dragActive)
-            {
-                if (Math.Abs(point.Y - dragStartY) < DragThreshold)
-                {
+            if (!dragActive) {
+                if (Math.Abs(point.Y - dragStartY) < DragThreshold) {
                     return;
                 }
                 dragActive = true;
@@ -89,10 +76,8 @@ namespace OpenUtau.App.Controls
             e.Handled = true;
         }
 
-        public void EndTrackReorder(TrackHeader header, PointerReleasedEventArgs e)
-        {
-            if (dragTrack == null || dragHeader != header)
-            {
+        public void EndTrackReorder(TrackHeader header, PointerReleasedEventArgs e) {
+            if (dragTrack == null || dragHeader != header) {
                 return;
             }
             suppressCaptureLostCancel = true;
@@ -101,26 +86,21 @@ namespace OpenUtau.App.Controls
             e.Handled = true;
         }
 
-        void FinishTrackReorder(bool commit)
-        {
-            if (dragHeader != null)
-            {
+        void FinishTrackReorder(bool commit) {
+            if (dragHeader != null) {
                 dragHeader.Opacity = 1;
                 dragHeader.ZIndex = 0;
                 Canvas.SetTop(dragHeader, dragHeaderBaseTop);
             }
             RemoveInsertIndicator();
 
-            if (commit && dragActive && dragTrack != null)
-            {
+            if (commit && dragActive && dragTrack != null) {
                 int oldIndex = dragTrack.TrackNo;
                 int targetIndex = dragInsertIndex;
-                if (targetIndex > oldIndex)
-                {
+                if (targetIndex > oldIndex) {
                     targetIndex--;
                 }
-                if (targetIndex != oldIndex && targetIndex >= 0 && targetIndex < _items.Count)
-                {
+                if (targetIndex != oldIndex && targetIndex >= 0 && targetIndex < _items.Count) {
                     DocManager.Inst.StartUndoGroup("command.track.order");
                     DocManager.Inst.ExecuteCmd(new ReorderTrackCommand(DocManager.Inst.Project, dragTrack, targetIndex));
                     DocManager.Inst.EndUndoGroup();
@@ -133,10 +113,8 @@ namespace OpenUtau.App.Controls
             dragInsertIndex = -1;
         }
 
-        int GetInsertIndex(double y)
-        {
-            if (TrackHeight <= 0 || _items.Count == 0)
-            {
+        int GetInsertIndex(double y) {
+            if (TrackHeight <= 0 || _items.Count == 0) {
                 return 0;
             }
             double relativeY = y + TrackOffset * TrackHeight;
@@ -144,14 +122,11 @@ namespace OpenUtau.App.Controls
             return Math.Clamp(index, 0, _items.Count);
         }
 
-        void EnsureInsertIndicator()
-        {
-            if (insertIndicator != null)
-            {
+        void EnsureInsertIndicator() {
+            if (insertIndicator != null) {
                 return;
             }
-            insertIndicator = new Border
-            {
+            insertIndicator = new Border {
                 Height = 2,
                 Background = Brushes.White,
                 Opacity = 0.75,
@@ -160,10 +135,8 @@ namespace OpenUtau.App.Controls
             Children.Add(insertIndicator);
         }
 
-        void UpdateInsertIndicator()
-        {
-            if (insertIndicator == null || TrackHeight <= 0)
-            {
+        void UpdateInsertIndicator() {
+            if (insertIndicator == null || TrackHeight <= 0) {
                 return;
             }
             double top = dragInsertIndex * TrackHeight - TrackOffset * TrackHeight - 1;
@@ -172,10 +145,8 @@ namespace OpenUtau.App.Controls
             Canvas.SetLeft(insertIndicator, 0);
         }
 
-        void RemoveInsertIndicator()
-        {
-            if (insertIndicator == null)
-            {
+        void RemoveInsertIndicator() {
+            if (insertIndicator == null) {
                 return;
             }
             Children.Remove(insertIndicator);

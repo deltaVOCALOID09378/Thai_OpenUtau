@@ -1,14 +1,8 @@
-<!-- ชื่อไฟล์: PianoRollDiffSingerQualityToggles.axaml -->
-<!-- ลำดับเวอร์ชัน: 0.1 -->
-<!-- Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT -->
-<!-- Original By OpenUtau Contributors -->
-<!-- หมายเหตุ: เพิ่ม Spacing เพื่อไม่ให้ปุ่มดูเบียดเสียดจนเกินไป -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:OpenUtau.App.Controls"
              x:Class="OpenUtau.App.Controls.PianoRollDiffSingerQualityToggles">
-  <StackPanel Spacing="4" Orientation="{Binding LayoutOrientation, RelativeSource={RelativeSource AncestorType=c:PianoRollDiffSingerQualityToggles}}">
-    <!-- รายการปุ่มคงเดิมแต่ได้รับผลจาก Spacing="4" ใน StackPanel ทำให้มีระยะห่างสวยงาม -->
+  <StackPanel Spacing="0" Orientation="{Binding LayoutOrientation, RelativeSource={RelativeSource AncestorType=c:PianoRollDiffSingerQualityToggles}}">
     <Button Classes="sideToolbarAction" Margin="0" Padding="0" Focusable="False"
             Command="{Binding ApplyDiffSingerQualityPresetCommand}">
       <ToolTip.Tip>

@@ -1,114 +1,142 @@
-# Made And Checked By DELTA SYNTH & Gemini AI
-# สำหรับโปรเจกต์ OpenUtau และ .NET C#
-# ต้นฉบับจาก GitHub VisualStudio.gitignore
+# Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
+# สำหรับโปรเจกต์ Thai OpenUtau (.NET 8 C# / Avalonia / C++ DSP)
 
-# [เอกสารและไฟล์โปรแกรม]
-Doxyfile
-docs/
+# ===================================================
+# 1. ไบนารีและผลลัพธ์การคอมไพล์ (Compiled Binaries & Libraries)
+# ===================================================
+# ป้องกันไม่ให้ไฟล์ .dll และไฟล์ไบนารีคอมไพล์หลุดเข้า Git ทุกกรณี
+*.dll
+*.exe
+*.so
+*.dylib
+*.node
+*.pdb
+*.ilk
+*.obj
+*.iobj
+*.ipdb
+*.pch
+*.lib
+*.exp
+*.a
+*.o
+*.sbr
+*.tlb
+*.tli
+*.tlh
 
-# [ไฟล์เฉพาะตัวของผู้ใช้ (User-specific files)]
+# ===================================================
+# 2. โฟลเดอร์ผลลัพธ์การ Build (Build Output Directories)
+# ===================================================
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+bld/
+Publish/
+Generated Files/
+x64/
+x86/
+ARM64/
+
+# ===================================================
+# 3. ไฟล์ชั่วคราว บันทึกการทำงาน และรายงาน (Logs & Diagnostics)
+# ===================================================
+*.log
+*.binlog
+*.tmp
+*.tmp_proj
+*.bak
+*.orig
+check_*.txt
+test_out*.txt
+test_output.txt
+build_log*.txt
+compile_log*.txt
+publish*.log
+publish_*.log
+build_*.log
+
+# ===================================================
+# 4. แคชของระบบและโปรแกรม (Application & Audio Cache)
+# ===================================================
+UCache/
+Cache/
+cache/
+.tmp.driveupload/
+.tmp.drivedownload/
+
+# ===================================================
+# 5. การตั้งค่าของ IDE และ Editor (IDE & Editor Settings)
+# ===================================================
+.vs/
+.idea/
+.vscode/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 *.userprefs
-
-# [ผลลัพธ์การ Build (Build results)]
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-Generated\ Files/
-
-# [Visual Studio Cache & Settings]
-.vs/
-.idea/
 *.sln.iml
-.vscode/
-
-# [ไฟล์ชั่วคราวและไฟล์คอมไพล์ของระบบ (Files built by Visual Studio)]
-*.ilk
-*.meta
-*.obj
-*.iobj
-*.pch
-*.pdb
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp
-*.tmp_proj
-*.log
 *.vspscc
 *.vssscc
 .builds
 *.pidb
 *.svclog
 *.scc
-*.binlog
 
-# [NuGet Packages]
+# ===================================================
+# 6. NuGet Packages
+# ===================================================
 *.nupkg
 **/[Pp]ackages/*
 !**/[Pp]ackages/build/
 *.nuget.props
 *.nuget.targets
 
-# [การทดสอบ (Unit Tests)]
+# ===================================================
+# 7. ผลการทดสอบ (Unit Tests & Benchmarks)
+# ===================================================
 [Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-*.VisualState.xml
 TestResult.xml
+*.VisualState.xml
+BenchmarkDotNet.Artifacts/
 OpenUtau.Test/Usts/*
 
-# [ไฟล์ติดตั้งและผลลัพธ์สำเร็จรูป (Installer & Release artifacts)]
+# ===================================================
+# 8. ไฟล์ติดตั้งและแพ็กเกจแจกจ่าย (Installers & Packages)
+# ===================================================
 *.dmg
-*.exe
+*.pkg
 *.tar.gz
+*.zip
+# ข้อยกเว้น: อนุญาตไฟล์ ZIP พจนานุกรม G2P ที่จำเป็นสำหรับ Core Engine
+!OpenUtau.Core/G2p/Data/*.zip
 appcast.*.xml
 
-# [ไฟล์เฉพาะระบบปฏิบัติการ (OS-specific files)]
-.DS_Store
+# ===================================================
+# 9. ไฟล์เฉพาะระบบปฏิบัติการ (OS-specific files)
+# ===================================================
+desktop.ini
 Thumbs.db
+.DS_Store
 
-# [ไลบรารีและอื่นๆ]
-node_modules/
+# ===================================================
+# 10. Python Cache
+# ===================================================
 __pycache__/
 *.pyc
-Microsoft.AI.DirectML
+*.pyo
+.pytest_cache/
 
-
-# [Publish and Build Artifacts]
-
-App/
-
-*.zip
-
-Publish/
-
+# ===================================================
+# 11. โฟลเดอร์และไฟล์ทดสอบชั่วคราว
+# ===================================================
 TestProject/
-
-test.cs
-
-test.csproj
-
 CheckSharpCompress/
-
-
-
-Publish/
-TestProject/
 test.cs
 test.csproj
-CheckSharpCompress/
+PianoRoll_backup.cs
+Program_backup.cs

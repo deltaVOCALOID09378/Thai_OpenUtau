@@ -1,14 +1,13 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
-#pragma warning disable CS8632
-// ==========================================
-// Made And Checked By DELTA SYNTH & Gemini AI
+// ============================================================================
+// Made And Checked By DELTA SYNTH & All Agentic AI
 // Original by Patiphat Wongyai
 // Version: v.2.5
-// History/Summary:
-// v.2.5 (Consonant Space Widening - ขยายพื้นที่พยัญชนะ): เพิ่มพื้นที่ VC transition จาก 75% เป็น 80%, ending C จาก 85% เป็น 88%, vcPosition buffer จาก 120 เป็น 100 ticks เพื่อเสียงพยัญชนะชัดขึ้น
-// v.2.4: Implemented Safety Position Buffer (prevPos + 10) to prevent phoneme overlapping ("ghostly voice" bug). Multi-syllable + note support.
-// ==========================================
+// Description: ระบบแปลงหน่วยเสียงสไตล์ VCV (Vowel-Consonant-Vowel)
+// ขยายพื้นที่การครอสเฟด (VC transition) เป็น 80% และ Ending C เป็น 88%
+// (VC Transition width = 80%, Ending C width = 88% for clearer articulation)
+// ============================================================================
 
 using System;
 using System.Collections.Generic;
@@ -87,28 +86,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
         }
 
-        private Dictionary<string, string> CustomDictionary = new Dictionary<string, string> {
-            {"บวร", "bQ wQn"},
-            {"ศร", "sQn"},
-            {"โสน", "sa no"},
-            {"เบื้อง", "b3aN"},
-            {"คือ", "kh1"},
-            {"เรือ", "r6"},
-            {"บ่", "bQ"},
-            {"ก็", "kQ"},
-            {"เอื้อ", "q6"},
-            {"ตึก", "t1k"},
-            {"ปู่", "pu"},
-            {"ครุธ", "khrut"},
-            {"ครุฑ", "khrut"},
-            {"สถิตย์", "sathit"},
-            {"ธ", "tha"},
-            {"ณ", "na"},
-            {"ฤาษี", "r1 si"},
-            {"ฤทธิ์", "rit"},
-            {"ฤกดิ์", "r3k"},
-            {"ศักดิ์", "sak"}
-        };
+        private Dictionary<string, string> CustomDictionary = new Dictionary<string, string>();
         private bool isDictLoaded = false;
         private USinger? singer;
 
@@ -135,7 +113,6 @@ namespace OpenUtau.Plugin.Builtin {
                 else if (p == "Y") p = "y";
                 else if (p == "W") p = "w";
                 
-                // Map Diffsinger vowels to VCCV equivalents
                 if (p == "A") p = "@";
                 else if (p == "E") p = "3";
                 else if (p == "O") p = "Q";
@@ -214,38 +191,32 @@ namespace OpenUtau.Plugin.Builtin {
         private void LoadCustomDictionary() {
             if (isDictLoaded) return;
             try {
-                string[] dictPaths = {
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionaries", "dsdict-th.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th_dict.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "TH_VCCV_Dict.txt")
-                };
-
-                foreach (var path in dictPaths) {
-                    if (File.Exists(path)) {
-                        var lines = File.ReadAllLines(path, Encoding.UTF8);
-                        bool isTHVCCVDict = Path.GetFileName(path) == "TH_VCCV_Dict.txt";
-                        foreach (var line in lines) {
-                            if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
-                            var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                            if (parts.Length >= 2) {
-                                string word = parts[0].Trim();
-                                string phonemes = parts[1].Trim();
-                                if (isTHVCCVDict) {
-                                    phonemes = ConvertDiffsingerToSyllables(phonemes);
+                // เรียกใช้จากพจนานุกรมส่วนกลาง (Call unified dictionary manager)
+                ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => ConvertDiffsingerToSyllables(phonemes));
+                
+                if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
+                    string[] singerDicts = { "dsdict-th.txt", "th_custom_dict.txt" };
+                    foreach (var dict in singerDicts) {
+                        string path = Path.Combine(singer.Location, dict);
+                        if (File.Exists(path)) {
+                            var lines = File.ReadAllLines(path, Encoding.UTF8);
+                            foreach (var line in lines) {
+                                if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+                                var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                if (parts.Length >= 2) {
+                                    CustomDictionary[parts[0].Trim()] = ConvertDiffsingerToSyllables(parts[1].Trim());
                                 }
-                                CustomDictionary[word] = phonemes;
                             }
                         }
                     }
                 }
-            } catch (Exception ex) { Log.Error(ex, "Failed to load custom dictionary."); }
+            } catch (Exception ex) { Log.Error(ex, "เกิดข้อผิดพลาดในการโหลดพจนานุกรม (Failed to load custom dictionary)"); }
             isDictLoaded = true;
         }
 
         private bool checkOtoUntilHit(string[] input, Note note, out UOto oto) {
             oto = default;
-            var attr = note.phonemeAttributes?.FirstOrDefault(attr => attr.index == 0) ?? default;
+            var attr = note.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
             foreach (string test in input) {
                 if (test == null) continue;
                 if (singer.TryGetMappedOto(test, note.tone + attr.toneShift, attr.voiceColor, out var otoCandidacy)) {
@@ -358,6 +329,7 @@ namespace OpenUtau.Plugin.Builtin {
                 if (aliases.Count == 0) aliases.Add(string.IsNullOrEmpty(syllable) ? "a" : syllable);
                 
                 bool firstHasVowel = aliases.Count > 0 && vowels.Any(v => aliases[0].Contains(v));
+                // ปรับ buffer position ให้กว้างขึ้นเพื่อความชัดเจน (Increased buffer position to 100 ticks)
                 int vcPosition = Math.Max(0, noteDuration - 100);
 
                 for (int i = 0; i < aliases.Count; i++) {
@@ -371,14 +343,17 @@ namespace OpenUtau.Plugin.Builtin {
                         } else if (alias == "-") {
                             position = Math.Max((int)(noteDuration * 0.88), noteDuration - 18);
                         } else if (alias.EndsWith("-")) {
+                            // พื้นที่พยัญชนะท้าย (Ending C space) ขยายเป็น 88%
                             position = Math.Max((int)(noteDuration * 0.88), noteDuration - 18);
                         } else if (i == aliases.Count - 1 && aliases.Count >= 3) {
                             position = Math.Max((int)(noteDuration * 0.80), vcPosition);
                         } else {
+                            // พื้นที่ข้ามสระ (VC transition) ขยายเป็น 80%
                             position = Math.Max((int)(noteDuration * 0.80), vcPosition);
                         }
                     }
                     
+                    // ป้องกันเสียงผีสิง (Prevent phoneme overlapping bug)
                     int absolutePosition = position + noteStartPos;
                     int lastPos = phonemes.Count > 0 ? phonemes.Last().position : -120;
                     if (absolutePosition <= lastPos) {

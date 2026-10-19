@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -39,6 +39,11 @@ namespace OpenUtau.Classic {
                 startInfo.Arguments = $"\"{Executable}\" \"{tempFile}\"";
                 startInfo.UseShellExecute = false;
                 startInfo.Environment.Add("LANG", "ja_JP.utf8");
+            } else if (OS.IsWindows() && (ext == ".bat" || ext == ".cmd")) {
+                startInfo.FileName = "cmd.exe";
+                // DELTA SYNTH: Wrap entire command in quotes so cmd.exe handles spaces in OneDrive paths perfectly
+                startInfo.Arguments = $"/c \"\"{Executable}\" \"{tempFile}\"\"";
+                startInfo.UseShellExecute = UseShell;
             } else {
                 startInfo.FileName = Executable;
                 startInfo.Arguments = $"\"{tempFile}\"";

@@ -5,11 +5,9 @@ using OpenUtau.Core.Util;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
+namespace OpenUtau.App.ViewModels {
     public class TimeAxisChangedEvent { }
-    public class PlaybackViewModel : ViewModelBase, ICmdSubscriber
-    {
+    public class PlaybackViewModel : ViewModelBase, ICmdSubscriber {
         UProject Project => DocManager.Inst.Project;
         public int BeatPerBar => Project.timeSignatures[0].beatPerBar;
         public int BeatUnit => Project.timeSignatures[0].beatUnit;
@@ -30,61 +28,51 @@ namespace OpenUtau.App.ViewModels
         public bool IsPlaying => PlaybackManager.Inst.PlayingMaster;
         public bool ShowPlayPosHighlight => !IsPlaying || HasRangeSelection;
 
-        public PlaybackViewModel()
-        {
+        public PlaybackViewModel() {
             playbackActiveLast = IsPlaybackActive;
             DocManager.Inst.AddSubscriber(this);
 
             this.WhenAnyValue(x => x.MetronomeEnabled)
-             .Subscribe(metronomeEnabled =>
-             {
+             .Subscribe(metronomeEnabled => {
                  Preferences.Default.MetronomeEnabled = metronomeEnabled;
                  Preferences.Save();
                  PlaybackManager.Inst.PlayMetronome(MetronomeEnabled);
              });
         }
 
-        public void SeekStart()
-        {
+        public void SeekStart() {
             Pause();
             DocManager.Inst.ExecuteCmd(new SeekPlayPosTickNotification(0));
             NotifyPlaybackActiveChanged();
         }
-        public void SeekEnd()
-        {
+        public void SeekEnd() {
             Pause();
             DocManager.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Project.EndTick));
             NotifyPlaybackActiveChanged();
         }
-        public void PlayOrPause(int tick = -1, int endTick = -1, int trackNo = -1)
-        {
+        public void PlayOrPause(int tick = -1, int endTick = -1, int trackNo = -1) {
             bool wasPlaying = PlaybackManager.Inst.PlayingMaster;
             PlaybackManager.Inst.PlayOrPause(tick: tick, endTick: endTick, trackNo: trackNo);
             if (wasPlaying && !PlaybackManager.Inst.PlayingMaster && !PlaybackManager.Inst.StartingToPlay
-                && Preferences.Default.LockStartTime != 0)
-            {
+                && Preferences.Default.LockStartTime != 0) {
                 DocManager.Inst.ExecuteCmd(new SetPlayPosTickNotification(
                     PlaybackManager.Inst.PlaybackStartTick, pause: true));
             }
             NotifyPlaybackActiveChanged();
         }
-        public void Pause()
-        {
+        public void Pause() {
             bool wasPlaying = PlaybackManager.Inst.PlayingMaster;
             PlaybackManager.Inst.PausePlayback();
-            if (wasPlaying && Preferences.Default.LockStartTime != 0)
-            {
+            if (wasPlaying && Preferences.Default.LockStartTime != 0) {
                 DocManager.Inst.ExecuteCmd(new SetPlayPosTickNotification(
                     PlaybackManager.Inst.PlaybackStartTick, pause: true));
             }
             NotifyPlaybackActiveChanged();
         }
 
-        public void PollPlaybackActiveChanged()
-        {
+        public void PollPlaybackActiveChanged() {
             bool active = IsPlaybackActive;
-            if (active == playbackActiveLast)
-            {
+            if (active == playbackActiveLast) {
                 return;
             }
             playbackActiveLast = active;
@@ -93,36 +81,29 @@ namespace OpenUtau.App.ViewModels
             this.RaisePropertyChanged(nameof(ShowPlayPosHighlight));
         }
 
-        void NotifyPlaybackActiveChanged()
-        {
+        void NotifyPlaybackActiveChanged() {
             playbackActiveLast = IsPlaybackActive;
             this.RaisePropertyChanged(nameof(IsPlaybackActive));
             this.RaisePropertyChanged(nameof(IsPlaying));
             this.RaisePropertyChanged(nameof(ShowPlayPosHighlight));
         }
 
-        public void MovePlayPos(int tick)
-        {
-            if (DocManager.Inst.playPosTick != tick)
-            {
+        public void MovePlayPos(int tick) {
+            if (DocManager.Inst.playPosTick != tick) {
                 DocManager.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick), pause: true));
             }
         }
 
-        public void SetTimeSignature(int beatPerBar, int beatUnit)
-        {
-            if (beatPerBar > 1 && (beatUnit == 2 || beatUnit == 4 || beatUnit == 8 || beatUnit == 16))
-            {
+        public void SetTimeSignature(int beatPerBar, int beatUnit) {
+            if (beatPerBar > 1 && (beatUnit == 2 || beatUnit == 4 || beatUnit == 8 || beatUnit == 16)) {
                 DocManager.Inst.StartUndoGroup("command.project.timesignature");
                 DocManager.Inst.ExecuteCmd(new TimeSignatureCommand(Project, beatPerBar, beatUnit));
                 DocManager.Inst.EndUndoGroup();
             }
         }
 
-        public void SetBpm(double bpm)
-        {
-            if (bpm == DocManager.Inst.Project.tempos[0].bpm)
-            {
+        public void SetBpm(double bpm) {
+            if (bpm == DocManager.Inst.Project.tempos[0].bpm) {
                 return;
             }
             DocManager.Inst.StartUndoGroup("command.project.tempo");
@@ -132,10 +113,8 @@ namespace OpenUtau.App.ViewModels
 
         public void SetKey(int key) => SetKeySignature(key, Project.keyIsMajor);
 
-        public void SetKeySignature(int key, bool isMajor)
-        {
-            if (key == DocManager.Inst.Project.key && isMajor == DocManager.Inst.Project.keyIsMajor)
-            {
+        public void SetKeySignature(int key, bool isMajor) {
+            if (key == DocManager.Inst.Project.key && isMajor == DocManager.Inst.Project.keyIsMajor) {
                 return;
             }
             DocManager.Inst.StartUndoGroup("command.project.key");
@@ -143,8 +122,7 @@ namespace OpenUtau.App.ViewModels
             DocManager.Inst.EndUndoGroup();
         }
 
-        public void OnNext(UCommand cmd, bool isUndo)
-        {
+        public void OnNext(UCommand cmd, bool isUndo) {
             if (cmd is BpmCommand ||
                 cmd is TimeSignatureCommand ||
                 cmd is AddTempoChangeCommand ||
@@ -152,8 +130,7 @@ namespace OpenUtau.App.ViewModels
                 cmd is AddTimeSigCommand ||
                 cmd is DelTimeSigCommand ||
                 cmd is KeyCommand ||
-                cmd is LoadProjectNotification)
-            {
+                cmd is LoadProjectNotification) {
                 this.RaisePropertyChanged(nameof(BeatPerBar));
                 this.RaisePropertyChanged(nameof(BeatUnit));
                 this.RaisePropertyChanged(nameof(Bpm));
@@ -161,21 +138,16 @@ namespace OpenUtau.App.ViewModels
                 this.RaisePropertyChanged(nameof(KeyName));
                 this.RaisePropertyChanged(nameof(KeyIsMajor));
                 MessageBus.Current.SendMessage(new TimeAxisChangedEvent());
-                if (cmd is LoadProjectNotification)
-                {
+                if (cmd is LoadProjectNotification) {
                     DocManager.Inst.ExecuteCmd(new SetPlayPosTickNotification(0));
                     this.RaisePropertyChanged(nameof(ShowPlayPosHighlight));
                     this.RaisePropertyChanged(nameof(IsPlaying));
                 }
-            }
-            else if (cmd is SeekPlayPosTickNotification ||
-                cmd is SetPlayPosTickNotification)
-            {
+            } else if (cmd is SeekPlayPosTickNotification ||
+                cmd is SetPlayPosTickNotification) {
                 this.RaisePropertyChanged(nameof(PlayPosTick));
                 this.RaisePropertyChanged(nameof(PlayPosTime));
-            }
-            else if (cmd is SetRangeSelectionNotification)
-            {
+            } else if (cmd is SetRangeSelectionNotification) {
                 this.RaisePropertyChanged(nameof(ShowPlayPosHighlight));
             }
         }

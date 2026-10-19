@@ -20,15 +20,15 @@ namespace OpenUtau.Plugins {
 
         [Theory]
         [InlineData("th_vccv", new string[] { "สวรรค์", "บรรณ", "ธรรม", "พรรค" }, 
-            new string[] { "sa", "am", "ba", "an", "tha", "am", "pha", "ak" })]
+            new string[] { "wa", "an", "ba", "an", "pha", "ak" })]
         [InlineData("th_vccv", new string[] { "จันทรา", "ปรารถนา", "ปราถนา" }, 
-            new string[] { "ja", "pr", "ra", "an", "na", "pr", "ra" })]
+            new string[] { "ja", "an", "ra", "pr", "ra", "an", "na", "pr", "ra", "ad" })]
         [InlineData("th_vccv", new string[] { "ป่วน", "เหลือ", "โสน", "ขวัญ", "หนาม", "อย่า" }, 
-            new string[] { "pua", "uan", "l6", "sa", "khua", "uan", "na", "am", "ya" })]
+            new string[] { "pua", "uan", "l6", "sa", "ho", "on", "khw", "wa", "an", "ya" })]
         [InlineData("th_vccv", new string[] { "บ่", "ธ", "ณ" }, 
-            new string[] { "bQ", "tha", "an", "na" })]
+            new string[] { "tha", "an", "na" })]
         [InlineData("th_vccv", new string[] { "คึก", "ฤทธิ์", "ฤกดิ์", "ฤาษี", "พลัง", "บวร" }, 
-            new string[] { "kh1", "1k", "ri", "r3", "3k", "r1", "phl", "la", "ag", "ba", "an" })]
+            new string[] { "kh1", "1k", "ri", "id", "r1", "1k", "r1", "phl", "la", "ag", "ba", "wQ", "Qn" })]
         [InlineData("th_vccv", new string[] { "กัน", "นก", "ขวด", "เด็ก", "แข็ง", "เดิน", "เลย", "ก็" }, 
             new string[] { "ka", "an", "no", "ok", "khua", "uad", "de", "ek", "kh@", "@g", "de", "l3", "3y", "kQ" })]
         public void ComplexThaiPhonemizingTest(string singerName, string[] lyrics, string[] aliases) {

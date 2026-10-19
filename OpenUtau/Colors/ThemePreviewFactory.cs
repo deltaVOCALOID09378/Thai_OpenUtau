@@ -2,12 +2,9 @@ using Avalonia.Media;
 
 namespace OpenUtau.Colors;
 
-public static class ThemePreviewFactory
-{
-    public static ThemeYaml LoadTheme(string name)
-    {
-        if (BuiltInThemeLoader.TryCreateThemeByName(name, out var builtInTheme))
-        {
+public static class ThemePreviewFactory {
+    public static ThemeYaml LoadTheme(string name) {
+        if (BuiltInThemeLoader.TryCreateThemeByName(name, out var builtInTheme)) {
             return builtInTheme;
         }
         return CustomTheme.Themes.TryGetValue(name, out var path)
@@ -15,8 +12,7 @@ public static class ThemePreviewFactory
             : BuiltInThemeLoader.CreateFromBuiltIn(name, name);
     }
 
-    public static ThemePreviewColors GetPreviewColors(string name)
-    {
+    public static ThemePreviewColors GetPreviewColors(string name) {
         var yaml = LoadTheme(name);
         return new ThemePreviewColors(
             ToBrush(yaml.WorkspaceCanvasColor),
@@ -27,8 +23,7 @@ public static class ThemePreviewFactory
             ToBrush(yaml.AccentColor2));
     }
 
-    static SolidColorBrush ToBrush(string? colorString)
-    {
+    static SolidColorBrush ToBrush(string? colorString) {
         return new SolidColorBrush(ThemeColorStorage.ParseOrDefault(colorString, Color.Parse("#808080")));
     }
 }

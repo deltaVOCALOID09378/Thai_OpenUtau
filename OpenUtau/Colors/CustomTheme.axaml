@@ -54,15 +54,15 @@
   <Color x:Key="AppTopBarValueStripColor">#D8D8DE</Color>
   <Color x:Key="AppTopBarValueDividerColor">#C0C0C8</Color>
 
-  <Color x:Key="WhiteKeyColorLeft">#FFFEFA</Color>
-  <Color x:Key="WhiteKeyColorRight">#DEDEDA</Color>
+  <Color x:Key="WhiteKeyColorLeft">Transparent</Color>
+  <Color x:Key="WhiteKeyColorRight">Transparent</Color>
   <Color x:Key="WhiteKeyNameColor">#343434</Color>
 
   <Color x:Key="CenterKeyColorLeft">#A9A6CD</Color>
   <Color x:Key="CenterKeyColorRight">#D3CFFF</Color>
   <Color x:Key="CenterKeyNameColor">#111111</Color>
 
-  <Color x:Key="BlackKeyColorLeft">#414148</Color>
-  <Color x:Key="BlackKeyColorRight">#15151A</Color>
+  <Color x:Key="BlackKeyColorLeft">#45445C</Color>
+  <Color x:Key="BlackKeyColorRight">#45445C</Color>
   <Color x:Key="BlackKeyNameColor">#FCFCFC</Color>
 </ResourceDictionary>

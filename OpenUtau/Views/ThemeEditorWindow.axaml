@@ -5,8 +5,9 @@
         xmlns:views="clr-namespace:OpenUtau.App.Views"
         mc:Ignorable="d" MinWidth="360" Width="360" Height="640"
         x:Class="OpenUtau.App.Views.ThemeEditorWindow" WindowStartupLocation="CenterOwner"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource themeeditor.title}"
         Closing="WindowClosing" Topmost="True">
   <views:ThemeEditorPane x:Name="EditorPane"/>
 </Window>
+

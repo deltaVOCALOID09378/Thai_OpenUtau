@@ -1,8 +1,3 @@
-<!-- ชื่อไฟล์: NotePropertiesControl.axaml -->
-<!-- ลำดับเวอร์ชัน: 0.1 -->
-<!-- Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT -->
-<!-- Original By OpenUtau Contributors -->
-<!-- หมายเหตุ: ปรับปรุงโครงสร้าง UI โดยรวม ขยาย Spacing เพิ่ม CornerRadius ให้กับ Control ต่างๆ และจัด ColumnDefinitions ใหม่เพื่อลดความแออัด -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -14,9 +9,8 @@
              x:Name="NotePropsRoot"
              KeyDown="OnKeyDown" Focusable="True">
   <UserControl.Styles>
-    <!-- หมายเหตุ: ขยาย Spacing จาก 6 เป็น 10 เพื่อให้แต่ละบรรทัดมีช่องว่างหายใจ ดูล้ำสมัยและสบายตาขึ้น -->
     <Style Selector="StackPanel.notePropsSectionContent">
-      <Setter Property="Spacing" Value="10"/>
+      <Setter Property="Spacing" Value="6"/>
     </Style>
     <Style Selector="Button,CheckBox,ToggleSwitch">
       <Setter Property="Focusable" Value="False"/>
@@ -28,7 +22,7 @@
     <Style Selector="TextBlock.notePropLabel">
       <Setter Property="TextWrapping" Value="Wrap"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="Margin" Value="0,0,12,0"/>
+      <Setter Property="Margin" Value="0,0,8,0"/>
     </Style>
     <Style Selector="Slider.fader">
       <Setter Property="Focusable" Value="True"/>
@@ -36,38 +30,32 @@
   </UserControl.Styles>
 
   <Grid>
-    <!-- หมายเหตุ: ปรับ Margin ของ Title ให้สอดคล้องกับโครงสร้างใหม่ -->
     <TextBlock Text="{Binding Title}" Classes="notePropsPanelTitle"
                Height="32" Margin="16,16,40,0"
-               HorizontalAlignment="Left" VerticalAlignment="Top" FontWeight="SemiBold"/>
-    
+               HorizontalAlignment="Left" VerticalAlignment="Top"/>
     <Button x:Name="ClosePanelButton" Classes="workspacePanelClose"
             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0"
-            IsVisible="False" Click="OnCloseDockedPanel" CornerRadius="6"
+            IsVisible="False" Click="OnCloseDockedPanel"
             ToolTip.Tip="{DynamicResource workspace.panel.close}">
       <Path Classes="stroked"/>
     </Button>
-    
-    <!-- หมายเหตุ: เพิ่ม Margin ด้านข้างให้ ScrollViewer เพื่อไม่ให้เนื้อหาชิดขอบจอเกินไป -->
     <ScrollViewer Name="ContentScroll" Classes="workspaceScroll workspaceDockPanelScroll"
-                  Margin="16,48,16,16"
+                  Margin="10,48,10,16"
                   HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                   AllowAutoHide="False">
-      <StackPanel Classes="workspacePanelSections" Margin="0" HorizontalAlignment="Stretch" Spacing="8">
-        
-        <!-- ส่วนที่ 1: Basic Properties -->
+      <StackPanel Classes="workspacePanelSections" Margin="0" HorizontalAlignment="Stretch">
         <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
-                  Header="{DynamicResource noteproperty.basic}" CornerRadius="6">
-          <StackPanel Classes="notePropsSectionContent" IsEnabled="{Binding IsNoteSelected}" Margin="4,8">
-            <Grid ColumnDefinitions="132,12,*">
+                  Header="{DynamicResource noteproperty.basic}">
+          <StackPanel Classes="notePropsSectionContent" IsEnabled="{Binding IsNoteSelected}">
+            <Grid ColumnDefinitions="132,7,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.lyric}" Grid.Column="0"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Text="{Binding Lyric, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="2" Tag="Lyric" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Text="{Binding Lyric, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="2" Tag="Lyric"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,*">
+            <Grid ColumnDefinitions="132,7,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource noteproperty.phonemizer}" Grid.Column="0"/>
               <Button Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                       Content="{Binding PhonemizerOverrideText}"
-                      Click="OnPhonemizerButtonClicked" CornerRadius="6">
+                      Click="OnPhonemizerButtonClicked">
                 <Button.ContextMenu>
                   <ContextMenu Name="PhonemizerMenu" ItemsSource="{Binding PhonemizerMenuItems}" Placement="Left">
                     <ContextMenu.Styles>
@@ -82,60 +70,57 @@
                 </Button.ContextMenu>
               </Button>
             </Grid>
-            <Grid ColumnDefinitions="132,12,*">
+            <Grid ColumnDefinitions="132,7,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource noteproperty.tone}" Grid.Column="0"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Text="{Binding Tone, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="2" Tag="Tone" Margin="0" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Text="{Binding Tone, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="2" Tag="Tone" Margin="0"/>
             </Grid>
-            <!-- หมายเหตุ: ขยายช่องว่างระหว่างคอลัมน์จาก 7 เป็น 12 และปรับความกว้าง TextBox (50 -> 54) เพื่อความสมดุล -->
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource noteproperty.tuning}" FontWeight="{Binding TuningFontWeight}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding Tuning, Mode=OneWay}" Tag="Tuning" Margin="0" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding Tuning, Mode=OneWay}" Tag="Tuning" Margin="0"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding Tuning}" Minimum="-100" Maximum="100"
                       TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="true"
-                      Tag="Tuning" Margin="4,0"/>
+                      Tag="Tuning"/>
             </Grid>
           </StackPanel>
         </Expander>
-        
-        <Separator Classes="workspacePanelSectionDivider" Margin="0,4"/>
+        <Separator Classes="workspacePanelSectionDivider"/>
 
-        <!-- ส่วนที่ 2: Portamento -->
         <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
-                  Header="{DynamicResource notedefaults.portamento}" CornerRadius="6">
-          <StackPanel Classes="notePropsSectionContent" IsEnabled="{Binding IsNoteSelected}" Margin="4,8">
-            <Grid ColumnDefinitions="132,12,*">
+                  Header="{DynamicResource notedefaults.portamento}">
+          <StackPanel Classes="notePropsSectionContent" IsEnabled="{Binding IsNoteSelected}">
+            <Grid ColumnDefinitions="132,7,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.preset}"/>
               <c:WorkspacePanelComboBox Grid.Column="1" Grid.ColumnSpan="2" Classes="workspacePanelCombo" ItemsSource="{Binding PortamentoPresets}" Margin="0"
                 IsEnabled="{Binding IsNoteSelected}"
-                SelectedItem="{Binding ApplyPortamentoPreset}" HorizontalAlignment="Stretch" CornerRadius="6"/>
+                SelectedItem="{Binding ApplyPortamentoPreset}" HorizontalAlignment="Stretch"/>
             </Grid>
             <Grid ColumnDefinitions="132,*,20,*">
               <Button Grid.Column="1" Classes="workspacePanelButton" Content="{DynamicResource button.save}"
-                      HorizontalAlignment="Stretch" Click="OnSavePortamentoPreset" CornerRadius="6"
+                      HorizontalAlignment="Stretch" Click="OnSavePortamentoPreset"
                       ToolTip.Tip="{DynamicResource notedefaults.preset.save.tooltip}"/>
               <Button Grid.Column="3" Classes="workspacePanelButton" Content="{DynamicResource button.remove}"
-                      HorizontalAlignment="Stretch" Command="{Binding RemoveAppliedPortamentoPreset}" CornerRadius="6"
+                      HorizontalAlignment="Stretch" Command="{Binding RemoveAppliedPortamentoPreset}"
                       ToolTip.Tip="{DynamicResource notedefaults.preset.remove.tooltip}"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.portamento.length}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding PortamentoLength, Mode=OneWay}" Tag="PortamentoLength_TextBox" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding PortamentoLength, Mode=OneWay}" Tag="PortamentoLength_TextBox"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding PortamentoLength}" Minimum="2" Maximum="320"
                       TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="true"
-                      Tag="PortamentoLength" Margin="4,0"/>
+                      Tag="PortamentoLength"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.portamento.start}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding PortamentoStart, Mode=OneWay}" Tag="PortamentoStart_TextBox" Margin="0" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding PortamentoStart, Mode=OneWay}" Tag="PortamentoStart_TextBox" Margin="0"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding PortamentoStart}" Minimum="-200" Maximum="200"
                       TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="true"
-                      Tag="PortamentoStart" Margin="4,0"/>
+                      Tag="PortamentoStart"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,*">
+            <Grid ColumnDefinitions="132,7,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource context.pitch.shape}"/>
               <c:WorkspacePanelComboBox Grid.Column="1" Grid.ColumnSpan="2" Classes="workspacePanelCombo" Margin="0"
                 IsEnabled="{Binding IsNoteSelected}"
-                SelectedIndex="{Binding PitchCurveShape}" HorizontalAlignment="Stretch" CornerRadius="6">
+                SelectedIndex="{Binding PitchCurveShape}" HorizontalAlignment="Stretch">
                 <ComboBoxItem Content="{DynamicResource context.pitch.easeinout}"/>
                 <ComboBoxItem Content="{DynamicResource context.pitch.linear}"/>
                 <ComboBoxItem Content="{DynamicResource context.pitch.easein}"/>
@@ -145,105 +130,101 @@
             </Grid>
           </StackPanel>
         </Expander>
-        
-        <Separator Classes="workspacePanelSectionDivider" Margin="0,4"/>
+        <Separator Classes="workspacePanelSectionDivider"/>
 
-        <!-- ส่วนที่ 3: Vibrato -->
         <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
-                  Header="{DynamicResource notedefaults.vibrato}" CornerRadius="6">
-          <StackPanel Classes="notePropsSectionContent" IsEnabled="{Binding IsNoteSelected}" Margin="4,8">
+                  Header="{DynamicResource notedefaults.vibrato}">
+          <StackPanel Classes="notePropsSectionContent" IsEnabled="{Binding IsNoteSelected}">
             <ToggleSwitch IsChecked="{Binding VibratoEnable, Mode=OneWay}" OnContent="{DynamicResource prefs.on}" OffContent="{DynamicResource prefs.off}"
                           Click="VibratoEnableClicked"/>
-            <Grid ColumnDefinitions="132,12,*">
+            <Grid ColumnDefinitions="132,7,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.preset}"/>
               <c:WorkspacePanelComboBox Grid.Column="1" Grid.ColumnSpan="2" Classes="workspacePanelCombo" ItemsSource="{Binding VibratoPresets}" Margin="0"
                 IsEnabled="{Binding IsNoteSelected}"
-                SelectedItem="{Binding ApplyVibratoPreset}" HorizontalAlignment="Stretch" CornerRadius="6"/>
+                SelectedItem="{Binding ApplyVibratoPreset}" HorizontalAlignment="Stretch" />
             </Grid>
             <Grid ColumnDefinitions="132,*,20,*">
               <Button Grid.Column="1" Classes="workspacePanelButton" Content="{DynamicResource button.save}"
-                      HorizontalAlignment="Stretch" Click="OnSaveVibratoPreset" CornerRadius="6"
+                      HorizontalAlignment="Stretch" Click="OnSaveVibratoPreset"
                       ToolTip.Tip="{DynamicResource notedefaults.preset.save.tooltip}"/>
               <Button Grid.Column="3" Classes="workspacePanelButton" Content="{DynamicResource button.remove}"
-                HorizontalAlignment="Stretch" Command="{Binding RemoveAppliedVibratoPreset}" CornerRadius="6"
+                HorizontalAlignment="Stretch" Command="{Binding RemoveAppliedVibratoPreset}"
                 ToolTip.Tip="{DynamicResource notedefaults.preset.remove.tooltip}"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*" >
+            <Grid ColumnDefinitions="132,7,50,20,*" >
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.length}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoLength, Mode=OneWay}" Tag="VibratoLength" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoLength, Mode=OneWay}" Tag="VibratoLength"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding VibratoLength}" Minimum="0" Maximum="100"
                       TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="true"
-                      Tag="VibratoLength" IsDirectionReversed="True" Margin="4,0"/>
+                      Tag="VibratoLength" IsDirectionReversed="True" />
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.period}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoPeriod, Mode=OneWay}" Tag="VibratoPeriod" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoPeriod, Mode=OneWay}" Tag="VibratoPeriod"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding VibratoPeriod}" Minimum="5" Maximum="500"
                       TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="true"
-                      Tag="VibratoPeriod" Margin="4,0"/>
+                      Tag="VibratoPeriod"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.depth}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoDepth, Mode=OneWay}" Tag="VibratoDepth" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoDepth, Mode=OneWay}" Tag="VibratoDepth"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding VibratoDepth}" Minimum="5" Maximum="200"
                       TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="true"
-                      Tag="VibratoDepth" Margin="4,0"/>
+                      Tag="VibratoDepth"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.in}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoIn, Mode=OneWay}" Tag="VibratoIn" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoIn, Mode=OneWay}" Tag="VibratoIn"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding VibratoIn}" Minimum="0" Maximum="100"
                       TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="true"
-                      Tag="VibratoIn" Margin="4,0"/>
+                      Tag="VibratoIn"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.out}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoOut, Mode=OneWay}" Tag="VibratoOut" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoOut, Mode=OneWay}" Tag="VibratoOut"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding VibratoOut}" Minimum="0" Maximum="100"
                       TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="true"
-                      Tag="VibratoOut" Margin="4,0"/>
+                      Tag="VibratoOut"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.shift}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoShift, Mode=OneWay}" Tag="VibratoShift" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoShift, Mode=OneWay}" Tag="VibratoShift"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding VibratoShift}" Minimum="0" Maximum="100"
                       TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="true"
-                      Tag="VibratoShift" Margin="4,0"/>
+                      Tag="VibratoShift"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.drift}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoDrift, Mode=OneWay}" Tag="VibratoDrift" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoDrift, Mode=OneWay}" Tag="VibratoDrift"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding VibratoDrift}" Minimum="-100" Maximum="100"
                       TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="true"
-                      Tag="VibratoDrift" Margin="4,0"/>
+                      Tag="VibratoDrift"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.vollink}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoVolLink, Mode=OneWay}" Tag="VibratoVolLink" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" Text="{Binding VibratoVolLink, Mode=OneWay}" Tag="VibratoVolLink"/>
               <Slider Grid.Column="4" Classes="fader" Value="{Binding VibratoVolLink}" Minimum="-100" Maximum="100"
                       TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="true"
-                      Tag="VibratoVolLink" Margin="4,0"/>
+                      Tag="VibratoVolLink"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,*">
+            <Grid ColumnDefinitions="132,7,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource noteproperty.setlongnote}"/>
               <CheckBox Grid.Column="1" Grid.ColumnSpan="2" IsChecked="{Binding AutoVibratoToggle}"/>
             </Grid>
-            <Grid ColumnDefinitions="132,12,54,20,*">
+            <Grid ColumnDefinitions="132,7,50,20,*">
               <TextBlock Classes="notePropLabel" Text="{DynamicResource notedefaults.vibrato.autominlength}"/>
-              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" IsEnabled="{Binding AutoVibratoToggle}" Text="{Binding AutoVibratoNoteLength}" Margin="0" CornerRadius="6"/>
+              <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" Grid.Column="2" IsEnabled="{Binding AutoVibratoToggle}" Text="{Binding AutoVibratoNoteLength}" Margin="0" />
               <Slider Grid.Column="4" Classes="fader" IsEnabled="{Binding AutoVibratoToggle}" Value="{Binding AutoVibratoNoteLength}" Minimum="10" Maximum="1920"
-                      TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="true" Margin="4,0"/>
+                      TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="true" />
             </Grid>
           </StackPanel>
         </Expander>
-        
-        <Separator Classes="workspacePanelSectionDivider" Margin="0,4"/>
+        <Separator Classes="workspacePanelSectionDivider"/>
 
-        <!-- ส่วนที่ 4: Expressions -->
         <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
-                  Header="{DynamicResource exps.caption}" CornerRadius="6">
-          <StackPanel Classes="notePropsSectionContent" Margin="4,8">
-            <StackPanel Name="ExpressionsPanel" Spacing="10" />
+                  Header="{DynamicResource exps.caption}">
+          <StackPanel Classes="notePropsSectionContent">
+            <StackPanel Name="ExpressionsPanel" Spacing="6" />
           </StackPanel>
         </Expander>
       </StackPanel>

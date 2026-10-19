@@ -1,9 +1,7 @@
 using Avalonia.Input;
 
-namespace OpenUtau.App
-{
-    static class ViewConstants
-    {
+namespace OpenUtau.App {
+    static class ViewConstants {
         public const double TickWidthMax = 256.0 / 480.0;
         public const double TickWidthMin = 4.0 / 480.0;
         public const double TickWidthDefault = 24.0 / 480.0;
@@ -84,8 +82,7 @@ namespace OpenUtau.App
         public const double PhonemeEmbeddedHeight = PhonemeAliasStripHeight + PhonemeAliasEnvelopeGap + PhonemeClassicEnvelopeHeight;
 
         /// <summary>Classic phoneme strip envelope band inside the piano roll.</summary>
-        public static (double barY, double barHeight) GetClassicPhonemeEnvelopeLayout()
-        {
+        public static (double barY, double barHeight) GetClassicPhonemeEnvelopeLayout() {
             return (PhonemeAliasStripHeight + PhonemeAliasEnvelopeGap, PhonemeClassicEnvelopeHeight);
         }
     }

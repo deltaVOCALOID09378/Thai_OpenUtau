@@ -2,23 +2,25 @@
 **Thai OpenUtau by DELTA SYNTH**
 
 ## 1. การวิจัยปัญหาเชิงสถาปัตยกรรม (Architectural Problems)
-จากการตรวจสอบบริบทการทำงานที่ผ่านมา (Chat History) พบปัญหาหลักดังนี้:
-1. **Log Spam จากไฟล์ `oto.ini`:** 
-   * **Root Cause:** ผู้สร้าง Voicebank บางท่านได้ทำการตั้งค่า Placeholder ในไฟล์ `oto.ini` ด้วยค่า `.wav=` ทำให้เอนจิน `VoicebankLoader.cs` พยายามสแกนไฟล์ที่ไม่มีอยู่จริง และพิมพ์ Error ลงระบบนับพันบรรทัด ทำให้ประสิทธิภาพตกลง
-   * **Resolution:** ดำเนินการ Patch ระบบให้อ่านค่า `oto.ini` อย่างมีวิจารณญาณ โดยข้ามไฟล์ที่มีเพียง `.wav=` เงียบๆ ทำให้สแปมลดลงเป็นศูนย์ และลดภาระของ I/O
-2. **YAML Parsing Failure:**
-   * **Root Cause:** บางไฟล์ `character.yaml` ตกหล่นเรื่องเว้นวรรคหลังเครื่องหมาย `:` ทำให้ระบบของ YamlDotNet ล้มเหลวระหว่างโหลด
-   * **Resolution:** ดำเนินการแก้ไขโครงสร้างเว้นวรรคของไฟล์ต้นทางเรียบร้อยแล้ว
-3. **Compilation Lock (Sandbox Environment):**
-   * **Root Cause:** การ Build โปรเจกต์ผ่าน IDE ภายในเครื่องที่มีข้อจำกัด ทำให้ Background Task (Python) ถูกบล็อกโดยระบบรักษาความปลอดภัยของ Windows/Sandbox
-   * **Resolution:** สร้างชุดสคริปต์ Standalone `Auto Compiler.bat` เพื่อข้ามการล็อก และทำงานผสานร่วมกับ `TuneAndFormat.ps1` ทำให้โปรเจกต์คอมไพล์ผ่านลื่นไหล 100%
+จากการตรวจสอบบริบทการทำงานและ Log รันไทม์จริง พบปัญหาหลักดังนี้:
+1. **Startup Stalling จาก Process Enumeration:**
+   * **Root Cause:** ใน `Program.cs` โค้ดเดิมใช้ `Process.GetProcessesByName(processName)` ซึ่งบนระบบปฏิบัติการ Windows คำสั่งนี้จำเป็นต้องวนลูปตรวจสอบทุก Process ในระดับระบบปฏิบัติการ ส่งผลให้เกิดความล่าช้าหลายวินาทีในจังหวะเปิดโปรแกรม
+   * **Resolution:** เปลี่ยนมาใช้ **Kernel-level Named Mutex** (`ThaiOpenUtau_SingleInstance_{User}`) ซึ่งใช้เวลาเพียงระดับไมโครวินาทีในการตรวจจับอินสแตนซ์ที่ซ้ำซ้อน รวดเร็ว แม่นยำ และปลอดภัยสูงสุด
+2. **Ghost Background Processes & Exit Hanging:**
+   * **Root Cause:** เมื่อผู้ใช้สั่งปิดหน้าต่างหลัก `MainWindow` หากมีหน้าต่างแยก (`pianoRollWindow`) หรือหน้าต่าง Dialog เปิดค้างอยู่ ตัวโปรแกรมจะไม่ยอมสิ้นสุดการทำงาน นอกจากนี้ Thread สังเคราะห์เสียงและ DispatcherTimer ยังคงทำงานต่อ ทำให้ Process ค้างในหน่วยความจำ และเมื่อผู้ใช้พยายามเปิดโปรแกรมใหม่จะขึ้นข้อความ `Process already open. Exiting.`
+   * **Resolution:** เสริมขั้นตอน Graceful Shutdown ใน `WindowClosing`: สั่งหยุด `PlaybackManager.Inst.StopPlayback()` คืน Audio Hardware ทันที, หยุด `timer` และ `autosaveTimer`, สั่งปิดหน้าต่างบริวารทุกบาน (`pianoRollWindow.Close()`), บันทึก Preferences อย่างปลอดภัย และสั่ง `IControlledApplicationLifetime.Shutdown(0)` พร้อม `Environment.Exit(0)` ป้องกันเธรดตกค้าง 100%
+3. **SplashWindow Serial Audio Initialization:**
+   * **Root Cause:** `InitAudio()` ทำงานต่อท้ายหลังจาก Tools และ Plugins ทำงานเสร็จ ทำให้ต้องรอ Audio Driver Query (DirectSound COM) เพิ่มเติม
+   * **Resolution:** แตกงาน `InitAudio()` ไปรันแบบขนาน (`tAudio`) ร่วมกับ `ToolsManager` และ `DocManager` พร้อมตัด `Thread.Sleep(100)` ที่หน่วงโดยไม่จำเป็นออก ทำให้เข้าสู่หน้าต่างหลักได้อย่างรวดเร็วทันใจ
 
 ## 2. แผนการพัฒนาความเร็วและความเสถียรเชิงรูปธรรม (Concrete Optimization Plan)
-1. **Fast Startup (เข้าโปรแกรมเร็วขึ้น):** 
-   * ปัจจุบัน UTAU คลาสสิกมักโหลดตารางเสียง (Voicebank) ทั้งหมดแบบ Synchronous ซึ่งทำให้จังหวะเปิดแอปพลิเคชันล่าช้า การปรับปรุง `VoicebankLoader` ให้ทำงานแบบ Lazy Loading หรือ Asynchronous จะช่วยแก้ปัญหาคอขวด 
-2. **Safe Recovery (การฟื้นฟูหลังเกิดข้อผิดพลาดและปิดโปรแกรม):** 
-   * กระบวนการปิดโปรแกรมต้องรับรองว่า `Preferences` และออฟเจ็กต์ใน Memory ถูกจัดการอย่างถูกต้องเพื่อไม่ให้ Config ของผู้ใช้เพี้ยนในรอบต่อไป
+1. **Snappy Startup (เข้าโปรแกรมเร็วที่สุด):** 
+   * ใช้ Named Mutex สำหรับ Single-instance Check
+   * ผสาน Asynchronous & Parallel Task Scheduling ใน `SplashWindow` (Tools + Singers + DocManager + Audio)
+2. **Graceful & Safe Shutdown (ปิดโปรแกรมทันใจ ปลอดภัยทุกการบันทึก):** 
+   * เมื่อผู้ใช้สั่งปิด มีการเตือนบันทึกงานหากยังไม่บันทึก (`AskIfSaveAndContinue`)
+   * บันทึกขนาดและพิกัดหน้าต่างลง `Preferences.Default.MainWindowSize` ก่อนปิด
+   * ยกเลิก Audio Buffer และ Background Timers ทั้งหมด
+   * รับประกันว่า Process คืนทรัพยากร RAM/CPU แก่ OS ทันทีที่หน้าต่างปิด
 3. **C++ Native Extensions (โลกของ DSP):**
-   * โมดูล C++ ทั้ง 37 ไฟล์ที่ทำการ Mapping ไว้ในระบบจะเป็นตัวขับเคลื่อนประสิทธิภาพ (Performance-Critical) โดยเราจะคงสถาปัตยกรรมเดิมไว้ แต่จะ Compile แยกเพื่อความรวดเร็ว
-
-*(เอกสารอ้างอิงและบันทึกประวัติจะถูกเพิ่มมายัง R&D ฉบับนี้อย่างต่อเนื่องใน Phase ถัดไป)*
+   * โมดูล C++ ทั้ง 37 ไฟล์ที่ทำการ Mapping ไว้ในระบบจะเป็นตัวขับเคลื่อนประสิทธิภาพ (Performance-Critical) โดยคงสถาปัตยกรรมเดิมไว้ และผสานการทำงานกับ C# Audio Engine ได้อย่างลงตัว

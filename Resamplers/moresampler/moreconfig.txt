@@ -1,0 +1,37 @@
+# ==============================================================================
+# Configuration file for Moresampler 0.8.3 (Optimized for OpenUtau & UTAU)
+# DELTA SYNTH Standard Configuration
+# ==============================================================================
+
+# === Output settings / การตั้งค่า Output ===
+output-sampling-rate 44100
+output-bit-depth 16
+
+# CRITICAL FOR OPENUTAU: Must be 'on' so Moresampler outputs standard WAV audio
+# when called as a resampler in OpenUtau or UTAU classic.
+# สำคัญมากสำหรับ OpenUtau: ต้องเปิดเป็น 'on' เพื่อให้ส่งออกไฟล์ WAV ที่ OpenUtau อ่านได้
+resampler-compatibility on
+
+# === Synthesis settings / การตั้งค่าการสังเคราะห์เสียง ===
+synthesis-utau-style-normalization full
+synthesis-loudness-preservation off
+synthesis-duration-extension-method auto
+
+# === Miscellaneous / การตั้งค่าทั่วไป ===
+dump-log-file off
+
+# Set to 'full' to enable multi-threading for both resampler and wavtool stages.
+# ตั้งค่าเป็น 'full' เพื่อเปิดใช้งาน Multi-threading ประมวลผลเต็มประสิทธิภาพทุกคอร์
+multithread-synthesis full
+
+auto-update-llsm-mrq on
+
+# === Analysis settings / การตั้งค่าการวิเคราะห์สัญญาณเสียง ===
+analysis-anti-distortion off
+analysis-noise-reduction off
+analysis-biased-f0-estimation off
+analysis-suppress-subharmonics off
+analysis-f0-range-from-path on
+analysis-f0-min 70.0
+analysis-f0-max 800.0
+load-frq off

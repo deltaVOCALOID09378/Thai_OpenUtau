@@ -7,13 +7,11 @@ using OpenUtau.Core;
 using OpenUtau.Core.Util;
 using ReactiveUI;
 
-namespace OpenUtau.App.Controls
-{
+namespace OpenUtau.App.Controls {
     /// <summary>
     /// Draws the planned pitch-follow camera-center trajectory over the piano roll.
     /// </summary>
-    class PitchFollowPathCanvas : Control
-    {
+    class PitchFollowPathCanvas : Control {
         public static readonly StyledProperty<bool> ShowPathProperty =
             AvaloniaProperty.Register<PitchFollowPathCanvas, bool>(nameof(ShowPath));
         public static readonly DirectProperty<PitchFollowPathCanvas, double> TickWidthProperty =
@@ -47,38 +45,31 @@ namespace OpenUtau.App.Controls
                 o => o.NotesViewModel,
                 (o, v) => o.NotesViewModel = v);
 
-        public bool ShowPath
-        {
+        public bool ShowPath {
             get => GetValue(ShowPathProperty);
             set => SetValue(ShowPathProperty, value);
         }
-        public double TickWidth
-        {
+        public double TickWidth {
             get => tickWidth;
             private set => SetAndRaise(TickWidthProperty, ref tickWidth, value);
         }
-        public double TickOffset
-        {
+        public double TickOffset {
             get => tickOffset;
             private set => SetAndRaise(TickOffsetProperty, ref tickOffset, value);
         }
-        public double TrackHeight
-        {
+        public double TrackHeight {
             get => trackHeight;
             private set => SetAndRaise(TrackHeightProperty, ref trackHeight, value);
         }
-        public double TrackOffset
-        {
+        public double TrackOffset {
             get => trackOffset;
             private set => SetAndRaise(TrackOffsetProperty, ref trackOffset, value);
         }
-        public double ViewportTracks
-        {
+        public double ViewportTracks {
             get => viewportTracks;
             private set => SetAndRaise(ViewportTracksProperty, ref viewportTracks, value);
         }
-        public NotesViewModel? NotesViewModel
-        {
+        public NotesViewModel? NotesViewModel {
             get => notesViewModel;
             set => SetAndRaise(NotesViewModelProperty, ref notesViewModel, value);
         }
@@ -91,10 +82,8 @@ namespace OpenUtau.App.Controls
         NotesViewModel? notesViewModel;
         IDisposable? previewSubscription;
         IDisposable? playPosSubscription;
-        IDisposable? settingsSubscription;
 
-        static PitchFollowPathCanvas()
-        {
+        static PitchFollowPathCanvas() {
             AffectsRender<PitchFollowPathCanvas>(
                 ShowPathProperty,
                 TickWidthProperty,
@@ -105,65 +94,51 @@ namespace OpenUtau.App.Controls
                 NotesViewModelProperty);
         }
 
-        public PitchFollowPathCanvas()
-        {
+        public PitchFollowPathCanvas() {
             ClipToBounds = true;
             IsHitTestVisible = false;
         }
 
-        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-        {
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e) {
             base.OnAttachedToVisualTree(e);
             previewSubscription = MessageBus.Current.Listen<PitchFollowPathPreviewChangedEvent>()
                 .Subscribe(_ => InvalidateVisual());
             playPosSubscription = MessageBus.Current.Listen<SetPlayPosTickNotification>()
-                .Subscribe(_ =>
-                {
-                    if (ShowPath)
-                    {
+                .Subscribe(_ => {
+                    if (ShowPath) {
                         InvalidateVisual();
                     }
                 });
-            settingsSubscription = MessageBus.Current.Listen<PlaybackPitchFollowSettingsChangedEvent>()
-                .Subscribe(_ =>
-                {
-                    if (ShowPath)
-                    {
+            MessageBus.Current.Listen<PlaybackPitchFollowSettingsChangedEvent>()
+                .Subscribe(_ => {
+                    if (ShowPath) {
                         InvalidateVisual();
                     }
                 });
         }
 
-        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-        {
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e) {
             base.OnDetachedFromVisualTree(e);
             previewSubscription?.Dispose();
             previewSubscription = null;
             playPosSubscription?.Dispose();
             playPosSubscription = null;
-            settingsSubscription?.Dispose();
-            settingsSubscription = null;
         }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-        {
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
             base.OnPropertyChanged(change);
-            if (change.Property == ShowPathProperty && ShowPath)
-            {
+            if (change.Property == ShowPathProperty && ShowPath) {
                 InvalidateVisual();
             }
         }
 
-        public override void Render(DrawingContext context)
-        {
-            if (!ShowPath || notesViewModel == null || !notesViewModel.PitchFollowPathIsBuilt)
-            {
+        public override void Render(DrawingContext context) {
+            if (!ShowPath || notesViewModel == null || !notesViewModel.PitchFollowPathIsBuilt) {
                 return;
             }
 
             var samples = notesViewModel.PitchFollowPathSamples;
-            if (samples.Count < 2 || TickWidth <= 0 || TrackHeight <= 0)
-            {
+            if (samples.Count < 2 || TickWidth <= 0 || TrackHeight <= 0) {
                 return;
             }
 
@@ -173,41 +148,33 @@ namespace OpenUtau.App.Controls
             var markerFill = ThemeManager.AccentBrush2Semi;
 
             var geometry = new StreamGeometry();
-            using (var ctx = geometry.Open())
-            {
+            using (var ctx = geometry.Open()) {
                 bool started = false;
-                foreach (var sample in samples)
-                {
+                foreach (var sample in samples) {
                     var point = ToCanvasPoint(sample.Tick, sample.TrackOffset, verticalPosition);
-                    if (!started)
-                    {
+                    if (!started) {
                         ctx.BeginFigure(point, false);
                         started = true;
-                    }
-                    else
-                    {
+                    } else {
                         ctx.LineTo(point);
                     }
                 }
             }
             context.DrawGeometry(null, pathPen, geometry);
 
-            if (notesViewModel.Part != null)
-            {
+            if (notesViewModel.Part != null) {
                 int localTick = DocManager.Inst.playPosTick - notesViewModel.Part.position;
                 bool playing = PlaybackManager.Inst.PlayingMaster || PlaybackManager.Inst.StartingToPlay;
                 double pathOffset = notesViewModel.GetPitchFollowCameraOffset(localTick, playing);
                 var playPoint = ToCanvasPoint(localTick, pathOffset, verticalPosition);
-                if (playPoint.X >= -8 && playPoint.X <= Bounds.Width + 8)
-                {
+                if (playPoint.X >= -8 && playPoint.X <= Bounds.Width + 8) {
                     context.DrawEllipse(markerFill, markerPen, playPoint, 5, 5);
                     context.DrawLine(markerPen, new Point(playPoint.X, 0), new Point(playPoint.X, Bounds.Height));
                 }
             }
         }
 
-        Point ToCanvasPoint(double localTick, double pathTrackOffset, double verticalPosition)
-        {
+        Point ToCanvasPoint(double localTick, double pathTrackOffset, double verticalPosition) {
             double x = (localTick - TickOffset) * TickWidth;
             double y = (pathTrackOffset + ViewportTracks * verticalPosition - TrackOffset) * TrackHeight;
             return new Point(x, y);

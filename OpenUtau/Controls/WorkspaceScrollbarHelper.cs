@@ -6,46 +6,39 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using OpenUtau.Core.Util;
 
-namespace OpenUtau.App.Controls
-{
+namespace OpenUtau.App.Controls {
     /// <summary>Applies classic vs overlay scrollbar layout and classes for workspace panels.</summary>
-    public static class WorkspaceScrollbarHelper
-    {
+    public static class WorkspaceScrollbarHelper {
         public const double OverlayThumbThickness = 8;
         public const double OverlayBarThickness = 10;
 
         /// <summary>Classic dedicated-track scrollbars are disabled; overlay mode is always used.</summary>
         public static bool UseClassicScrollbars => false;
 
-        sealed class DockPanelScrollTag
-        {
+        sealed class DockPanelScrollTag {
             public bool Classic;
         }
 
         public static bool IsInVisualTree(Control? control) =>
             control != null && control.GetVisualRoot() != null;
 
-        public static void ApplyHorizontalScrollBar(ScrollBar bar, bool classic)
-        {
-            if (!IsInVisualTree(bar))
-            {
+        public static void ApplyHorizontalScrollBar(ScrollBar bar, bool classic) {
+            if (!IsInVisualTree(bar)) {
                 return;
             }
             bar.Classes.Set("overlay", !classic);
             bar.Classes.Set("music", classic);
             bar.AllowAutoHide = false;
-            if (classic)
-            {
+            if (classic) {
                 bar.HorizontalAlignment = HorizontalAlignment.Stretch;
                 bar.VerticalAlignment = VerticalAlignment.Stretch;
                 bar.Width = double.NaN;
                 bar.Height = double.NaN;
                 bar.Margin = new Thickness(0, 4, 0, 0);
                 bar.ZIndex = 0;
-            }
-            else
-            {
+            } else {
                 bar.HorizontalAlignment = HorizontalAlignment.Stretch;
                 bar.VerticalAlignment = VerticalAlignment.Bottom;
                 bar.Width = double.NaN;
@@ -54,26 +47,21 @@ namespace OpenUtau.App.Controls
             }
         }
 
-        public static void ApplyVerticalScrollBar(ScrollBar bar, bool classic, ScrollViewer? hostScrollViewer = null)
-        {
-            if (!IsInVisualTree(bar))
-            {
+        public static void ApplyVerticalScrollBar(ScrollBar bar, bool classic, ScrollViewer? hostScrollViewer = null) {
+            if (!IsInVisualTree(bar)) {
                 return;
             }
             bar.Classes.Set("overlay", !classic);
             bar.Classes.Set("music", classic);
             bar.AllowAutoHide = false;
-            if (classic)
-            {
+            if (classic) {
                 bar.HorizontalAlignment = HorizontalAlignment.Stretch;
                 bar.VerticalAlignment = VerticalAlignment.Stretch;
                 bar.Width = double.NaN;
                 bar.Height = double.NaN;
                 bar.Margin = new Thickness(4, 0, 4, 0);
                 bar.ZIndex = 0;
-            }
-            else
-            {
+            } else {
                 bool dockPanelScroll = hostScrollViewer?.Classes.Contains("workspaceDockPanelScroll") == true;
                 bar.HorizontalAlignment = HorizontalAlignment.Right;
                 bar.VerticalAlignment = VerticalAlignment.Stretch;
@@ -84,19 +72,15 @@ namespace OpenUtau.App.Controls
             }
         }
 
-        public static void ApplyScrollViewer(ScrollViewer scrollViewer, bool classic)
-        {
-            if (!IsInVisualTree(scrollViewer))
-            {
+        public static void ApplyScrollViewer(ScrollViewer scrollViewer, bool classic) {
+            if (!IsInVisualTree(scrollViewer)) {
                 return;
             }
             scrollViewer.Classes.Set("overlay", !classic);
 
-            void apply()
-            {
+            void apply() {
                 ApplyDockPanelScrollLayout(scrollViewer, classic);
-                foreach (var bar in scrollViewer.GetVisualDescendants().OfType<ScrollBar>())
-                {
+                foreach (var bar in scrollViewer.GetVisualDescendants().OfType<ScrollBar>()) {
                     ApplyVerticalScrollBar(bar, classic, scrollViewer);
                 }
                 Dispatcher.UIThread.Post(
@@ -104,26 +88,20 @@ namespace OpenUtau.App.Controls
                     DispatcherPriority.Loaded);
             }
 
-            if (scrollViewer.IsInitialized)
-            {
+            if (scrollViewer.IsInitialized) {
                 apply();
-            }
-            else
-            {
+            } else {
                 scrollViewer.Loaded += (_, _) => apply();
             }
         }
 
-        static void ApplyDockPanelScrollLayout(ScrollViewer scrollViewer, bool classic)
-        {
-            if (!scrollViewer.Classes.Contains("workspaceDockPanelScroll"))
-            {
+        static void ApplyDockPanelScrollLayout(ScrollViewer scrollViewer, bool classic) {
+            if (!scrollViewer.Classes.Contains("workspaceDockPanelScroll")) {
                 return;
             }
             scrollViewer.Padding = new Thickness(0);
             scrollViewer.ClipToBounds = false;
-            if (scrollViewer.Content is not Control content)
-            {
+            if (scrollViewer.Content is not Control content) {
                 return;
             }
             content.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -131,23 +109,17 @@ namespace OpenUtau.App.Controls
             UpdateDockPanelContentRightMargin(scrollViewer, classic);
         }
 
-        static void WireDockPanelScrollInset(ScrollViewer scrollViewer, bool classic)
-        {
-            if (scrollViewer.Tag is not DockPanelScrollTag tag)
-            {
+        static void WireDockPanelScrollInset(ScrollViewer scrollViewer, bool classic) {
+            if (scrollViewer.Tag is not DockPanelScrollTag tag) {
                 tag = new DockPanelScrollTag();
                 scrollViewer.Tag = tag;
-                scrollViewer.SizeChanged += (_, _) =>
-                {
-                    if (scrollViewer.Tag is DockPanelScrollTag state)
-                    {
+                scrollViewer.SizeChanged += (_, _) => {
+                    if (scrollViewer.Tag is DockPanelScrollTag state) {
                         UpdateDockPanelContentRightMargin(scrollViewer, state.Classic);
                     }
                 };
-                scrollViewer.ScrollChanged += (_, _) =>
-                {
-                    if (scrollViewer.Tag is DockPanelScrollTag state)
-                    {
+                scrollViewer.ScrollChanged += (_, _) => {
+                    if (scrollViewer.Tag is DockPanelScrollTag state) {
                         UpdateDockPanelContentRightMargin(scrollViewer, state.Classic);
                     }
                 };
@@ -155,14 +127,11 @@ namespace OpenUtau.App.Controls
             tag.Classic = classic;
         }
 
-        static void UpdateDockPanelContentRightMargin(ScrollViewer scrollViewer, bool classic)
-        {
-            if (!scrollViewer.Classes.Contains("workspaceDockPanelScroll"))
-            {
+        static void UpdateDockPanelContentRightMargin(ScrollViewer scrollViewer, bool classic) {
+            if (!scrollViewer.Classes.Contains("workspaceDockPanelScroll")) {
                 return;
             }
-            if (scrollViewer.Content is not Control content)
-            {
+            if (scrollViewer.Content is not Control content) {
                 return;
             }
             bool needsVerticalScroll = scrollViewer.Extent.Height > scrollViewer.Viewport.Height + 0.5;
@@ -170,8 +139,7 @@ namespace OpenUtau.App.Controls
                 ? WorkspaceDockPanelMetrics.OverlayContentRightMargin
                 : 0;
             var margin = content.Margin;
-            if (Math.Abs(margin.Right - right) > 0.01)
-            {
+            if (Math.Abs(margin.Right - right) > 0.01) {
                 content.Margin = new Thickness(margin.Left, margin.Top, right, margin.Bottom);
             }
         }

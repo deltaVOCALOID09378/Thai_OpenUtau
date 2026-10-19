@@ -1,0 +1,179 @@
+# OpenUtau Resampler Manifest for Moresampler
+# DELTA SYNTH Standard Package
+# Enables all Moresampler 0.8.3 flags natively in OpenUtau's Expressions Editor
+
+name: Moresampler
+author: Kanru Hua ("Sleepwalking")
+version: 0.8.3
+website: http://web.engr.illinois.edu/~khua5/index.php/moresampler/
+
+expressions:
+  gen:
+    name: Gender Factor (g)
+    abbr: gen
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: g
+
+  pitd:
+    name: Pitch Shift Cents (t)
+    abbr: pitd
+    type: Numerical
+    min: -1200
+    max: 1200
+    default_value: 0
+    is_flag: true
+    flag: t
+
+  mbre:
+    name: Breathiness (Mb)
+    abbr: mbre
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: Mb
+
+  mtns:
+    name: Tenseness (Mt)
+    abbr: mtns
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: Mt
+
+  mopn:
+    name: Openness (Mo)
+    abbr: mopn
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: Mo
+
+  mdry:
+    name: Dryness (Md)
+    abbr: mdry
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: Md
+
+  mfrm:
+    name: Formant Emphasis (ME)
+    abbr: mfrm
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: ME
+
+  mrfmt:
+    name: Singer Formant (Mr)
+    abbr: mrfmt
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: Mr
+
+  mpit:
+    name: Pitch Perturbation (Mp)
+    abbr: mpit
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: Mp
+
+  mcrs:
+    name: Coarseness (MC)
+    abbr: mcrs
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: MC
+
+  mgrw:
+    name: Growl (MG)
+    abbr: mgrw
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: MG
+
+  mdst:
+    name: Distortion (MD)
+    abbr: mdst
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: MD
+
+  mmod:
+    name: Model Interp (Mm)
+    abbr: mmod
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 100
+    is_flag: true
+    flag: Mm
+
+  mstb:
+    name: Stabilization (Ms)
+    abbr: mstb
+    type: Numerical
+    min: 0
+    max: 10
+    default_value: 0
+    is_flag: true
+    flag: Ms
+
+  mbc:
+    name: Unvoiced Consonant (b)
+    abbr: mbc
+    type: Numerical
+    min: -20
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: b
+
+  mam:
+    name: Amplitude Mod (A)
+    abbr: mam
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: A
+
+  mpkn:
+    name: Peak Normalization (P)
+    abbr: mpkn
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 86
+    is_flag: true
+    flag: P

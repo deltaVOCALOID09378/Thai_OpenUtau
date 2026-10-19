@@ -55,11 +55,7 @@ namespace OpenUtau.App.Capture
                 format = "name-dd-mm-yy-hh:mm";
             }
 
-            string name = projectName;
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                name = DocManager.Inst.Project?.name;
-            }
+            string name = projectName ?? DocManager.Inst.Project?.name ?? "OpenUtau";
             if (string.IsNullOrWhiteSpace(name))
             {
                 name = "OpenUtau";

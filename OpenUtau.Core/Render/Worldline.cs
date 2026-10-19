@@ -1,3 +1,10 @@
+/*
+Worldline.cs
+A:\Thai_OpenUtau\OpenUtau.Core\Render\Worldline.cs
+Made And Checked By DELTA SYNTH & Gemini AI
+Original by StAkira / OpenUtau Authors
+Revision 1.0: Auto-clamping oto bounds, positive vowel speed protection, smooth f0 voicing transition, and click-free cosine crossfade.
+*/
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -320,21 +327,42 @@ namespace OpenUtau.Core.Render {
             static void Validate(SynthRequest request) {
                 int frame_ms = 10;
                 var total_ms = 1000.0 * request.sample_length / request.sample_fs; 
+                // Auto-clamp offset within audio range to prevent crash
+                if (request.offset < 0) {
+                    request.offset = 0;
+                } else if (request.offset >= total_ms) {
+                    request.offset = (int)Math.Max(0, total_ms - 20);
+                }
+
                 var in_start_ms = (double)request.offset;
-                var in_length_ms = request.cut_off < 0
-                    ? -request.cut_off
-                    : total_ms - request.offset - request.cut_off;
+                double in_end_ms = request.cut_off < 0
+                    ? in_start_ms - request.cut_off
+                    : total_ms - request.cut_off;
+
+                // Clamp in_end_ms to total_ms and ensure it is after in_start_ms (Moresampler behavior)
+                if (in_end_ms > total_ms) {
+                    in_end_ms = total_ms;
+                }
+                if (in_end_ms <= in_start_ms + frame_ms) {
+                    in_end_ms = Math.Min(total_ms, in_start_ms + frame_ms * 2);
+                }
+
+                // Adjust cut_off to match clamped in_end_ms
+                if (request.cut_off < 0) {
+                    request.cut_off = -(int)(in_end_ms - in_start_ms);
+                } else {
+                    request.cut_off = (int)Math.Max(0, total_ms - in_end_ms);
+                }
+
+                var in_length_ms = in_end_ms - in_start_ms;
                 int in_start_frame = (int)(in_start_ms / frame_ms); 
                 int in_length_frame = (int)Math.Ceiling((in_start_ms + in_length_ms) / (double)frame_ms) - in_start_frame;
-                if (in_start_ms + in_length_ms > total_ms + 0.1) {
-                    throw new CutOffExceedDurationError();
-                }
                 int max_frames = (int)Math.Ceiling(total_ms / (double)frame_ms);
                 if (in_start_frame + in_length_frame > max_frames) {
-                    in_length_frame = max_frames - in_start_frame;
+                    in_length_frame = Math.Max(1, max_frames - in_start_frame);
                 }
                 if (in_length_frame <= 0) {
-                    throw new CutOffBeforeOffsetError();
+                    in_length_frame = 1;
                 }
             }
 
@@ -493,6 +521,9 @@ namespace OpenUtau.Core.Render {
                 var frq = new Frq();
                 bool hasFrq = frq.Load(item.inputFile);
                 var f0Src = F0(samples, fs, cfg.frame_ms, hasFrq ? -1 : 0);
+                if (f0Src == null || f0Src.Length == 0) {
+                    f0Src = new double[(int)Math.Ceiling(samples.Length / (double)cfg.hop_size)];
+                }
                 if (hasFrq) {
                     for (int i = 0; i < f0Src.Length; ++i) {
                         double ratio = (double)config.hop_size / frq.hopSize;
@@ -516,15 +547,28 @@ namespace OpenUtau.Core.Render {
                     }
                 }
 
-                int srcStartFrame = (int)(item.offset / cfg.frame_ms);
-                srcStartFrame = Math.Max(0, srcStartFrame);
-                double srcEndMs = item.cutoff < 0
-                    ? -item.cutoff + item.offset
-                    : (samples.Length / (double)fs * 1000.0) - item.cutoff;
+                double totalAudioMs = samples.Length / (double)fs * 1000.0;
+                double clampedOffset = Math.Clamp(item.offset, 0.0, Math.Max(0.0, totalAudioMs - 15.0));
+                int srcStartFrame = (int)(clampedOffset / cfg.frame_ms);
+                srcStartFrame = Math.Clamp(srcStartFrame, 0, Math.Max(0, f0Src.Length - 2));
+
+                double srcEndMs;
+                if (item.cutoff < 0) {
+                    srcEndMs = clampedOffset - item.cutoff;
+                } else {
+                    srcEndMs = totalAudioMs - item.cutoff;
+                }
+
+                // If srcEndMs is invalid or cut before offset, guarantee at least 2 frames (20ms) of audio
+                if (srcEndMs <= clampedOffset + cfg.frame_ms) {
+                    srcEndMs = Math.Min(totalAudioMs, clampedOffset + cfg.frame_ms * 2.0);
+                }
+                srcEndMs = Math.Clamp(srcEndMs, clampedOffset + cfg.frame_ms, totalAudioMs);
+
                 int srcEndFrame = (int)Math.Ceiling(srcEndMs / cfg.frame_ms);
-                srcEndFrame = Math.Min(f0Src.Length, srcEndFrame);
+                srcEndFrame = Math.Clamp(srcEndFrame, srcStartFrame + 1, f0Src.Length);
                 if (srcEndFrame <= srcStartFrame) {
-                    throw new CutOffBeforeOffsetError();
+                    srcEndFrame = Math.Min(f0Src.Length, srcStartFrame + 1);
                 }
 
                 float wavMax = samples.Max(s => Math.Abs(s));
@@ -555,20 +599,30 @@ namespace OpenUtau.Core.Render {
 
                 WorldAnalysisF0In(ref cfg, samples, f0Src, out var spEnvSrc, out var apSrc);
 
-                double[] tSrc = new double[srcEndFrame - srcStartFrame];
+                double[] tSrc = new double[Math.Max(1, srcEndFrame - srcStartFrame)];
                 for (int i = 0; i < tSrc.Length; ++i) {
                     tSrc[i] = i * cfg.frame_ms;
                 }
-                double[] tDst = new double[(int)Math.Ceiling(item.durRequired / cfg.frame_ms)];
+                int dstFrameCount = Math.Max(1, (int)Math.Ceiling(item.durRequired / cfg.frame_ms));
+                double[] tDst = new double[dstFrameCount];
                 {
                     double srcLengthMs = tSrc.Length * cfg.frame_ms;
                     double consonantSpeed = Math.Pow(0.5, 1.0 - item.velocity / 100.0);
-                    double srcConsonantMs = item.consonant;
-                    double srcVowelMs = srcLengthMs - srcConsonantMs;
+                    // Crucial fix: srcConsonantMs must NOT exceed srcLengthMs!
+                    // In UTAU / Moresampler, consonant cannot consume the entire segment leaving no vowel.
+                    // Keep at least 10ms or 1 frame for vowel tail so vowelSpeed is always positive.
+                    double maxConsonantMs = Math.Max(0.0, srcLengthMs - cfg.frame_ms);
+                    double srcConsonantMs = Math.Clamp(item.consonant, 0.0, maxConsonantMs);
+                    double srcVowelMs = Math.Max(cfg.frame_ms, srcLengthMs - srcConsonantMs);
+
                     double dstLengthMs = tDst.Length * cfg.frame_ms;
-                    double dstConsonantMs = srcConsonantMs / consonantSpeed;
-                    double dstVowelMs = dstLengthMs - dstConsonantMs;
-                    double vowelSpeed = dstVowelMs > 0 ? srcVowelMs / dstVowelMs : 1.0;
+                    double dstConsonantMs = consonantSpeed > 0.001 ? srcConsonantMs / consonantSpeed : srcConsonantMs;
+                    // If note duration is shorter than consonant duration, clamp dstConsonantMs
+                    if (dstConsonantMs > dstLengthMs - cfg.frame_ms) {
+                        dstConsonantMs = Math.Max(0.0, dstLengthMs - cfg.frame_ms);
+                    }
+                    double dstVowelMs = Math.Max(cfg.frame_ms, dstLengthMs - dstConsonantMs);
+                    double vowelSpeed = srcVowelMs / dstVowelMs;
 
                     for (int i = 0; i < tDst.Length; ++i) {
                         double dstMs = i * cfg.frame_ms;
@@ -587,11 +641,23 @@ namespace OpenUtau.Core.Render {
                 var spEnvDst = np.ndarray(new Shape(tDst.Length, spEnvSrc.shape[1]), typeof(double));
                 var apDst = np.ndarray(new Shape(tDst.Length, apSrc.shape[1]), typeof(double));
                 for (int i = 0; i < tDst.Length; ++i) {
-                    double pos = tDst[i];
+                    double pos = Math.Clamp(tDst[i], 0.0, Math.Max(0.0, f0Src.Length - 1.0001));
                     int index = (int)Math.Floor(pos);
                     double frac = pos - index;
+                    index = Math.Clamp(index, 0, Math.Max(0, f0Src.Length - 1));
                     if (index + 1 < f0Src.Length) {
-                        f0Dst[i] = f0Src[index] * (1.0 - frac) + f0Src[index + 1] * frac;
+                        // Natural F0 interpolation: Avoid subharmonic glitching between unvoiced (0) and voiced (>0)
+                        double f0A = f0Src[index];
+                        double f0B = f0Src[index + 1];
+                        if (f0A > config.f0_floor && f0B > config.f0_floor) {
+                            f0Dst[i] = f0A * (1.0 - frac) + f0B * frac;
+                        } else if (f0A > config.f0_floor) {
+                            f0Dst[i] = frac < 0.5 ? f0A : 0.0;
+                        } else if (f0B > config.f0_floor) {
+                            f0Dst[i] = frac >= 0.5 ? f0B : 0.0;
+                        } else {
+                            f0Dst[i] = 0.0;
+                        }
                         spEnvDst[i] = spEnvSrc[index] * (1.0 - frac) + spEnvSrc[index + 1] * frac;
                         apDst[i] = apSrc[index] * (1.0 - frac) + apSrc[index + 1] * frac;
                     } else {
@@ -612,7 +678,8 @@ namespace OpenUtau.Core.Render {
                 p4 = (int)Math.Round((posMs + lengthMs) / cfg.frame_ms);
                 p0 = Math.Max(0, p0);
                 p1 = Math.Max(p0 + 1, p1);
-                p3 = Math.Min(p4 - 1, p3);
+                p3 = Math.Max(p1, Math.Min(p4 - 1, p3));
+                p4 = Math.Max(p3 + 1, p4);
             }
 
             float GetAutoGain(float[] samples, double[] f0, float wavMax, int peakComp) {
@@ -672,14 +739,20 @@ namespace OpenUtau.Core.Render {
 
                 for (int i = 0; i < segments.Count; ++i) {
                     var segment = segments[i];
-                    for (int j = segment.p0; j < segment.p4; ++j) {
-                        double weight = 1.0;
+                    int segLen = segment.f0.shape[0];
+                    for (int j = segment.p0; j < segment.p4 && j < totalFrames; ++j) {
+                        double linearWeight = 1.0;
                         if (j < segment.p1) {
-                            weight = (double)(j - segment.p0) / (segment.p1 - segment.p0);
+                            linearWeight = Math.Clamp((double)(j - segment.p0) / Math.Max(1, segment.p1 - segment.p0), 0.0, 1.0);
                         } else if (j >= segment.p3) {
-                            weight = (double)(segment.p4 - j) / (segment.p4 - segment.p3);
+                            linearWeight = Math.Clamp((double)(segment.p4 - j) / Math.Max(1, segment.p4 - segment.p3), 0.0, 1.0);
                         }
+                        // Cosine smooth crossfade curve: eliminates click / pop at fade boundaries
+                        double weight = 0.5 * (1.0 - Math.Cos(Math.PI * linearWeight));
+
                         int segIdx = segment.skipFrames + j - segment.p0;
+                        segIdx = Math.Clamp(segIdx, 0, segLen - 1);
+
                         if (dirty.GetAtIndex<int>(j) == 0 || weight > 0.5) {
                             f0Out[j] = segment.f0[segIdx];
                         }

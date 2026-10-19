@@ -1,7 +1,7 @@
-﻿/*
+/*
  * Made And Checked By DELTA SYNTH & Gemini AI
  * Original by OpenUtau Contributors
- * Version: 1.0
+ * Version: 2.0 (Resilient Wavtool Concatenation Engine with Failure Isolation)
  */
 
 using System;
@@ -17,6 +17,7 @@ using NWaves.Signals;
 using OpenUtau.Core;
 using OpenUtau.Core.Format;
 using OpenUtau.Core.Render;
+using Serilog;
 
 namespace OpenUtau.Classic {
     class SharpWavtool : IWavtool {
@@ -45,57 +46,87 @@ namespace OpenUtau.Classic {
         }
 
         public float[] Concatenate(List<ResamplerItem> resamplerItems, string tempPath, CancellationTokenSource cancellation) {
-            if (cancellation.IsCancellationRequested) {
+            if (cancellation.IsCancellationRequested || resamplerItems == null || resamplerItems.Count == 0) {
                 return null;
             }
             var phrase = resamplerItems[0].phrase;
             var segments = new List<Segment>();
             foreach (var item in resamplerItems) {
                 var segment = new Segment();
-                if(item.phone.direct){
-                    using (var waveStream = Wave.OpenFile(item.inputFile)) {
-                        float[] samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
-                        int offset = (int)(item.phone.oto.Offset / 1000 * 44100);
-                        int cutoff = (int)(item.phone.oto.Cutoff / 1000 * 44100);
-                        int length = cutoff >= 0 ? (samples.Length - offset - cutoff) : -cutoff;
-                        segment.samples = samples.Skip(offset).Take(length).ToArray();
+                if (item.phone.direct) {
+                    try {
+                        if (!File.Exists(item.inputFile) || new FileInfo(item.inputFile).Length < 44) {
+                            segment.samples = new float[0];
+                        } else {
+                            using (var waveStream = Wave.OpenFile(item.inputFile)) {
+                                float[] samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                                int offset = (int)(item.phone.oto.Offset / 1000.0 * 44100.0);
+                                int cutoff = (int)(item.phone.oto.Cutoff / 1000.0 * 44100.0);
+                                int length = cutoff >= 0 ? (samples.Length - offset - cutoff) : -cutoff;
+                                if (length < 0) length = 0;
+                                segment.samples = samples.Skip(Math.Max(0, offset)).Take(length).ToArray();
+                            }
+                        }
+                    } catch (Exception ex) {
+                        Log.Error(ex, $"Failed to open direct sample file: {item.inputFile}");
+                        segment.samples = new float[0];
                     }
-                } else { 
-                    if (!File.Exists(item.outputFile)) {
-                        continue;
-                    }
-                    using (var waveStream = Wave.OpenFile(item.outputFile)) {
-                        segment.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                } else {
+                    // Serialize the read with the resampler writes (ClassicRenderer), which
+                    // use the same per-path lock, to avoid "file is being used by another
+                    // process" when two phrases sharing a resample cache render concurrently.
+                    lock (Renderers.GetCacheLock(item.outputFile)) {
+                        if (!File.Exists(item.outputFile) || new FileInfo(item.outputFile).Length < 44) {
+                            segment.samples = new float[0];
+                        } else {
+                            try {
+                                using (var waveStream = Wave.OpenFile(item.outputFile)) {
+                                    segment.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                                }
+                            } catch (Exception ex) {
+                                Log.Error(ex, $"Failed to open resampled output file: {item.outputFile}");
+                                segment.samples = new float[0];
+                            }
+                        }
                     }
                 }
+
+                segment.samples ??= new float[0];
                 segments.Add(segment);
+
                 segment.posMs = item.phone.positionMs - item.phone.leadingMs - (phrase.positionMs - phrase.leadingMs);
-                segment.posSamples = (int)Math.Round(segment.posMs * 44100 / 1000);
-                segment.skipSamples = (int)Math.Round(item.skipOver * 44100 / 1000);
+                segment.posSamples = (int)Math.Round(segment.posMs * 44100.0 / 1000.0);
+                segment.skipSamples = (int)Math.Round(item.skipOver * 44100.0 / 1000.0);
                 segment.envelope = item.EnvelopeMsToSamples();
 
-                if (phaseComp) {
+                if (phaseComp && segment.samples.Length > 0) {
                     var headWindow = GetHeadWindow(segment.samples, segment.envelope, out segment.headWindowStart);
-                    segment.headWindowF0 = GetF0AtSample(phrase,
-                        segment.posSamples - segment.skipSamples + segment.headWindowStart + headWindow.Length / 2);
-                    segment.headPhase = CalcPhase(headWindow,
-                        segment.posSamples - segment.skipSamples + segment.headWindowStart, 44100, segment.headWindowF0);
+                    if (headWindow.Length > 0) {
+                        segment.headWindowF0 = GetF0AtSample(phrase,
+                            segment.posSamples - segment.skipSamples + segment.headWindowStart + headWindow.Length / 2);
+                        segment.headPhase = CalcPhase(headWindow,
+                            segment.posSamples - segment.skipSamples + segment.headWindowStart, 44100, segment.headWindowF0);
+                    }
 
                     var tailWindow = GetTailWindow(segment.samples, segment.envelope, out segment.tailWindowStart);
-                    segment.tailWindowF0 = GetF0AtSample(phrase,
-                        segment.posSamples - segment.skipSamples + segment.tailWindowStart + tailWindow.Length / 2);
-                    segment.tailPhase = CalcPhase(tailWindow,
-                        segment.posSamples - segment.skipSamples + segment.tailWindowStart, 44100, segment.tailWindowF0);
+                    if (tailWindow.Length > 0) {
+                        segment.tailWindowF0 = GetF0AtSample(phrase,
+                            segment.posSamples - segment.skipSamples + segment.tailWindowStart + tailWindow.Length / 2);
+                        segment.tailPhase = CalcPhase(tailWindow,
+                            segment.posSamples - segment.skipSamples + segment.tailWindowStart, 44100, segment.tailWindowF0);
+                    }
                 }
 
-                item.ApplyEnvelope(segment.samples);
+                if (segment.samples.Length > 0) {
+                    item.ApplyEnvelope(segment.samples);
+                }
             }
 
             if (phaseComp) {
                 for (int i = 1; i < segments.Count; ++i) {
                     double? tailPhase = segments[i - 1].tailPhase;
                     double? headPhase = segments[i].headPhase;
-                    if (!tailPhase.HasValue || !headPhase.HasValue) {
+                    if (!tailPhase.HasValue || !headPhase.HasValue || segments[i].headWindowF0 <= 0) {
                         continue;
                     }
                     double lastCorrAngle = segments[i - 1].correction * 2.0 * Math.PI / 44100.0 * segments[i].headWindowF0;
@@ -109,25 +140,21 @@ namespace OpenUtau.Classic {
                     if (Math.Abs(diff - 2 * Math.PI) < diff) {
                         diff -= 2 * Math.PI;
                     }
-                    segments[i].correction = (int)(diff / 2 / Math.PI * 44100 / segments[i].headWindowF0);
+                    segments[i].correction = (int)(diff / 2.0 / Math.PI * 44100.0 / segments[i].headWindowF0);
                 }
             }
 
             var phraseSamples = new float[0];
             foreach (var segment in segments) {
-                // [DELTA SYNTH Optimization]: ป้องกัน Array Size ติดลบ และป้องกันการหั่นหางเสียงเดิมทิ้ง (Safe Resize & Anti-Truncation)
+                if (segment.samples == null || segment.samples.Length == 0) continue;
                 int targetSize = segment.posSamples + segment.correction + segment.samples.Length - segment.skipSamples;
                 int safeNewSize = Math.Max(phraseSamples.Length, Math.Max(0, targetSize));
-                
                 if (safeNewSize > phraseSamples.Length) {
                     Array.Resize(ref phraseSamples, safeNewSize);
                 }
-
                 for (int i = Math.Max(0, -segment.skipSamples); i < segment.samples.Length - segment.skipSamples; i++) {
                     int writeIndex = segment.posSamples + segment.correction + i;
                     int readIndex = segment.skipSamples + i;
-                    
-                    // [DELTA SYNTH Guard]: ตรวจสอบขอบเขตตัวแปร (Boundary Checking) ป้องกัน Crash ขั้นเด็ดขาด
                     if (writeIndex >= 0 && writeIndex < phraseSamples.Length && readIndex >= 0 && readIndex < segment.samples.Length) {
                         phraseSamples[writeIndex] += segment.samples[readIndex];
                     }
@@ -137,61 +164,73 @@ namespace OpenUtau.Classic {
         }
 
         private float[] GetHeadWindow(float[] samples, IList<Vector2> envelope, out int windowStart) {
+            if (samples == null || samples.Length == 0 || envelope == null || envelope.Count < 2) {
+                windowStart = 0;
+                return new float[0];
+            }
             var windowCenter = (envelope[0] + envelope[1]) * 0.5f;
             windowStart = Math.Max((int)windowCenter.X - 440, 0);
-            int windowLength = Math.Min(880, samples.Length - windowStart);
+            int windowLength = Math.Min(880, Math.Max(0, samples.Length - windowStart));
             return samples.Skip(windowStart).Take(windowLength).ToArray();
         }
 
         private float[] GetTailWindow(float[] samples, IList<Vector2> envelope, out int windowStart) {
+            if (samples == null || samples.Length == 0 || envelope == null || envelope.Count < 2) {
+                windowStart = 0;
+                return new float[0];
+            }
             var windowCenter = (envelope[envelope.Count - 1] + envelope[envelope.Count - 2]) * 0.5f;
             windowStart = Math.Max((int)windowCenter.X - 440, 0);
-            int windowLength = Math.Min(880, samples.Length - windowStart);
+            int windowLength = Math.Min(880, Math.Max(0, samples.Length - windowStart));
             return samples.Skip(windowStart).Take(windowLength).ToArray();
         }
 
         private double GetF0AtSample(RenderPhrase phrase, float sampleIndex) {
             float sampleMs = sampleIndex / 44100f * 1000f;
             int sampleTick = phrase.timeAxis.MsPosToTickPos(phrase.positionMs - phrase.leadingMs + sampleMs);
-            int pitchIndex = (int)Math.Round((double)(sampleTick - (phrase.position - phrase.leading)) / 5);
+            int pitchIndex = (int)Math.Round((double)(sampleTick - (phrase.position - phrase.leading)) / 5.0);
             pitchIndex = Math.Clamp(pitchIndex, 0, phrase.pitches.Length - 1);
-            return MusicMath.ToneToFreq(phrase.pitches[pitchIndex] / 100);
+            return MusicMath.ToneToFreq(phrase.pitches[pitchIndex] / 100.0);
         }
 
         private double? CalcPhase(float[] samples, int offset, int fs, double f) {
-            if (samples.Length < 4) {
+            if (samples == null || samples.Length < 4 || f <= 0) {
                 return null;
             }
-            var x = new DiscreteSignal(fs, samples);
-            var peakTf = DesignFilter.IirPeak(f / fs, 5);
-            var filter = new ZiFilter(peakTf);
-            samples = filter.ZeroPhase(x).Samples;
-            if (samples.Max() > 10) {
-                return null;
-            }
-            double left = 0;
-            double right = 0;
-            for (int i = samples.Length / 2 - 1; i >= 1; --i) {
-                if (samples[i] >= samples[i - 1] && samples[i] >= samples[i + 1]) {
-                    left = i;
-                    break;
+            try {
+                var x = new DiscreteSignal(fs, samples);
+                var peakTf = DesignFilter.IirPeak(f / fs, 5);
+                var filter = new ZiFilter(peakTf);
+                samples = filter.ZeroPhase(x).Samples;
+                if (samples.Max() > 10) {
+                    return null;
                 }
-            }
-            for (int i = samples.Length / 2; i <= samples.Length - 2; ++i) {
-                if (samples[i] >= samples[i - 1] && samples[i] >= samples[i + 1]) {
-                    right = i;
-                    break;
+                double left = 0;
+                double right = 0;
+                for (int i = samples.Length / 2 - 1; i >= 1; --i) {
+                    if (samples[i] >= samples[i - 1] && samples[i] >= samples[i + 1]) {
+                        left = i;
+                        break;
+                    }
                 }
-            }
-            if (left >= right) {
+                for (int i = samples.Length / 2; i <= samples.Length - 2; ++i) {
+                    if (samples[i] >= samples[i - 1] && samples[i] >= samples[i + 1]) {
+                        right = i;
+                        break;
+                    }
+                }
+                if (left >= right) {
+                    return null;
+                }
+                double actualF = fs / (right - left);
+                if (Math.Abs(f - actualF) > f * 0.25) {
+                    return null;
+                }
+                double t = (offset + (left + right) * 0.5) / fs * f;
+                return 2 * Math.PI * (Math.Round(t) - t);
+            } catch {
                 return null;
             }
-            double actualF = fs / (right - left);
-            if (Math.Abs(f - actualF) > f * 0.25) {
-                return null;
-            }
-            double t = (offset + (left + right) * 0.5) / fs * f;
-            return 2 * Math.PI * (Math.Round(t) - t);
         }
 
         public void CheckPermissions() { }

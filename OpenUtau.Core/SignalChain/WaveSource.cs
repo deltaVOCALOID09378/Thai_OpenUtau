@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace OpenUtau.Core.SignalChain {
     public class WaveSource : ISignalSource {
@@ -24,6 +24,17 @@ namespace OpenUtau.Core.SignalChain {
 
         public void SetSamples(float[] samples) {
             lock (lockObj) {
+                // DELTA SYNTH Optimization: Universal Sub-millisecond Head/Tail Micro-Fade 
+                // Applies to all rendering engines (DiffSinger, UTAU, ENUNU, etc.) to eliminate micro-clicks at buffer boundaries.
+                // 44 samples = approx 0.99 millisecond at 44.1kHz.
+                int microFadeSamples = 44 * channels;
+                for (int i = 0; i < samples.Length; ++i) {
+                    if (i < microFadeSamples) {
+                        samples[i] *= (float)i / microFadeSamples;
+                    } else if (i > samples.Length - 1 - microFadeSamples) {
+                        samples[i] *= (float)(samples.Length - 1 - i) / microFadeSamples;
+                    }
+                }
                 data = samples;
             }
         }

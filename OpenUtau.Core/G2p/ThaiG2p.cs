@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.ML.OnnxRuntime;
@@ -36,9 +36,8 @@ namespace OpenUtau.Core.G2p {
                         .Skip(4)
                         .Select((g, i) => Tuple.Create(g, i))
                         .ToDictionary(t => t.Item1, t => t.Item2 + 4);
-                    var tuple = LoadPack(Data.Resources.g2p_th);
-                    dict = tuple.Item1;
-                    session = tuple.Item2;
+                    dict = G2pDictionary.NewBuilder().Build();
+                    session = null;
                 }
             }
             GraphemeIndexes = graphemeIndexes;

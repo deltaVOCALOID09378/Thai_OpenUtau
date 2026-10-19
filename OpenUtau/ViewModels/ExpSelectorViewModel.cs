@@ -6,24 +6,20 @@ using System.Reactive.Linq;
 using Avalonia.Media;
 using OpenUtau.App.Controls;
 using OpenUtau.Core;
+using OpenUtau.Core.Render;
 using OpenUtau.Core.Ustx;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
-    public class ExpSelectorViewModel : ViewModelBase, ICmdSubscriber
-    {
+namespace OpenUtau.App.ViewModels {
+    public class ExpSelectorViewModel : ViewModelBase, ICmdSubscriber {
         [Reactive] public int Index { get; set; }
         [Reactive] public int SelectedIndex { get; set; }
         [Reactive] public ExpDisMode DisplayMode { get; set; }
         [Reactive] public UExpressionDescriptor? Descriptor { get; set; }
-        public string Abbr
-        {
-            get
-            {
-                if (Descriptor == null)
-                {
+        public string Abbr {
+            get{
+                if (Descriptor == null) {
                     return "";
                 }
                 return Descriptor.abbr;
@@ -38,8 +34,7 @@ namespace OpenUtau.App.ViewModels
         ObservableAsPropertyHelper<string> header;
         int currentTrackNo = -1;
 
-        public ExpSelectorViewModel()
-        {
+        public ExpSelectorViewModel() {
             DocManager.Inst.AddSubscriber(this);
             this.WhenAnyValue(x => x.DisplayMode)
                 .Subscribe(_ => RefreshBrushes());
@@ -49,8 +44,7 @@ namespace OpenUtau.App.ViewModels
             this.WhenAnyValue(x => x.Descriptor)
                 .Subscribe(SelectionChanged);
             this.WhenAnyValue(x => x.Index, x => x.Descriptors)
-                .Subscribe(tuple =>
-                {
+                .Subscribe(tuple => {
                     SetExp(DocManager.Inst.Project.expSelectors[tuple.Item1]);
                 });
             MessageBus.Current.Listen<ThemeChangedEvent>()
@@ -60,136 +54,99 @@ namespace OpenUtau.App.ViewModels
             OnListChange();
         }
 
-        public bool SetExp(string abbr)
-        {
-            if (Descriptors.Any(d => d.abbr == abbr))
-            {
+        public bool SetExp(string abbr) {
+            if(Descriptors.Any(d => d.abbr == abbr)) {
                 Descriptor = Descriptors.First(d => d.abbr == abbr);
                 return true;
-            }
-            else
-            {
-                if (Descriptors != null && Descriptors.Count > Index)
-                {
+            } else {
+                if (Descriptors != null && Descriptors.Count > Index) {
                     Descriptor = Descriptors[Index];
                 }
                 return false;
             }
         }
 
-        public void OnSelected(bool store)
-        {
-            if (DisplayMode != ExpDisMode.Visible && Descriptor != null)
-            {
+        public void OnSelected(bool store) {
+            if (DisplayMode != ExpDisMode.Visible && Descriptor != null) {
                 DocManager.Inst.ExecuteCmd(new SelectExpressionNotification(Descriptor.abbr, Index, true));
             }
-            if (store)
-            {
+            if(store) {
                 var project = DocManager.Inst.Project;
                 project.expSecondary = project.expPrimary;
                 project.expPrimary = Index;
             }
         }
 
-        void SelectionChanged(UExpressionDescriptor? descriptor)
-        {
-            if (descriptor != null)
-            {
+        void SelectionChanged(UExpressionDescriptor? descriptor) {
+            if (descriptor != null) {
                 DocManager.Inst.ExecuteCmd(new SelectExpressionNotification(descriptor.abbr, Index, DisplayMode != ExpDisMode.Visible));
             }
-            if (!string.IsNullOrEmpty(Abbr))
-            {
+            if (!string.IsNullOrEmpty(Abbr)) {
                 DocManager.Inst.Project.expSelectors[Index] = Abbr;
             }
         }
 
-        public void OnNext(UCommand cmd, bool isUndo)
-        {
-            if (cmd is LoadProjectNotification)
-            {
+        public void OnNext(UCommand cmd, bool isUndo) {
+            if (cmd is LoadProjectNotification) {
                 currentTrackNo = -1;
                 OnListChange();
-            }
-            else if (cmd is LoadPartNotification loadPart)
-            {
+            } else if (cmd is LoadPartNotification loadPart) {
                 currentTrackNo = loadPart.part.trackNo;
                 OnListChange();
-            }
-            else if (cmd is ConfigureExpressionsCommand ||
+            } else if (cmd is ConfigureExpressionsCommand ||
                 cmd is ValidateProjectNotification ||
-                cmd is SingersRefreshedNotification)
-            {
+                cmd is SingersRefreshedNotification) {
                 OnListChange();
-            }
-            else if (cmd is SelectExpressionNotification)
-            {
+            } else if (cmd is SelectExpressionNotification) {
                 OnSelectExp((SelectExpressionNotification)cmd);
             }
         }
 
-        private void OnListChange()
-        {
+        private void OnListChange() {
             var selectedIndex = SelectedIndex;
             var savedAbbr = Descriptor?.abbr ?? DocManager.Inst.Project.expSelectors[Index];
             Descriptors.Clear();
-            foreach (var descriptor in GetVisibleDescriptors(currentTrackNo))
-            {
+            foreach (var descriptor in GetVisibleDescriptors(currentTrackNo)) {
                 Descriptors.Add(descriptor);
             }
-            if (Descriptors.Count == 0)
-            {
+            if (Descriptors.Count == 0) {
                 return;
             }
-            if (!string.IsNullOrEmpty(savedAbbr) && Descriptors.Any(d => d.abbr == savedAbbr))
-            {
+            if (!string.IsNullOrEmpty(savedAbbr) && Descriptors.Any(d => d.abbr == savedAbbr)) {
                 SelectedIndex = Descriptors.IndexOf(Descriptors.First(d => d.abbr == savedAbbr));
-            }
-            else if (selectedIndex >= Descriptors.Count)
-            {
+            } else if (selectedIndex >= Descriptors.Count) {
                 SelectedIndex = Math.Min(Index, Descriptors.Count - 1);
-            }
-            else
-            {
+            } else {
                 SelectedIndex = selectedIndex;
             }
         }
 
-        static IEnumerable<UExpressionDescriptor> GetVisibleDescriptors(int trackNo)
-        {
+        static IEnumerable<UExpressionDescriptor> GetVisibleDescriptors(int trackNo) {
             var project = DocManager.Inst.Project;
-            if (trackNo >= 0 && trackNo < project.tracks.Count)
-            {
+            if (trackNo >= 0 && trackNo < project.tracks.Count) {
                 var track = project.tracks[trackNo];
-                if (track.RendererSettings.Renderer?.SingerType == USingerType.DiffSinger)
-                {
+                if (track.RendererSettings.Renderer?.SingerType == USingerType.DiffSinger) {
                     return track.GetSupportedExps(project);
                 }
             }
             return project.expressions.Values;
         }
 
-        private void OnSelectExp(SelectExpressionNotification cmd)
-        {
-            if (Descriptors.Count == 0)
-            {
+        private void OnSelectExp(SelectExpressionNotification cmd) {
+            if (Descriptors.Count == 0) {
                 return;
             }
-            if (cmd.SelectorIndex == Index)
-            {
-                if (Descriptors[SelectedIndex].abbr != cmd.ExpKey)
-                {
+            if (cmd.SelectorIndex == Index) {
+                if (Descriptors[SelectedIndex].abbr != cmd.ExpKey) {
                     SelectedIndex = Descriptors.IndexOf(Descriptors.First(d => d.abbr == cmd.ExpKey));
                 }
                 DisplayMode = ExpDisMode.Visible;
-            }
-            else if (cmd.UpdateShadow)
-            {
+            } else if (cmd.UpdateShadow) {
                 DisplayMode = DisplayMode == ExpDisMode.Visible ? ExpDisMode.Shadow : ExpDisMode.Hidden;
             }
         }
 
-        private void RefreshBrushes()
-        {
+        private void RefreshBrushes() {
             TagBrush = DisplayMode == ExpDisMode.Visible
                     ? ThemeManager.ExpActiveNameBrush
                     : DisplayMode == ExpDisMode.Shadow

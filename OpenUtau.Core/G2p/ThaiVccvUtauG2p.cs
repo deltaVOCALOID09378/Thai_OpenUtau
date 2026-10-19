@@ -17,10 +17,10 @@ namespace OpenUtau.Core.G2p {
         };
 
         private static readonly string[] phonemes = new string[] {
-            "", "", "", "", "a", "i", "u", "e", "o", "A", "O", "E",
-            "Ua", "U", "ia", "ua", "I", "au", "b", "ch", "d", "f", "h",
-            "j", "k", "kk", "l", "m", "n", "ng", "p", "pp", "r", "s", "t",
-            "tt", "w", "W", "y", "Y", "B", "D", "K",
+            "-", "a", "i", "u", "e", "o", "@", "Q", "3",
+            "6", "1", "ia", "ua", "ay", "aw", "b", "ch", "d", "f", "h",
+            "j", "kh", "k", "l", "m", "n", "ng", "ph", "p", "r", "s", "th",
+            "t", "w", "y",
         };
 
         private static object lockObj = new object();
@@ -37,9 +37,8 @@ namespace OpenUtau.Core.G2p {
                         .Select((g, i) => Tuple.Create(g, i))
                         .ToDictionary(t => t.Item1, t => t.Item2 + 4);
                     // Using the same dictionary/model for now.
-                    var tuple = LoadPack(Data.Resources.g2p_th);
-                    dict = tuple.Item1;
-                    session = tuple.Item2;
+                    dict = G2pDictionary.NewBuilder().Build();
+                    session = null;
                 }
             }
             GraphemeIndexes = graphemeIndexes;

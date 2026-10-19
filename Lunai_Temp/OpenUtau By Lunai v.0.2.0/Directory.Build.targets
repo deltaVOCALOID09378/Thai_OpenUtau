@@ -1,0 +1,8 @@
+<Project>
+  <!-- Release builds shipped to users must not embed PDB paths from the CI machine
+       (e.g. D:\a\<repo>\<repo>\ on GitHub Actions). -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+</Project>

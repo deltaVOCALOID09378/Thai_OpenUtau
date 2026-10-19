@@ -8,7 +8,7 @@ using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.App.Views {
     public partial class AutoPitchwriterDialog : Window {
-        public Action<AutoPitchwriterOptions> onFinish;
+        public Action<AutoPitchwriterOptions>? onFinish;
 
         public AutoPitchwriterDialog() {
             InitializeComponent();
@@ -37,5 +37,13 @@ namespace OpenUtau.App.Views {
             onFinish?.Invoke(options);
             Close();
         }
+    }
+
+    public class AutoPitchwriterOptions {
+        public bool Thunderbolt { get; set; }
+        public bool PitchDropRise { get; set; }
+        public bool Slope { get; set; }
+        public double PortamentoStart { get; set; }
+        public double PortamentoLength { get; set; }
     }
 }

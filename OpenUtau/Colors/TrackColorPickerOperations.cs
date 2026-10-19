@@ -9,13 +9,10 @@ using OpenUtau.App.Views;
 
 namespace OpenUtau.Colors;
 
-public static class TrackColorPickerOperations
-{
-    public static void PopulateItems(ObservableCollection<TrackColorPickerItemViewModel> items)
-    {
+public static class TrackColorPickerOperations {
+    public static void PopulateItems(ObservableCollection<TrackColorPickerItemViewModel> items) {
         items.Clear();
-        foreach (var color in ThemeManager.TrackColors)
-        {
+        foreach (var color in ThemeManager.TrackColors) {
             items.Add(TrackColorPickerItemViewModel.FromColor(color));
         }
         items.Add(TrackColorPickerItemViewModel.CreateAddTile());
@@ -23,10 +20,8 @@ public static class TrackColorPickerOperations
 
     public static TrackColorPickerItemViewModel? FindItem(
         ObservableCollection<TrackColorPickerItemViewModel> items,
-        string? colorName)
-    {
-        if (string.IsNullOrEmpty(colorName))
-        {
+        string? colorName) {
+        if (string.IsNullOrEmpty(colorName)) {
             return null;
         }
         return items.FirstOrDefault(item =>
@@ -34,14 +29,11 @@ public static class TrackColorPickerOperations
             && string.Equals(item.Color.Name, colorName, StringComparison.OrdinalIgnoreCase));
     }
 
-    public static void OpenCreateDialog(Window? owner, Action<TrackColor> onCreated)
-    {
+    public static void OpenCreateDialog(Window? owner, Action<TrackColor> onCreated) {
         var dialog = new CreateCustomTrackColorDialog();
         dialog.InitializeForCreate();
-        dialog.onFinish = (name, baseColor, brightColor) =>
-        {
-            if (!TryCreateColor(name, baseColor, brightColor, out var created, out var errorKey))
-            {
+        dialog.onFinish = (name, baseColor, brightColor) => {
+            if (!TryCreateColor(name, baseColor, brightColor, out var created, out var errorKey)) {
                 MessageBox.ShowModal(dialog,
                     ThemeManager.GetString(errorKey),
                     ThemeManager.GetString("prefs.appearance.customtrackcolor.create.title"));
@@ -53,18 +45,14 @@ public static class TrackColorPickerOperations
         ShowDialog(dialog, owner);
     }
 
-    public static void OpenEditDialog(Window? owner, TrackColor color, Action<TrackColor> onUpdated)
-    {
-        if (!color.IsCustom || string.IsNullOrEmpty(color.StoragePath))
-        {
+    public static void OpenEditDialog(Window? owner, TrackColor color, Action<TrackColor> onUpdated) {
+        if (!color.IsCustom || string.IsNullOrEmpty(color.StoragePath)) {
             return;
         }
         var dialog = new CreateCustomTrackColorDialog();
         dialog.InitializeForEdit(color);
-        dialog.onFinish = (name, baseColor, brightColor) =>
-        {
-            if (!TryUpdateColor(color, name, baseColor, brightColor, out var updated, out var errorKey))
-            {
+        dialog.onFinish = (name, baseColor, brightColor) => {
+            if (!TryUpdateColor(color, name, baseColor, brightColor, out var updated, out var errorKey)) {
                 MessageBox.ShowModal(dialog,
                     ThemeManager.GetString(errorKey),
                     ThemeManager.GetString("prefs.appearance.customtrackcolor.edit.title"));
@@ -76,14 +64,10 @@ public static class TrackColorPickerOperations
         ShowDialog(dialog, owner);
     }
 
-    static void ShowDialog(Window dialog, Window? owner)
-    {
-        if (owner != null)
-        {
+    static void ShowDialog(Window dialog, Window? owner) {
+        if (owner != null) {
             dialog.ShowDialog(owner);
-        }
-        else
-        {
+        } else {
             dialog.Show();
         }
     }
@@ -93,30 +77,25 @@ public static class TrackColorPickerOperations
         Color baseColor,
         Color brightColor,
         out TrackColor? created,
-        out string errorKey)
-    {
+        out string errorKey) {
         created = null;
         errorKey = "prefs.appearance.customtrackcolor.create.empty";
         name = CustomTrackColorStore.SanitizeNewName(name);
-        if (string.IsNullOrEmpty(name))
-        {
+        if (string.IsNullOrEmpty(name)) {
             return false;
         }
         if (ThemeManager.IsBuiltInTrackColorName(name)
-            || ThemeManager.TrackColors.Any(color => string.Equals(color.Name, name, StringComparison.OrdinalIgnoreCase)))
-        {
+            || ThemeManager.TrackColors.Any(color => string.Equals(color.Name, name, StringComparison.OrdinalIgnoreCase))) {
             errorKey = "prefs.appearance.customtrackcolor.create.exists";
             return false;
         }
 
-        var yaml = new TrackColorYaml
-        {
+        var yaml = new TrackColorYaml {
             Name = name,
             BaseColor = ToStorageColor(baseColor),
             BrightColor = ToStorageColor(brightColor),
         };
-        if (!CustomTrackColorStore.TrySave(yaml, out _))
-        {
+        if (!CustomTrackColorStore.TrySave(yaml, out _)) {
             errorKey = "prefs.appearance.customtrackcolor.create.exists";
             return false;
         }
@@ -132,33 +111,28 @@ public static class TrackColorPickerOperations
         Color baseColor,
         Color brightColor,
         out TrackColor? updated,
-        out string errorKey)
-    {
+        out string errorKey) {
         updated = null;
         errorKey = "prefs.appearance.customtrackcolor.create.empty";
         name = CustomTrackColorStore.SanitizeNewName(name);
-        if (string.IsNullOrEmpty(name))
-        {
+        if (string.IsNullOrEmpty(name)) {
             return false;
         }
         if (!string.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase)
             && (ThemeManager.IsBuiltInTrackColorName(name)
                 || ThemeManager.TrackColors.Any(color =>
                     !string.Equals(color.Name, existing.Name, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(color.Name, name, StringComparison.OrdinalIgnoreCase))))
-        {
+                    && string.Equals(color.Name, name, StringComparison.OrdinalIgnoreCase)))) {
             errorKey = "prefs.appearance.customtrackcolor.create.exists";
             return false;
         }
 
-        var yaml = new TrackColorYaml
-        {
+        var yaml = new TrackColorYaml {
             Name = name,
             BaseColor = ToStorageColor(baseColor),
             BrightColor = ToStorageColor(brightColor),
         };
-        if (!CustomTrackColorStore.TryUpdate(existing, yaml, out _))
-        {
+        if (!CustomTrackColorStore.TryUpdate(existing, yaml, out _)) {
             errorKey = "prefs.appearance.customtrackcolor.create.exists";
             return false;
         }
@@ -168,10 +142,8 @@ public static class TrackColorPickerOperations
         return true;
     }
 
-    public static async System.Threading.Tasks.Task<bool> ConfirmAndDeleteAsync(Window owner, TrackColor color)
-    {
-        if (!color.IsCustom)
-        {
+    public static async System.Threading.Tasks.Task<bool> ConfirmAndDeleteAsync(Window owner, TrackColor color) {
+        if (!color.IsCustom) {
             return false;
         }
         var result = await MessageBox.Show(
@@ -179,8 +151,7 @@ public static class TrackColorPickerOperations
             ThemeManager.GetString("prefs.appearance.customtrackcolor.delete.message"),
             ThemeManager.GetString("prefs.appearance.customtrackcolor.delete.title"),
             MessageBox.MessageBoxButtons.YesNo);
-        if (result != MessageBox.MessageBoxResult.Yes)
-        {
+        if (result != MessageBox.MessageBoxResult.Yes) {
             return false;
         }
 
