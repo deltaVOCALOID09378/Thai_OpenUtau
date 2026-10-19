@@ -5,7 +5,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="OpenUtau.App.Views.LoadingWindow" SizeToContent="WidthAndHeight" CanResize="False"
         Title="Loading" MinWidth="300" MinHeight="150"
-        Icon="/Assets/Thai OpenUtau Logo type.ico" 
+        Icon="/Assets/Thai OpenUtau Logo.ico" 
         WindowStartupLocation="CenterScreen"
         ExtendClientAreaChromeHints="NoChrome"
         ExtendClientAreaTitleBarHeightHint="-1"
@@ -15,7 +15,8 @@
     <Grid>
         <Image Margin="20" Width="80" Height="80"
            VerticalAlignment="Top" HorizontalAlignment="Center"
-           Source="/Assets/open-utau.ico"/>
+           Source="/Assets/Thai OpenUtau Logo.ico"/>
         <TextBlock Margin="0,110,0,10" Grid.Row="0"  HorizontalAlignment="Center" VerticalAlignment="Center" Name="Text" TextWrapping="Wrap" MaxWidth="560"> Loading... </TextBlock>
     </Grid>
 </Window>
+

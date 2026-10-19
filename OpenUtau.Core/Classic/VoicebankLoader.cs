@@ -50,7 +50,7 @@ namespace OpenUtau.Classic {
             IEnumerable<string> files = new List<string>();
             try {
                 if (Preferences.Default.LoadDeepFolderSinger) {
-                    files = Directory.EnumerateFiles(basePath, kCharTxt, new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true });
+                    files = Directory.EnumerateFiles(basePath, kCharTxt, new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 4 });
                 } else {
                     // TopDirectoryOnly
                     var topOptions = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = false };

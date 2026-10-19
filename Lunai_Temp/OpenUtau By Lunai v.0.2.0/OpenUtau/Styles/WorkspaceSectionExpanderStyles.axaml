@@ -1,0 +1,373 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:pe="using:OpenUtau.Controls">
+  <Style Selector="StackPanel.workspacePanelSections">
+    <Setter Property="Spacing" Value="8"/>
+  </Style>
+  <Style Selector="StackPanel.workspacePanelSection">
+    <Setter Property="Spacing" Value="4"/>
+  </Style>
+  <Style Selector="TextBlock.workspacePanelSectionTitle">
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Margin" Value="0,4,0,0"/>
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+  </Style>
+  <Style Selector="Separator.workspacePanelSectionDivider">
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="Height" Value="1"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+  </Style>
+  <Style Selector="Separator.workspacePanelSectionDivider /template/ Border">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander">
+    <Setter Property="Theme" Value="{x:Null}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="ExpandDirection" Value="Down"/>
+    <Setter Property="Template">
+      <ControlTemplate TargetType="Expander">
+        <StackPanel>
+          <ToggleButton x:Name="ExpanderHeader"
+                        Theme="{x:Null}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="0"
+                        MinHeight="24"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Center"
+                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                        IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"
+                        Content="{TemplateBinding Header}"
+                        ContentTemplate="{TemplateBinding HeaderTemplate}">
+            <ToggleButton.Template>
+              <ControlTemplate TargetType="ToggleButton">
+                <Grid ColumnDefinitions="*,14" Background="Transparent">
+                  <ContentPresenter x:Name="PART_ContentPresenter"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Left"/>
+                  <Path x:Name="ChevronDown"
+                        Grid.Column="1"
+                        Width="10"
+                        Height="10"
+                        Margin="-7,4,0,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Stretch="None"
+                        IsHitTestVisible="False"
+                        IsVisible="True"
+                        Stroke="{DynamicResource MutedIconBrush}"
+                        StrokeThickness="1.5"
+                        Data="M 0 0 L 7 7 L 14 0"/>
+                  <Path x:Name="ChevronUp"
+                        Grid.Column="1"
+                        Width="10"
+                        Height="10"
+                        Margin="-7,4,0,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Stretch="None"
+                        IsHitTestVisible="False"
+                        IsVisible="False"
+                        Stroke="{DynamicResource MutedIconBrush}"
+                        StrokeThickness="1.5"
+                        Data="M 0 7 L 7 0 L 14 7"/>
+                </Grid>
+              </ControlTemplate>
+            </ToggleButton.Template>
+          </ToggleButton>
+          <Border x:Name="ExpanderContent"
+                  IsVisible="{TemplateBinding IsExpanded}"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Padding="0,2,0,0">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"/>
+          </Border>
+        </StackPanel>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander:pointerover /template/ ToggleButton#ExpanderHeader">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander /template/ ToggleButton#ExpanderHeader /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Margin" Value="0,4,0,0"/>
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander /template/ ToggleButton#ExpanderHeader /template/ Path">
+    <Setter Property="Transitions" Value="{x:Null}"/>
+    <Setter Property="RenderTransform" Value="{x:Null}"/>
+    <Setter Property="Stroke" Value="{DynamicResource MutedIconBrush}"/>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander /template/ ToggleButton#ExpanderHeader:pointerover /template/ Path,
+          Expander.workspacePanelSectionExpander /template/ ToggleButton#ExpanderHeader:pressed /template/ Path">
+    <Setter Property="Stroke" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander:expanded /template/ ToggleButton#ExpanderHeader /template/ Path#ChevronDown">
+    <Setter Property="IsVisible" Value="False"/>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander:expanded /template/ ToggleButton#ExpanderHeader /template/ Path#ChevronUp">
+    <Setter Property="IsVisible" Value="True"/>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander:not(:expanded) /template/ ToggleButton#ExpanderHeader /template/ Path#ChevronDown">
+    <Setter Property="IsVisible" Value="True"/>
+  </Style>
+  <Style Selector="Expander.workspacePanelSectionExpander:not(:expanded) /template/ ToggleButton#ExpanderHeader /template/ Path#ChevronUp">
+    <Setter Property="IsVisible" Value="False"/>
+  </Style>
+
+  <Style Selector="ComboBox.workspacePanelCombo">
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="MinHeight" Value="24"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="Padding" Value="6,0"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="FocusAdorner" Value="{x:Null}"/>
+    <Setter Property="MaxDropDownHeight" Value="504"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource MutedIconBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo /template/ Border#Background">
+    <Setter Property="Transitions" Value="{x:Null}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource MutedIconBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:pointerover:not(:pressed):not(:dropdownopen):not(:disabled) /template/ Border#Background">
+    <Setter Property="Background" Value="{DynamicResource TransportToolbarOffHoverBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource MutedIconBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:pressed:not(:dropdownopen):not(:disabled) /template/ Border#Background">
+    <Setter Property="Background" Value="{DynamicResource AppTopBarTransportHoverBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource MutedIconBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:dropdownopen /template/ Border#Background">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource MutedIconBrush}"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:dropdownopen /template/ Border#Background:not(.openAbove)">
+    <Setter Property="CornerRadius" Value="6,6,0,0"/>
+    <Setter Property="BorderThickness" Value="1,1,1,1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:dropdownopen /template/ Border#Background.openAbove">
+    <Setter Property="CornerRadius" Value="0,0,6,6"/>
+    <Setter Property="BorderThickness" Value="1,1,1,1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo /template/ Border#PopupBorder">
+    <Setter Property="Background" Value="{DynamicResource TrackBackgroundAltBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource MutedIconBrush}"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:dropdownopen /template/ Border#PopupBorder:not(.openAbove)">
+    <Setter Property="CornerRadius" Value="0,0,6,6"/>
+    <Setter Property="BorderThickness" Value="1,0,1,1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:dropdownopen /template/ Border#PopupBorder.openAbove">
+    <Setter Property="CornerRadius" Value="6,6,0,0"/>
+    <Setter Property="BorderThickness" Value="1,1,1,0"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:disabled">
+    <Setter Property="Foreground" Value="{DynamicResource TextControlForegroundDisabled}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:disabled /template/ Border#Background">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:disabled:pointerover /template/ Border#Background,
+          ComboBox.workspacePanelCombo:disabled:pressed /template/ Border#Background">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:disabled /template/ ContentControl#ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource TextControlForegroundDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:disabled /template/ PathIcon#DropDownGlyph">
+    <Setter Property="Foreground" Value="{DynamicResource TextControlForegroundDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:disabled /template/ Border#HighlightBackground,
+          ComboBox.workspacePanelCombo:disabled /template/ ContentControl#ContentPresenter">
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo /template/ ContentControl#ContentPresenter">
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo /template/ PathIcon#DropDownGlyph">
+    <Setter Property="Transitions" Value="{x:Null}"/>
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo:dropdownopen /template/ PathIcon#DropDownGlyph">
+    <Setter Property="Data" Value="M1939 1562L2029 1472L1024 467L19 1472L109 1562L1024 647L1939 1562Z"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo ComboBoxItem">
+    <Setter Property="Theme" Value="{x:Null}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="MinHeight" Value="24"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Template">
+      <ControlTemplate TargetType="ComboBoxItem">
+        <Border x:Name="HoverFill"
+                Background="Transparent"
+                CornerRadius="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+          <ContentPresenter x:Name="PART_ContentPresenter"
+                            Margin="6,0"
+                            Background="Transparent"
+                            CornerRadius="0"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo ComboBoxItem:disabled">
+    <Setter Property="Foreground" Value="{DynamicResource TextControlForegroundDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo ComboBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="CornerRadius" Value="0"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo ComboBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+          ComboBox.workspacePanelCombo ComboBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter,
+          ComboBox.workspacePanelCombo ComboBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="CornerRadius" Value="0"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo ComboBoxItem:pointerover:not(:selected) /template/ Border#HoverFill">
+    <Setter Property="Background" Value="{DynamicResource TransportToolbarOffHoverBrush}"/>
+  </Style>
+  <Style Selector="ComboBox.workspacePanelCombo ComboBoxItem:selected /template/ Border#HoverFill,
+          ComboBox.workspacePanelCombo ComboBoxItem:selected:pointerover /template/ Border#HoverFill">
+    <Setter Property="Background" Value="{DynamicResource SelectedTrackAccentLightBrushSemi}"/>
+  </Style>
+
+  <Style Selector="TextBox.workspacePanelTextBox,
+                   pe|FloatEditor.workspacePanelTextBox,
+                   pe|IntEditor.workspacePanelTextBox">
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="MinHeight" Value="24"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="Padding" Value="6,2"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="FocusAdorner" Value="{x:Null}"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource MutedIconBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    <Setter Property="SelectionBrush" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    <Setter Property="SelectionForegroundBrush" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+  </Style>
+  <Style Selector="TextBox.workspacePanelTextBox /template/ Border#PART_BorderElement,
+                   pe|FloatEditor.workspacePanelTextBox /template/ Border#PART_BorderElement,
+                   pe|IntEditor.workspacePanelTextBox /template/ Border#PART_BorderElement">
+    <Setter Property="Transitions" Value="{x:Null}"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource MutedIconBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+  </Style>
+  <Style Selector="TextBox.workspacePanelTextBox:pointerover:not(:disabled) /template/ Border#PART_BorderElement,
+                   pe|FloatEditor.workspacePanelTextBox:pointerover:not(:disabled) /template/ Border#PART_BorderElement,
+                   pe|IntEditor.workspacePanelTextBox:pointerover:not(:disabled) /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1Brush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="TextBox.workspacePanelTextBox:pressed:not(:disabled) /template/ Border#PART_BorderElement,
+                   pe|FloatEditor.workspacePanelTextBox:pressed:not(:disabled) /template/ Border#PART_BorderElement,
+                   pe|IntEditor.workspacePanelTextBox:pressed:not(:disabled) /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorLight1Brush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="TextBox.workspacePanelTextBox:focus:not(:disabled) /template/ Border#PART_BorderElement,
+                   pe|FloatEditor.workspacePanelTextBox:focus:not(:disabled) /template/ Border#PART_BorderElement,
+                   pe|IntEditor.workspacePanelTextBox:focus:not(:disabled) /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1Brush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="TextBox.workspacePanelTextBox:disabled,
+                   pe|FloatEditor.workspacePanelTextBox:disabled,
+                   pe|IntEditor.workspacePanelTextBox:disabled">
+    <Setter Property="Foreground" Value="{DynamicResource TextControlForegroundDisabled}"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="TextBox.workspacePanelTextBox:disabled /template/ Border#PART_BorderElement,
+                   pe|FloatEditor.workspacePanelTextBox:disabled /template/ Border#PART_BorderElement,
+                   pe|IntEditor.workspacePanelTextBox:disabled /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="TextBox.workspacePanelTextBox:disabled:pointerover /template/ Border#PART_BorderElement,
+          TextBox.workspacePanelTextBox:disabled:pressed /template/ Border#PART_BorderElement,
+          TextBox.workspacePanelTextBox:disabled:focus /template/ Border#PART_BorderElement,
+          pe|FloatEditor.workspacePanelTextBox:disabled:pointerover /template/ Border#PART_BorderElement,
+          pe|FloatEditor.workspacePanelTextBox:disabled:pressed /template/ Border#PART_BorderElement,
+          pe|FloatEditor.workspacePanelTextBox:disabled:focus /template/ Border#PART_BorderElement,
+          pe|IntEditor.workspacePanelTextBox:disabled:pointerover /template/ Border#PART_BorderElement,
+          pe|IntEditor.workspacePanelTextBox:disabled:pressed /template/ Border#PART_BorderElement,
+          pe|IntEditor.workspacePanelTextBox:disabled:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushDisabled}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+
+  <Style Selector="TextBox.workspacePanelTextBoxMultiline">
+    <Setter Property="VerticalAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Top"/>
+    <Setter Property="Height" Value="NaN"/>
+    <Setter Property="MinHeight" Value="24"/>
+  </Style>
+
+  <Style Selector="Button.workspacePanelButton">
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+  </Style>
+</Styles>

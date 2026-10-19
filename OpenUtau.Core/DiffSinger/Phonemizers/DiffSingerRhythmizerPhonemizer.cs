@@ -60,7 +60,7 @@ namespace OpenUtau.Core.DiffSinger {
             //Load phoneme set
             string phonemesPath = Path.Combine(Location, config.phonemes);
             phonemes = File.ReadLines(phonemesPath, Encoding.UTF8).ToList();
-            session = new InferenceSession(Path.Combine(Location, config.model));
+            session = Onnx.getInferenceSession(Path.Combine(Location, config.model));
         }
     }
 

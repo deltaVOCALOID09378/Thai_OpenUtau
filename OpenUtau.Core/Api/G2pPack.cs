@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -24,27 +24,41 @@ namespace OpenUtau.Api {
             byte[] data,
             Func<string, string> prepGrapheme = null,
             Func<string, string> prepPhoneme = null) {
+            if (data == null || data.Length == 0) {
+                return Tuple.Create((IG2p)G2pDictionary.NewBuilder().Build(), (InferenceSession)null);
+            }
             prepGrapheme = prepGrapheme ?? ((string s) => s);
             prepPhoneme = prepPhoneme ?? ((string s) => s);
             string[] dictTxt = Zip.ExtractText(data, "dict.txt");
             string[] phonesTxt = Zip.ExtractText(data, "phones.txt");
             byte[] g2pData = Zip.ExtractBytes(data, "g2p.onnx");
             var builder = G2pDictionary.NewBuilder();
-            phonesTxt.Select(line => line.Trim())
-                .Select(line => line.Split())
-                .Where(parts => parts.Length == 2)
-                .ToList()
-                .ForEach(parts => builder.AddSymbol(prepPhoneme(parts[0]), parts[1]));
-            dictTxt.Where(line => !line.StartsWith(";;;"))
-                .Select(line => line.Trim())
-                .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
-                .Where(parts => parts.Length == 2)
-                .ToList()
-                .ForEach(parts => builder.AddEntry(
-                    prepGrapheme(parts[0]),
-                    parts[1].Split().Select(symbol => prepPhoneme(symbol))));
+            if (phonesTxt != null) {
+                phonesTxt.Select(line => line.Trim())
+                    .Select(line => line.Split())
+                    .Where(parts => parts.Length == 2)
+                    .ToList()
+                    .ForEach(parts => builder.AddSymbol(prepPhoneme(parts[0]), parts[1]));
+            }
+            if (dictTxt != null) {
+                dictTxt.Where(line => !line.StartsWith(";;;"))
+                    .Select(line => line.Trim())
+                    .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
+                    .Where(parts => parts.Length == 2)
+                    .ToList()
+                    .ForEach(parts => builder.AddEntry(
+                        prepGrapheme(parts[0]),
+                        parts[1].Split().Select(symbol => prepPhoneme(symbol))));
+            }
             var dict = builder.Build();
-            var session = new InferenceSession(g2pData);
+            InferenceSession session = null;
+            if (g2pData != null && g2pData.Length > 0) {
+                try {
+                    session = new InferenceSession(g2pData);
+                } catch (Exception) {
+                    session = null;
+                }
+            }
             return Tuple.Create((IG2p)dict, session);
         }
 

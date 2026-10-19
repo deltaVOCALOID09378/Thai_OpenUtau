@@ -1,15 +1,12 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
-#pragma warning disable CS8632
-// ==========================================
-// Made And Checked By DELTA SYNTH & Gemini AI
+// ============================================================================
+// Made And Checked By DELTA SYNTH & All Agentic AI
 // Original by Patiphat Wongyai
 // Version: v.3.6
-// History/Summary:
-// v.3.6 (Consonant Space Widening - ขยายพื้นที่พยัญชนะ): CCV จาก 4% เป็น 7%, V start จาก 5% เป็น 9%
-//   เพื่อให้เสียงพยัญชนะออกมาชัดเจนขึ้น มีความเป็นธรรมชาติมากขึ้น
-// v.3.5: Implemented Safety Position Buffer (prevPos + 10) to prevent phoneme overlapping. Multi-syllable + note support.
-// ==========================================
+// Description: ระบบแปลงหน่วยเสียงสไตล์ C+V (Consonant + Vowel)
+// ขยายพื้นที่พยัญชนะนำ (Consonant Space Widening): CCV จาก 4% เป็น 7%, V start จาก 5% เป็น 9%
+// ============================================================================
 
 using System;
 using System.Collections.Generic;
@@ -79,11 +76,13 @@ namespace OpenUtau.Plugin.Builtin {
         private Dictionary<string, string> CustomDictionary = new Dictionary<string, string>();
         private USinger? singer;
         private bool isDictLoaded = false;
+        
         public override void SetSinger(USinger singer) {
             this.singer = singer;
             LoadCustomDictionary();
         }
 
+        // แปลงฟอนีม Diffsinger ให้เป็นสระสไตล์ VCCV/C+V (Convert Diffsinger phonemes)
         private string ConvertDiffsingerToSyllables(string dsPhonemes) {
             var phonemes = dsPhonemes.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             List<string> syllables = new List<string>();
@@ -102,7 +101,6 @@ namespace OpenUtau.Plugin.Builtin {
                 else if (p == "Y") p = "y";
                 else if (p == "W") p = "w";
                 
-                // Map Diffsinger vowels to VCCV equivalents
                 if (p == "A") p = "@";
                 else if (p == "E") p = "3";
                 else if (p == "O") p = "Q";
@@ -181,6 +179,7 @@ namespace OpenUtau.Plugin.Builtin {
         private void LoadCustomDictionary() {
             if (isDictLoaded) return;
             try {
+                // โหลดพจนานุกรมภาษาไทยส่วนกลาง (Load custom Thai dictionary)
                 ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => ConvertDiffsingerToSyllables(phonemes));
                 
                 if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
@@ -308,20 +307,20 @@ namespace OpenUtau.Plugin.Builtin {
                     } else if (alias == "-") {
                         position = Math.Max((int)(noteDuration * 0.90), noteDuration - 18);
                     } else if (i == 1 && !vowels.Any(v => alias.Contains(v))) {
-                        // พยัญชนะควบตัวที่สอง (v3.6: 4%→7%)
+                        // พยัญชนะควบตัวที่สอง (v3.6: Expanded CCV from 4% to 7%)
                         position = Math.Min((int)(noteDuration * 0.07), 45);
                     } else if ((i == 1 || i == 2) && vowels.Any(v => alias.Contains(v))) {
-                        // สระ (V) เริ่มเร็วยิ่งขึ้น เพื่อพื้นที่ V (v3.6: 5%→9%)
+                        // สระ (V) เริ่มเร็วยิ่งขึ้น เพื่อเพิ่มพื้นที่ (v3.6: Expanded V from 5% to 9%)
                         position = Math.Min((int)(noteDuration * 0.09), 55);
                     } else if (i == aliases.Count - 1) {
-                        // C ท้าย เริ่มที่ 85% เพื่อให้ C กินพื้นที่แค่ 15-20% (v3.6)
+                        // C ท้าย เริ่มที่ 85% (Ending C position)
                         position = Math.Max((int)(noteDuration * 0.85), noteDuration - 60);
                     } else {
-                        // กรณีอื่นๆ ในคำ
+                        // กรณีอื่นๆ ในคำ (Other cases within the word)
                         position = Math.Max((int)(noteDuration * 0.80), noteDuration - 90);
                     }
 
-                    // ป้องกันเสียงผีสิง (Overlap Note Bug)
+                    // ป้องกันเสียงผีสิง (Prevent phoneme overlapping bug)
                     int absolutePosition = position + noteStartPos;
                     int lastPos = phonemes.Count > 0 ? phonemes.Last().position : -120;
                     if (absolutePosition <= lastPos) {

@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -15,18 +15,15 @@ using OpenUtau.Core.SingerHub;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
+namespace OpenUtau.App.ViewModels {
 
-    public sealed class VersionStatusSegment
-    {
+    public sealed class VersionStatusSegment {
         public string Text { get; init; } = string.Empty;
         public bool Bold { get; init; }
         public FontWeight SegmentFontWeight => Bold ? FontWeight.Bold : FontWeight.Normal;
     }
 
-    public class SingerHubRowViewModel : ViewModelBase
-    {
+    public class SingerHubRowViewModel : ViewModelBase {
         public const string SingersBaseUrl = "https://lunaiproject.github.io/singers/";
         public const string UfrVoicebankBaseUrl = "https://utaufrance.com/voicebank/";
 
@@ -55,10 +52,8 @@ namespace OpenUtau.App.ViewModels
         public bool HasRegistry => Registry != null;
         /// <summary>Install when not installed or when installed version is older than latest, and download is available.</summary>
         public bool CanInstall => HasRegistry && HasDownloadUrl && (!IsInstalled || SingerHubClient.CompareVersions(InstalledVersion, Version) < 0);
-        bool HasDownloadUrl
-        {
-            get
-            {
+        bool HasDownloadUrl {
+            get {
                 if (Registry == null) return false;
                 var url = (Registry.DownloadUrl ?? string.Empty).Trim();
                 if (string.IsNullOrEmpty(url) || url.Equals("none", StringComparison.OrdinalIgnoreCase)) return false;
@@ -71,36 +66,26 @@ namespace OpenUtau.App.ViewModels
 
         static string Ver(string? v) => string.IsNullOrEmpty(v) ? ThemeManager.GetString("lunai.unknownversion") : "v" + v;
 
-        public IEnumerable<VersionStatusSegment> VersionStatusSegments
-        {
-            get
-            {
+        public IEnumerable<VersionStatusSegment> VersionStatusSegments {
+            get {
                 var list = new List<VersionStatusSegment>();
-                if (HasRegistry)
-                {
+                if (HasRegistry) {
                     var latestVer = Ver(Version);
-                    if (!IsInstalled)
-                    {
+                    if (!IsInstalled) {
                         list.Add(new VersionStatusSegment { Text = ThemeManager.GetString("lunai.notinstalled"), Bold = false });
-                    }
-                    else if (IsNewVersionAvailable)
-                    {
+                    } else if (IsNewVersionAvailable) {
                         var instVer = Ver(InstalledVersion);
                         list.Add(new VersionStatusSegment { Text = ThemeManager.GetString("lunai.outdated") + " (", Bold = false });
                         list.Add(new VersionStatusSegment { Text = instVer, Bold = true });
                         list.Add(new VersionStatusSegment { Text = "), " + ThemeManager.GetString("lunai.newversionavailable") + " (", Bold = false });
                         list.Add(new VersionStatusSegment { Text = latestVer, Bold = true });
                         list.Add(new VersionStatusSegment { Text = ")", Bold = false });
-                    }
-                    else
-                    {
+                    } else {
                         list.Add(new VersionStatusSegment { Text = ThemeManager.GetString("lunai.uptodate") + " (", Bold = false });
                         list.Add(new VersionStatusSegment { Text = latestVer, Bold = true });
                         list.Add(new VersionStatusSegment { Text = ")", Bold = false });
                     }
-                }
-                else if (IsInstalled)
-                {
+                } else if (IsInstalled) {
                     list.Add(new VersionStatusSegment { Text = ThemeManager.GetString("lunai.installed") + ": ", Bold = false });
                     list.Add(new VersionStatusSegment { Text = Ver(InstalledVersion), Bold = true });
                 }
@@ -108,8 +93,7 @@ namespace OpenUtau.App.ViewModels
             }
         }
 
-        public SingerHubRowViewModel(SingerHubEntry entry)
-        {
+        public SingerHubRowViewModel(SingerHubEntry entry) {
             Registry = entry;
             Name = entry.Name?.Trim() ?? string.Empty;
             Version = entry.Version?.Trim() ?? string.Empty;
@@ -120,38 +104,27 @@ namespace OpenUtau.App.ViewModels
             var codeLower = code.ToLowerInvariant();
             var icon = (entry.Icon ?? string.Empty).Trim();
 
-            if (Host == "ufr")
-            {
+            if (Host == "ufr") {
                 PageUrl = string.IsNullOrEmpty(code) ? string.Empty : (UfrVoicebankBaseUrl + codeLower + "/");
                 IconUrl = icon;
                 IconFallbackUrl = string.Empty;
-            }
-            else if (Host == "brapa")
-            {
+            } else if (Host == "brapa") {
                 // BRAPA: icon из JSON, страница — tos или сайт команды.
                 IconUrl = icon;
                 IconFallbackUrl = string.Empty;
                 var page = (entry.Tos ?? string.Empty).Trim();
-                if (string.IsNullOrEmpty(page) || page.Equals("none", StringComparison.OrdinalIgnoreCase))
-                {
+                if (string.IsNullOrEmpty(page) || page.Equals("none", StringComparison.OrdinalIgnoreCase)) {
                     PageUrl = "https://www.teambrapa.com.br/";
-                }
-                else
-                {
+                } else {
                     PageUrl = page;
                 }
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(codeLower))
-                {
+            } else {
+                if (!string.IsNullOrEmpty(codeLower)) {
                     var singerBase = SingersBaseUrl + codeLower + "/";
                     IconUrl = singerBase + "iconou.png";
                     IconFallbackUrl = singerBase + "icon.png";
                     PageUrl = singerBase;
-                }
-                else
-                {
+                } else {
                     IconUrl = string.Empty;
                     IconFallbackUrl = string.Empty;
                     PageUrl = string.Empty;
@@ -166,27 +139,22 @@ namespace OpenUtau.App.ViewModels
                         : "LUNAI Project")
                 : entry.Company.Trim();
             var tos = (entry.Tos ?? string.Empty).Trim();
-            if (string.IsNullOrEmpty(tos) || tos.Equals("none", StringComparison.OrdinalIgnoreCase))
-            {
+            if (string.IsNullOrEmpty(tos) || tos.Equals("none", StringComparison.OrdinalIgnoreCase)) {
                 TosUrl = Host == "lunai" ? "https://lunaiproject.github.io/termsofuse" : string.Empty;
-            }
-            else
-            {
+            } else {
                 TosUrl = tos;
             }
             var rawType = (entry.Type ?? string.Empty).Trim();
             TypeDisplay = rawType.Equals("utau", StringComparison.OrdinalIgnoreCase) ? "UTAU" : "DiffSinger";
             this.WhenAnyValue(x => x.IsInstalled, x => x.InstalledVersion, x => x.Version)
-                .Subscribe(_ =>
-                {
+                .Subscribe(_ => {
                     this.RaisePropertyChanged(nameof(CanInstall));
                     this.RaisePropertyChanged(nameof(IsNewVersionAvailable));
                     this.RaisePropertyChanged(nameof(VersionStatusSegments));
                 });
         }
 
-        public SingerHubRowViewModel(string name, string version, string folderPath, bool isLunai)
-        {
+        public SingerHubRowViewModel(string name, string version, string folderPath, bool isLunai) {
             Registry = null;
             Name = name;
             Version = version;
@@ -203,8 +171,7 @@ namespace OpenUtau.App.ViewModels
             InstalledVersion = version;
         }
 
-        public void SetInstalled(string installedVersion, string folderPath)
-        {
+        public void SetInstalled(string installedVersion, string folderPath) {
             IsInstalled = true;
             InstalledVersion = installedVersion;
             FolderPath = folderPath;
@@ -215,14 +182,12 @@ namespace OpenUtau.App.ViewModels
     }
 
     /// <summary>Section header and its singer rows (e.g. "Updates available", "Installed", "Not installed").</summary>
-    public sealed class SingerHubSectionViewModel
-    {
+    public sealed class SingerHubSectionViewModel {
         public string Header { get; init; } = string.Empty;
         public List<SingerHubRowViewModel> Rows { get; init; } = new List<SingerHubRowViewModel>();
     }
 
-    public class SingerHubViewModel : ViewModelBase
-    {
+    public class SingerHubViewModel : ViewModelBase {
         readonly SingerHubClient client = new SingerHubClient();
         readonly ConcurrentDictionary<string, Bitmap> iconCache = new ConcurrentDictionary<string, Bitmap>(StringComparer.OrdinalIgnoreCase);
 
@@ -237,8 +202,7 @@ namespace OpenUtau.App.ViewModels
         public ReactiveCommand<SingerHubRowViewModel, Unit> InstallOrUpdateCommand { get; }
         public ReactiveCommand<SingerHubRowViewModel, Unit> UninstallCommand { get; }
 
-        public SingerHubViewModel()
-        {
+        public SingerHubViewModel() {
             RefreshCommand = ReactiveCommand.CreateFromTask(RefreshAsync);
             InstallOrUpdateCommand = ReactiveCommand.CreateFromTask<SingerHubRowViewModel>(InstallOrUpdateAsync);
             UninstallCommand = ReactiveCommand.CreateFromTask<SingerHubRowViewModel>(UninstallAsync);
@@ -246,8 +210,7 @@ namespace OpenUtau.App.ViewModels
             _ = RefreshAsync();
         }
 
-        void ApplyFilter()
-        {
+        void ApplyFilter() {
             var q = Rows.AsEnumerable();
             // ALL: только исполнители из реестров (любой host).
             if (SelectedTabIndex == 0) q = q.Where(r => r.HasRegistry);
@@ -279,27 +242,20 @@ namespace OpenUtau.App.ViewModels
 
         static string NormalizeName(string s) => (s ?? string.Empty).Trim();
 
-        async Task LoadIconsAsync(IEnumerable<SingerHubRowViewModel> rows)
-        {
+        async Task LoadIconsAsync(IEnumerable<SingerHubRowViewModel> rows) {
             using var http = new HttpClient();
             http.DefaultRequestHeaders.Add("User-Agent", "OpenUtau-LUNAI");
-            foreach (var row in rows.Where(r => !string.IsNullOrEmpty(r.IconUrl)))
-            {
-                try
-                {
+            foreach (var row in rows.Where(r => !string.IsNullOrEmpty(r.IconUrl))) {
+                try {
                     Bitmap? cachedBitmap = null;
-                    foreach (var url in IconUrlsFor(row))
-                    {
-                        if (iconCache.TryGetValue(url, out var cached))
-                        {
+                    foreach (var url in IconUrlsFor(row)) {
+                        if (iconCache.TryGetValue(url, out var cached)) {
                             cachedBitmap = cached;
                             break;
                         }
                     }
-                    if (cachedBitmap != null)
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
+                    if (cachedBitmap != null) {
+                        await Dispatcher.UIThread.InvokeAsync(() => {
                             row.IconBitmap = cachedBitmap;
                         });
                         continue;
@@ -307,75 +263,56 @@ namespace OpenUtau.App.ViewModels
 
                     byte[]? bytes = null;
                     string? loadedUrl = null;
-                    foreach (var url in IconUrlsFor(row))
-                    {
-                        try
-                        {
+                    foreach (var url in IconUrlsFor(row)) {
+                        try {
                             using var response = await http.GetAsync(url);
-                            if (!response.IsSuccessStatusCode)
-                            {
+                            if (!response.IsSuccessStatusCode) {
                                 continue;
                             }
                             bytes = await response.Content.ReadAsByteArrayAsync();
                             loadedUrl = url;
                             break;
-                        }
-                        catch
-                        {
+                        } catch {
                             /* try next URL */
                         }
                     }
-                    if (bytes == null || loadedUrl == null)
-                    {
+                    if (bytes == null || loadedUrl == null) {
                         continue;
                     }
 
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        try
-                        {
+                    await Dispatcher.UIThread.InvokeAsync(() => {
+                        try {
                             using var ms = new MemoryStream(bytes);
                             var bmp = new Bitmap(ms);
                             row.IconBitmap = bmp;
                             iconCache[loadedUrl] = bmp;
-                        }
-                        catch { /* ignore decode errors */ }
+                        } catch { /* ignore decode errors */ }
                     });
-                }
-                catch { /* ignore load errors */ }
+                } catch { /* ignore load errors */ }
             }
         }
 
-        static IEnumerable<string> IconUrlsFor(SingerHubRowViewModel row)
-        {
-            if (!string.IsNullOrEmpty(row.IconUrl))
-            {
+        static IEnumerable<string> IconUrlsFor(SingerHubRowViewModel row) {
+            if (!string.IsNullOrEmpty(row.IconUrl)) {
                 yield return row.IconUrl;
             }
             if (!string.IsNullOrEmpty(row.IconFallbackUrl)
-                && !string.Equals(row.IconFallbackUrl, row.IconUrl, StringComparison.OrdinalIgnoreCase))
-            {
+                && !string.Equals(row.IconFallbackUrl, row.IconUrl, StringComparison.OrdinalIgnoreCase)) {
                 yield return row.IconFallbackUrl;
             }
         }
 
-        async Task<List<SingerHubEntry>> FetchRegistrySafeAsync(string? registryUrl = null)
-        {
-            try
-            {
+        async Task<List<SingerHubEntry>> FetchRegistrySafeAsync(string? registryUrl = null) {
+            try {
                 return await client.FetchRegistryAsync(registryUrl);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Serilog.Log.Warning(e, "Failed to fetch Singer Hub registry from {Url}", registryUrl ?? SingerHubClient.DefaultRegistryUrl);
                 return new List<SingerHubEntry>();
             }
         }
 
-        public async Task RefreshAsync()
-        {
-            try
-            {
+        public async Task RefreshAsync() {
+            try {
                 Status = ThemeManager.GetString("lunai.status.fetching");
                 var lunaiList = await FetchRegistrySafeAsync();
 
@@ -395,21 +332,18 @@ namespace OpenUtau.App.ViewModels
                     .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.Version, Comparer<string>.Create((a, b) => SingerHubClient.CompareVersions(a, b))).First(), StringComparer.OrdinalIgnoreCase);
                 var rows = new System.Collections.Generic.List<SingerHubRowViewModel>();
 
-                foreach (var entry in registry)
-                {
+                foreach (var entry in registry) {
                     var row = new SingerHubRowViewModel(entry);
                     var key = NormalizeName(entry.Name);
-                    if (installedByName.TryGetValue(key, out var info))
-                    {
+                    if (installedByName.TryGetValue(key, out var info)) {
                         row.SetInstalled(info.Version, info.FolderPath);
                         installedByName.Remove(key);
                     }
                     rows.Add(row);
                 }
 
-                foreach (var info in installedByName.Values)
-                {
-                    var row = new SingerHubRowViewModel(info.DisplayName, info.Version, info.FolderPath, info.IsLunai);
+                foreach (var info in installedByName.Values) {
+                    var row = new SingerHubRowViewModel(info.DisplayName, info.Version, info.FolderPath, false);
                     rows.Add(row);
                 }
 
@@ -431,24 +365,19 @@ namespace OpenUtau.App.ViewModels
                 Status = hadRegistry
                     ? ThemeManager.GetString("lunai.status.ready")
                     : ThemeManager.GetString("lunai.status.offline");
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Status = ThemeManager.GetString("lunai.status.error");
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
         }
 
-        public async Task InstallOrUpdateAsync(SingerHubRowViewModel row)
-        {
-            if (row.Registry == null)
-            {
+        public async Task InstallOrUpdateAsync(SingerHubRowViewModel row) {
+            if (row.Registry == null) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(new InvalidOperationException("No registry entry.")));
                 return;
             }
             if (!row.CanInstall) return;
-            try
-            {
+            try {
                 var baseStatus = string.Format(ThemeManager.GetString("lunai.status.installing"), row.Name);
                 Status = baseStatus;
                 var progress = new Progress<int>(p => Status = $"{baseStatus} ({p}%)");
@@ -457,27 +386,21 @@ namespace OpenUtau.App.ViewModels
                 await Dispatcher.UIThread.InvokeAsync(() => SingerManager.Inst.SearchAllSingers());
                 await RefreshAsync();
                 Status = ThemeManager.GetString("lunai.status.installfinished");
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Status = ThemeManager.GetString("lunai.status.installfailed");
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
         }
 
-        public async Task UninstallAsync(SingerHubRowViewModel row)
-        {
+        public async Task UninstallAsync(SingerHubRowViewModel row) {
             if (!row.IsInstalled) return;
-            try
-            {
+            try {
                 Status = string.Format(ThemeManager.GetString("lunai.status.uninstalling"), row.Name);
                 await client.UninstallAsync(row.FolderPath);
                 await Dispatcher.UIThread.InvokeAsync(() => SingerManager.Inst.SearchAllSingers());
                 await RefreshAsync();
                 Status = ThemeManager.GetString("lunai.status.uninstallfinished");
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Status = ThemeManager.GetString("lunai.status.uninstallfailed");
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }

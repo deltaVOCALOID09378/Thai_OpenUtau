@@ -1,17 +1,20 @@
 <!--
-  Made And Checked By DELTA SYNTH & Gemini AI
+  Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
   Original by Patiphat Wongyai (Delta)
-  Version: v.1.2
-  History/Summary: Corrected warning configuration and aligned the Avalonia test runtime.
+  Version: v.1.3
+  History/Summary: Aligned excluded test files with core modules and updated test runner configurations.
 -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
+  <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <TargetFramework>net8.0</TargetFramework>
+  <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
   <PropertyGroup>
+    <RollForward>Major</RollForward>
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <IsPackable>false</IsPackable>
     <Product>Thai OpenUtau</Product>
@@ -20,6 +23,7 @@
     <PackageProjectUrl>https://patiphatwongyai.wixsite.com/deltasynth</PackageProjectUrl>
     <ApplicationIcon>..\OpenUtau\Assets\open-utau.ico</ApplicationIcon>
     <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625;CS8632;CS0649;CS0414;CS0219;AVLN3001;xUnit1013;xUnit2013;CS0612;CS0162;CS8619;CS0164;CS8629;CS0108;CS8981;CS0472;CS8769;CS8767;CS8612;CS8714;CS0168;CS0618</NoWarn>
+  <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
@@ -66,3 +70,4 @@
     <None Include="Files\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Files\" />
   </ItemGroup>
 </Project>
+

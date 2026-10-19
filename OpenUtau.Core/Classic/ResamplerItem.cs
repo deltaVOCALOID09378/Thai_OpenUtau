@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -163,6 +163,11 @@ namespace OpenUtau.Classic {
         public void ApplyEnvelope(float[] samples) {
             var envelope = EnvelopeMsToSamples();
             int nextPoint = 0;
+            
+            // DELTA SYNTH Optimization: Sub-millisecond Head/Tail Micro-Fade (approx 1.0ms = 44 samples)
+            // Ensures absolute zero crossing at the very start and end to eliminate micro-clicks.
+            int microFadeSamples = 44; 
+
             for (int i = 0; i < samples.Length; ++i) {
                 while (nextPoint < envelope.Count && i > envelope[nextPoint].X) {
                     nextPoint++;
@@ -181,6 +186,14 @@ namespace OpenUtau.Classic {
                         gain = p0.Y + (p1.Y - p0.Y) * (i - p0.X) / (p1.X - p0.X);
                     }
                 }
+                
+                // Sub-millisecond safety fades
+                if (i < microFadeSamples) {
+                    gain *= (float)i / microFadeSamples;
+                } else if (i > samples.Length - 1 - microFadeSamples) {
+                    gain *= (float)(samples.Length - 1 - i) / microFadeSamples;
+                }
+                
                 samples[i] *= gain;
             }
         }

@@ -1,19 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
-    public sealed class KeyOptionViewModel
-    {
+namespace OpenUtau.App.ViewModels {
+    public sealed class KeyOptionViewModel {
         public MusicalKey Key { get; init; }
         public string DisplayName { get; init; } = string.Empty;
     }
 
-    public class GenerateHarmonyViewModel
-    {
+    public class GenerateHarmonyViewModel {
         readonly UVoicePart sourcePart;
         readonly UProject project;
 
@@ -27,30 +25,24 @@ namespace OpenUtau.App.ViewModels
         public string PartName => sourcePart.DisplayName;
         public string TrackName => project.tracks[sourcePart.trackNo].TrackName;
 
-        public GenerateHarmonyViewModel(UVoicePart part)
-        {
+        public GenerateHarmonyViewModel(UVoicePart part) {
             sourcePart = part;
             project = DocManager.Inst.Project;
             var projectKey = MusicalKey.FromProject(project);
             var detected = KeySignatureHelper.DetectKeys(part.notes, 3);
             var detectedSet = detected.ToHashSet();
             var options = new List<KeyOptionViewModel>();
-            foreach (var key in detected)
-            {
-                options.Add(new KeyOptionViewModel
-                {
+            foreach (var key in detected) {
+                options.Add(new KeyOptionViewModel {
                     Key = key,
                     DisplayName = $"★ {KeySignatureHelper.FormatKey(key)}",
                 });
             }
-            foreach (var key in KeySignatureHelper.AllKeys())
-            {
-                if (detectedSet.Contains(key))
-                {
+            foreach (var key in KeySignatureHelper.AllKeys()) {
+                if (detectedSet.Contains(key)) {
                     continue;
                 }
-                options.Add(new KeyOptionViewModel
-                {
+                options.Add(new KeyOptionViewModel {
                     Key = key,
                     DisplayName = KeySignatureHelper.FormatKey(key),
                 });
@@ -61,8 +53,7 @@ namespace OpenUtau.App.ViewModels
                 ?? options.FirstOrDefault();
         }
 
-        public IReadOnlyList<HarmonyInterval> GetSelectedIntervals()
-        {
+        public IReadOnlyList<HarmonyInterval> GetSelectedIntervals() {
             var list = new List<HarmonyInterval>();
             if (ThirdAbove) list.Add(HarmonyInterval.ThirdAbove);
             if (ThirdBelow) list.Add(HarmonyInterval.ThirdBelow);

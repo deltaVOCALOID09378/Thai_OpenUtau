@@ -5,8 +5,9 @@
         xmlns:views="clr-namespace:OpenUtau.App.Views"
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.SingerHubDialog"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource lunai.caption}" Width="720" Height="560" WindowStartupLocation="CenterScreen">
   <views:SingerHubPane />
 </Window>
+
 

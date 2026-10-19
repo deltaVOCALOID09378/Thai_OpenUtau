@@ -1,7 +1,11 @@
-// Made And Checked By DELTA SYNTH & Gemini AI
-// Original by DELTA
-// Version: v1.1 | Date: 2026-08-03
-// Summary: AutoPitchRandomizerBatchEdit — six pitch patterns with an optional per-note random mix.
+/*
+AutoPitchRandomizerBatchEdit.cs
+OpenUtau.Core/Editing/AutoPitchRandomizerBatchEdit.cs
+Made And Checked By DELTA SYNTH & Gemini AI
+Original by DELTA
+Revision 1.2
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +22,8 @@ namespace OpenUtau.Core.Editing {
         private readonly int pattern;
         private readonly double intensity;
 
+        public AutoPitchRandomizerBatchEdit() : this(RandomPattern, 15.0) { }
+
         public AutoPitchRandomizerBatchEdit(int pattern, double intensity) {
             if (pattern < RandomPattern || pattern >= PatternCount) {
                 throw new ArgumentOutOfRangeException(nameof(pattern));
@@ -30,8 +36,8 @@ namespace OpenUtau.Core.Editing {
         }
 
         public string Name => pattern == RandomPattern
-            ? "AutoPitch All in 1"
-            : "Auto Pitch Randomizer";
+            ? "pianoroll.menu.notes.autopitchallin1"
+            : "pianoroll.menu.notes.autopitchrandomizer";
 
         public void Run(UProject project, UVoicePart part, List<UNote> selectedNotes, DocManager docManager) {
             var notes = selectedNotes.Count > 0 ? selectedNotes : part.notes.ToList();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -42,10 +42,10 @@ namespace Classic {
         public Presamp() {
             SetVowels(defVowels);
             SetConsonants(defConsonants);
-            Replace = defReplace;
-            Nums = defNums;
-            Appends = defAppends;
-            Pitches = defPitches;
+            Replace = new Dictionary<string, string>(defReplace);
+            Nums = new List<string>(defNums);
+            Appends = new List<string>(defAppends);
+            Pitches = new List<string>(defPitches);
 
             MakePhonemeList();
         }
@@ -214,8 +214,8 @@ namespace Classic {
                             MustVC = true;
                         }
                     }
-                    if (TryGetLinesFromIniBrocks(blocks, "[CFLAGS]", out List<IniLine> cflags) && cflags.Count > 0) {
-                        CFlags = cflags[0].line;
+                    if (TryGetLinesFromIniBrocks(blocks, "[CFLAGS]", out List<IniLine> cflags)) {
+                        CFlags = cflags.Count > 0 ? cflags[0].line : string.Empty;
                     }
                     if (TryGetLinesFromIniBrocks(blocks, "[VCLENGTH]", out List<IniLine> vcLength) && vcLength.Count > 0) {
                         if (vcLength[0].line == "0") {

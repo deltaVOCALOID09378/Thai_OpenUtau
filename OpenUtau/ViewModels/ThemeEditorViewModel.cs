@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
@@ -13,21 +13,17 @@ public class ThemeEditorStateChangedEvent { }
 
 public class ThemeEditorSavedEvent { }
 
-public class OpenDockedThemeEditorEvent
-{
+public class OpenDockedThemeEditorEvent {
     public required string Path { get; init; }
 }
 
 public class CloseDockedThemeEditorEvent { }
 
-public static class ThemeEditorDockState
-{
+public static class ThemeEditorDockState {
     public static bool IsOpen { get; private set; }
 
-    public static void SetOpen(bool open)
-    {
-        if (IsOpen == open)
-        {
+    public static void SetOpen(bool open) {
+        if (IsOpen == open) {
             return;
         }
         IsOpen = open;
@@ -35,26 +31,22 @@ public static class ThemeEditorDockState
     }
 }
 
-public class ThemeEditorViewModel : ViewModelBase
-{
+public class ThemeEditorViewModel : ViewModelBase {
     readonly string customThemePath;
     readonly string themeName;
 
     [Reactive] public bool IsDarkMode { get; set; }
     public ObservableCollection<ThemeColorSectionViewModel> Sections { get; } = [];
 
-    public ThemeEditorViewModel(string customThemePath)
-    {
+    public ThemeEditorViewModel(string customThemePath) {
         this.customThemePath = customThemePath;
         var themeYaml = ThemeYaml.LoadFromFile(customThemePath);
         themeName = themeYaml.Name;
         IsDarkMode = themeYaml.IsDarkMode;
 
-        foreach (var section in ThemeColorCatalog.Sections)
-        {
+        foreach (var section in ThemeColorCatalog.Sections) {
             var fields = new List<ThemeColorFieldViewModel>();
-            foreach (var key in section.Keys)
-            {
+            foreach (var key in section.Keys) {
                 var field = new ThemeColorFieldViewModel(
                     key,
                     ThemeColorStorage.ParseOrDefault(themeYaml.GetColor(key), Color.Parse("#000000")));
@@ -73,15 +65,12 @@ public class ThemeEditorViewModel : ViewModelBase
         ApplyPreview();
     }
 
-    ThemeYaml BuildCurrentYaml()
-    {
+    ThemeYaml BuildCurrentYaml() {
         var yaml = ThemeYaml.LoadFromFile(customThemePath);
         yaml.Name = themeName;
         yaml.IsDarkMode = IsDarkMode;
-        foreach (var section in Sections)
-        {
-            foreach (var field in section.Fields)
-            {
+        foreach (var section in Sections) {
+            foreach (var field in section.Fields) {
                 yaml.SetColor(field.Key, ThemeColorStorage.ToStorageString(field.Color));
             }
         }
@@ -91,13 +80,11 @@ public class ThemeEditorViewModel : ViewModelBase
         return yaml;
     }
 
-    void ApplyPreview()
-    {
+    void ApplyPreview() {
         ThemeApplicator.Apply(BuildCurrentYaml());
     }
 
-    public void Save()
-    {
+    public void Save() {
         BuildCurrentYaml().SaveToFile(customThemePath);
     }
 }

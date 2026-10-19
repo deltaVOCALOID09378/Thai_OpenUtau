@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -7,16 +7,12 @@ using OpenUtau.Core.Util;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
-    public class PhoneticAssistantViewModel : ViewModelBase
-    {
-        public class G2pOption
-        {
+namespace OpenUtau.App.ViewModels {
+    public class PhoneticAssistantViewModel : ViewModelBase {
+        public class G2pOption {
             public string name;
             public Type klass;
-            public G2pOption(Type klass)
-            {
+            public G2pOption(Type klass) {
                 name = klass.Name;
                 this.klass = klass;
             }
@@ -48,17 +44,14 @@ namespace OpenUtau.App.ViewModels
 
         private Api.G2pPack? g2p;
 
-        public PhoneticAssistantViewModel()
-        {
-            G2p = g2ps.FirstOrDefault(x => x.name == Preferences.Default.PhoneticAssistant) ?? g2ps.First();
+        public PhoneticAssistantViewModel() {
+            G2p = g2ps.FirstOrDefault(x=>x.name == Preferences.Default.PhoneticAssistant) ?? g2ps.First();
             Grapheme = string.Empty;
             Phonemes = string.Empty;
             this.WhenAnyValue(x => x.G2p)
-                .Subscribe(option =>
-                {
+                .Subscribe(option => {
                     g2p = null;
-                    if (option != null)
-                    {
+                    if (option != null) {
                         g2p = Activator.CreateInstance(option.klass) as Api.G2pPack;
                         Preferences.Default.PhoneticAssistant = option.name;
                         Preferences.Save();
@@ -69,16 +62,13 @@ namespace OpenUtau.App.ViewModels
                 .Subscribe(_ => Refresh());
         }
 
-        private void Refresh()
-        {
-            if (Grapheme == null || g2p == null)
-            {
+        private void Refresh() {
+            if (Grapheme == null || g2p == null) {
                 Phonemes = string.Empty;
                 return;
             }
             string[] phonemes = g2p.Query(Grapheme);
-            if (phonemes == null)
-            {
+            if (phonemes == null) {
                 Phonemes = string.Empty;
                 return;
             }

@@ -1,17 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
 using System.Threading.Tasks;
 using OpenUtau.Core;
-using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using System.Reactive;
+using ReactiveUI;
 
-namespace OpenUtau.App.ViewModels
-{
-    public class PackageRowViewModel : ViewModelBase
-    {
+namespace OpenUtau.App.ViewModels {
+    public class PackageRowViewModel : ViewModelBase {
         public RegistrySoftware? Software { get; }
         public string Id { get; }
         public string Name { get; }
@@ -27,8 +25,7 @@ namespace OpenUtau.App.ViewModels
         public bool CanUninstall => IsInstalled;
         public string InstalledDisplay => IsInstalled ? (string.IsNullOrEmpty(InstalledVersion) ? ThemeManager.GetString("packages.unknownversion") : InstalledVersion) : string.Empty;
 
-        public PackageRowViewModel(RegistrySoftware s)
-        {
+        public PackageRowViewModel(RegistrySoftware s) {
             Software = s;
             Id = s.id;
             Name = s.LocalizedName();
@@ -36,8 +33,7 @@ namespace OpenUtau.App.ViewModels
             Version = (s.versions != null && s.versions.Length > 0) ? PackageManager.GetLatestVersionString(s.versions) : string.Empty;
 
             this.WhenAnyValue(x => x.IsInstalled, x => x.InstalledVersion)
-                .Subscribe(_ =>
-                {
+                .Subscribe(_ => {
                     this.RaisePropertyChanged(nameof(IsUpToDate));
                     this.RaisePropertyChanged(nameof(CanInstallOrUpdate));
                     this.RaisePropertyChanged(nameof(PrimaryActionLabel));
@@ -46,8 +42,7 @@ namespace OpenUtau.App.ViewModels
                 });
         }
 
-        public PackageRowViewModel(string id, string name, string developer, string version)
-        {
+        public PackageRowViewModel(string id, string name, string developer, string version) {
             Software = null;
             Id = id;
             Name = name;
@@ -56,8 +51,7 @@ namespace OpenUtau.App.ViewModels
             IsInstalled = false;
         }
 
-        public void SetInstalled(OudepMetadata info)
-        {
+        public void SetInstalled(OudepMetadata info) {
             IsInstalled = true;
             InstalledVersion = info.version ?? string.Empty;
             this.RaisePropertyChanged(nameof(IsUpToDate));
@@ -68,26 +62,22 @@ namespace OpenUtau.App.ViewModels
         }
     }
 
-    public class PackageManagerViewModel : ViewModelBase
-    {
+    public class PackageManagerViewModel : ViewModelBase {
         public ObservableCollection<PackageRowViewModel> Available { get; } = new ObservableCollection<PackageRowViewModel>();
         [Reactive] public string Status { get; set; } = string.Empty;
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
         public ReactiveCommand<PackageRowViewModel, Unit> InstallCommand { get; }
         public ReactiveCommand<PackageRowViewModel, Unit> UninstallCommand { get; }
 
-        public PackageManagerViewModel()
-        {
+        public PackageManagerViewModel() {
             RefreshCommand = ReactiveCommand.CreateFromTask(RefreshAsync);
             InstallCommand = ReactiveCommand.CreateFromTask<PackageRowViewModel>(InstallAsync);
             UninstallCommand = ReactiveCommand.CreateFromTask<PackageRowViewModel>(UninstallAsync);
             _ = RefreshAsync();
         }
 
-        public async Task RefreshAsync()
-        {
-            try
-            {
+        public async Task RefreshAsync() {
+            try {
                 Status = ThemeManager.GetString("packages.status.fetching");
                 var registry = await PackageManager.Inst.FetchRegistryAsync();
                 Status = ThemeManager.GetString("packages.status.listinginstalled");
@@ -97,19 +87,16 @@ namespace OpenUtau.App.ViewModels
 
                 var rows = new List<PackageRowViewModel>();
 
-                foreach (var s in registry)
-                {
+                foreach (var s in registry) {
                     var row = new PackageRowViewModel(s);
-                    if (installedById.TryGetValue(row.Id, out var info))
-                    {
+                    if (installedById.TryGetValue(row.Id, out var info)) {
                         row.SetInstalled(info);
                         installedById.Remove(row.Id);
                     }
                     rows.Add(row);
                 }
 
-                foreach (var info in installedById.Values)
-                {
+                foreach (var info in installedById.Values) {
                     var id = info.id;
                     var row = new PackageRowViewModel(id, id, string.Empty, string.Empty);
                     row.SetInstalled(info);
@@ -122,20 +109,15 @@ namespace OpenUtau.App.ViewModels
                 foreach (var r in ordered) Available.Add(r);
 
                 Status = ThemeManager.GetString("packages.status.ready");
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Status = ThemeManager.GetString("packages.status.error");
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
         }
 
-        public async Task InstallAsync(PackageRowViewModel row)
-        {
-            try
-            {
-                if (row.Software == null)
-                {
+        public async Task InstallAsync(PackageRowViewModel row) {
+            try {
+                if (row.Software == null) {
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(new InvalidOperationException("No registry entry to install.")));
                     return;
                 }
@@ -143,27 +125,21 @@ namespace OpenUtau.App.ViewModels
                 var installingTemplate = ThemeManager.GetString("packages.status.installing");
                 var baseStatus = string.Format(installingTemplate, row.Id);
                 Status = baseStatus;
-                var progress = new Progress<int>(p =>
-                {
+                var progress = new Progress<int>(p => {
                     Status = $"{baseStatus} ({p}%)";
                 });
                 await PackageManager.Inst.InstallAsync(row.Software, progress);
                 await RefreshAsync();
                 Status = ThemeManager.GetString("packages.status.installfinished");
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Status = ThemeManager.GetString("packages.status.installfailed");
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
         }
 
-        public async Task UninstallAsync(PackageRowViewModel row)
-        {
-            try
-            {
-                if (!row.IsInstalled)
-                {
+        public async Task UninstallAsync(PackageRowViewModel row) {
+            try {
+                if (!row.IsInstalled) {
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(new InvalidOperationException("Package is not installed.")));
                     return;
                 }
@@ -171,9 +147,7 @@ namespace OpenUtau.App.ViewModels
                 await PackageManager.Inst.UninstallAsync(row.Id);
                 await RefreshAsync();
                 Status = ThemeManager.GetString("packages.status.uninstallfinished");
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Status = ThemeManager.GetString("packages.status.uninstallfailed");
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }

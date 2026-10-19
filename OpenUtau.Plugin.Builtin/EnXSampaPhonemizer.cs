@@ -451,7 +451,6 @@ namespace OpenUtau.Plugin.Builtin {
                             }
                         }
                     }
-FoundMatch:;
                     // try vcc
                     for (var i = lastC + 1; i >= 0; i--) {
                         var vr = $"{prevV} -";

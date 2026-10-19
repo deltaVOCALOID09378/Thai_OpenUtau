@@ -1,9 +1,8 @@
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
-    public class TrackColorPickerItemViewModel : ViewModelBase
-    {
+namespace OpenUtau.App.ViewModels {
+    public class TrackColorPickerItemViewModel : ViewModelBase {
         public TrackColor? Color { get; init; }
         public bool IsCreateTile { get; init; }
         public bool IsCustom => Color?.IsCustom ?? false;

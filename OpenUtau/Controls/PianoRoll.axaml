@@ -85,8 +85,8 @@
         <ColumnDefinition Width="16"/>
       </Grid.ColumnDefinitions>
       <ScrollBar Name="HScrollBar" Classes="overlay" Grid.Row="2" Grid.Column="1" ZIndex="350"
-                 VerticalAlignment="Top" HorizontalAlignment="Stretch"
-                 Height="10" Margin="0,4,0,0"
+                 VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                 Height="10" Margin="{Binding NotesViewModel.PianoRollHScrollBottomMargin}"
                  Orientation="Horizontal" AllowAutoHide="False"
                  Padding="0" ClipToBounds="True"
                  Maximum="{Binding NotesViewModel.HScrollBarMax, Mode=OneWay}"
@@ -253,42 +253,6 @@
                          TickOffset="{Binding TickOffset, Mode=OneWay}"
                          ShowWaveform="{Binding ShowWaveform, Mode=OneWay}"/>
       </Border>
-
-      <!-- Screenshot Button -->
-      <Button Grid.Row="2" Grid.Column="1" ZIndex="400"
-              HorizontalAlignment="Right" VerticalAlignment="Bottom"
-              Margin="0,0,16,16" Width="32" Height="32"
-              CornerRadius="16" Background="{DynamicResource SystemRegionBrush}"
-              BorderBrush="{DynamicResource NeutralAccentBrush}" BorderThickness="1"
-              Click="TakeScreenshot_Click" ToolTip.Tip="ถ่ายภาพหน้าจอ (Screenshot)">
-        <Path Data="M 12,2A 2,2 0 0,1 14,4L 20,4A 2,2 0 0,1 22,6L 22,20A 2,2 0 0,1 20,22L 4,22A 2,2 0 0,1 2,20L 2,6A 2,2 0 0,1 4,4L 10,4A 2,2 0 0,1 12,2M 12,17A 5,5 0 0,0 17,12A 5,5 0 0,0 12,7A 5,5 0 0,0 7,12A 5,5 0 0,0 12,17M 12,9A 3,3 0 0,1 15,12A 3,3 0 0,1 12,15A 3,3 0 0,1 9,12A 3,3 0 0,1 12,9Z"
-              Fill="{DynamicResource ForegroundColor}" Stretch="Uniform" Margin="4"/>
-      </Button>
-
-      <!-- AutoPitch Randomizer Button -->
-      <Button Grid.Row="2" Grid.Column="1" ZIndex="400"
-              HorizontalAlignment="Right" VerticalAlignment="Bottom"
-              Margin="0,0,52,16" Width="32" Height="32"
-              CornerRadius="16" Background="{DynamicResource SystemRegionBrush}"
-              BorderBrush="{DynamicResource NeutralAccentBrush}" BorderThickness="1"
-              Click="AutoPitchRandomizer_Click" ToolTip.Tip="สุ่มวาดเส้น Pitch อัตโนมัติ (AutoPitch)">
-        <Path Data="M18.8 2.2a2 2 0 0 1 2.8 0 2 2 0 0 1 0 2.8L9.1 17.5 4.9 18.9 6.3 14.7 18.8 2.2ZM5.9 16.5l2.6-.7L17 4.3l-1.9-1.9L3.6 13.9l.7 2.6ZM20 20H4v-2h16v2Z"
-              Fill="{DynamicResource ForegroundColor}" Stretch="Uniform" Margin="4"/>
-      </Button>
-
-      <!-- AutoPitch All in 1: randomly mixes all six AutoPitch/Vibrato shapes. -->
-      <Button Name="AutoPitchAllInOneButton"
-              Grid.Row="2" Grid.Column="1" ZIndex="400"
-              HorizontalAlignment="Right" VerticalAlignment="Bottom"
-              Margin="0,0,88,16" Width="32" Height="32"
-              CornerRadius="16" Background="{DynamicResource SystemRegionBrush}"
-              BorderBrush="{DynamicResource NeutralAccentBrush}" BorderThickness="1"
-              Click="AutoPitchAllInOne_Click"
-              ToolTip.Tip="AutoPitch All in 1 — สุ่ม 6 รูปแบบ (ไม่เลือกโน้ต = ใช้ทั้งพาร์ต)">
-        <TextBlock Text="A6" FontFamily="Leelawadee UI" FontSize="11" FontWeight="Bold"
-                   Foreground="{DynamicResource ForegroundColor}"
-                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-      </Button>
       <Border Grid.Row="2" Grid.Column="1" ZIndex="0"
               Background="#4D000000"
               IsVisible="{Binding PitchFocusDim}"
@@ -375,12 +339,6 @@
           <Menu Background="Transparent"
                 Closed="OnMenuClosed" PointerExited="OnMenuPointerLeave">
             <Menu.Styles>
-              <Style Selector="MenuItem.MenuItemWithSubMenu > MenuItem">
-                <Setter Property="Header" Value="{Binding Header}"/>
-                <Setter Property="Command" Value="{Binding Command}"/>
-                <Setter Property="CommandParameter" Value="{Binding CommandParameter}"/>
-                <Setter Property="ItemsSource" Value="{Binding Items}"/>
-              </Style>
               <Style Selector="CheckBox">
                 <Setter Property="IsHitTestVisible" Value="False" />
                 <Style Selector="^:unchecked /template/ Border#NormalRectangle">
@@ -399,34 +357,32 @@
             </Menu.Styles>
 
             <MenuItem Header="{DynamicResource menu.edit}">
-              <MenuItem Header="-- HISTORY --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {Binding UndoText}" InputGesture="Ctrl+Z" Command="{Binding Undo}" IsEnabled="{Binding CanUndo}" StaysOpenOnClick="True"/>
-              <MenuItem Header="- {Binding RedoText}" InputGesture="Ctrl+Y" Command="{Binding Redo}" IsEnabled="{Binding CanRedo}" StaysOpenOnClick="True"/>
-              <MenuItem Header="-- CLIPBOARD --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource menu.edit.cut}" InputGesture="Ctrl+X" Command="{Binding Cut}" StaysOpenOnClick="True"/>
-              <MenuItem Header="- {DynamicResource menu.edit.copy}" InputGesture="Ctrl+C" Command="{Binding Copy}" StaysOpenOnClick="True"/>
-              <MenuItem Header="- {DynamicResource menu.edit.paste}" InputGesture="Ctrl+V" Command="{Binding Paste}" StaysOpenOnClick="True"/>
-              <MenuItem Header="- {DynamicResource menu.edit.pasteplainnotes}" InputGesture="Ctrl+Shift+V" Command="{Binding PastePlain}" StaysOpenOnClick="True"/>
-              <MenuItem Header="- {DynamicResource menu.edit.delete}" InputGesture="Delete" Command="{Binding Delete}" StaysOpenOnClick="True"/>
-              <MenuItem Header="-- SELECTION --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.searchnote}" InputGesture="Ctrl+F" Click="OnMenuSearchNote" StaysOpenOnClick="True"/>
-              <MenuItem Header="- {DynamicResource menu.edit.selectall}" InputGesture="Ctrl+A" Command="{Binding SelectAll}" StaysOpenOnClick="True"/>
-              <MenuItem Header="-- PART OPTIONS --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.part.singer}" Click="OnMenuSingers" StaysOpenOnClick="True"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.part.generateharmonies}" Click="OnMenuGenerateHarmonies" StaysOpenOnClick="True"/>
-              <MenuItem Header="-- LOCK NOTES --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource menu.edit.lockunselectednotes}">
-                <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes.pitchpoints}" Click="OnMenuLockPitchPoints" StaysOpenOnClick="True">
+              <MenuItem Header="{Binding UndoText}" InputGesture="Ctrl+Z" Command="{Binding Undo}" IsEnabled="{Binding CanUndo}"/>
+              <MenuItem Header="{Binding RedoText}" InputGesture="Ctrl+Y" Command="{Binding Redo}" IsEnabled="{Binding CanRedo}"/>
+              <MenuItem Header="-" Height="1"/>
+              <MenuItem Header="{DynamicResource menu.edit.cut}" InputGesture="Ctrl+X" Command="{Binding Cut}"/>
+              <MenuItem Header="{DynamicResource menu.edit.copy}" InputGesture="Ctrl+C" Command="{Binding Copy}"/>
+              <MenuItem Header="{DynamicResource menu.edit.paste}" InputGesture="Ctrl+V" Command="{Binding Paste}"/>
+              <MenuItem Header="{DynamicResource menu.edit.pasteplainnotes}" InputGesture="Ctrl+Shift+V" Command="{Binding PastePlain}"/>
+              <MenuItem Header="{DynamicResource menu.edit.delete}" InputGesture="Delete" Command="{Binding Delete}"/>
+              <MenuItem Header="-" Height="1"/>
+              <MenuItem Header="{DynamicResource pianoroll.menu.searchnote}" InputGesture="Ctrl+F" Click="OnMenuSearchNote"/>
+              <MenuItem Header="{DynamicResource menu.edit.selectall}" InputGesture="Ctrl+A" Command="{Binding SelectAll}"/>
+              <MenuItem Header="-" Height="1"/>
+              <MenuItem Header="{DynamicResource pianoroll.menu.part.singer}" Click="OnMenuSingers"/>
+              <MenuItem Header="{DynamicResource pianoroll.menu.part.generateharmonies}" Click="OnMenuGenerateHarmonies"/>
+              <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes}">
+                <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes.pitchpoints}" Click="OnMenuLockPitchPoints">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding LockPitchPoints}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes.vibrato}" Click="OnMenuLockVibrato" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes.vibrato}" Click="OnMenuLockVibrato">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding LockVibrato}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes.expressions}" Click="OnMenuLockExpressions" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes.expressions}" Click="OnMenuLockExpressions">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding LockExpressions}" />
                   </MenuItem.Icon>
@@ -435,95 +391,91 @@
             </MenuItem>
 
             <MenuItem Header="{DynamicResource menu.view}">
-              <MenuItem Header="-- APPEARANCE --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource prefs.appearance.showportrait}" Click="OnMenuShowPortrait" StaysOpenOnClick="True">
+              <MenuItem Header="{DynamicResource prefs.appearance.showportrait}" Click="OnMenuShowPortrait">
                 <MenuItem.Icon>
                   <CheckBox IsChecked="{Binding ShowPortrait}" />
                 </MenuItem.Icon>
               </MenuItem>
-              <MenuItem Header="- {DynamicResource prefs.appearance.showghostnotes}" Click="OnMenuShowGhostNotes" StaysOpenOnClick="True">
+              <MenuItem Header="{DynamicResource prefs.appearance.showghostnotes}" Click="OnMenuShowGhostNotes">
                 <MenuItem.Icon>
                   <CheckBox IsChecked="{Binding ShowGhostNotes}" />
                 </MenuItem.Icon>
               </MenuItem>
-              <MenuItem Header="- {DynamicResource prefs.appearance.shownoteborder}" Click="OnMenuShowNoteBorder" StaysOpenOnClick="True">
+              <MenuItem Header="{DynamicResource prefs.appearance.shownoteborder}" Click="OnMenuShowNoteBorder">
                 <MenuItem.Icon>
                   <CheckBox IsChecked="{Binding ShowNoteBorder}" />
                 </MenuItem.Icon>
               </MenuItem>
-              <MenuItem Header="- {DynamicResource prefs.appearance.trackcolor}" Click="OnMenuUseTrackColor" StaysOpenOnClick="True">
+              <MenuItem Header="{DynamicResource prefs.appearance.trackcolor}" Click="OnMenuUseTrackColor">
                 <MenuItem.Icon>
                   <CheckBox IsChecked="{Binding UseTrackColor}" />
                 </MenuItem.Icon>
               </MenuItem>
-              <MenuItem Header="- {DynamicResource menu.tools.fullscreen}" InputGesture="F11" Click="OnMenuFullScreen" StaysOpenOnClick="True"/>
-              <MenuItem Header="-- PITCH DEGREES --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource prefs.appearance.degree}">
-                <MenuItem Header="{DynamicResource prefs.appearance.degree.off}" Click="OnMenuDegreeStyle" Tag="0" StaysOpenOnClick="True">
+              <MenuItem Header="{DynamicResource menu.tools.fullscreen}" InputGesture="F11" Click="OnMenuFullScreen"/>
+              <MenuItem Header="{DynamicResource prefs.appearance.degree}">
+                <MenuItem Header="{DynamicResource prefs.appearance.degree.off}" Click="OnMenuDegreeStyle" Tag="0">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding DegreeStyle0}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource prefs.appearance.degree.solfege}" Click="OnMenuDegreeStyle" Tag="1" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource prefs.appearance.degree.solfege}" Click="OnMenuDegreeStyle" Tag="1">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding DegreeStyle1}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource prefs.appearance.degree.numbered}" Click="OnMenuDegreeStyle" Tag="2" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource prefs.appearance.degree.numbered}" Click="OnMenuDegreeStyle" Tag="2">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding DegreeStyle2}" />
                   </MenuItem.Icon>
                 </MenuItem>
               </MenuItem>
-              <MenuItem Header="-- PLAYBACK OPTIONS --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource prefs.playback.lockstarttime}">
-                <MenuItem Header="{DynamicResource prefs.playback.lockstarttime.off}" Click="OnMenuLockStartTime" Tag="0" StaysOpenOnClick="True">
+              <MenuItem Header="{DynamicResource prefs.playback.lockstarttime}">
+                <MenuItem Header="{DynamicResource prefs.playback.lockstarttime.off}" Click="OnMenuLockStartTime" Tag="0">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding LockStartTime0}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource prefs.playback.lockstarttime.on}" Click="OnMenuLockStartTime" Tag="1" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource prefs.playback.lockstarttime.on}" Click="OnMenuLockStartTime" Tag="1">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding LockStartTime1}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource prefs.playback.lockstarttime.onlycursor}" Click="OnMenuLockStartTime" Tag="2" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource prefs.playback.lockstarttime.onlycursor}" Click="OnMenuLockStartTime" Tag="2">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding LockStartTime2}" />
                   </MenuItem.Icon>
                 </MenuItem>
               </MenuItem>
-              <MenuItem Header="- {DynamicResource prefs.playback.autoscroll}">
-                <MenuItem Header="{DynamicResource prefs.off}" Click="OnMenuPlaybackAutoScroll" Tag="0" StaysOpenOnClick="True">
+              <MenuItem Header="{DynamicResource prefs.playback.autoscroll}">
+                <MenuItem Header="{DynamicResource prefs.off}" Click="OnMenuPlaybackAutoScroll" Tag="0">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding PlaybackAutoScroll0}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource prefs.playback.autoscrollmode.stationarycursor}" Click="OnMenuPlaybackAutoScroll" Tag="1" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource prefs.playback.autoscrollmode.stationarycursor}" Click="OnMenuPlaybackAutoScroll" Tag="1">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding PlaybackAutoScroll1}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource prefs.playback.autoscrollmode.pagescroll}" Click="OnMenuPlaybackAutoScroll" Tag="2" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource prefs.playback.autoscrollmode.pagescroll}" Click="OnMenuPlaybackAutoScroll" Tag="2">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding PlaybackAutoScroll2}" />
                   </MenuItem.Icon>
                 </MenuItem>
               </MenuItem>
-              <MenuItem Header="-- PIANO ROLL OPTIONS --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.view.pianoroll}">
-                <MenuItem Header="{DynamicResource pianoroll.menu.view.pianoroll.fullscreen}" Click="OnMenuPianoRollFullscreen" StaysOpenOnClick="True">
+              <MenuItem Header="{DynamicResource pianoroll.menu.view.pianoroll}">
+                <MenuItem Header="{DynamicResource pianoroll.menu.view.pianoroll.fullscreen}" Click="OnMenuPianoRollFullscreen">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding PianoRollFullscreen}" IsHitTestVisible="False"/>
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource pianoroll.menu.view.pianoroll.detach}" Click="OnMenuDetachPianoRoll" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource pianoroll.menu.view.pianoroll.detach}" Click="OnMenuDetachPianoRoll">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding PianoRollDetached}" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource pianoroll.menu.view.pianoroll.hide}" Click="OnMenuHidePianoRoll" StaysOpenOnClick="True"/>
-                <MenuItem Header="{DynamicResource pianoroll.menu.view.tiktokmode}" Click="OnMenuTikTokMode" StaysOpenOnClick="True">
+                <MenuItem Header="{DynamicResource pianoroll.menu.view.pianoroll.hide}" Click="OnMenuHidePianoRoll"/>
+                <MenuItem Header="{DynamicResource pianoroll.menu.view.tiktokmode}" Click="OnMenuTikTokMode">
                   <MenuItem.Icon>
                     <CheckBox IsChecked="{Binding IsTikTokMode}" IsHitTestVisible="False"/>
                   </MenuItem.Icon>
@@ -532,16 +484,14 @@
             </MenuItem>
 
             <MenuItem Header="{DynamicResource pianoroll.menu.batch}">
-              <MenuItem Header="-- ACTIONS --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.notes}" ItemsSource="{Binding NoteBatchEdits}" Classes="MenuItemWithSubMenu"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.lyrics}" ItemsSource="{Binding LyricBatchEdits}" Classes="MenuItemWithSubMenu"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.reset}" ItemsSource="{Binding ResetBatchEdits}" Classes="MenuItemWithSubMenu"/>
-              <MenuItem Header="-- EXTERNAL --" IsHitTestVisible="False" Foreground="Gray" FontWeight="Bold"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.external}" ItemsSource="{Binding ExternalBatchEdits}" Classes="MenuItemWithSubMenu"/>
-              <MenuItem Header="- {DynamicResource pianoroll.menu.part.legacypluginexp}" ItemsSource="{Binding LegacyPlugins}" Name="PluginMenu" Classes="MenuItemWithSubMenu"/>
+              <MenuItem Header="{DynamicResource pianoroll.menu.notes}" ItemsSource="{Binding NoteBatchEdits}" Classes="MenuItemWithSubMenu"/>
+              <MenuItem Header="{DynamicResource pianoroll.menu.lyrics}" ItemsSource="{Binding LyricBatchEdits}" Classes="MenuItemWithSubMenu"/>
+              <MenuItem Header="{DynamicResource pianoroll.menu.reset}" ItemsSource="{Binding ResetBatchEdits}" Classes="MenuItemWithSubMenu"/>
+              <MenuItem Header="{DynamicResource pianoroll.menu.external}" ItemsSource="{Binding ExternalBatchEdits}" Classes="MenuItemWithSubMenu"/>
+              <MenuItem Header="{DynamicResource pianoroll.menu.part.legacypluginexp}" ItemsSource="{Binding LegacyPlugins}" Name="PluginMenu" Classes="MenuItemWithSubMenu"/>
             </MenuItem>
-            <MenuItem Header="- {DynamicResource pianoroll.menu.lyrics.edit}" Click="OnMenuEditLyrics" StaysOpenOnClick="True"/>
-            <MenuItem Header="- {DynamicResource pianoroll.menu.notedefaults}" Click="OnMenuNoteDefaults" StaysOpenOnClick="True"/>
+            <MenuItem Header="{DynamicResource pianoroll.menu.lyrics.edit}" Click="OnMenuEditLyrics"/>
+            <MenuItem Header="{DynamicResource pianoroll.menu.notedefaults}" Click="OnMenuNoteDefaults"/>
           </Menu>
         </Border>
 

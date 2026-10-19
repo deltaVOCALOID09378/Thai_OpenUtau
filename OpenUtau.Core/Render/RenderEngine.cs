@@ -254,24 +254,28 @@ namespace OpenUtau.Core.Render {
                 tuples = orderedTuples;
             }
             var progress = new Progress(tuples.Sum(t => t.Item1.phones.Length));
-            foreach (var tuple in tuples) {
+            Parallel.ForEach(tuples, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2), CancellationToken = cancellation.Token }, tuple => {
                 var phrase = tuple.Item1;
                 var source = tuple.Item2;
                 var request = tuple.Item3;
                 bool realCurvesPublished = false;
                 var renderEvents = phrase.renderer.SupportsRealCurve
                     ? new RenderPhraseEvents(realCurves => {
-                        realCurvesPublished = PublishRealCurveUpdates(request.part, phrase, realCurves);
+                        lock (request.part) {
+                            realCurvesPublished = PublishRealCurveUpdates(request.part, phrase, realCurves);
+                        }
                     })
                     : null;
                 var task = phrase.renderer.Render(phrase, progress, request.trackNo, cancellation, true, renderEvents);
                 task.Wait();
                 if (cancellation.IsCancellationRequested) {
-                    break;
+                    return;
                 }
                 var result = task.Result;
                 source.SetSamples(result.samples);
-                request.part.SetMix(request.mix);
+                lock (request.part) {
+                    request.part.SetMix(request.mix);
+                }
                 if (result.samples != null) {
                     var layout = phrase.renderer.Layout(phrase);
                     PhraseWaveformCache.Put(
@@ -283,14 +287,18 @@ namespace OpenUtau.Core.Render {
                 }
                 DocManager.Inst.ExecuteCmd(new PhraseRenderedNotification(request.part, phrase, result, request.trackNo));
                 if (!realCurvesPublished) {
-                    PublishRealCurveUpdates(request.part, phrase);
+                    lock (request.part) {
+                        PublishRealCurveUpdates(request.part, phrase);
+                    }
                 }
-                if (request.sources.All(s => s.HasSamples)) {
-                    request.part.SetRenderMixComplete(true);
-                    request.part.SetMix(request.mix);
-                    DocManager.Inst.ExecuteCmd(new PartRenderedNotification(request.part));
+                lock (request.part) {
+                    if (request.sources.All(s => s.HasSamples)) {
+                        request.part.SetRenderMixComplete(true);
+                        request.part.SetMix(request.mix);
+                        DocManager.Inst.ExecuteCmd(new PartRenderedNotification(request.part));
+                    }
                 }
-            }
+            });
             progress.Clear();
         }
 
@@ -343,3 +351,4 @@ namespace OpenUtau.Core.Render {
         }
     }
 }
+

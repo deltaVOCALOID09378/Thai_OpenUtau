@@ -1,0 +1,152 @@
+AutoPitchwriter　Ver.1.7.0
+
+* Anti-virus software might react to this plug-in,but it is false positive.
+* I'm sorry, but it result from compressing executably for some unavoidable circumstances.
+
+- Support tempo changed ust from ver.1.6.1
+- It can use only the four beats music. 
+- It is most important to match rythme bar by bar.　←　This is the most important.
+- You might want to delete pitches before using plugin.
+- It does not work with the UST that is made half or double tempo of original music. 
+small "r" is not recognize as rest notes. 
+- Mode1's data is deleted.
+- Support CVVC. When using CVVC, check checkbox.　CVVC that is mixed with VCV is not recomended much.
+- You can customize this to edit "pitch.ust". Maybe.  I don't test this, so I don't know much.
+- Generally "っ" is used in Japanese lyrics is put as "R",but this plugin recommend to put "Rっ".
+
+★Change certain vowel notes to one syllable.
+  Put a check mark makes to shorten certain vowel notes.  The border will move by the amount of input number.When [Do alone] button is pressed, it going to do it without writing the pitch.
+
+■Slide a bar position as much as entered number.（Quarter note=480）
+  When Selection is not match with a bar, simply enter the amount of bar you need.
+
+■Base portamento
+  Portamento setting of notes that is not wrote pitch.
+
+■Vibrato cycle
+  AutoPitchwriter's vibrato is supposed between 120～200 tempo, so you could type it when the song is too fast or too slow.
+ You should write specific number like 0.5 , 0.6666 , 1.5 , 2 ... and so on. 
+
+■Write more vibratos
+  This is a test implementation.
+
+■Pitch extent threshold   (C4=60)
+  Put the check mark on it that makes to draw high tone and low tone exclusive pitches.
+  If it is uncheck, it will perform the same as the previous version.
+   Each high tone exclusive pitches and low tone exclusive pitches perform independently, so you can also enter like High[C4] and Low[C5].
+ You can enter the pitch height like C#4 , C＃4 , C♯4 , Db4 , D♭4 or 61(NoteNum).  
+
+■Arrange the pitches to the specific scale
+ Put a check mark makes to move anchor points of pitch bend to scale.
+ "Auto" is analyzing the scale automatically if you don't know what kind of scale is.
+ Otherwise it is manually process.
+
+[Default]　Back to default settings.
+[Run]　Run
+
+I'm studying English, so if there is a weird English, let me know it.
+I will quickly correct it!
+
+Contact details
+カノン(Canon)
+Twitter:　@canon_73
+E-mail: canon7373@gmail.com
+http://www.canon-voice.com/
+
+
+
+
+
+
+・　強拍かどうかの判定が非常に多いため、選択範囲の始点を曲の拍にきっちり合わせないとまともに機能しません 　←　最重要
+
+・　4拍子の曲にしか使えません
+・　出来るだけシンプルな8分音符の倍数のノートを中心に構成されたUSTのほうが上手く行きます
+・　mode1のデータは消えます。その他怪しい動作をする可能性が無いとは言えないので不安な方はUSTのバックアップを取っといてください
+・　CVVCに対応しました。CVVCで使う場合、チェックボックスにチェックを入れたほうがいいです。（連続音混じりのCVVCでのテストは不完全です。Eve式かCC式を推奨します）
+・　pitch.ustのピッチベンドを編集してカスタマイズする事が一応可能です。が、制作上楽にするためであってユーザー側の実用性は無いように思います
+・　促音を"R"ではなく"Rっ"と置くと、より精度が良くなります
+
+★特定の母音を一音節化する
+
+　[あ　　][い　　]　のように、同じ音高で2つ目が母音で、２つ合わせて4分音符になるようなノートの2つ目を指定した数値にする。1つ目は「480-指定した数値」になります
+　1音節化して欲しくない場面でもやってしまうことが度々あります
+　プラグイン上では１つのノートとして扱われます　
+　[単独で]ボタンを押すとピッチを描かずにこの処理のみ行います
+
+
+■拍の位置を数値分後ろにずらす
+
+　タイミングを合わせたいけどUSTは改変したくない時にどうぞ
+
+
+■基本ポルタメント
+
+　プラグインがピッチ入力をしない部分のポルタメント開始位置と長さを指定
+
+
+■ビブラート周期
+
+　ビブラート周期を変更します
+　基本的にデフォルト状態で曲に合う周期になっているため、入力する数値は　2、1.5、0.666、0.5　など出来るだけ綺麗な数値を入力した方が良い結果になります
+
+
+■ビブラートをさらに追加
+
+　テスト機能
+
+
+■音域区切り
+
+　高音をC5に指定した場合、音高がC5以上のノートに対して高音専用ピッチを描きます
+　低音をC4に指定した場合、音高がC4以下のノートに対して低音専用ピッチを描きます
+　それぞれ独立しているため、高音C4,低音C5としてもそれぞれ機能します
+　入力方法は、例としてC5、Db4、D♭4、C#4、C♯4、60（NoteNum）などが可能です
+　男性と女性で音域が違うため、声の性別に応じて数値を変えないとおかしなことになります
+
+■スケールに合わせる
+
+　ピッチ線をスケールに合わせて描きます
+　自動はめちゃくちゃ転調に弱いです
+
+
+■CVVC
+
+　CVVCで使うときは必ずチェックを入れて下さい
+　連続音の時にチェックを入れっぱなしでも多分問題ありません
+　私は入れっぱなしで使っています
+
+
+■debug
+
+　個人的に使うものです
+　上だけ、下だけ、両方チェックの3パターンあります
+　どういう処理してるのかがなんとなく分かるかもしれない
+
+
+[デフォルト値]　　設定をデフォルト状態に戻します
+[いくぜ]　いきます
+
+
+
+何かありましたらこちらまで
+カノン(Canon)
+Twitter:　@canon_73
+E-mail: canon7373@gmail.com
+http://www.canon-voice.com/
+
+
+
+り・れ・き
+
+Ver.1.7.0 アンチウィルス対策とほぼチェックされていないビブラート強化モードの追加
+Ver.1.6.3b 英語モード追加
+Ver.1.6.3 細かい修正、日本語マニュアルちゃんとした
+Ver.1.6.2 テンポチェンジに関する不具合修正、ＣＶＶＣモードの不具合修正、先頭ノートがＲじゃない時の不具合修正、母音１音節化の調整、ピッチ規則追加
+Ver.1.6.1 テンポチェンジに対応。ピッチパターン、ルールを追加。一部正しく書かれないピッチパターンを華麗に放置
+Ver.1.5.1 スケールオプションを追加、パラメータを保存、ピッチを一部追加・改善、音高を一般的な名称で入力可能に、ビブラート機能が機能していなかったのを修正、他にも何かあった気がするけど忘れた
+Ver.1.4.0 高音低音専用ピッチの用意、母音の１音節化、ビブラートの周期変更可能に。一部ピッチ調整
+Ver.1.2.0 ポルタメントのベースの数値を変更可能に
+Ver.1.1.0 CVVC対応、他
+Ver1.0.1　休符　小文字のrに対応、旧形式のエントリに対応、AutoCVVCが使えなくなる不具合解消、他
+Ver1　こうかいした

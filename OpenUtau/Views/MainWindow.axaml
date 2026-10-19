@@ -1,10 +1,3 @@
-<!--
-  Made And Checked By DELTA SYNTH & Gemini AI
-  Original by Patiphat Wongyai (Delta)
-  Version: 1.4 | Date: 2026-08-05
-  History: UI Enhancement — Status Bar ProgressBar color fixed to DELTA SYNTH red (#CC2200),
-           Status Bar text size 11→12pt for better readability
--->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -14,7 +7,7 @@
         xmlns:views="clr-namespace:OpenUtau.App.Views"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
         x:Class="OpenUtau.App.Views.MainWindow"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{Binding Title}" MinWidth="300" MinHeight="200" Width="{Binding Width}" Height="{Binding Height}"
         Background="{DynamicResource WorkspaceCanvasBrush}"
         Focusable="True" KeyDown="OnKeyDown" PointerPressed="OnPointerPressed" Closing="WindowClosing"
@@ -26,14 +19,9 @@
   </Window.Styles>
   <Grid Background="{DynamicResource WorkspaceCanvasBrush}">
     <Grid Name="MainGrid" Margin="{Binding $parent[1].WindowDecorationMargin}">
-      <!-- DELTA SYNTH Logo Background -->
-      <Image Source="/Assets/logo_delta_synth.png" 
-             HorizontalAlignment="Center" VerticalAlignment="Center" 
-             Stretch="Uniform" Opacity="0.10" IsHitTestVisible="False" Grid.RowSpan="3" Margin="50"/>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
-        <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
       <Border Grid.Row="0" Classes="workspaceCard workspaceDockTop appTopBar">
         <Grid ColumnDefinitions="Auto,*,Auto">
@@ -66,7 +54,6 @@
               <MenuItem Header="{DynamicResource menu.file.exportds}" Click="OnMenuExportDsTo"/>
             </MenuItem>
             <MenuItem Header="{DynamicResource menu.file.openexportlocation}" Click="OnMenuOpenProjectLocation"/>
-            <MenuItem Header="{DynamicResource menu.file.deleteexport}" Click="OnMenuDeleteExport"/>
           </MenuItem>
           <MenuItem Header="{DynamicResource menu.edit}" IsEnabled="{Binding Page}">
             <MenuItem Header="{Binding UndoText}" InputGesture="Ctrl+Z" Command="{Binding Undo}" IsEnabled="{Binding CanUndo}"/>
@@ -162,34 +149,6 @@
                   </Canvas>
                 </Viewbox>
               </ToggleButton>
-              
-              <!-- Screen Record Buttons -->
-              <Button Classes="transportChip recordChip"
-                      Command="{Binding RecordCommand}">
-                <ToolTip.Tip>
-                  <TextBlock Text="{DynamicResource transport.record.start}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
-                </ToolTip.Tip>
-                <Viewbox>
-                  <Canvas Width="14" Height="14" RenderTransformOrigin="0.5,0.5">
-                    <Ellipse Classes="filled" Fill="#CC2200" Width="10" Height="10" Canvas.Left="2" Canvas.Top="2"
-                             IsVisible="{Binding !IsRecording}"/>
-                    <Path Classes="filled" Fill="#CC2200" Data="M 3.5 2 L 6.5 2 L 6.5 12 L 3.5 12 Z M 8.5 2 L 11.5 2 L 11.5 12 L 8.5 12 Z"
-                          IsVisible="{Binding IsRecording}"/>
-                  </Canvas>
-                </Viewbox>
-              </Button>
-              <Button Classes="transportChip stopRecordChip"
-                      Command="{Binding StopRecordCommand}"
-                      IsEnabled="{Binding IsRecording}">
-                <ToolTip.Tip>
-                  <TextBlock Text="{DynamicResource transport.record.stop}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
-                </ToolTip.Tip>
-                <Viewbox>
-                  <Canvas Width="14" Height="14" RenderTransformOrigin="0.5,0.5">
-                    <Rectangle Classes="filled" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="10" Height="10" Canvas.Left="2" Canvas.Top="2"/>
-                  </Canvas>
-                </Viewbox>
-              </Button>
             </StackPanel>
             <Border Classes="appTopBarValueStrip" MinWidth="200">
               <Grid ColumnDefinitions="*,Auto,*,Auto,*">
@@ -228,6 +187,20 @@
             </Border>
           </StackPanel>
           </Border>
+          <Border Grid.Column="2" Classes="appTopBarChrome" HorizontalAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="6,2">
+              <Border Width="8" Height="8" CornerRadius="4" Background="#CC2200" VerticalAlignment="Center"/>
+              <TextBlock Text="DELTA SYNTH Core"
+                         FontFamily="Leelawadee UI, Segoe UI, sans-serif"
+                         FontSize="11" FontWeight="SemiBold"
+                         Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
+                         VerticalAlignment="Center"/>
+              <Border Width="1" Height="14" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Margin="2,0"/>
+              <Button Classes="transportChip" Padding="6,2" Click="OnMenuClearCache" ToolTip.Tip="ล้างไฟล์แคชและข้อมูลขยะ (Clear Cache)">
+                <TextBlock Text="🧹 ล้างแคช" FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="10"/>
+              </Button>
+            </StackPanel>
+          </Border>
         </Grid>
       </Border>
       <Carousel Grid.Row="1" SelectedIndex="{Binding Page}" >
@@ -236,6 +209,25 @@
           <Grid Grid.Column="0" RowDefinitions="Auto,8,*" ColumnDefinitions="*,8,*">
             <Border Grid.Row="0" Grid.ColumnSpan="3" Classes="welcomeCard">
               <StackPanel Spacing="8">
+                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="4" Padding="12,8" Margin="0,0,0,4" BorderBrush="#CC2200" BorderThickness="1">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                      <Image Width="28" Height="28" Source="/Assets/Thai OpenUtau Logo.png" VerticalAlignment="Center"/>
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Thai OpenUtau by DELTA SYNTH" FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="13" FontWeight="Bold" Foreground="#CC2200"/>
+                        <TextBlock Text="Bilingual Synthesizer &amp; DSP Core • High Performance Edition" FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="10" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                      </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <Button Classes="transportChip" Padding="8,4" Click="OnMenuClearCache" ToolTip.Tip="ล้างไฟล์แคชและข้อมูลขยะ">
+                        <TextBlock Text="🧹 ล้างไฟล์แคช" FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="11"/>
+                      </Button>
+                      <Button Classes="transportChip" Padding="8,4" Click="OnMenuSingerHub" ToolTip.Tip="เปิด Singer Hub เพื่อติดตั้งหรือจัดการโมเดลเสียง">
+                        <TextBlock Text="🎙 Singer Hub" FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="11"/>
+                      </Button>
+                    </StackPanel>
+                  </Grid>
+                </Border>
                 <Button Classes="welcomeRecoveryButton"
                         Click="OnWelcomeRecovery" Content="{Binding RecoveryString}"
                         IsVisible="{Binding HasRecovery}" Background="{DynamicResource WarningBrush}"/>
@@ -320,7 +312,7 @@
         <!--Main page-->
         <Grid x:Name="WorkspaceTracksGrid" Classes="workspaceLayout" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="{Binding TracksViewModel.TrackHeaderColumnWidth, Mode=TwoWay}"/>
+            <ColumnDefinition Width="{Binding TracksViewModel.TrackHeaderColumnWidth}"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="16"/>
           </Grid.ColumnDefinitions>
@@ -336,7 +328,7 @@
                   IsVisible="{Binding ShowTracksArea}">
             <Grid>
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="{Binding TracksViewModel.TrackHeaderColumnWidth, Mode=TwoWay}"/>
+                <ColumnDefinition Width="{Binding TracksViewModel.TrackHeaderColumnWidth}"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="16"/>
               </Grid.ColumnDefinitions>
@@ -345,8 +337,6 @@
                 <RowDefinition Height="*" MinHeight="0.01"/>
                 <RowDefinition Height="0"/>
               </Grid.RowDefinitions>
-              <Grid Grid.Row="0" Grid.Column="0" ClipToBounds="True">
-              </Grid>
           <ScrollBar Name="TracksHScrollBar" Classes="overlay" Grid.Row="1" Grid.Column="1" ZIndex="400"
                     VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
                     Height="10" Margin="0,0,0,3" Orientation="Horizontal" AllowAutoHide="False"
@@ -449,8 +439,6 @@
           </Canvas>
           <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" IsHitTestVisible="False"
                   Background="{DynamicResource WorkspaceCanvasBrush}"/>
-          <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Left" Width="4" Background="Transparent" ZIndex="500"/>
-
           <c:TrackHeaderCanvas Grid.Row="1" Grid.Column="0" ClipToBounds="True" Background="Transparent"
                               DataContext="{Binding TracksViewModel}"
                               TrackHeight="{Binding TrackHeight}"
@@ -465,9 +453,6 @@
                             TrackHeight="{Binding TrackHeight}"
                             TrackOffset="{Binding TrackOffset}"
                             PianoRollHighlightTrackNo="{Binding PianoRollHighlightTrackNo}"/>
-          <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Width="4"
-                        Background="Transparent" Focusable="False" Cursor="SizeWestEast"
-                        HorizontalAlignment="Right" ZIndex="1000"/>
           <c:TickBackground Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="0" IsHitTestVisible="False"
                             Foreground="{DynamicResource TickLineBrush}"
                             Background="{DynamicResource TickLineBrushLow}"
@@ -597,62 +582,43 @@
             <ContentControl Name="PianoRollContainer"
                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
           </Border>
+          <Border Grid.Row="3" Grid.ColumnSpan="3" Classes="workspaceDockBottom" Height="22" Margin="4,2,4,0"
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="4,0">
+              <!-- Left: Live Operation Message -->
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border Width="6" Height="6" CornerRadius="3" Background="#CC2200" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding DisplayStatusText}"
+                           FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="11"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+              </StackPanel>
+
+              <!-- Center: Project & Audio Engine Indicators -->
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0">
+                <TextBlock Text="{Binding TracksCountText}"
+                           FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="10"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="•" FontSize="9" Foreground="{DynamicResource SystemControlForegroundBaseLowBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="C++ Worldline &amp; DirectML DSP"
+                           FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="10"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                           VerticalAlignment="Center"/>
+              </StackPanel>
+
+              <!-- Right: System Info -->
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <TextBlock Text="Thai OpenUtau Master Tool"
+                           FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="10"
+                           FontWeight="SemiBold" Foreground="#CC2200" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Grid>
+          </Border>
+          <ProgressBar Grid.Row="4" Grid.ColumnSpan="3" Height="3" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                       Value="{Binding Progress}" Foreground="#CC2200"/>
         </Grid>
       </Carousel>
-      
-      <!-- DELTA SYNTH Toast Notification v1.1 — toast-style มุมขวาล่าง โปร่งใส หายใน 1 วิ -->
-      <ItemsControl ItemsSource="{Binding Source={x:Static vm:ToastViewModel.Inst}, Path=Messages}"
-                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                    Margin="0,0,16,20" ZIndex="100"
-                    IsHitTestVisible="True"
-                    Grid.RowSpan="3">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <!-- MaxWidth 280px ตามมาตรฐาน DELTA SYNTH Toast — ไม่เกิน 280px ไม่บดบังพื้นที่ทำงาน -->
-            <StackPanel Spacing="6" VerticalAlignment="Bottom" MaxWidth="280"/>
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <!-- Toast item: โปร่งใส CornerRadius 6 BoxShadow เบา MaxHeight 80px -->
-            <Border Background="{Binding Background}" Padding="10,6" CornerRadius="6"
-                    MaxHeight="80" BoxShadow="0 2 8 0 #60000000" Opacity="0.92">
-              <Grid ColumnDefinitions="*,Auto">
-                <!-- ข้อความ Toast: Leelawadee UI 11pt ตามมาตรฐานฟ้อนต์ไทย DELTA SYNTH -->
-                <TextBlock Grid.Column="0" Text="{Binding Message}" TextWrapping="Wrap"
-                           FontFamily="Leelawadee UI" FontSize="11"
-                           VerticalAlignment="Center"
-                           Foreground="{Binding Foreground}"/>
-                <!-- ปุ่มปิด X ขนาดเล็กลง (20x20) ไม่บดบังข้อความ -->
-                <Button Grid.Column="1" Content="X" Width="20" Height="20" Padding="0"
-                        Background="Transparent" Foreground="{Binding Foreground}"
-                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                        Command="{Binding Source={x:Static vm:ToastViewModel.Inst}, Path=CloseMessage}"
-                        CommandParameter="{Binding}"/>
-              </Grid>
-            </Border>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-      
-      <!-- DELTA SYNTH Render Status Bar v1.2 (Thick Tube in bottom left) -->
-      <Grid Grid.RowSpan="3" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="300"
-            IsVisible="{Binding ProgressText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-            IsHitTestVisible="False" ZIndex="200" Margin="0,0,0,4">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,0,0,14" Spacing="8">
-          <TextBlock Text="{Binding ProgressText}" FontFamily="Leelawadee UI" FontSize="12" Foreground="#F0F0F0" />
-          <TextBlock FontFamily="Leelawadee UI" FontSize="12" Foreground="#F0F0F0">
-            <TextBlock.Text>
-              <MultiBinding StringFormat="{}{0:0}%">
-                <Binding Path="Progress"/>
-              </MultiBinding>
-            </TextBlock.Text>
-          </TextBlock>
-        </StackPanel>
-        <ProgressBar Value="{Binding Progress}" Minimum="0" Maximum="100" Height="6" 
-                     VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="12,0,12,4"
-                     Foreground="{DynamicResource AccentBrush2}" Background="#44000000" CornerRadius="3" />
-      </Grid>
     </Grid>
   </Grid>
 </Window>

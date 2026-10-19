@@ -5,7 +5,7 @@
         xmlns:c="using:OpenUtau.App.Controls"
         mc:Ignorable="d" MinWidth="200" MinHeight="200" Width="300" Height="350"
         x:Class="OpenUtau.App.Views.LyricsReplaceDialog"  WindowStartupLocation="CenterOwner"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource lyricsreplace.replace}">
   <Window.Styles>
     <StyleInclude Source="/Styles/PianoRollStyles.axaml"/>
@@ -39,3 +39,4 @@
     </StackPanel>
   </Grid>
 </Window>
+

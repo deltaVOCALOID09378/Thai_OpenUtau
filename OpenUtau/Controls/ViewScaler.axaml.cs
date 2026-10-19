@@ -1,13 +1,11 @@
-using System;
+﻿using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 
-namespace OpenUtau.App.Controls
-{
-    public partial class ViewScaler : UserControl
-    {
+namespace OpenUtau.App.Controls {
+    public partial class ViewScaler : UserControl {
         public static readonly DirectProperty<ViewScaler, double> MaxProperty =
             AvaloniaProperty.RegisterDirect<ViewScaler, double>(
                 nameof(Max),
@@ -24,18 +22,15 @@ namespace OpenUtau.App.Controls
                 o => o.Value,
                 (o, v) => o.Value = v);
 
-        public double Max
-        {
+        public double Max {
             get => max;
             set => SetAndRaise(MaxProperty, ref max, value);
         }
-        public double Min
-        {
+        public double Min {
             get => min;
             set => SetAndRaise(MinProperty, ref min, value);
         }
-        public double Value
-        {
+        public double Value {
             get => value_;
             set => SetAndRaise(ValueProperty, ref value_, value);
         }
@@ -44,22 +39,18 @@ namespace OpenUtau.App.Controls
         private double min;
         private double value_;
 
-        public ViewScaler()
-        {
+        public ViewScaler() {
             InitializeComponent();
         }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-        {
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
             base.OnPropertyChanged(change);
-            if (change.Property == MaxProperty || change.Property == MinProperty || change.Property == ValueProperty)
-            {
+            if (change.Property == MaxProperty || change.Property == MinProperty || change.Property == ValueProperty) {
                 UpdatePath();
             }
         }
 
-        private void UpdatePath()
-        {
+        private void UpdatePath() {
             double offset = 7 * Math.Log(Max / Value, 2) / Math.Log(Max / Min, 2);
             double size = offset < 4 ? 4 : 8 - offset;
             if (double.IsNaN(offset) || double.IsNaN(size) ||

@@ -4,23 +4,23 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using OpenUtau.App;
 using OpenUtau.App.Controls;
 using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
+using OpenUtau.Core.Util;
 using ReactiveUI;
 
-namespace OpenUtau.App.Views
-{
-    public partial class SingerHubPane : UserControl
-    {
+namespace OpenUtau.App.Views {
+    public partial class SingerHubPane : UserControl {
         int scrollStyleApplyGeneration;
 
-        public SingerHubPane()
-        {
+        public SingerHubPane() {
             InitializeComponent();
             AttachedToVisualTree += (_, _) => ScheduleApplyScrollStyle();
             DetachedFromVisualTree += (_, _) => scrollStyleApplyGeneration++;
@@ -28,38 +28,29 @@ namespace OpenUtau.App.Views
                 .Subscribe(_ => ScheduleApplyScrollStyle());
         }
 
-        void ScheduleApplyScrollStyle()
-        {
-            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
-            {
+        void ScheduleApplyScrollStyle() {
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                 return;
             }
             int generation = ++scrollStyleApplyGeneration;
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this))
-                {
+            Dispatcher.UIThread.Post(() => {
+                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                     return;
                 }
                 ApplyScrollStyle();
             }, DispatcherPriority.Loaded);
         }
 
-        void ApplyScrollStyle()
-        {
-            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
-            {
+        void ApplyScrollStyle() {
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                 return;
             }
             bool classic = WorkspaceScrollbarHelper.UseClassicScrollbars;
             WorkspaceScrollbarHelper.ApplyScrollViewer(ContentScroll, classic);
             ContentScroll.Padding = new Thickness(0);
-            if (!classic)
-            {
-                foreach (var bar in ContentScroll.GetVisualDescendants().OfType<ScrollBar>())
-                {
-                    if (bar.Orientation == Orientation.Vertical)
-                    {
+            if (!classic) {
+                foreach (var bar in ContentScroll.GetVisualDescendants().OfType<ScrollBar>()) {
+                    if (bar.Orientation == Orientation.Vertical) {
                         bar.Margin = new Thickness(0, 0, 0, 0);
                         bar.HorizontalAlignment = HorizontalAlignment.Right;
                     }
@@ -67,34 +58,27 @@ namespace OpenUtau.App.Views
             }
         }
 
-        static Window? GetOwnerWindow(Visual? visual)
-        {
-            if (visual?.GetVisualRoot() is Window w)
-            {
+        static Window? GetOwnerWindow(Visual? visual) {
+            if (visual?.GetVisualRoot() is Window w) {
                 return w;
             }
             var lifetime = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
             return lifetime?.MainWindow;
         }
 
-        async void OnPrimaryActionClick(object sender, RoutedEventArgs e)
-        {
-            try
-            {
+        async void OnPrimaryActionClick(object sender, RoutedEventArgs e) {
+            try {
                 if (DataContext is SingerHubViewModel vm &&
                     sender is Button b &&
                     b.DataContext is SingerHubRowViewModel row &&
-                    row.CanInstall)
-                {
+                    row.CanInstall) {
                     var owner = GetOwnerWindow(this);
-                    if (owner == null)
-                    {
+                    if (owner == null) {
                         DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(new InvalidOperationException("No owner window for Singer Hub dialog.")));
                         return;
                     }
                     var msg = string.Format(ThemeManager.GetString("lunai.confirm.install.message"), row.Name);
-                    if (!string.IsNullOrEmpty(row.TosUrl))
-                    {
+                    if (!string.IsNullOrEmpty(row.TosUrl)) {
                         msg += "\n" + ThemeManager.GetString("lunai.confirm.install.tos") + " " + row.TosUrl;
                     }
                     var caption = ThemeManager.GetString("lunai.confirm.install.caption");
@@ -102,44 +86,33 @@ namespace OpenUtau.App.Views
                     if (result != MessageBox.MessageBoxResult.Yes) return;
                     await vm.InstallOrUpdateAsync(row);
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
             }
         }
 
-        void OnOpenWebsiteClick(object? sender, RoutedEventArgs e)
-        {
+        void OnOpenWebsiteClick(object? sender, RoutedEventArgs e) {
             OpenHttpUrl((sender as Control)?.DataContext as SingerHubRowViewModel, row => row.PageUrl);
         }
 
-        static void OpenHttpUrl(SingerHubRowViewModel? row, Func<SingerHubRowViewModel, string> urlSelector)
-        {
-            if (row == null)
-            {
+        static void OpenHttpUrl(SingerHubRowViewModel? row, Func<SingerHubRowViewModel, string> urlSelector) {
+            if (row == null) {
                 return;
             }
             var url = urlSelector(row);
-            if (string.IsNullOrEmpty(url))
-            {
+            if (string.IsNullOrEmpty(url)) {
                 return;
             }
-            try
-            {
-                if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                {
+            try {
+                if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) {
                     return;
                 }
                 if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
-                    !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
-                {
+                    !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)) {
                     return;
                 }
                 OS.OpenWeb(uri.ToString());
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
             }
         }

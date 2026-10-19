@@ -10,8 +10,7 @@ using OpenUtau.Colors;
 using OpenUtau.Core.Util;
 using ReactiveUI;
 
-namespace OpenUtau.App
-{
+namespace OpenUtau.App {
     class ThemeChangedEvent { }
 
     /// <summary>Raised when timeline/tick grid line style (dashed vs solid) preference changes.</summary>
@@ -23,8 +22,7 @@ namespace OpenUtau.App
     /// <summary>Raised when classic vs overlay scrollbar preference changes.</summary>
     class ScrollbarsStyleChangedEvent { }
 
-    class ThemeManager
-    {
+    class ThemeManager {
         public static bool IsDarkMode = false;
         public static IBrush ForegroundBrush = Brushes.Black;
         public static IBrush BackgroundBrush = Brushes.White;
@@ -112,13 +110,11 @@ namespace OpenUtau.App
 
         public static List<TrackColor> TrackColors = new List<TrackColor>();
 
-        static ThemeManager()
-        {
+        static ThemeManager() {
             ReloadTrackColors();
         }
 
-        public static void ReloadTrackColors()
-        {
+        public static void ReloadTrackColors() {
             TrackColors.Clear();
             TrackColors.AddRange(BuiltInTrackColors);
             TrackColors.AddRange(CustomTrackColorStore.LoadAll());
@@ -127,8 +123,7 @@ namespace OpenUtau.App
         public static bool IsBuiltInTrackColorName(string name) =>
             BuiltInTrackColors.Any(color => string.Equals(color.Name, name, StringComparison.OrdinalIgnoreCase));
 
-        public static List<string> GetAvailableThemes()
-        {
+        public static List<string> GetAvailableThemes() {
             Colors.CustomTheme.ListThemes();
             return [
                 ..BuiltInThemeLoader.BaseThemeNames,
@@ -137,132 +132,104 @@ namespace OpenUtau.App
             ];
         }
 
-        public static void LoadTheme()
-        {
-            if (Application.Current == null)
-            {
+        public static void LoadTheme() {
+            if (Application.Current == null) {
                 return;
             }
             IResourceDictionary resDict = Application.Current.Resources;
             object? outVar;
             IsDarkMode = false;
             var themeVariant = ThemeVariant.Default;
-            if (resDict.TryGetResource("IsDarkMode", themeVariant, out outVar))
-            {
-                if (outVar is bool b)
-                {
+            if (resDict.TryGetResource("IsDarkMode", themeVariant, out outVar)) {
+                if (outVar is bool b) {
                     IsDarkMode = b;
                 }
             }
-            if (resDict.TryGetResource("SystemControlForegroundBaseHighBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("SystemControlForegroundBaseHighBrush", themeVariant, out outVar)) {
                 ForegroundBrush = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("SystemControlBackgroundAltHighBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("SystemControlBackgroundAltHighBrush", themeVariant, out outVar)) {
                 BackgroundBrush = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("NeutralAccentBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("NeutralAccentBrush", themeVariant, out outVar)) {
                 NeutralAccentBrush = (IBrush)outVar!;
                 NeutralAccentPen = new Pen(NeutralAccentBrush, 1);
             }
-            if (resDict.TryGetResource("NeutralAccentBrushSemi", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("NeutralAccentBrushSemi", themeVariant, out outVar)) {
                 NeutralAccentBrushSemi = (IBrush)outVar!;
                 NeutralAccentPenSemi = new Pen(NeutralAccentBrushSemi, 1);
             }
-            if (resDict.TryGetResource("AccentBrush1", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("AccentBrush1", themeVariant, out outVar)) {
                 AccentBrush1 = (IBrush)outVar!;
                 AccentPen1 = new Pen(AccentBrush1);
                 AccentPen1Thickness2 = new Pen(AccentBrush1, 2);
                 AccentPen1Thickness3 = new Pen(AccentBrush1, 3);
             }
-            if (resDict.TryGetResource("AccentBrush1Semi", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("AccentBrush1Semi", themeVariant, out outVar)) {
                 AccentBrush1Semi = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("AccentBrush1Note", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("AccentBrush1Note", themeVariant, out outVar)) {
                 AccentBrush1Note = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("AccentBrush1NoteSemi", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("AccentBrush1NoteSemi", themeVariant, out outVar)) {
                 AccentBrush1NoteSemi = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("AccentBrush2", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("AccentBrush2", themeVariant, out outVar)) {
                 AccentBrush2 = (IBrush)outVar!;
                 AccentPen2 = new Pen(AccentBrush2, 1);
                 AccentPen2Thickness2 = new Pen(AccentBrush2, 2);
                 AccentPen2Thickness3 = new Pen(AccentBrush2, 3);
             }
-            if (resDict.TryGetResource("AccentBrush2Semi", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("AccentBrush2Semi", themeVariant, out outVar)) {
                 AccentBrush2Semi = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("AccentBrush3", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("AccentBrush3", themeVariant, out outVar)) {
                 AccentBrush3 = (IBrush)outVar!;
                 AccentPen3 = new Pen(AccentBrush3, 1);
                 AccentPen3Thick = new Pen(AccentBrush3, 3);
             }
-            if (resDict.TryGetResource("AccentBrush3Semi", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("AccentBrush3Semi", themeVariant, out outVar)) {
                 AccentBrush3Semi = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("NoteBorderBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("NoteBorderBrush", themeVariant, out outVar)) {
                 NoteBorderPen = new Pen((IBrush)outVar!, 1);
                 NoteBorderPenThickness3 = new Pen(NoteBorderPen.Brush, 3);
             }
-            if (resDict.TryGetResource("NoteBorderBrushPressed", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("NoteBorderBrushPressed", themeVariant, out outVar)) {
                 NoteBorderPenPressed = new Pen((IBrush)outVar!, 1);
             }
-            if (resDict.TryGetResource("TickLineBrushLow", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("TickLineBrushLow", themeVariant, out outVar)) {
                 TickLineBrushLow = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("BarNumberBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("BarNumberBrush", themeVariant, out outVar)) {
                 BarNumberBrush = (IBrush)outVar!;
                 BarNumberPen = new Pen(BarNumberBrush, 1);
             }
-            if (resDict.TryGetResource("FinalPitchBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("FinalPitchBrush", themeVariant, out outVar)) {
                 FinalPitchBrush = (IBrush)outVar!;
                 FinalPitchPen = new Pen(FinalPitchBrush, 1);
                 s_defaultFinalPitchPen = FinalPitchPen;
             }
-            if (resDict.TryGetResource("RealCurveFillBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("RealCurveFillBrush", themeVariant, out outVar)) {
                 RealCurveFillBrush = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("RealCurveStrokeBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("RealCurveStrokeBrush", themeVariant, out outVar)) {
                 RealCurveStrokeBrush = (IBrush)outVar!;
                 RealCurvePen = new Pen(RealCurveStrokeBrush, 2, DashStyle.Dash);
             }
-            if (resDict.TryGetResource("TrackBackgroundAltBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("TrackBackgroundAltBrush", themeVariant, out outVar)) {
                 TrackBackgroundAltBrush = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("WorkspaceElevatedSurfaceBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("WorkspaceElevatedSurfaceBrush", themeVariant, out outVar)) {
                 WorkspaceElevatedSurfaceBrush = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("WorkspaceCardBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("WorkspaceCardBrush", themeVariant, out outVar)) {
                 WorkspaceCardBrush = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("TrackHeaderBorderBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("TrackHeaderBorderBrush", themeVariant, out outVar)) {
                 TrackHeaderBorderBrush = (IBrush)outVar!;
             }
-            if (resDict.TryGetResource("MutedIconBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("MutedIconBrush", themeVariant, out outVar)) {
                 MutedIconBrush = (IBrush)outVar!;
             }
             if (resDict.TryGetResource("CenterKeyColorLeft", themeVariant, out outVar) && outVar is Color ckl) { s_defaultCenterKeyColorLeft = ckl; }
@@ -276,24 +243,20 @@ namespace OpenUtau.App
             MessageBus.Current.SendMessage(new ThemeChangedEvent());
         }
 
-        public static void ChangePianorollColor(string color)
-        {
+        public static void ChangePianorollColor(string color) {
             lastPianorollTrackColor = color;
             ApplyPianorollColorCore(color);
             MessageBus.Current.SendMessage(new ThemeChangedEvent());
         }
 
-        static void ApplyPianorollColorCore(string color)
-        {
-            if (Application.Current == null)
-            {
+        static void ApplyPianorollColorCore(string color) {
+            if (Application.Current == null) {
                 return;
             }
-            try
-            {
+            try {
                 IResourceDictionary resDict = Application.Current.Resources;
                 TrackColor tcolor = GetTrackColor(color);
-
+                
                 resDict["SelectedTrackAccentBrush"] = tcolor.AccentColor;
                 var accentSemi = new SolidColorBrush(tcolor.AccentColor.Color);
                 accentSemi.Opacity = 0.5;
@@ -302,32 +265,25 @@ namespace OpenUtau.App
                 resDict["SelectedTrackAccentLightBrushSemi"] = tcolor.AccentColorLightSemi;
                 resDict["SelectedTrackAccentDarkBrush"] = tcolor.AccentColorDark;
                 resDict["SelectedTrackCenterKeyBrush"] = tcolor.AccentColorCenterKey;
-                if (Preferences.Default.UseTrackColor)
-                {
-                    if (IsDarkMode)
-                    {
+                if (Preferences.Default.UseTrackColor) {
+                    if (IsDarkMode) {
                         resDict["CenterKeyNameColor"] = tcolor.AccentColorDark.Color;       // piano2; label darkening applied in SetKeyboardBrush
                         resDict["CenterKeyColorLeft"] = BlendColors(tcolor.AccentColorLight.Color, Color.Parse("#C0C0C0"));   // piano3 + gray 50/50
                         resDict["CenterKeyColorRight"] = BlendColors(tcolor.AccentColorCenterKey.Color, Color.Parse("#F0F0F0")); // piano4 + light gray 50/50
                         if (s_defaultBlackKeyColorLeft is Color bkl) { resDict["BlackKeyColorLeft"] = bkl; }
                         if (s_defaultBlackKeyColorRight is Color bkr) { resDict["BlackKeyColorRight"] = bkr; }
                         if (s_defaultFinalPitchPen != null) { FinalPitchPen = s_defaultFinalPitchPen; }
-                    }
-                    else
-                    {
+                    } else {
                         resDict["CenterKeyNameColor"] = tcolor.AccentColorDark.Color;       // piano2 (light theme)
                         resDict["CenterKeyColorLeft"] = tcolor.AccentColorLight.Color;       // piano3 (light theme)
                         resDict["CenterKeyColorRight"] = tcolor.AccentColorCenterKey.Color;  // piano4 (light theme)
                     }
-                    if (!IsDarkMode)
-                    {
+                    if (!IsDarkMode) {
                         resDict["BlackKeyColorLeft"] = tcolor.AccentColorDark.Color;    // piano2 (light theme)
                         resDict["BlackKeyColorRight"] = tcolor.AccentColorLight.Color;  // piano3 (light theme)
                         FinalPitchPen = new Pen(tcolor.AccentColorDark, 1);             // pitch curve = piano2 (light theme)
                     }
-                }
-                else
-                {
+                } else {
                     if (s_defaultCenterKeyColorLeft is Color ckl) { resDict["CenterKeyColorLeft"] = ckl; }
                     if (s_defaultCenterKeyColorRight is Color ckr) { resDict["CenterKeyColorRight"] = ckr; }
                     if (s_defaultCenterKeyNameColor is Color ckn) { resDict["CenterKeyNameColor"] = ckn; }
@@ -344,54 +300,42 @@ namespace OpenUtau.App
                 NoteEmptyBrush = tcolor.NoteColorEmpty;
 
                 SetKeyboardBrush();
-            }
-            catch { }
+            } catch { }
         }
-        private static void SetKeyboardBrush()
-        {
-            if (Application.Current == null)
-            {
+        private static void SetKeyboardBrush() {
+            if (Application.Current == null) {
                 return;
             }
             IResourceDictionary resDict = Application.Current.Resources;
             object? outVar;
             var themeVariant = ThemeVariant.Default;
 
-            if (Preferences.Default.UseTrackColor)
-            {
+            if (Preferences.Default.UseTrackColor) {
                 // Staff (piano roll keyboard): use theme colors for white/black keys and labels;
                 // only C key rows use track color: fill = CenterKeyBrush, text = CenterKeyNameBrush (track accent).
-                if (resDict.TryGetResource("WhiteKeyBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("WhiteKeyBrush", themeVariant, out outVar)) {
                     WhiteKeyBrush = (IBrush)outVar!;
                 }
-                if (resDict.TryGetResource("WhiteKeyNameBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("WhiteKeyNameBrush", themeVariant, out outVar)) {
                     WhiteKeyNameBrush = (IBrush)outVar!;
                 }
                 CenterKeyNameBrush = ResolveCenterKeyNameBrush(resDict, themeVariant);
-                if (resDict.TryGetResource("BlackKeyBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("BlackKeyBrush", themeVariant, out outVar)) {
                     BlackKeyBrush = (IBrush)outVar!;
                 }
-                if (resDict.TryGetResource("BlackKeyNameBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("BlackKeyNameBrush", themeVariant, out outVar)) {
                     BlackKeyNameBrush = (IBrush)outVar!;
                 }
                 // Use gradient CenterKeyBrush (respects CenterKeyColorLeft/Right set in ChangePianorollColor)
-                if (resDict.TryGetResource("CenterKeyBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("CenterKeyBrush", themeVariant, out outVar)) {
                     CenterKeyBrush = (IBrush)outVar!;
                 }
-                if (!IsDarkMode)
-                {
+                if (!IsDarkMode) {
                     ExpBrush = WhiteKeyBrush;
                     ExpNameBrush = WhiteKeyNameBrush;
                     ExpActiveBrush = BlackKeyBrush;
                     ExpActiveNameBrush = BlackKeyNameBrush;
-                }
-                else
-                {
+                } else {
                     ExpBrush = BlackKeyBrush;
                     ExpNameBrush = BlackKeyNameBrush;
                     ExpActiveBrush = WhiteKeyBrush;
@@ -399,39 +343,29 @@ namespace OpenUtau.App
                 }
                 ExpShadowBrush = DarkenBrush(ExpActiveBrush, 0.5);
                 ExpShadowNameBrush = Brushes.White;
-            }
-            else
-            { // DefColor
-                if (resDict.TryGetResource("WhiteKeyBrush", themeVariant, out outVar))
-                {
+            } else { // DefColor
+                if (resDict.TryGetResource("WhiteKeyBrush", themeVariant, out outVar)) {
                     WhiteKeyBrush = (IBrush)outVar!;
                 }
-                if (resDict.TryGetResource("WhiteKeyNameBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("WhiteKeyNameBrush", themeVariant, out outVar)) {
                     WhiteKeyNameBrush = (IBrush)outVar!;
                 }
-                if (resDict.TryGetResource("CenterKeyBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("CenterKeyBrush", themeVariant, out outVar)) {
                     CenterKeyBrush = (IBrush)outVar!;
                 }
                 CenterKeyNameBrush = ResolveCenterKeyNameBrush(resDict, themeVariant);
-                if (resDict.TryGetResource("BlackKeyBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("BlackKeyBrush", themeVariant, out outVar)) {
                     BlackKeyBrush = (IBrush)outVar!;
                 }
-                if (resDict.TryGetResource("BlackKeyNameBrush", themeVariant, out outVar))
-                {
+                if (resDict.TryGetResource("BlackKeyNameBrush", themeVariant, out outVar)) {
                     BlackKeyNameBrush = (IBrush)outVar!;
                 }
-                if (!IsDarkMode)
-                {
+                if (!IsDarkMode) {
                     ExpBrush = WhiteKeyBrush;
                     ExpNameBrush = WhiteKeyNameBrush;
                     ExpActiveBrush = BlackKeyBrush;
                     ExpActiveNameBrush = BlackKeyNameBrush;
-                }
-                else
-                {
+                } else {
                     ExpBrush = BlackKeyBrush;
                     ExpNameBrush = BlackKeyNameBrush;
                     ExpActiveBrush = WhiteKeyBrush;
@@ -446,26 +380,21 @@ namespace OpenUtau.App
         private static Color DarkThemeAccentLabelColor(Color accent) =>
             BlendColorsWeighted(accent, Color.Parse("#2F2F2F"), 0.5);
 
-        private static IBrush ResolveCenterKeyNameBrush(IResourceDictionary resDict, ThemeVariant themeVariant)
-        {
-            if (resDict.TryGetResource("CenterKeyNameColor", themeVariant, out object? outVar) && outVar is Color c)
-            {
-                if (IsDarkMode)
-                {
+        private static IBrush ResolveCenterKeyNameBrush(IResourceDictionary resDict, ThemeVariant themeVariant) {
+            if (resDict.TryGetResource("CenterKeyNameColor", themeVariant, out object? outVar) && outVar is Color c) {
+                if (IsDarkMode) {
                     c = DarkThemeAccentLabelColor(c);
                 }
                 return new SolidColorBrush(c);
             }
-            if (resDict.TryGetResource("CenterKeyNameBrush", themeVariant, out outVar))
-            {
+            if (resDict.TryGetResource("CenterKeyNameBrush", themeVariant, out outVar)) {
                 return (IBrush)outVar!;
             }
             return Brushes.Black;
         }
 
         /// <summary>Blends two colors; <paramref name="weightA"/> is the fraction of <paramref name="a"/> (0–1).</summary>
-        private static Color BlendColorsWeighted(Color a, Color b, double weightA)
-        {
+        private static Color BlendColorsWeighted(Color a, Color b, double weightA) {
             weightA = System.Math.Clamp(weightA, 0, 1);
             double weightB = 1 - weightA;
             return Color.FromArgb(
@@ -476,21 +405,16 @@ namespace OpenUtau.App
         }
 
         /// <summary>Darkens a brush by blending its colors toward black; factor is the original color weight (e.g. 0.8 = 20% darker).</summary>
-        private static IBrush DarkenBrush(IBrush brush, double factor)
-        {
-            if (brush is SolidColorBrush solid)
-            {
+        private static IBrush DarkenBrush(IBrush brush, double factor) {
+            if (brush is SolidColorBrush solid) {
                 return new SolidColorBrush(DarkenColor(solid.Color, factor)) { Opacity = solid.Opacity };
             }
-            if (brush is LinearGradientBrush gradient)
-            {
+            if (brush is LinearGradientBrush gradient) {
                 var stops = new GradientStops();
-                foreach (GradientStop stop in gradient.GradientStops)
-                {
+                foreach (GradientStop stop in gradient.GradientStops) {
                     stops.Add(new GradientStop(DarkenColor(stop.Color, factor), stop.Offset));
                 }
-                return new LinearGradientBrush
-                {
+                return new LinearGradientBrush {
                     StartPoint = gradient.StartPoint,
                     EndPoint = gradient.EndPoint,
                     GradientStops = stops,
@@ -503,8 +427,7 @@ namespace OpenUtau.App
         private static Color DarkenColor(Color c, double factor) => BlendColorsWeighted(c, Color.Parse("#000000"), factor);
 
         /// <summary>Blends two colors 50/50 by component.</summary>
-        private static Color BlendColors(Color a, Color b)
-        {
+        private static Color BlendColors(Color a, Color b) {
             return Color.FromArgb(
                 (byte)((a.A + b.A) / 2),
                 (byte)((a.R + b.R) / 2),
@@ -512,22 +435,18 @@ namespace OpenUtau.App
                 (byte)((a.B + b.B) / 2));
         }
 
-        public static string GetString(string key)
-        {
+        public static string GetString(string key) {
             TryGetString(key, out string value);
             return value;
         }
 
-        public static bool TryGetString(string key, out string value)
-        {
-            if (Application.Current == null)
-            {
+        public static bool TryGetString(string key, out string value) {
+            if (Application.Current == null) {
                 value = key;
                 return false;
             }
             IResourceDictionary resDict = Application.Current.Resources;
-            if (resDict.TryGetResource(key, ThemeVariant.Default, out var outVar) && outVar is string s)
-            {
+            if (resDict.TryGetResource(key, ThemeVariant.Default, out var outVar) && outVar is string s) {
                 value = s;
                 return true;
             }
@@ -535,15 +454,13 @@ namespace OpenUtau.App
             return false;
         }
 
-        public static TrackColor GetTrackColor(string name)
-        {
+        public static TrackColor GetTrackColor(string name) {
             var match = TrackColors.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
             return match ?? TrackColors.First(c => c.Name == "Blue");
         }
     }
 
-    public class TrackColor
-    {
+    public class TrackColor {
         public string Name { get; set; } = "";
         public bool IsCustom { get; }
         public string? StoragePath { get; }
@@ -558,8 +475,7 @@ namespace OpenUtau.App
         public SolidColorBrush NoteBorderColorPressed { get; set; }
         public SolidColorBrush NoteColorEmpty { get; set; }
 
-        public TrackColor(string name, string accentColor, string darkColor, string lightColor, string centerKey, string noteColor, string noteColorPressed, string noteBorderColor, string noteBorderColorPressed, string noteColorEmpty, bool isCustom = false, string? storagePath = null)
-        {
+        public TrackColor(string name, string accentColor, string darkColor, string lightColor, string centerKey, string noteColor, string noteColorPressed, string noteBorderColor, string noteBorderColorPressed, string noteColorEmpty, bool isCustom = false, string? storagePath = null) {
             Name = name;
             IsCustom = isCustom;
             StoragePath = storagePath;
@@ -576,8 +492,7 @@ namespace OpenUtau.App
             NoteColorEmpty = SolidColorBrush.Parse(noteColorEmpty);
         }
 
-        public static TrackColor FromCustomYaml(TrackColorYaml yaml, string storagePath)
-        {
+        public static TrackColor FromCustomYaml(TrackColorYaml yaml, string storagePath) {
             var normal = Color.Parse(yaml.BaseColor);
             var bright = Color.Parse(yaml.BrightColor);
             var palette = TrackColorPalette.Generate(normal, bright);

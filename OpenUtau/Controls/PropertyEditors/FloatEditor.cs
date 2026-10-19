@@ -3,14 +3,16 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Input;
 using Avalonia.Interactivity;
-using OpenUtau.App.Controls;
+using OpenUtau.App.ViewModels;
 using ReactiveUI;
+using System.Reactive.Linq;
 
-namespace OpenUtau.Controls
-{
-    public class FloatEditor : WorkspacePanelTextBox
+namespace OpenUtau.Controls{
+    public class FloatEditor : TextBox
     {
+        protected override Type StyleKeyOverride => typeof(TextBox);
         public static readonly DirectProperty<FloatEditor, float> ValueProperty =
             AvaloniaProperty.RegisterDirect<FloatEditor, float>(
                 nameof(Value),
@@ -21,13 +23,13 @@ namespace OpenUtau.Controls
 
         public FloatEditor()
         {
-            Classes.Add("workspacePanelTextBox");
             Text = "0";
             this.WhenAnyValue(x => x.Text)
-                .Subscribe((text =>
-                {
-                    OnTextChanged(text);
-                }));
+                .Subscribe(text => { 
+                    if (text != null) {
+                        OnTextChanged(text);
+                    }
+                });
         }
 
         public float Value
@@ -44,19 +46,17 @@ namespace OpenUtau.Controls
 
         protected void OnTextChanged(string? newText)
         {
-            if (!IsKeyboardFocusWithin)
-            {
+            if (!IsKeyboardFocusWithin){
                 return;
             }
 
-            if (newText != null && float.TryParse(newText, out float newValue))
+            if( newText != null && float.TryParse(newText, out float newValue))
             {
-                Value = newValue;
+                Value = newValue;  
             }
         }
 
-        protected override void OnLostFocus(RoutedEventArgs e)
-        {
+        protected override void OnLostFocus(RoutedEventArgs e) {
             base.OnLostFocus(e);
             if (!float.TryParse(Text, out float newValue))
             {

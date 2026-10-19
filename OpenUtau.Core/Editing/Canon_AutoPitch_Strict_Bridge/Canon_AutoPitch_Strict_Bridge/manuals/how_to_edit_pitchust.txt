@@ -1,0 +1,27 @@
+How to edit pitch.ust.
+
+Basically it consists of three notes.
+I call the first notes "before note".   when it is not exist, it means head note of sentence.
+I call the second notes note "number's note".  
+I call the third notes "after note".  
+
+
+1.
+You can only write pitch on the number's notes.
+
+2.
+You can not write vibrato.
+
+3.
+By moving certain note, all anchor point except start point will move together.
+If you input "b,2" to before note, first two notes except start point is locked against the pitch shift.
+If you don't want to do anything, you must input "a".
+
+4.
+By writing like "c,2" to the after note, you can avoid the fitting to the scale.
+The extent is decide by the number like "c,2" ,  "c,3".
+When you input "c,3", first three notes including start point is avoid it.
+If you don't want to do anything, you must input "a".
+
+5.
+The end note of the UST have to be input "END".

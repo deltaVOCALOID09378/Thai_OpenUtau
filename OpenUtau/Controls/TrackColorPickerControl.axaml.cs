@@ -10,8 +10,7 @@ using OpenUtau.Colors;
 
 namespace OpenUtau.App.Controls;
 
-public partial class TrackColorPickerControl : UserControl
-{
+public partial class TrackColorPickerControl : UserControl {
     public static readonly DirectProperty<TrackColorPickerControl, TrackColor?> SelectedColorProperty =
         AvaloniaProperty.RegisterDirect<TrackColorPickerControl, TrackColor?>(
             nameof(SelectedColor),
@@ -22,13 +21,10 @@ public partial class TrackColorPickerControl : UserControl
     readonly ObservableCollection<TrackColorPickerItemViewModel> items = new();
     TrackColor? selectedColor;
 
-    public TrackColor? SelectedColor
-    {
+    public TrackColor? SelectedColor {
         get => selectedColor;
-        set
-        {
-            if (SetAndRaise(SelectedColorProperty, ref selectedColor, value))
-            {
+        set {
+            if (SetAndRaise(SelectedColorProperty, ref selectedColor, value)) {
                 UpdateSelectionState();
             }
         }
@@ -36,31 +32,24 @@ public partial class TrackColorPickerControl : UserControl
 
     public event EventHandler? ColorsChanged;
 
-    public TrackColorPickerControl()
-    {
+    public TrackColorPickerControl() {
         InitializeComponent();
         ItemsHost.ItemsSource = items;
         RefreshItems();
     }
 
-    public void RefreshItems()
-    {
+    public void RefreshItems() {
         string? selectedName = SelectedColor?.Name;
         TrackColorPickerOperations.PopulateItems(items);
-        if (!string.IsNullOrEmpty(selectedName))
-        {
+        if (!string.IsNullOrEmpty(selectedName)) {
             SelectedColor = ThemeManager.GetTrackColor(selectedName);
-        }
-        else
-        {
+        } else {
             UpdateSelectionState();
         }
     }
 
-    void UpdateSelectionState()
-    {
-        foreach (var item in items)
-        {
+    void UpdateSelectionState() {
+        foreach (var item in items) {
             item.IsSelected = item.Color != null
                 && SelectedColor != null
                 && string.Equals(item.Color.Name, SelectedColor.Name, StringComparison.OrdinalIgnoreCase);
@@ -69,77 +58,61 @@ public partial class TrackColorPickerControl : UserControl
 
     Window? GetOwnerWindow() => TopLevel.GetTopLevel(this) as Window;
 
-    void OnSwatchPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (e.GetCurrentPoint(sender as Control).Properties.IsRightButtonPressed)
-        {
+    void OnSwatchPointerPressed(object? sender, PointerPressedEventArgs e) {
+        if (e.GetCurrentPoint(sender as Control).Properties.IsRightButtonPressed) {
             return;
         }
-        if (sender is not Border { DataContext: TrackColorPickerItemViewModel item })
-        {
+        if (sender is not Border { DataContext: TrackColorPickerItemViewModel item }) {
             return;
         }
-        if (item.IsCreateTile)
-        {
+        if (item.IsCreateTile) {
             OpenCreateDialog();
             e.Handled = true;
             return;
         }
-        if (item.Color != null)
-        {
+        if (item.Color != null) {
             SelectedColor = item.Color;
             e.Handled = true;
         }
     }
 
-    void OnContextEditClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem { DataContext: TrackColorPickerItemViewModel { Color: { IsCustom: true } color } })
-        {
+    void OnContextEditClick(object? sender, RoutedEventArgs e) {
+        if (sender is not MenuItem { DataContext: TrackColorPickerItemViewModel { Color: { IsCustom: true } color } }) {
             return;
         }
         OpenEditDialog(color);
         e.Handled = true;
     }
 
-    void OnContextDeleteClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem { DataContext: TrackColorPickerItemViewModel { Color: { IsCustom: true } color } })
-        {
+    void OnContextDeleteClick(object? sender, RoutedEventArgs e) {
+        if (sender is not MenuItem { DataContext: TrackColorPickerItemViewModel { Color: { IsCustom: true } color } }) {
             return;
         }
         _ = DeleteColorAsync(color);
         e.Handled = true;
     }
 
-    async System.Threading.Tasks.Task DeleteColorAsync(TrackColor color)
-    {
+    async System.Threading.Tasks.Task DeleteColorAsync(TrackColor color) {
         var owner = GetOwnerWindow();
-        if (owner == null)
-        {
+        if (owner == null) {
             return;
         }
-        if (!await TrackColorPickerOperations.ConfirmAndDeleteAsync(owner, color))
-        {
+        if (!await TrackColorPickerOperations.ConfirmAndDeleteAsync(owner, color)) {
             return;
         }
 
         string deletedName = color.Name;
-        if (string.Equals(SelectedColor?.Name, deletedName, StringComparison.OrdinalIgnoreCase))
-        {
+        if (string.Equals(SelectedColor?.Name, deletedName, StringComparison.OrdinalIgnoreCase)) {
             SelectedColor = ThemeManager.GetTrackColor("Blue");
         }
         RefreshItems();
         ColorsChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    void OpenEditDialog(TrackColor color)
-    {
-        TrackColorPickerOperations.OpenEditDialog(GetOwnerWindow(), color, updated =>
-        {
+    void OpenEditDialog(TrackColor color) {
+        TrackColorPickerOperations.OpenEditDialog(GetOwnerWindow(), color, updated => {
             string previousName = color.Name;
-            if (string.Equals(SelectedColor?.Name, previousName, StringComparison.OrdinalIgnoreCase))
-            {
+            if (string.Equals(SelectedColor?.Name, previousName, StringComparison.OrdinalIgnoreCase)) {
                 SelectedColor = updated;
             }
             RefreshItems();
@@ -147,10 +120,8 @@ public partial class TrackColorPickerControl : UserControl
         });
     }
 
-    void OpenCreateDialog()
-    {
-        TrackColorPickerOperations.OpenCreateDialog(GetOwnerWindow(), created =>
-        {
+    void OpenCreateDialog() {
+        TrackColorPickerOperations.OpenCreateDialog(GetOwnerWindow(), created => {
             ThemeManager.ReloadTrackColors();
             SelectedColor = created;
             RefreshItems();

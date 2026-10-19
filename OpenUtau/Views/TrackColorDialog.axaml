@@ -1,22 +1,12 @@
-<!--
-File: TrackColorDialog.xaml
-Version: 1.1
-Made and Checked By DELTA SYNTH And Gemini AI
-Original By OpenUtau Contributors
--->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:OpenUtau.App.ViewModels"
         mc:Ignorable="d" Width="450" Height="130"
-        x:Class="OpenUtau.App.Views.TrackColorDialog" 
-        WindowStartupLocation="CenterOwner"
-        CanResize="False"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
-        Title="{DynamicResource tracks.trackcolor}">
-  
-  <!-- เค้าโครงสำหรับแผงเลือกสีของแทร็ก -->
+        x:Class="OpenUtau.App.Views.TrackColorDialog" WindowStartupLocation="CenterOwner"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
+        Title="{StaticResource tracks.trackcolor}">
   <Grid RowDefinitions="*,50">
     <ListBox Grid.Row="0"
              ItemsSource="{Binding Items}"
@@ -68,11 +58,10 @@ Original By OpenUtau Contributors
         </Style>
       </ListBox.Styles>
     </ListBox>
-    
-    <!-- ปุ่มยืนยันและการยกเลิก -->
     <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Top">
-      <Button Content="{DynamicResource button.cancel}" MinWidth="50" Click="OnCancel"/>
-      <Button Content="{DynamicResource button.apply}" MinWidth="50" Click="OnFinish"/>
+      <Button Content="{StaticResource button.cancel}" MinWidth="50" Click="OnCancel"/>
+      <Button Content="{StaticResource button.apply}" MinWidth="50" Click="OnFinish"/>
     </StackPanel>
   </Grid>
 </Window>
+

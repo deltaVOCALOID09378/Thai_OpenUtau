@@ -1,3 +1,8 @@
+// DocManager.cs
+// OpenUtau.Core/DocManager.cs
+// Made And Checked By DELTA SYNTH & Gemini AI
+// Original by OpenUtau Authors
+// Revision: 1.1
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,10 +44,11 @@ namespace OpenUtau.Core {
 
         public TaskScheduler MainScheduler => mainScheduler;
         public Action<Action> PostOnUIThread { get; set; }
-        public Plugin[] Plugins { get; private set; }
+        public OpenUtau.Classic.Plugin[] Plugins { get; private set; }
         public PhonemizerFactory[] PhonemizerFactories { get; private set; }
         public UProject Project { get; private set; }
         public bool HasOpenUndoGroup => undoGroup != null;
+        public OpenUtau.Core.Integrations.GeminiSparkClient GeminiSpark { get; private set; }
         public List<UPart>? PartsClipboard { get; set; }
         public List<UNote>? NotesClipboard { get; set; }
         public CurveSelection? CurvesClipboard { get; set; }
@@ -59,6 +65,7 @@ namespace OpenUtau.Core {
             this.mainScheduler = mainScheduler;
             PhonemizerRunner = new PhonemizerRunner(mainScheduler);
             RealTimePitchGenerationService.Inst.Initialize();
+            GeminiSpark = new OpenUtau.Core.Integrations.GeminiSparkClient(Util.Preferences.Default.GeminiSparkApiKey);
         }
 
         public void SearchAllLegacyPlugins() {
@@ -69,7 +76,7 @@ namespace OpenUtau.Core {
                 Log.Information($"Search all legacy plugins: {stopWatch.Elapsed}");
             } catch (Exception e) {
                 Log.Error(e, "Failed to search legacy plugins.");
-                Plugins = new Plugin[0];
+                Plugins = new OpenUtau.Classic.Plugin[0];
             }
         }
 
@@ -87,7 +94,7 @@ namespace OpenUtau.Core {
                 files.AddRange(Directory.EnumerateFiles(
                     PathManager.Inst.PluginsPath,
                     "*.dll",
-                    new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true }));
+                    new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 2 }));
             } catch (Exception e) {
                 Log.Error(e, "Failed to search plugins.");
             }
@@ -110,11 +117,12 @@ namespace OpenUtau.Core {
             }
 
             var assembliesToLoad = new List<(string file, AssemblyName assemblyName)>();
+            var allLoadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var group in managedCandidates.GroupBy(
                 candidate => candidate.identity,
                 StringComparer.OrdinalIgnoreCase)) {
                 var first = group.First();
-                var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                var loadedAssembly = allLoadedAssemblies
                     .FirstOrDefault(assembly =>
                         AssemblyName.ReferenceMatchesDefinition(
                             assembly.GetName(),
@@ -162,7 +170,7 @@ namespace OpenUtau.Core {
 
             var typesAndFiles = assembliesToLoad.AsParallel().SelectMany(item => {
                 try {
-                    var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                    var loadedAssembly = allLoadedAssemblies
                         .FirstOrDefault(assembly =>
                             AssemblyName.ReferenceMatchesDefinition(assembly.GetName(), item.assemblyName));
                     var assembly = loadedAssembly
@@ -351,7 +359,10 @@ namespace OpenUtau.Core {
 
         public void ExecuteCmd(UCommand cmd) {
             if (mainThread != Thread.CurrentThread) {
-                if (!(cmd is ProgressBarNotification) && !(cmd is WaveformReadyNotification)) {
+                if (!(cmd is ProgressBarNotification)
+                    && !(cmd is WaveformReadyNotification)
+                    && !(cmd is PhraseRenderedNotification)
+                    && !(cmd is PartRenderedNotification)) {
                     Log.Warning($"{cmd} not on main thread");
                 }
                 PostOnUIThread(() => ExecuteCmd(cmd));

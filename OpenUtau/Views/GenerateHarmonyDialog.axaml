@@ -4,7 +4,7 @@
         x:Class="OpenUtau.App.Views.GenerateHarmonyDialog"
         Width="420" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource dialogs.harmony.caption}">
   <StackPanel Margin="16" Spacing="10">
     <TextBlock TextWrapping="Wrap"
@@ -48,3 +48,4 @@
     </StackPanel>
   </StackPanel>
 </Window>
+

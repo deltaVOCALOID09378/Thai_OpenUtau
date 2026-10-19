@@ -7,18 +7,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using NWaves.Signals;
+using OpenUtau.App;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 using ReactiveUI;
 using Serilog;
 
-namespace OpenUtau.App.Controls
-{
-    class PartControl : Control, IDisposable, IProgress<int>
-    {
+namespace OpenUtau.App.Controls {
+    class PartControl : Control, IDisposable, IProgress<int> {
         public static readonly DirectProperty<PartControl, double> TickWidthProperty =
             AvaloniaProperty.RegisterDirect<PartControl, double>(
                 nameof(TickWidth),
@@ -76,58 +76,47 @@ namespace OpenUtau.App.Controls
                 (o, v) => o.PianoRollViewViewportTicks = v);
 
         // Tick width in pixel.
-        public double TickWidth
-        {
+        public double TickWidth {
             get => tickWidth;
             set => SetAndRaise(TickWidthProperty, ref tickWidth, value);
         }
-        public double TrackHeight
-        {
+        public double TrackHeight {
             get => trackHeight;
             set => SetAndRaise(TrackHeightProperty, ref trackHeight, value);
         }
-        public double ViewWidth
-        {
+        public double ViewWidth {
             get { return viewWidth; }
             set { SetAndRaise(ViewWidthProperty, ref viewWidth, value); }
         }
-        public double TickOffset
-        {
+        public double TickOffset {
             get { return tickOffset; }
             set { SetAndRaise(TickOffsetProperty, ref tickOffset, value); }
         }
-        public Point Offset
-        {
+        public Point Offset {
             get { return offset; }
             set { SetAndRaise(OffsetProperty, ref offset, value); }
         }
-        public string Text
-        {
+        public string Text {
             get { return text; }
             set { SetAndRaise(TextProperty, ref text, value); }
         }
-        public bool Selected
-        {
+        public bool Selected {
             get { return selected; }
             set { SetAndRaise(SelectedProperty, ref selected, value); }
         }
-        public double FadeIn
-        {
+        public double FadeIn {
             get { return fadeIn * TickWidth; }
             set { SetAndRaise(FadeInProperty, ref fadeIn, value); }
         }
-        public double FadeOut
-        {
+        public double FadeOut {
             get { return Width - (fadeOut * TickWidth); }
             set { SetAndRaise(FadeOutProperty, ref fadeOut, value); }
         }
-        public double PianoRollViewTickOffset
-        {
+        public double PianoRollViewTickOffset {
             get => pianoRollViewTickOffset;
             set => SetAndRaise(PianoRollViewTickOffsetProperty, ref pianoRollViewTickOffset, value);
         }
-        public double PianoRollViewViewportTicks
-        {
+        public double PianoRollViewViewportTicks {
             get => pianoRollViewViewportTicks;
             set => SetAndRaise(PianoRollViewViewportTicksProperty, ref pianoRollViewViewportTicks, value);
         }
@@ -153,8 +142,7 @@ namespace OpenUtau.App.Controls
         private WriteableBitmap? bitmap;
         private int[] bitmapData;
 
-        public PartControl(UPart part, PartsCanvas canvas)
-        {
+        public PartControl(UPart part, PartsCanvas canvas) {
             this.part = part;
             partsCanvas = canvas;
             bitmapData = new int[0];
@@ -174,58 +162,46 @@ namespace OpenUtau.App.Controls
             SetPosition();
             Refersh();
 
-            if (part is UWavePart wavePart)
-            {
+            if (part is UWavePart wavePart) {
                 var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
-                wavePart.Peaks.ContinueWith((task) =>
-                {
-                    if (task.IsFaulted)
-                    {
+                wavePart.Peaks.ContinueWith((task) => {
+                    if (task.IsFaulted) {
                         Log.Error(task.Exception, "Failed to build peaks");
-                    }
-                    else
-                    {
+                    } else {
                         InvalidateVisual();
                     }
                 }, CancellationToken.None, TaskContinuationOptions.None, scheduler);
             }
         }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-        {
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
             base.OnPropertyChanged(change);
             if (change.Property == OffsetProperty ||
                 change.Property == TrackHeightProperty ||
-                change.Property == TickWidthProperty)
-            {
+                change.Property == TickWidthProperty) {
                 SetPosition();
             }
             if (change.Property == TickOffsetProperty ||
                 change.Property == ViewWidthProperty ||
                 change.Property == PianoRollViewTickOffsetProperty ||
-                change.Property == PianoRollViewViewportTicksProperty)
-            {
+                change.Property == PianoRollViewViewportTicksProperty) {
                 InvalidateVisual();
             }
             if (change.Property == SelectedProperty ||
-                change.Property == TextProperty ||
+                change.Property == TextProperty || 
                 change.Property == FadeInProperty ||
-                change.Property == FadeOutProperty)
-            {
+                change.Property == FadeOutProperty) {
                 InvalidateVisual();
             }
         }
 
-        public void SetPosition()
-        {
+        public void SetPosition() {
             Canvas.SetLeft(this, Offset.X + part.position * tickWidth);
             Canvas.SetTop(this, Offset.Y + part.trackNo * trackHeight);
         }
 
-        public bool TryHitViewport(Point localPoint)
-        {
-            if (partsCanvas.PianoRollOpenPart != part || pianoRollViewViewportTicks <= 0 || tickWidth <= 0)
-            {
+        public bool TryHitViewport(Point localPoint) {
+            if (partsCanvas.PianoRollOpenPart != part || pianoRollViewViewportTicks <= 0 || tickWidth <= 0) {
                 return false;
             }
             const double inset = 1;
@@ -233,32 +209,27 @@ namespace OpenUtau.App.Controls
             double vpLeft = Math.Max(0, pianoRollViewTickOffset * tickWidth);
             double vpRight = Math.Min(outerWidth,
                 (pianoRollViewTickOffset + pianoRollViewViewportTicks) * tickWidth);
-            if (vpRight <= vpLeft + 1)
-            {
+            if (vpRight <= vpLeft + 1) {
                 return false;
             }
             return localPoint.X >= inset + vpLeft && localPoint.X <= inset + vpRight
                 && localPoint.Y >= inset && localPoint.Y <= Height - inset;
         }
 
-        public void SetSize()
-        {
+        public void SetSize() {
             Width = TickWidth * part.Duration;
             Height = trackHeight;
         }
 
-        public void Refersh()
-        {
+        public void Refersh() {
             Text = part.DisplayName;
-            if (part is UWavePart wavePart)
-            {
+            if (part is UWavePart wavePart) {
                 FadeIn = wavePart.fadein;
                 FadeOut = wavePart.fadeout;
             }
         }
 
-        public override void Render(DrawingContext context)
-        {
+        public override void Render(DrawingContext context) {
             bool isOpenInPianoRoll = partsCanvas.PianoRollOpenPart == part;
             const byte fillAlphaFull = 200;
             const byte fillAlphaDim = 78;
@@ -272,11 +243,9 @@ namespace OpenUtau.App.Controls
             Color bodyRgb = Color.FromRgb(0x52, 0x52, 0x52);
             byte accentAlpha = isOpenInPianoRoll ? accentAlphaFull : accentAlphaDim;
             byte bodyAlpha = isOpenInPianoRoll ? grayAlphaFull : grayAlphaDim;
-            if (part != null)
-            {
+            if (part != null) {
                 var project = DocManager.Inst.Project;
-                if (project != null && part.trackNo >= 0 && part.trackNo < project.tracks.Count)
-                {
+                if (project != null && part.trackNo >= 0 && part.trackNo < project.tracks.Count) {
                     var track = project.tracks[part.trackNo];
                     var note = ThemeManager.GetTrackColor(track.TrackColor).NoteColor.Color;
                     bodyRgb = Color.FromRgb(note.R, note.G, note.B);
@@ -296,21 +265,18 @@ namespace OpenUtau.App.Controls
 
             double visibleLeft = 0;
             double visibleRight = outerRect.Width;
-            if (part != null)
-            {
+            if (part != null) {
                 visibleLeft = Math.Max(0, (TickOffset - part.position) * TickWidth);
                 visibleRight = Math.Min(outerRect.Width,
                     (TickOffset + ViewWidth / TickWidth - part.position) * TickWidth);
             }
             context.DrawRectangle(null, borderPen, borderRect, cornerRadius, cornerRadius);
 
-            if (isOpenInPianoRoll && pianoRollViewViewportTicks > 0)
-            {
+            if (isOpenInPianoRoll && pianoRollViewViewportTicks > 0) {
                 double vpLeft = Math.Max(0, pianoRollViewTickOffset * tickWidth);
                 double vpRight = Math.Min(outerRect.Width,
                     (pianoRollViewTickOffset + pianoRollViewViewportTicks) * tickWidth);
-                if (vpRight > vpLeft + 1)
-                {
+                if (vpRight > vpLeft + 1) {
                     var vpRect = new Rect(outerRect.X + vpLeft, outerRect.Y, vpRight - vpLeft, outerRect.Height);
                     var vpFill = new SolidColorBrush(Color.FromArgb(28, 255, 255, 255));
                     var vpPen = new Pen(Brushes.White, 2);
@@ -321,81 +287,63 @@ namespace OpenUtau.App.Controls
             var textLayout = TextLayoutCache.Get(Text, Brushes.White, 12);
             double labelX = outerRect.X + Math.Max(6, visibleLeft + 6);
             double labelY = outerRect.Y + (Math.Min(18, outerRect.Height) - textLayout.Height) * 0.5;
-            using (var clip = context.PushClip(new Rect(visibleLeft, 0, Math.Max(0, visibleRight - visibleLeft), outerRect.Height)))
-            {
-                using (var state = context.PushTransform(Matrix.CreateTranslation(labelX, labelY)))
-                {
+            using (var clip = context.PushClip(new Rect(visibleLeft, 0, Math.Max(0, visibleRight - visibleLeft), outerRect.Height))) {
+                using (var state = context.PushTransform(Matrix.CreateTranslation(labelX, labelY))) {
                     textLayout.Draw(context, new Point());
                 }
             }
 
-            if (part == null)
-            {
+            if (part == null) {
                 return;
             }
-            if (part is UVoicePart voicePart && voicePart.notes.Count > 0)
-            {
+            if (part is UVoicePart voicePart && voicePart.notes.Count > 0) {
                 // Notes
                 int maxTone = voicePart.notes.Max(note => note.tone);
                 int minTone = voicePart.notes.Min(note => note.tone);
-                if (maxTone - minTone < 52)
-                {
+                if (maxTone - minTone < 52) {
                     int additional = (52 - (maxTone - minTone)) / 2;
                     minTone -= additional;
                     maxTone += additional;
                 }
                 using var pushedState = context.PushTransform(Matrix.CreateScale(1, trackHeight / (maxTone - minTone)));
-                foreach (var note in voicePart.notes)
-                {
+                foreach (var note in voicePart.notes) {
                     var start = new Point((int)(note.position * tickWidth), maxTone - note.tone);
                     var end = new Point((int)(note.End * tickWidth), maxTone - note.tone);
                     context.DrawLine(notePen, start, end);
                 }
-            }
-            else if (part is UWavePart wavePart)
-            {
+            } else if (part is UWavePart wavePart) {
                 // Waveform
-                try
-                {
+                try {
                     DrawWaveform(wavePart, GetBitmap(ViewWidth));
-                    if (bitmap != null)
-                    {
+                    if (bitmap != null) {
                         var srcRect = Bounds.WithY(0);
                         var dstRect = Bounds.WithX(inset).WithY(inset).WithWidth(Math.Max(0, Bounds.Width - 2 * inset)).WithHeight(Math.Max(0, Bounds.Height - 2 * inset));
                         context.DrawImage(bitmap, srcRect, dstRect);
                     }
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     Log.Error(e, "failed to draw bitmap");
                 }
                 // Fade
                 var brush = Brushes.White;
                 var pen = Selected ? ThemeManager.AccentPen2 : ThemeManager.AccentPen1;
-                using (var state = context.PushTransform(Matrix.CreateTranslation(FadeIn, 0)))
-                {
+                using (var state = context.PushTransform(Matrix.CreateTranslation(FadeIn, 0))) {
                     context.DrawGeometry(brush, pen, pointGeometry);
                 }
-                if (wavePart.fadein > 0)
-                {
+                if (wavePart.fadein > 0) {
                     context.DrawLine(fadePen, new Point(2, Height - 2), new Point(FadeIn + 1, 2));
                 }
-                using (var state = context.PushTransform(Matrix.CreateTranslation(FadeOut - 6, 0)))
-                {
+                using (var state = context.PushTransform(Matrix.CreateTranslation(FadeOut - 6, 0))) {
                     context.DrawGeometry(brush, pen, pointGeometry);
                 }
-                if (wavePart.fadeout > 0)
-                {
+                if (wavePart.fadeout > 0) {
                     context.DrawLine(fadePen, new Point(Width - 1, Height - 2), new Point(FadeOut, 2));
                 }
             }
         }
 
-        private WriteableBitmap GetBitmap(double width)
-        {
+        private WriteableBitmap GetBitmap(double width) {
             int w = 128 * (int)(width / 128 + 1);
-            if (bitmap == null || bitmap.Size.Width < w)
-            {
+            if (bitmap == null || bitmap.Size.Width < w) {
                 bitmap?.Dispose();
                 var size = new PixelSize(w, (int)ViewConstants.TrackHeightMax);
                 Log.Information($"created bitmap {size}");
@@ -408,12 +356,10 @@ namespace OpenUtau.App.Controls
             return bitmap;
         }
 
-        private void DrawWaveform(UWavePart wavePart, WriteableBitmap bitmap)
-        {
+        private void DrawWaveform(UWavePart wavePart, WriteableBitmap bitmap) {
             if (wavePart.Peaks == null ||
                 !wavePart.Peaks.IsCompletedSuccessfully ||
-                wavePart.Peaks.Result == null)
-            {
+                wavePart.Peaks.Result == null) {
                 return;
             }
             var wholePeaks = wavePart.Peaks.Result;
@@ -426,14 +372,12 @@ namespace OpenUtau.App.Controls
 
             var timeAxis = Core.DocManager.Inst.Project.timeAxis;
             DiscreteSignal[] peaks = new DiscreteSignal[wholePeaks.Length];
-            for (int i = 0; i < wholePeaks.Length; i++)
-            {
+            for (int i = 0; i < wholePeaks.Length; i++) {
                 var newSamples = wholePeaks[i].Samples.Skip(skipCount);
                 peaks[i] = new DiscreteSignal(wavePart.peaksSampleRate, newSamples);
             }
             int x = 0;
-            if (TickOffset <= wavePart.position)
-            {
+            if (TickOffset <= wavePart.position) {
                 // Part starts in or to the right of view.
                 x = (int)(TickWidth * (wavePart.position - TickOffset));
             }
@@ -442,23 +386,18 @@ namespace OpenUtau.App.Controls
             double offsetMs = timeAxis.TickPosToMsPos(wavePart.position);
             int sampleIndex = (int)(wavePart.peaksSampleRate * (posMs - offsetMs) * 0.001);
             sampleIndex = Math.Clamp(sampleIndex, 0, peaks[0].Length);
-            using (var frameBuffer = bitmap.Lock())
-            {
+            using (var frameBuffer = bitmap.Lock()) {
                 Array.Clear(bitmapData, 0, bitmapData.Length);
-                while (x < frameBuffer.Size.Width)
-                {
-                    if (posTick >= wavePart.position + wavePart.Duration)
-                    {
+                while (x < frameBuffer.Size.Width) {
+                    if (posTick >= wavePart.position + wavePart.Duration) {
                         break;
                     }
                     int nextPosTick = (int)(TickOffset + (x + 1) / TickWidth);
                     double nexPosMs = timeAxis.TickPosToMsPos(nextPosTick);
                     int nextSampleIndex = (int)(wavePart.peaksSampleRate * (nexPosMs - offsetMs) * 0.001);
                     nextSampleIndex = Math.Clamp(nextSampleIndex, 0, peaks[0].Length);
-                    if (nextSampleIndex > sampleIndex)
-                    {
-                        for (int i = 0; i < peaks.Length; ++i)
-                        {
+                    if (nextSampleIndex > sampleIndex) {
+                        for (int i = 0; i < peaks.Length; ++i) {
                             var segment = new ArraySegment<float>(peaks[i].Samples, sampleIndex, nextSampleIndex - sampleIndex);
                             float min = segment.Min();
                             float max = segment.Max();
@@ -478,27 +417,22 @@ namespace OpenUtau.App.Controls
             }
         }
 
-        private void DrawPeak(int[] data, int width, int x, int y1, int y2)
-        {
+        private void DrawPeak(int[] data, int width, int x, int y1, int y2) {
             const int white = unchecked((int)0xFFFFFFFF);
-            if (y1 > y2)
-            {
+            if (y1 > y2) {
                 int temp = y2;
                 y2 = y1;
                 y1 = temp;
             }
-            for (var y = y1; y <= y2; ++y)
-            {
+            for (var y = y1; y <= y2; ++y) {
                 data[x + width * y] = white;
             }
         }
 
-        public void Report(int value)
-        {
+        public void Report(int value) {
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             bitmap?.Dispose();
             unbinds.ForEach(u => u.Dispose());
             unbinds.Clear();

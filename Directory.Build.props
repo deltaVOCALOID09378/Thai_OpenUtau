@@ -1,0 +1,1 @@
+﻿<Project><PropertyGroup><RollForward>LatestMajor</RollForward></PropertyGroup><ItemGroup><RuntimeHostConfigurationOption Include="System.Runtime.TieredCompilation" Value="true" /></ItemGroup></Project>

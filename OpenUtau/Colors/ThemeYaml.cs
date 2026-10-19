@@ -12,8 +12,7 @@ using Serilog;
 
 namespace OpenUtau.Colors;
 
-public class ThemeYaml
-{
+public class ThemeYaml {
     static readonly Dictionary<string, FieldInfo> ColorFields = typeof(ThemeYaml)
         .GetFields(BindingFlags.Public | BindingFlags.Instance)
         .Where(field => field.FieldType == typeof(string) && field.Name != nameof(Name))
@@ -73,70 +72,56 @@ public class ThemeYaml
     public string AppTopBarValueStripColor = "#D8D8DE";
     public string AppTopBarValueDividerColor = "#C0C0C8";
 
-    public string WhiteKeyColorLeft = "#FFFEFA";
-    public string WhiteKeyColorRight = "#DEDEDA";
+    public string WhiteKeyColorLeft = "Transparent";
+    public string WhiteKeyColorRight = "Transparent";
     public string WhiteKeyNameColor = "#343434";
 
     public string CenterKeyColorLeft = "#A9A6CD";
     public string CenterKeyColorRight = "#D3CFFF";
     public string CenterKeyNameColor = "#111111";
 
-    public string BlackKeyColorLeft = "#414148";
-    public string BlackKeyColorRight = "#15151A";
+    public string BlackKeyColorLeft = "#45445C";
+    public string BlackKeyColorRight = "#45445C";
     public string BlackKeyNameColor = "#FCFCFC";
 
-    public string? GetColor(string key)
-    {
-        if (!ColorFields.TryGetValue(key, out var field))
-        {
+    public string? GetColor(string key) {
+        if (!ColorFields.TryGetValue(key, out var field)) {
             return null;
         }
         return (string?)field.GetValue(this);
     }
 
-    public void SetColor(string key, string value)
-    {
-        if (ColorFields.TryGetValue(key, out var field))
-        {
+    public void SetColor(string key, string value) {
+        if (ColorFields.TryGetValue(key, out var field)) {
             field.SetValue(this, value);
         }
     }
 
-    public void ImportFromResources(IResourceDictionary resources)
-    {
-        foreach (var entry in resources)
-        {
-            if (entry.Key is not string key)
-            {
+    public void ImportFromResources(IResourceDictionary resources) {
+        foreach (var entry in resources) {
+            if (entry.Key is not string key) {
                 continue;
             }
-            if (key == nameof(IsDarkMode) && entry.Value is bool dark)
-            {
+            if (key == nameof(IsDarkMode) && entry.Value is bool dark) {
                 IsDarkMode = dark;
                 continue;
             }
-            if (entry.Value is Color color && ColorFields.ContainsKey(key))
-            {
+            if (entry.Value is Color color && ColorFields.ContainsKey(key)) {
                 SetColor(key, ThemeColorStorage.ToStorageString(color));
             }
         }
     }
 
-    public void FillMissingFrom(ThemeYaml defaults)
-    {
-        foreach (var key in ThemeColorCatalog.AllResourceKeys)
-        {
-            if (string.IsNullOrWhiteSpace(GetColor(key)))
-            {
+    public void FillMissingFrom(ThemeYaml defaults) {
+        foreach (var key in ThemeColorCatalog.AllResourceKeys) {
+            if (string.IsNullOrWhiteSpace(GetColor(key))) {
                 SetColor(key, defaults.GetColor(key) ?? string.Empty);
             }
         }
     }
 
-    public void ApplyToResources()
-    {
-        if (Application.Current == null)
-        {
+    public void ApplyToResources() {
+        if (Application.Current == null) {
             return;
         }
         var defaults = BuiltInThemeLoader.CreateFromBuiltIn(IsDarkMode ? "Dark" : "Light", Name);
@@ -145,8 +130,7 @@ public class ThemeYaml
 
         ThemeApplicator.ApplyCustomBase();
         Application.Current.Resources["IsDarkMode"] = IsDarkMode;
-        foreach (var key in ThemeColorCatalog.AllResourceKeys)
-        {
+        foreach (var key in ThemeColorCatalog.AllResourceKeys) {
             SetResourceColor(key, GetColor(key) ?? string.Empty);
         }
         SetResourceColor(
@@ -156,13 +140,10 @@ public class ThemeYaml
                 : (GetColor(nameof(MutedIconColor)) ?? "#808080"));
     }
 
-    public static ThemeYaml LoadFromFile(string path)
-    {
-        try
-        {
+    public static ThemeYaml LoadFromFile(string path) {
+        try {
             var yaml = Yaml.DefaultDeserializer.Deserialize<ThemeYaml>(File.ReadAllText(path, Encoding.UTF8));
-            if (HasBrokenBasePalette(yaml))
-            {
+            if (HasBrokenBasePalette(yaml)) {
                 var repaired = BuiltInThemeLoader.CreateFromBuiltIn(
                     yaml.IsDarkMode ? "Dark" : "Light",
                     yaml.Name);
@@ -172,19 +153,15 @@ public class ThemeYaml
             yaml.FillMissingFrom(defaults);
             ThemePaletteNormalizer.Normalize(yaml);
             return yaml;
-        }
-        catch (Exception exception)
-        {
+        } catch (Exception exception) {
             Log.Error(exception, "Failed to parse yaml in {Path}", path);
             return BuiltInThemeLoader.CreateFromBuiltIn("Light", "Custom YAML");
         }
     }
 
     /// <summary>Themes saved before built-in import was fixed: is_dark_mode set but palette left at ctor defaults.</summary>
-    static bool HasBrokenBasePalette(ThemeYaml yaml)
-    {
-        if (yaml.IsDarkMode)
-        {
+    static bool HasBrokenBasePalette(ThemeYaml yaml) {
+        if (yaml.IsDarkMode) {
             return string.Equals(yaml.BackgroundColor, "#FFFFFF", StringComparison.OrdinalIgnoreCase)
                 && string.Equals(yaml.AccentColor1, "#4EA6EA", StringComparison.OrdinalIgnoreCase);
         }
@@ -194,19 +171,14 @@ public class ThemeYaml
                 || string.Equals(yaml.BackgroundColor, "#212121", StringComparison.OrdinalIgnoreCase));
     }
 
-    public void SaveToFile(string path)
-    {
+    public void SaveToFile(string path) {
         File.WriteAllText(path, Yaml.DefaultSerializer.Serialize(this), Encoding.UTF8);
     }
 
-    static void SetResourceColor(string resourceKey, string colorString)
-    {
-        if (ThemeColorStorage.TryParse(colorString, out var color))
-        {
+    static void SetResourceColor(string resourceKey, string colorString) {
+        if (ThemeColorStorage.TryParse(colorString, out var color)) {
             Application.Current!.Resources[resourceKey] = color;
-        }
-        else
-        {
+        } else {
             Log.Error("Failed to parse color \"{Color}\" in custom theme", colorString);
         }
     }

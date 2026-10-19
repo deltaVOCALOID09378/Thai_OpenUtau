@@ -10,15 +10,12 @@ using OpenUtau.Core.Util;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
-    public sealed class TrackRendererOption
-    {
+namespace OpenUtau.App.ViewModels {
+    public sealed class TrackRendererOption {
         public string Id { get; }
         public string DisplayName { get; }
 
-        public TrackRendererOption(string id, string displayName)
-        {
+        public TrackRendererOption(string id, string displayName) {
             Id = id;
             DisplayName = displayName;
         }
@@ -26,8 +23,7 @@ namespace OpenUtau.App.ViewModels
         public override string ToString() => DisplayName;
     }
 
-    class TrackSettingsViewModel : ViewModelBase
-    {
+    class TrackSettingsViewModel : ViewModelBase {
         public UTrack Track { get; private set; }
         public IReadOnlyList<TrackRendererOption> RendererOptions { get; }
         [Reactive] public TrackRendererOption? SelectedRenderer { get; set; }
@@ -43,8 +39,7 @@ namespace OpenUtau.App.ViewModels
         readonly ObservableCollectionExtended<IWavtool> wavtools =
             new ObservableCollectionExtended<IWavtool>();
 
-        public TrackSettingsViewModel(UTrack track)
-        {
+        public TrackSettingsViewModel(UTrack track) {
             ToolsManager.Inst.Initialize();
             Track = track;
             RendererOptions = Renderers.GetSupportedRenderers(USingerType.Classic)
@@ -60,20 +55,16 @@ namespace OpenUtau.App.ViewModels
 
             resamplers.AddRange(ToolsManager.Inst.Resamplers);
             string? resamplerName = Track.RendererSettings.resampler;
-            if (string.IsNullOrEmpty(resamplerName))
-            {
-                if (!Preferences.Default.DefaultResamplers.TryGetValue(Renderers.CLASSIC, out resamplerName))
-                {
+            if (string.IsNullOrEmpty(resamplerName)) {
+                if (!Preferences.Default.DefaultResamplers.TryGetValue(Renderers.CLASSIC, out resamplerName)) {
                     resamplerName = string.Empty;
                 }
             }
             Resampler = ToolsManager.Inst.GetResampler(resamplerName);
             wavtools.AddRange(Renderers.GetSupportedWavtools(Resampler));
             string? wavtoolName = Track.RendererSettings.wavtool;
-            if (string.IsNullOrEmpty(wavtoolName))
-            {
-                if (!Preferences.Default.DefaultWavtools.TryGetValue(Renderers.CLASSIC, out wavtoolName))
-                {
+            if (string.IsNullOrEmpty(wavtoolName)) {
+                if (!Preferences.Default.DefaultWavtools.TryGetValue(Renderers.CLASSIC, out wavtoolName)) {
                     wavtoolName = string.Empty;
                 }
             }
@@ -84,84 +75,67 @@ namespace OpenUtau.App.ViewModels
             UpdateClassicToolsVisibility(SelectedRenderer?.Id);
 
             this.WhenAnyValue(x => x.Resampler)
-                .Subscribe(resampler =>
-                {
+                .Subscribe(resampler => {
                     resampler?.CheckPermissions();
                     var wavtool = Wavtool;
                     wavtools.Clear();
                     wavtools.AddRange(Renderers.GetSupportedWavtools(resampler));
-                    if (wavtool != null && wavtools.Contains(wavtool))
-                    {
+                    if (wavtool != null && wavtools.Contains(wavtool)) {
                         Wavtool = wavtool;
-                    }
-                    else
-                    {
+                    } else {
                         Wavtool = wavtools.FirstOrDefault();
                     }
                 });
             this.WhenAnyValue(x => x.Wavtool)
-                .Subscribe(wavtool =>
-                {
+                .Subscribe(wavtool => {
                     wavtool?.CheckPermissions();
                 });
         }
 
-        static string FormatRendererName(string id)
-        {
-            return id switch
-            {
+        static string FormatRendererName(string id) {
+            return id switch {
                 Renderers.CLASSIC => "Classic",
                 Renderers.WORLDLINE_R => "WORLDLINE-R",
                 _ => id,
             };
         }
 
-        void UpdateClassicToolsVisibility(string? rendererId)
-        {
+        void UpdateClassicToolsVisibility(string? rendererId) {
             bool classic = rendererId == Renderers.CLASSIC;
             NeedsResampler = classic;
             NeedsWavtool = classic;
         }
 
-        public void OpenResamplerLocation()
-        {
+        public void OpenResamplerLocation() {
             OS.OpenFolder(PathManager.Inst.ResamplersPath);
         }
 
-        public void SetDefaultResampler()
-        {
-            if (Resampler != null)
-            {
+        public void SetDefaultResampler() {
+            if (Resampler != null) {
                 Preferences.Default.DefaultResamplers[Renderers.CLASSIC] = Resampler.ToString() ?? string.Empty;
                 Preferences.Save();
             }
         }
 
-        public void OpenWavtoolLocation()
-        {
+        public void OpenWavtoolLocation() {
             OS.OpenFolder(PathManager.Inst.WavtoolsPath);
         }
 
-        public void SetDefaultWavtool()
-        {
-            if (Wavtool != null)
-            {
+        public void SetDefaultWavtool() {
+            if (Wavtool != null) {
                 Preferences.Default.DefaultWavtools[Renderers.CLASSIC] = Wavtool.ToString() ?? string.Empty;
                 Preferences.Save();
             }
         }
 
-        public void Finish()
-        {
-            if (Track.Singer?.SingerType != USingerType.Classic)
-            {
+        public void Finish() {
+            if (Track.Singer?.SingerType != USingerType.Classic) {
                 return;
             }
             DocManager.Inst.StartUndoGroup("command.track.setting");
             var settings = Track.RendererSettings.Clone();
             settings.renderer = SelectedRenderer?.Id ?? settings.renderer;
-            if (settings.renderer == Renderers.CLASSIC)
-            {
+            if (settings.renderer == Renderers.CLASSIC) {
                 settings.resampler = Resampler?.ToString() ?? string.Empty;
                 settings.wavtool = Wavtool?.ToString() ?? string.Empty;
             }

@@ -1,0 +1,542 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+
+             xmlns:vm="using:OpenUtau.App.ViewModels"
+
+             xmlns:c="using:OpenUtau.App.Controls"
+
+             xmlns:views="clr-namespace:OpenUtau.App.Views"
+
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="600"
+
+             x:Class="OpenUtau.App.Views.AppearancePreferencesPane"
+
+             x:Name="AppearancePrefsRoot">
+
+  <UserControl.Styles>
+
+    <Style Selector="StackPanel.appearanceSectionContent">
+
+      <Setter Property="Spacing" Value="6"/>
+
+    </Style>
+
+    <Style Selector="TextBlock">
+
+      <Setter Property="VerticalAlignment" Value="Center"/>
+
+    </Style>
+
+    <Style Selector="TextBlock.prefSubgroupTitle">
+
+      <Setter Property="FontWeight" Value="SemiBold"/>
+
+      <Setter Property="Margin" Value="0,8,0,0"/>
+
+    </Style>
+
+    <Style Selector="StackPanel.appearanceSectionContent > TextBlock.prefSubgroupTitle:first-child">
+
+      <Setter Property="Margin" Value="0"/>
+
+    </Style>
+
+    <Style Selector="ToggleSwitch">
+
+      <Setter Property="OnContent" Value="{DynamicResource prefs.on}"/>
+
+      <Setter Property="OffContent" Value="{DynamicResource prefs.off}"/>
+
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+
+      <Setter Property="Focusable" Value="False"/>
+
+      <Setter Property="IsTabStop" Value="False"/>
+
+    </Style>
+
+    <Style Selector="Grid.prefRow">
+
+      <Setter Property="Margin" Value="0"/>
+
+    </Style>
+
+    <Style Selector="Grid.prefRow > TextBlock">
+
+      <Setter Property="Grid.Column" Value="0"/>
+
+      <Setter Property="Margin" Value="0,0,10,0"/>
+
+      <Setter Property="TextWrapping" Value="Wrap"/>
+
+      <Setter Property="VerticalAlignment" Value="Center"/>
+
+    </Style>
+
+    <Style Selector="Grid.prefRow > ToggleSwitch">
+
+      <Setter Property="Grid.Column" Value="1"/>
+
+      <Setter Property="VerticalAlignment" Value="Center"/>
+
+    </Style>
+
+    <Style Selector="Grid.prefSliderRow">
+
+      <Setter Property="Margin" Value="0,2,0,0"/>
+
+    </Style>
+
+    <Style Selector="Slider.fader">
+
+      <Setter Property="Focusable" Value="True"/>
+
+    </Style>
+
+  </UserControl.Styles>
+
+  <Design.DataContext>
+
+    <vm:PreferencesViewModel/>
+
+  </Design.DataContext>
+
+  <Grid>
+
+    <TextBlock Text="{DynamicResource workspace.panel.view}" Classes="notePropsPanelTitle"
+
+               Height="32" Margin="16,16,40,0"
+
+               HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+    <Button x:Name="ClosePanelButton" Classes="workspacePanelClose"
+
+            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0"
+
+            IsVisible="False" Click="OnCloseDockedPanel"
+
+            ToolTip.Tip="{DynamicResource workspace.panel.close}">
+
+      <Path Classes="stroked"/>
+
+    </Button>
+
+    <ScrollViewer x:Name="ContentScroll" Classes="workspaceScroll workspaceDockPanelScroll"
+
+                  Margin="10,48,10,16"
+
+                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+
+                  AllowAutoHide="False">
+
+      <StackPanel Classes="workspacePanelSections" Margin="0" HorizontalAlignment="Stretch">
+
+        <Expander Classes="workspacePanelSectionExpander" IsExpanded="False"
+
+                  Header="{DynamicResource prefs.appearance.section.theme}">
+
+          <StackPanel Classes="appearanceSectionContent">
+
+            <views:ThemePickerControl DataContext="{Binding}"/>
+
+          </StackPanel>
+
+        </Expander>
+
+        <Separator Classes="workspacePanelSectionDivider"/>
+
+
+
+        <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
+
+                  Header="{DynamicResource prefs.appearance.section.trackcolors}">
+
+          <StackPanel Classes="appearanceSectionContent">
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.trackcolor}"/>
+
+              <ToggleSwitch IsChecked="{Binding UseTrackColor}"/>
+
+            </Grid>
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto" IsEnabled="{Binding UseTrackColor}">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.tintpianorollbackgroundwithtrackcolor}"/>
+
+              <ToggleSwitch IsChecked="{Binding TintPianoRollBackgroundWithTrackColor}"/>
+
+            </Grid>
+
+            <TextBlock Classes="prefSubgroupTitle"
+
+                       Text="{DynamicResource prefs.appearance.defaulttrackcolor}"/>
+
+            <c:TrackColorPickerControl SelectedColor="{Binding DefaultTrackColor, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+
+          </StackPanel>
+
+        </Expander>
+
+        <Separator Classes="workspacePanelSectionDivider"/>
+
+
+
+        <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
+
+                  Header="{DynamicResource prefs.appearance.section.pianoroll}">
+
+          <StackPanel Classes="appearanceSectionContent">
+
+            <TextBlock Classes="prefSubgroupTitle"
+
+                       Text="{DynamicResource prefs.appearance.degree}"/>
+
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch"
+
+                                      SelectedIndex="{Binding DegreeStyle}">
+
+              <ComboBoxItem Content="{DynamicResource prefs.appearance.degree.off}"/>
+
+              <ComboBoxItem Content="{DynamicResource prefs.appearance.degree.solfege}"/>
+
+              <ComboBoxItem Content="{DynamicResource prefs.appearance.degree.numbered}"/>
+
+            </c:WorkspacePanelComboBox>
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.showportrait}"/>
+
+              <ToggleSwitch IsChecked="{Binding ShowPortrait}"/>
+
+            </Grid>
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.showghostnotes}"/>
+
+              <ToggleSwitch IsChecked="{Binding ShowGhostNotes}"/>
+
+            </Grid>
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.shownoteborder}"/>
+
+              <ToggleSwitch IsChecked="{Binding ShowNoteBorder}"/>
+
+            </Grid>
+
+            <Grid Classes="prefSliderRow" ColumnDefinitions="Auto,8,44,8,*">
+
+              <TextBlock Grid.Column="0" VerticalAlignment="Center"
+
+                         Text="{DynamicResource prefs.appearance.notecornerradius}"/>
+
+              <TextBlock Grid.Column="2" VerticalAlignment="Center" TextAlignment="Right"
+
+                         Text="{Binding NoteCornerRadius, StringFormat={}{0:0.#} px}"/>
+
+              <Slider Grid.Column="4" VerticalAlignment="Center" Classes="fader"
+
+                      Minimum="0" Maximum="12" TickFrequency="1" IsSnapToTickEnabled="True"
+
+                      Value="{Binding NoteCornerRadius}"/>
+
+            </Grid>
+
+          </StackPanel>
+
+        </Expander>
+
+        <Separator Classes="workspacePanelSectionDivider"/>
+
+
+
+        <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
+
+                  Header="{DynamicResource prefs.appearance.section.phonemepanel}">
+
+          <StackPanel Classes="appearanceSectionContent">
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.diffsinger.phonemepanel}"/>
+
+              <ToggleSwitch IsChecked="{Binding DiffSingerPhonemePanelMode}"/>
+
+            </Grid>
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto"
+
+                  IsEnabled="{Binding DiffSingerPhonemePanelMode}">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.diffsingerlangcodehide}"/>
+
+              <ToggleSwitch IsChecked="{Binding DiffSingerLangCodeHide}"/>
+
+            </Grid>
+
+          </StackPanel>
+
+        </Expander>
+
+        <Separator Classes="workspacePanelSectionDivider"/>
+
+
+
+        <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
+
+                  Header="{DynamicResource prefs.appearance.section.displaylines}">
+
+          <StackPanel Classes="appearanceSectionContent">
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.solidtickgridlines}"/>
+
+              <ToggleSwitch IsChecked="{Binding SolidTickGridLines}"/>
+
+            </Grid>
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.solidexppanelgridlines}"/>
+
+              <ToggleSwitch IsChecked="{Binding SolidExpPanelGridLines}"/>
+
+            </Grid>
+
+            <!-- Overlay scrollbars: hidden until we decide whether a toggle is needed.
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.appearance.overlayscrollbars}"/>
+
+              <ToggleSwitch IsChecked="{Binding UseOverlayScrollbars}"/>
+
+            </Grid>
+
+            -->
+
+          </StackPanel>
+
+        </Expander>
+
+        <Separator Classes="workspacePanelSectionDivider"/>
+
+
+
+        <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
+
+                  Header="{DynamicResource prefs.appearance.section.playback}">
+
+          <StackPanel Classes="appearanceSectionContent">
+
+            <TextBlock Classes="prefSubgroupTitle"
+
+                       Text="{DynamicResource prefs.playback.lockstarttime}"/>
+
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch"
+
+                                      SelectedIndex="{Binding LockStartTime}">
+
+              <ComboBoxItem Content="{DynamicResource prefs.playback.lockstarttime.off}"/>
+
+              <ComboBoxItem Content="{DynamicResource prefs.playback.lockstarttime.on}"/>
+
+              <ComboBoxItem Content="{DynamicResource prefs.playback.lockstarttime.onlycursor}"/>
+
+            </c:WorkspacePanelComboBox>
+
+            <TextBlock Classes="prefSubgroupTitle"
+
+                       Text="{DynamicResource prefs.playback.autoscroll}"/>
+
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch"
+
+                                      SelectedIndex="{Binding PlaybackAutoScroll}">
+
+              <ComboBoxItem Content="{DynamicResource prefs.off}"/>
+
+              <ComboBoxItem Content="{DynamicResource prefs.playback.autoscrollmode.stationarycursor}"/>
+
+              <ComboBoxItem Content="{DynamicResource prefs.playback.autoscrollmode.pagescroll}"/>
+
+            </c:WorkspacePanelComboBox>
+
+            <Grid Classes="prefSliderRow" ColumnDefinitions="Auto,8,44,8,*">
+
+              <TextBlock Grid.Column="0" VerticalAlignment="Center"
+
+                         Text="{DynamicResource prefs.playback.cursorposition}"/>
+
+              <TextBlock Grid.Column="2" VerticalAlignment="Center" TextAlignment="Right">
+
+                <TextBlock.Text>
+
+                  <MultiBinding StringFormat="{}{0:#0.0}">
+
+                    <Binding Path="PlayPosMarkerMargin"/>
+
+                  </MultiBinding>
+
+                </TextBlock.Text>
+
+              </TextBlock>
+
+              <Slider Grid.Column="4" VerticalAlignment="Center" Classes="fader"
+
+                      Value="{Binding PlayPosMarkerMargin}" Minimum="0" Maximum="1"
+
+                      TickPlacement="BottomRight" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+
+            </Grid>
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.playback.modernplayhead}"/>
+
+              <ToggleSwitch IsChecked="{Binding UseModernPlayhead}"/>
+
+            </Grid>
+
+          </StackPanel>
+
+        </Expander>
+
+        <Separator Classes="workspacePanelSectionDivider"/>
+
+
+
+        <Expander Classes="workspacePanelSectionExpander" IsExpanded="True"
+
+                  Header="{DynamicResource prefs.playback.pitchfollow}">
+
+          <StackPanel Classes="appearanceSectionContent">
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto">
+
+              <TextBlock Text="{DynamicResource prefs.playback.pitchfollow.enabled}"/>
+
+              <ToggleSwitch IsChecked="{Binding PlaybackPitchFollowEnabled}"/>
+
+            </Grid>
+
+            <Grid Classes="prefRow" ColumnDefinitions="*,Auto"
+
+                  IsEnabled="{Binding PlaybackPitchFollowEnabled}">
+
+              <TextBlock Text="{DynamicResource prefs.playback.pitchfollow.showpath}"/>
+
+              <ToggleSwitch IsChecked="{Binding PlaybackPitchFollowShowPath}"/>
+
+            </Grid>
+
+            <StackPanel Spacing="6" IsEnabled="{Binding PlaybackPitchFollowEnabled}">
+
+              <Grid Classes="prefSliderRow" ColumnDefinitions="Auto,8,44,8,*">
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Center"
+
+                           Text="{DynamicResource prefs.playback.pitchfollow.threshold}"/>
+
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" TextAlignment="Right">
+
+                  <TextBlock.Text>
+
+                    <MultiBinding StringFormat="{}{0:#0}">
+
+                      <Binding Path="PlaybackPitchFollowSemitoneThreshold"/>
+
+                    </MultiBinding>
+
+                  </TextBlock.Text>
+
+                </TextBlock>
+
+                <Slider Grid.Column="4" VerticalAlignment="Center" Classes="fader"
+
+                        Value="{Binding PlaybackPitchFollowSemitoneThreshold}" Minimum="0" Maximum="12"
+
+                        TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True"/>
+
+              </Grid>
+
+              <Grid Classes="prefSliderRow" ColumnDefinitions="Auto,8,44,8,*">
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Center"
+
+                           Text="{DynamicResource prefs.playback.pitchfollow.verticalposition}"/>
+
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" TextAlignment="Right">
+
+                  <TextBlock.Text>
+
+                    <MultiBinding StringFormat="{}{0:#0.0}">
+
+                      <Binding Path="PlaybackPitchFollowVerticalPosition"/>
+
+                    </MultiBinding>
+
+                  </TextBlock.Text>
+
+                </TextBlock>
+
+                <Slider Grid.Column="4" VerticalAlignment="Center" Classes="fader"
+
+                        Value="{Binding PlaybackPitchFollowVerticalPosition}" Minimum="0.15" Maximum="0.85"
+
+                        TickPlacement="BottomRight" TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+
+              </Grid>
+
+              <Grid Classes="prefSliderRow" ColumnDefinitions="Auto,8,44,8,*">
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Center"
+
+                           Text="{DynamicResource prefs.playback.pitchfollow.framesmoothing}"/>
+
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" TextAlignment="Right">
+
+                  <TextBlock.Text>
+
+                    <MultiBinding StringFormat="{}{0:#0.0}">
+
+                      <Binding Path="PlaybackPitchFollowFrameSmoothing"/>
+
+                    </MultiBinding>
+
+                  </TextBlock.Text>
+
+                </TextBlock>
+
+                <Slider Grid.Column="4" VerticalAlignment="Center" Classes="fader"
+
+                        Value="{Binding PlaybackPitchFollowFrameSmoothing}" Minimum="0.05" Maximum="1"
+
+                        TickPlacement="BottomRight" TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+
+              </Grid>
+
+            </StackPanel>
+
+          </StackPanel>
+
+        </Expander>
+
+      </StackPanel>
+
+    </ScrollViewer>
+
+  </Grid>
+
+</UserControl>
+

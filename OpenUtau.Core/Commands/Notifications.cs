@@ -1,4 +1,4 @@
-﻿// Made And Checked By DELTA SYNTH & Gemini AI
+// Made And Checked By DELTA SYNTH & Gemini AI
 // Original by Patiphat Wongyai
 // Version: v.1.1
 // History/Summary: Added ShowPitchNotification, PageUp/PageDown track switching, and AutoPitchVibrato Batch Edit.
@@ -161,6 +161,17 @@ namespace OpenUtau.Core {
             AutoClearSeconds = autoClearSeconds;
         }
         public override string ToString() => $"Set progress {Progress} {Info}";
+    }
+
+    public class UserMessageNotification : UNotification {
+        public readonly string Message;
+        public readonly double AutoClearSeconds;
+        public override bool Silent => true;
+        public UserMessageNotification(string message, double autoClearSeconds = 4) {
+            Message = message;
+            AutoClearSeconds = autoClearSeconds;
+        }
+        public override string ToString() => $"UserMessage: {Message}";
     }
 
     public class VolumeChangeNotification : UNotification {

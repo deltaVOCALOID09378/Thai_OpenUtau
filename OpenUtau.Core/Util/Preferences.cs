@@ -208,7 +208,7 @@ namespace OpenUtau.Core.Util {
             public bool PenPlusDefault = false;
             public int DegreeStyle;
             public bool ShowKeyScaleOnPianoRoll = false;
-            public bool UseTrackColor = false;
+            public bool UseTrackColor = true;
             public bool TintPianoRollBackgroundWithTrackColor = false;
             public string DefaultTrackColor = "Blue";
             public bool ClearCacheOnQuit = false;
@@ -231,13 +231,6 @@ namespace OpenUtau.Core.Util {
             public bool DiffSingerPhonemePanelMode = true;
             public bool DiffSingerLocalRetaking = true;
             public bool DiffSingerShowRenderPhraseBoundaries = false;
-
-            // The Video And Picture Record file settings
-            public string CaptureFilenameFormat = "name-dd-mm-yy-hh:mm";
-            public string CaptureVideoFormat = "mp4";
-            public int CaptureResolution = 1080;
-            public string CaptureExportLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "OpenUtau");
-            public int CaptureCountdown = 0;
             public bool SkipRenderingMutedTracks = false;
             public string Language = string.Empty;
             public string? SortingOrder = null;
@@ -535,6 +528,14 @@ errors.txt
 ";
             public string RecoveryPath = string.Empty;
             public bool DetachPianoRoll = false;
+            public string GeminiSparkApiKey = string.Empty;
+
+            // Screen & Audio Capture
+            public string CaptureExportLocation = string.Empty;
+            public string CaptureFilenameFormat = "name-dd-mm-yy-hh:mm";
+            public string CaptureVideoFormat = "mp4";
+            public int CaptureResolution = 1080;
+            public int CaptureCountdown = 0;
 
             // ----- Mix FX (post-processing) -----
             // Per-track FX state lives in UTrack.MixFx and the project ustx.

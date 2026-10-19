@@ -1,44 +1,52 @@
-<!--
-  Made And Checked By DELTA SYNTH & Gemini AI
-  Original by Patiphat Wongyai (Delta)
-  Version: 1.4 | Date: 2026-08-05
-  History: UI Enhancement — DELTA SYNTH Edition text size 11→12pt, opacity 0.65→0.80
--->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" Width="400" Height="200"
+        mc:Ignorable="d" Width="440" Height="220"
         x:Class="OpenUtau.App.Views.SplashWindow"
-        Title="SplashWindow"
+        Title="Thai OpenUtau by DELTA SYNTH"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         CanResize="False"
         ExtendClientAreaChromeHints="NoChrome"
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaToDecorationsHint="True"
         SystemDecorations="BorderOnly"
-        WindowStartupLocation="CenterScreen">
-  <Grid>
-    <!-- App Logo Icon -->
-    <Image Margin="20" Width="96" Height="96"
-           VerticalAlignment="Top" HorizontalAlignment="Center"
-           Source="/Assets/Thai OpenUtau Logo.ico"/>
-    <!-- Dark Mode Logotype (shown when IsDarkMode=true) -->
-    <Image x:Name="LogoTypeDark" Height="16" Margin="0,136,0,28"
-           VerticalAlignment="Top" HorizontalAlignment="Center"
-           Source="/Assets/LogoTypeDark.png"
-           IsVisible="{Binding IsDarkMode}"/>
-    <!-- Light Mode Logotype (shown when IsDarkMode=false) -->
-    <Image x:Name="LogoTypeLight" Height="16" Margin="0,136,0,28"
-           VerticalAlignment="Top" HorizontalAlignment="Center"
-           Source="/Assets/logotype.png"
-           IsVisible="{Binding !IsDarkMode}"/>
-    <!-- DELTA SYNTH Edition branding subtitle -->
-    <TextBlock Text="DELTA SYNTH Edition"
-               Margin="0,158,0,10"
-               VerticalAlignment="Top" HorizontalAlignment="Center"
-               FontSize="12" Opacity="0.80"/>
-    <ProgressBar VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
-           IsIndeterminate="True"/>
-  </Grid>
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WorkspaceCanvasBrush}">
+  <Border BorderBrush="#CC2200" BorderThickness="1.5" CornerRadius="4" ClipToBounds="True">
+    <Grid RowDefinitions="*,Auto,Auto" Margin="20,16,20,16">
+      <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <Image Width="92" Height="92" HorizontalAlignment="Center"
+               Source="/Assets/Thai OpenUtau Logo.png"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+          <Image x:Name="LogoTypeDark" Height="18"
+                 Source="/Assets/logotype-w.png" IsVisible="{Binding IsDarkMode}"/>
+          <Image x:Name="LogoTypeLight" Height="18"
+                 Source="/Assets/logotype.png" IsVisible="{Binding !IsDarkMode}"/>
+        </StackPanel>
+      </StackPanel>
+
+      <Grid Grid.Row="1" Margin="4,12,4,6" ColumnDefinitions="*,Auto">
+        <TextBlock x:Name="StatusText" Grid.Column="0"
+                   Text="กำลังเริ่มต้นระบบ... (Initializing...)"
+                   FontFamily="Leelawadee UI, Microsoft Sans Serif, Segoe UI, sans-serif"
+                   FontSize="11"
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+        <TextBlock x:Name="PercentText" Grid.Column="1"
+                   Text="0%"
+                   FontFamily="Leelawadee UI, Microsoft Sans Serif, Segoe UI, sans-serif"
+                   FontWeight="SemiBold"
+                   FontSize="11"
+                   Foreground="#CC2200"
+                   VerticalAlignment="Center"/>
+      </Grid>
+
+      <ProgressBar x:Name="InitProgressBar" Grid.Row="2"
+                   Height="4" HorizontalAlignment="Stretch"
+                   Minimum="0" Maximum="100" Value="0"
+                   IsIndeterminate="False"
+                   Foreground="#CC2200"/>
+    </Grid>
+  </Border>
 </Window>

@@ -100,10 +100,30 @@ SectionEnd
 
 Section "VC Redist"
   SetOutPath "$TEMP"
-  File "vc_redist.${ARCH}.exe"
-  DetailPrint "กำลังติดตั้ง Microsoft Visual C++ Redistributable..."
-  ExecWait "$TEMP\vc_redist.${ARCH}.exe /quiet /norestart"
-  Delete "$TEMP\vc_redist.${ARCH}.exe"
+  IfFileExists "$TEMP\vc_redist.${ARCH}.exe" 0 +4
+    DetailPrint "กำลังติดตั้ง Microsoft Visual C++ Redistributable..."
+    ExecWait '"$TEMP\vc_redist.${ARCH}.exe" /quiet /norestart'
+    Delete "$TEMP\vc_redist.${ARCH}.exe"
+  IfFileExists "vc_redist.${ARCH}.exe" 0 done_vcredist
+    File /nonfatal "vc_redist.${ARCH}.exe"
+    DetailPrint "กำลังติดตั้ง Microsoft Visual C++ Redistributable..."
+    ExecWait '"$TEMP\vc_redist.${ARCH}.exe" /quiet /norestart'
+    Delete "$TEMP\vc_redist.${ARCH}.exe"
+  done_vcredist:
+SectionEnd
+
+Section ".NET Desktop Runtime 8"
+  SetOutPath "$TEMP"
+  IfFileExists "$EXEDIR\dotnet_redist.${ARCH}.exe" 0 +4
+    DetailPrint "กำลังติดตั้ง Microsoft .NET Desktop Runtime 8..."
+    ExecWait '"$EXEDIR\dotnet_redist.${ARCH}.exe" /install /quiet /norestart'
+    Goto done_dotnet
+  IfFileExists "dotnet_redist.${ARCH}.exe" 0 done_dotnet
+    File /nonfatal "dotnet_redist.${ARCH}.exe"
+    DetailPrint "กำลังติดตั้ง Microsoft .NET Desktop Runtime 8..."
+    ExecWait '"$TEMP\dotnet_redist.${ARCH}.exe" /install /quiet /norestart'
+    Delete "$TEMP\dotnet_redist.${ARCH}.exe"
+  done_dotnet:
 SectionEnd
 
 ; --- ระบบถอนการติดตั้ง ---

@@ -3,8 +3,7 @@ using System.Linq;
 
 namespace OpenUtau.Colors;
 
-public static class ThemeColorCatalog
-{
+public static class ThemeColorCatalog {
     public sealed record Section(string Title, params string[] Keys);
 
     /// <summary>Applied at runtime but not shown in the theme editor.</summary>
@@ -13,8 +12,7 @@ public static class ThemeColorCatalog
         "BlackKeyColorRight",
     ];
 
-    static readonly Dictionary<string, string> DisplayNames = new()
-    {
+    static readonly Dictionary<string, string> DisplayNames = new() {
         ["BackgroundColor"] = "Panel surface (menus, stripes)",
         ["BackgroundColorPointerOver"] = "Panel hover",
         ["BackgroundColorPressed"] = "Panel pressed",
@@ -136,8 +134,7 @@ public static class ThemeColorCatalog
         ]),
     ];
 
-    public static string GetDisplayName(string key)
-    {
+    public static string GetDisplayName(string key) {
         return DisplayNames.TryGetValue(key, out var name) ? name : key;
     }
 

@@ -4,10 +4,8 @@ using Avalonia.Media;
 namespace OpenUtau.Colors;
 
 /// <summary>Derives the full track palette from a base accent and a brighter highlight.</summary>
-public static class TrackColorPalette
-{
-    public readonly struct GeneratedPalette
-    {
+public static class TrackColorPalette {
+    public readonly struct GeneratedPalette {
         public string AccentColor { get; init; }
         public string DarkColor { get; init; }
         public string LightColor { get; init; }
@@ -19,13 +17,11 @@ public static class TrackColorPalette
         public string NoteColorEmpty { get; init; }
     }
 
-    public static GeneratedPalette Generate(Color normal, Color bright)
-    {
+    public static GeneratedPalette Generate(Color normal, Color bright) {
         var dark = Darken(normal, 0.28);
         var centerKey = Lighten(bright, 0.55);
         var noteBase = Desaturate(Darken(normal, 0.12), 0.12);
-        return new GeneratedPalette
-        {
+        return new GeneratedPalette {
             AccentColor = ToRgbHex(normal),
             DarkColor = ToRgbHex(dark),
             LightColor = ToRgbHex(bright),
@@ -38,8 +34,7 @@ public static class TrackColorPalette
         };
     }
 
-    static Color Mix(Color a, Color b, double t)
-    {
+    static Color Mix(Color a, Color b, double t) {
         return Color.FromRgb(
             Lerp(a.R, b.R, t),
             Lerp(a.G, b.G, t),
@@ -50,8 +45,7 @@ public static class TrackColorPalette
 
     static Color Lighten(Color color, double amount) => Mix(color, Color.FromRgb(255, 255, 255), amount);
 
-    static Color Desaturate(Color color, double amount)
-    {
+    static Color Desaturate(Color color, double amount) {
         byte gray = (byte)((color.R + color.G + color.B) / 3);
         var grayColor = Color.FromRgb(gray, gray, gray);
         return Mix(color, grayColor, amount);

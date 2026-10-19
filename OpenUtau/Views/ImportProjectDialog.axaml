@@ -11,7 +11,7 @@
 
         WindowStartupLocation="CenterOwner"
 
-        Icon="/Assets/Thai OpenUtau Logo type.ico"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
 
         Title="{DynamicResource dialogs.importproject.caption}"
 
@@ -182,5 +182,6 @@
   </Border>
 
 </Window>
+
 
 

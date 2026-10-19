@@ -2,35 +2,31 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using OpenUtau.App.ViewModels;
+using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 using ReactiveUI;
 
-namespace OpenUtau.App.Views
-{
-    public partial class MixFxDialog : Window
-    {
+namespace OpenUtau.App.Views {
+    public partial class MixFxDialog : Window {
         readonly MixFxViewModel viewModel;
         readonly UTrack? track;
 
         public MixFxDialog() : this(null) { }
 
-        public MixFxDialog(UTrack? track)
-        {
+        public MixFxDialog(UTrack? track) {
             InitializeComponent();
             this.track = track;
             DataContext = viewModel = new MixFxViewModel(track);
             viewModel.AskForName = PromptForNameAsync;
         }
 
-        Task<string?> PromptForNameAsync()
-        {
+        Task<string?> PromptForNameAsync() {
             var tcs = new TaskCompletionSource<string?>();
             var dialog = new TypeInDialog();
             dialog.Title = ThemeManager.GetString("mixfx.library.save");
             dialog.SetText(string.Empty);
             string? captured = null;
-            dialog.onFinish = name =>
-            {
+            dialog.onFinish = name => {
                 if (!string.IsNullOrWhiteSpace(name)) captured = name;
             };
             dialog.Closed += (_, __) => tcs.TrySetResult(captured);
@@ -38,18 +34,15 @@ namespace OpenUtau.App.Views
             return tcs.Task;
         }
 
-        void OnOkClicked(object sender, RoutedEventArgs e)
-        {
+        void OnOkClicked(object sender, RoutedEventArgs e) {
             viewModel.Apply();
-            if (track != null)
-            {
+            if (track != null) {
                 MessageBus.Current.SendMessage(new MixFxChangedNotification(track.TrackNo));
             }
             Close();
         }
 
-        void OnCancelClicked(object sender, RoutedEventArgs e)
-        {
+        void OnCancelClicked(object sender, RoutedEventArgs e) {
             Close();
         }
     }

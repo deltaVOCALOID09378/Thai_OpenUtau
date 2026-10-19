@@ -1,9 +1,9 @@
-// ==========================================
-// Made And Checked By DELTA SYNTH & Gemini AI
-// Original by Patiphat Wongyai
-// Version: v.17.3
-// History/Summary: ป้องกันการแครชจาก Moresampler โดยการสร้างไฟล์เสียงเปล่าทดแทน
-// ==========================================
+/*
+ * Made And Checked By DELTA SYNTH & Gemini AI
+ * Original by Patiphat Wongyai
+ * Version: 2.0 (Resilient ClassicRenderer with Automatic Silence Fallback)
+ */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -72,18 +72,29 @@ namespace OpenUtau.Classic {
                 }, body: item => {
                     if (!cancellation.IsCancellationRequested) {
                         lock (Renderers.GetCacheLock(item.outputFile)) {
-                            if (!File.Exists(item.outputFile)) {
+                            bool needsResample = !File.Exists(item.outputFile) || new FileInfo(item.outputFile).Length < 44;
+                            if (needsResample) {
                                 if (!(item.resampler is WorldlineResampler)) {
                                     VoicebankFiles.Inst.CopySourceTemp(item.inputFile, item.inputTemp);
                                 }
-                                if(!item.phone.direct){
-                                    item.resampler.DoResamplerReturnsFile(item, Log.Logger);
-                                    if (!File.Exists(item.outputFile)) {
+                                if (!item.phone.direct) {
+                                    try {
+                                        item.resampler.DoResamplerReturnsFile(item, Log.Logger);
+                                    } catch (Exception ex) {
+                                        Log.Error(ex, $"{item.resampler} threw an exception while resampling \"{item.phone.phoneme}\"");
+                                    }
+
+                                    // If resampler produced missing or 0-byte/corrupt file, generate a valid silence WAV fallback
+                                    if (!File.Exists(item.outputFile) || new FileInfo(item.outputFile).Length < 44) {
                                         DocManager.Inst.Project.timeAxis.TickPosToBarBeat(item.phrase.position + item.phone.position, out int bar, out int beat, out int tick);
-                                        Log.Warning($"{item.resampler} failed to resample \"{item.phone.phoneme}\" at {bar}:{beat}.{string.Format("{0:000}", tick)}");
-                                        var format = new NAudio.Wave.WaveFormat(44100, 16, 1);
-                                        using (var writer = new NAudio.Wave.WaveFileWriter(item.outputFile, format)) {
-                                            writer.Write(new byte[8820], 0, 8820);
+                                        Log.Warning($"{item.resampler} produced missing or invalid audio for \"{item.phone.phoneme}\" at {bar}:{beat}.{string.Format("{0:000}", tick)}. Generating silence fallback WAV.");
+                                        try {
+                                            var format = new WaveFormat(44100, 16, 1);
+                                            using (var writer = new WaveFileWriter(item.outputFile, format)) {
+                                                writer.Write(new byte[8820], 0, 8820);
+                                            }
+                                        } catch (Exception ex) {
+                                            Log.Error(ex, $"Failed to write silence fallback WAV to {item.outputFile}");
                                         }
                                     }
                                 }
@@ -118,7 +129,7 @@ namespace OpenUtau.Classic {
                 phrase.AddCacheFile(wavPath);
                 var result = Layout(phrase);
                 lock (Renderers.GetCacheLock(wavPath)) {
-                    if (File.Exists(wavPath)) {
+                    if (File.Exists(wavPath) && new FileInfo(wavPath).Length >= 44) {
                         try {
                             using (var waveStream = Wave.OpenFile(wavPath)) {
                                 result.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
@@ -152,7 +163,7 @@ namespace OpenUtau.Classic {
         }
 
         public UExpressionDescriptor[] GetSuggestedExpressions(USinger singer, URenderSettings renderSettings) {
-            var manifest= renderSettings.Resampler.Manifest;
+            var manifest = renderSettings.Resampler.Manifest;
             if (manifest == null) {
                 return new UExpressionDescriptor[] { };
             }

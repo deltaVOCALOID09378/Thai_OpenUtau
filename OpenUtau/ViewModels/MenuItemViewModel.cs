@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -11,10 +12,8 @@ using OpenUtau.Api;
 using OpenUtau.App.Controls;
 using OpenUtau.Core.Ustx;
 
-namespace OpenUtau.App.ViewModels
-{
-    public class MenuItemViewModel
-    {
+namespace OpenUtau.App.ViewModels {
+    public class MenuItemViewModel {
         public object? Header { get; set; }
         public ICommand? Command { get; set; }
         public ICommand? SecondaryCommand { get; set; }
@@ -28,13 +27,10 @@ namespace OpenUtau.App.ViewModels
         public virtual object HeaderViewModel => Header!;
 
         public MenuItemViewModel() { }
-        public MenuItemViewModel(bool isChecked)
-        {
+        public MenuItemViewModel(bool isChecked) {
             IsChecked = isChecked;
-            Dispatcher.UIThread.Post(() =>
-            {
-                Icon = new Path
-                {
+            Dispatcher.UIThread.Post(() => {
+                Icon = new Path {
                     IsVisible = isChecked,
                     Classes = { "checkmenu" },
                 };
@@ -42,12 +38,9 @@ namespace OpenUtau.App.ViewModels
         }
     }
 
-    public sealed class MenuSeparatorViewModel : MenuItemViewModel
-    {
-        public MenuSeparatorViewModel()
-        {
-            Header = new Panel
-            {
+    public sealed class MenuSeparatorViewModel : MenuItemViewModel {
+        public MenuSeparatorViewModel() {
+            Header = new Panel {
                 Height = 8,
                 Background = Brushes.Transparent,
                 IsHitTestVisible = false,
@@ -59,12 +52,9 @@ namespace OpenUtau.App.ViewModels
         public override object HeaderViewModel => Header!;
     }
 
-    public sealed class PhonemizerMenuSeparatorViewModel : MenuItemViewModel
-    {
-        public PhonemizerMenuSeparatorViewModel()
-        {
-            Header = new Border
-            {
+    public sealed class PhonemizerMenuSeparatorViewModel : MenuItemViewModel {
+        public PhonemizerMenuSeparatorViewModel() {
+            Header = new Border {
                 Height = 1,
                 Margin = new Thickness(0),
                 Background = ThemeManager.MutedIconBrush,
@@ -79,42 +69,35 @@ namespace OpenUtau.App.ViewModels
         public override object HeaderViewModel => Header!;
     }
 
-    public class PhonemizerMenuItemViewModel : MenuItemViewModel
-    {
+    public class PhonemizerMenuItemViewModel : MenuItemViewModel {
         public override object HeaderViewModel => this;
 
         public PhonemizerMenuItemViewModel(
             PhonemizerFactory factory,
             ICommand command,
             string? prefix = null,
-            ICommand? secondaryCommand = null)
-        {
+            ICommand? secondaryCommand = null) {
             Command = command;
             SecondaryCommand = secondaryCommand;
             CommandParameter = factory;
             Header = BuildHeader(factory, prefix);
         }
 
-        static Control BuildHeader(PhonemizerFactory factory, string? prefix)
-        {
-            var panel = new StackPanel
-            {
+        static Control BuildHeader(PhonemizerFactory factory, string? prefix) {
+            var panel = new StackPanel {
                 Orientation = Orientation.Horizontal,
                 Spacing = 6,
             };
-            var tagBlock = new TextBlock
-            {
+            var tagBlock = new TextBlock {
                 Text = prefix ?? factory.tag,
                 VerticalAlignment = VerticalAlignment.Center,
             };
             tagBlock.Foreground = ThemeManager.ForegroundBrush;
             var detail = factory.name;
-            if (!string.IsNullOrEmpty(factory.author))
-            {
+            if (!string.IsNullOrEmpty(factory.author)) {
                 detail += $" (Contributed by {factory.author})";
             }
-            var detailBlock = new TextBlock
-            {
+            var detailBlock = new TextBlock {
                 Text = detail,
                 Opacity = 0.4,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -126,36 +109,27 @@ namespace OpenUtau.App.ViewModels
         }
     }
 
-    public class SingerMenuItemViewModel : MenuItemViewModel
-    {
+    public class SingerMenuItemViewModel : MenuItemViewModel {
         Grid? singerMenuRow;
         public override object HeaderViewModel => singerMenuRow ??= SingerMenuRow.Create(this);
         public new object? Icon => null;
 
-        public bool IsFavourite
-        {
-            get
-            {
-                if (CommandParameter is USinger singer)
-                {
+        public bool IsFavourite {
+            get {
+                if(CommandParameter is USinger singer) {
                     return singer.IsFavourite;
                 }
                 return false;
             }
-            set
-            {
-                if (CommandParameter is USinger singer)
-                {
+            set {
+                if (CommandParameter is USinger singer) {
                     singer.IsFavourite = value;
                 }
             }
         }
-        public string? Location
-        {
-            get
-            {
-                if (CommandParameter is USinger singer)
-                {
+        public string? Location {
+            get {
+                if (CommandParameter is USinger singer) {
                     return singer.Location;
                 }
                 return null;

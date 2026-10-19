@@ -1,84 +1,73 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
-using Avalonia.Input;
+using OpenUtau.App;
 using OpenUtau.Audio;
 using OpenUtau.Classic;
-using OpenUtau.Colors;
 using OpenUtau.Core;
-using OpenUtau.Core.Editing;
-using OpenUtau.Core.Render;
 using OpenUtau.Core.Util;
+using OpenUtau.Colors;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using OpenUtau.Core.Render;
 using Serilog;
+using Avalonia.Input;
+using System.Collections.ObjectModel;
+using System.Reactive;
+using OpenUtau.Core.Editing;
 
-namespace OpenUtau.App.ViewModels
-{
-    public class LyricsHelperOption
-    {
+namespace OpenUtau.App.ViewModels {
+    public class LyricsHelperOption {
         public readonly Type klass;
-        public LyricsHelperOption(Type klass)
-        {
+        public LyricsHelperOption(Type klass) {
             this.klass = klass;
         }
-        public override string ToString()
-        {
+        public override string ToString() {
             return klass.Name;
         }
     }
     public class ShortcutsRefreshEvent { }
-    public class ShortcutItemViewModel : ViewModelBase
-    {
+    public class ShortcutItemViewModel : ViewModelBase {
         public string ActionName { get; set; } = string.Empty;
         public string ActionId { get; set; } = string.Empty;
-
+        
         [Reactive] public Key Key { get; set; }
         [Reactive] public KeyModifiers Modifiers { get; set; }
         [Reactive] public bool IsListening { get; set; }
 
-        public string DisplayString
-        {
-            get
-            {
+        public string DisplayString {
+            get {
                 if (IsListening) return ThemeManager.GetString("prefs.shortcuts.listening") ?? "Press keys...";
                 string mods = KeyTranslator.GetFriendlyModifiersName(Modifiers);
                 string friendlyKey = KeyTranslator.GetFriendlyName(Key.ToString());
-                if (!string.IsNullOrEmpty(mods))
-                {
+                if (!string.IsNullOrEmpty(mods)) {
                     return KeyTranslator.IsMac ? $"{mods}{friendlyKey}" : $"{mods} + {friendlyKey}";
                 }
-
+                
                 return friendlyKey;
             }
         }
 
-        public void RefreshDisplay()
-        {
+        public void RefreshDisplay() {
             this.RaisePropertyChanged(nameof(DisplayString));
         }
     }
-    public class PreferencesViewModel : ViewModelBase
-    {
+    public class PreferencesViewModel : ViewModelBase {
         // General
         private CultureInfo? language;
         private CultureInfo? sortingOrder;
 
         public List<CultureInfo>? Languages { get; }
-        public CultureInfo? Language
-        {
+        public CultureInfo? Language {
             get => language;
             set => this.RaiseAndSetIfChanged(ref language, value);
         }
         public List<CultureInfo>? SortingOrders { get; }
-        public CultureInfo? SortingOrder
-        {
+        public CultureInfo? SortingOrder {
             get => sortingOrder;
             set => this.RaiseAndSetIfChanged(ref sortingOrder, value);
         }
@@ -88,13 +77,11 @@ namespace OpenUtau.App.ViewModels
         private List<AudioOutputDevice>? audioOutputDevices;
         private AudioOutputDevice? audioOutputDevice;
 
-        public List<AudioOutputDevice>? AudioOutputDevices
-        {
+        public List<AudioOutputDevice>? AudioOutputDevices {
             get => audioOutputDevices;
             set => this.RaiseAndSetIfChanged(ref audioOutputDevices, value);
         }
-        public AudioOutputDevice? AudioOutputDevice
-        {
+        public AudioOutputDevice? AudioOutputDevice {
             get => audioOutputDevice;
             set => this.RaiseAndSetIfChanged(ref audioOutputDevice, value);
         }
@@ -128,13 +115,11 @@ namespace OpenUtau.App.ViewModels
         // Render
         [Reactive] public bool PreRender { get; set; }
         [Reactive] public int NumRenderThreads { get; set; }
-        public int LogicalCoreCount
-        {
+        public int LogicalCoreCount {
             get => Environment.ProcessorCount;
         }
         [Reactive] public bool HighThreads { get; set; }
-        public int SafeMaxThreadCount
-        {
+        public int SafeMaxThreadCount {
             get => Math.Min(8, LogicalCoreCount / 2);
         }
         [Reactive] public bool SkipRenderingMutedTracks { get; set; }
@@ -200,11 +185,9 @@ namespace OpenUtau.App.ViewModels
 
         // Shortcuts
         [Reactive] public ShortcutItemViewModel? ActiveShortcut { get; set; }
-        public void ListenForShortcut(ShortcutItemViewModel item)
-        {
+        public void ListenForShortcut(ShortcutItemViewModel item) {
             // Cancel any existing listening item
-            if (ActiveShortcut != null)
-            {
+            if (ActiveShortcut != null) {
                 ActiveShortcut.IsListening = false;
                 ActiveShortcut.RefreshDisplay();
             }
@@ -214,13 +197,10 @@ namespace OpenUtau.App.ViewModels
             ActiveShortcut.RefreshDisplay();
         }
 
-        private void SaveShortcuts()
-        {
+        private void SaveShortcuts() {
             Preferences.Default.Shortcuts.Clear();
-            foreach (var sc in allShortcuts)
-            {
-                Preferences.Default.Shortcuts.Add(new Preferences.ShortcutBinding
-                {
+            foreach (var sc in allShortcuts) { 
+                Preferences.Default.Shortcuts.Add(new Preferences.ShortcutBinding {
                     ActionId = sc.ActionId,
                     KeyName = sc.Key.ToString(),
                     ModifiersName = sc.Modifiers.ToString()
@@ -230,25 +210,22 @@ namespace OpenUtau.App.ViewModels
             MessageBus.Current.SendMessage(new ShortcutsRefreshEvent());
         }
 
-        public void AssignShortcut(Key key, KeyModifiers modifiers)
-        {
+        public void AssignShortcut(Key key, KeyModifiers modifiers) {
             if (ActiveShortcut == null) return;
-            if (key == Key.LeftCtrl || key == Key.RightCtrl || key == Key.LeftShift || key == Key.RightShift || key == Key.LeftAlt || key == Key.RightAlt || key == Key.LWin || key == Key.RWin)
-            {
+            if (key == Key.LeftCtrl || key == Key.RightCtrl || key == Key.LeftShift || key == Key.RightShift || key == Key.LeftAlt || key == Key.RightAlt || key == Key.LWin || key == Key.RWin) {
                 return;
             }
 
             var duplicate = allShortcuts.FirstOrDefault(s => s != ActiveShortcut && s.Key == key && s.Modifiers == modifiers);
-
-            if (duplicate != null)
-            {
+            
+            if (duplicate != null) {
                 ActiveShortcut.IsListening = false;
                 ActiveShortcut.RefreshDisplay();
                 ActiveShortcut = null;
                 string formatString = ThemeManager.GetString("prefs.shortcuts.duplicate") ?? "The shortcut '{0}' is already assigned to '{1}'.";
                 string message = string.Format(formatString, duplicate.DisplayString, duplicate.ActionName);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(message));
-                return;
+                return; 
             }
             ActiveShortcut.Key = key;
             ActiveShortcut.Modifiers = modifiers;
@@ -258,21 +235,17 @@ namespace OpenUtau.App.ViewModels
             SaveShortcuts();
         }
 
-        public void ResetShortcut(ShortcutItemViewModel item)
-        {
+        public void ResetShortcut(ShortcutItemViewModel item) {
             var defaults = new Preferences.SerializablePreferences().Shortcuts;
             var defaultBinding = defaults.FirstOrDefault(s => s.ActionId == item.ActionId);
-
-            if (defaultBinding != null &&
-                Enum.TryParse<Key>(defaultBinding.KeyName, out var defKey) &&
-                Enum.TryParse<KeyModifiers>(defaultBinding.ModifiersName, out var defMods))
-            {
-
+            
+            if (defaultBinding != null && 
+                Enum.TryParse<Key>(defaultBinding.KeyName, out var defKey) && 
+                Enum.TryParse<KeyModifiers>(defaultBinding.ModifiersName, out var defMods)) {
+                
                 item.Key = defKey;
                 item.Modifiers = defMods;
-            }
-            else
-            {
+            } else {
                 item.Key = Key.None;
                 item.Modifiers = KeyModifiers.None;
             }
@@ -281,139 +254,105 @@ namespace OpenUtau.App.ViewModels
             SaveShortcuts();
         }
 
-        public void ResetAllShortcuts()
-        {
+        public void ResetAllShortcuts() {
             var defaults = new Preferences.SerializablePreferences().Shortcuts;
 
-            Preferences.Default.Shortcuts = defaults.ToList();
-            Preferences.Save();
-            foreach (var item in allShortcuts)
-            {
+            Preferences.Default.Shortcuts = defaults.ToList(); 
+            Preferences.Save(); 
+            foreach (var item in allShortcuts) {
                 var defaultBinding = defaults.FirstOrDefault(s => s.ActionId == item.ActionId);
-
-                if (defaultBinding != null &&
-                    Enum.TryParse<Key>(defaultBinding.KeyName, out var defKey) &&
-                    Enum.TryParse<KeyModifiers>(defaultBinding.ModifiersName, out var defMods))
-                {
-
+                
+                if (defaultBinding != null && 
+                    Enum.TryParse<Key>(defaultBinding.KeyName, out var defKey) && 
+                    Enum.TryParse<KeyModifiers>(defaultBinding.ModifiersName, out var defMods)) {
+                    
                     item.Key = defKey;
                     item.Modifiers = defMods;
-                }
-                else
-                {
+                } else {
                     item.Key = Key.None;
                     item.Modifiers = KeyModifiers.None;
                 }
-
+                
                 item.IsListening = false;
                 item.RefreshDisplay();
             }
-            SaveShortcuts();
+            SaveShortcuts(); 
         }
         private List<ShortcutItemViewModel> allShortcuts = new List<ShortcutItemViewModel>();
         public ObservableCollection<ShortcutItemViewModel> FilteredShortcuts { get; } = new ObservableCollection<ShortcutItemViewModel>();
         [Reactive] public string ShortcutSearchText { get; set; } = string.Empty;
         public ReactiveCommand<ShortcutItemViewModel, Unit> ListenForShortcutCommand { get; }
 
-        // Record / Capture Preferences
-        private string captureFilenameFormat = Preferences.Default.CaptureFilenameFormat;
-        public string CaptureFilenameFormat {
-            get => captureFilenameFormat;
-            set {
-                this.RaiseAndSetIfChanged(ref captureFilenameFormat, value);
-                Preferences.Default.CaptureFilenameFormat = value;
-                Preferences.Save();
-            }
-        }
-
-        private string captureVideoFormat = Preferences.Default.CaptureVideoFormat;
-        public string CaptureVideoFormat {
-            get => captureVideoFormat;
-            set {
-                this.RaiseAndSetIfChanged(ref captureVideoFormat, value);
-                Preferences.Default.CaptureVideoFormat = value;
-                Preferences.Save();
-            }
-        }
-
-        private int captureVideoFormatIndex = Preferences.Default.CaptureVideoFormat switch { "avi" => 1, "gif" => 2, "mkv" => 3, _ => 0 };
-        public int CaptureVideoFormatIndex {
-            get => captureVideoFormatIndex;
-            set {
-                this.RaiseAndSetIfChanged(ref captureVideoFormatIndex, value);
-                CaptureVideoFormat = value switch { 1 => "avi", 2 => "gif", 3 => "mkv", _ => "mp4" };
-            }
-        }
-
-        private int captureResolutionIndex = Preferences.Default.CaptureResolution switch { 720 => 0, 1080 => 1, 2048 => 2, 4096 => 3, _ => 1 };
-        public int CaptureResolutionIndex {
-            get => captureResolutionIndex;
-            set {
-                this.RaiseAndSetIfChanged(ref captureResolutionIndex, value);
-                Preferences.Default.CaptureResolution = value switch { 0 => 720, 1 => 1080, 2 => 2048, 3 => 4096, _ => 1080 };
-                Preferences.Save();
-            }
-        }
-
-        private string captureExportLocation = Preferences.Default.CaptureExportLocation;
+        // DELTA SYNTH: Missing Capture/Record feature bindings
         public string CaptureExportLocation {
-            get => captureExportLocation;
+            get => Core.Util.Preferences.Default.CaptureExportLocation;
             set {
-                this.RaiseAndSetIfChanged(ref captureExportLocation, value);
-                Preferences.Default.CaptureExportLocation = value;
-                Preferences.Save();
+                Core.Util.Preferences.Default.CaptureExportLocation = value;
+                Core.Util.Preferences.Save();
+                this.RaisePropertyChanged(nameof(CaptureExportLocation));
             }
         }
-
-        private int captureCountdownIndex = Preferences.Default.CaptureCountdown switch { 0 => 0, 3 => 1, 5 => 2, 10 => 3, _ => 0 };
+        public string CaptureFilenameFormat {
+            get => Core.Util.Preferences.Default.CaptureFilenameFormat;
+            set {
+                Core.Util.Preferences.Default.CaptureFilenameFormat = value;
+                Core.Util.Preferences.Save();
+                this.RaisePropertyChanged(nameof(CaptureFilenameFormat));
+            }
+        }
+        public int CaptureVideoFormatIndex {
+            get => Core.Util.Preferences.Default.CaptureVideoFormat == "mp4" ? 0 : 1;
+            set {
+                Core.Util.Preferences.Default.CaptureVideoFormat = value == 0 ? "mp4" : "avi";
+                Core.Util.Preferences.Save();
+                this.RaisePropertyChanged(nameof(CaptureVideoFormatIndex));
+            }
+        }
+        public int CaptureResolutionIndex {
+            get => Core.Util.Preferences.Default.CaptureResolution == 1080 ? 0 : (Core.Util.Preferences.Default.CaptureResolution == 720 ? 1 : 2);
+            set {
+                Core.Util.Preferences.Default.CaptureResolution = value == 0 ? 1080 : (value == 1 ? 720 : 480);
+                Core.Util.Preferences.Save();
+                this.RaisePropertyChanged(nameof(CaptureResolutionIndex));
+            }
+        }
         public int CaptureCountdownIndex {
-            get => captureCountdownIndex;
+            get => Core.Util.Preferences.Default.CaptureCountdown;
             set {
-                this.RaiseAndSetIfChanged(ref captureCountdownIndex, value);
-                Preferences.Default.CaptureCountdown = value switch { 0 => 0, 1 => 3, 2 => 5, 3 => 10, _ => 0 };
-                Preferences.Save();
+                Core.Util.Preferences.Default.CaptureCountdown = value;
+                Core.Util.Preferences.Save();
+                this.RaisePropertyChanged(nameof(CaptureCountdownIndex));
             }
         }
 
-        public PreferencesViewModel()
-        {
+        public PreferencesViewModel() {
             ListenForShortcutCommand = ReactiveCommand.Create<ShortcutItemViewModel>(ListenForShortcut);
 
             var validActionIds = new HashSet<string>();
-
+            
             var defaultShortcuts = new Preferences.SerializablePreferences().Shortcuts;
-            foreach (var sc in defaultShortcuts)
-            {
+            foreach (var sc in defaultShortcuts) {
                 validActionIds.Add(sc.ActionId);
             }
-            foreach (var type in DocManager.Inst.ExternalBatchEditTypes)
-            {
+            foreach (var type in DocManager.Inst.ExternalBatchEditTypes) {
                 try { if (Activator.CreateInstance(type) is BatchEdit edit) validActionIds.Add(edit.Name); } catch { }
             }
-            if (DocManager.Inst.Plugins != null)
-            {
-                foreach (var plugin in DocManager.Inst.Plugins)
-                {
+            if (DocManager.Inst.Plugins != null) {
+                foreach (var plugin in DocManager.Inst.Plugins) {
                     validActionIds.Add(plugin.Name);
                 }
             }
-            if (Preferences.Default.Shortcuts != null)
-            {
+            if (Preferences.Default.Shortcuts != null) {
                 var orderedShortcuts = new List<Preferences.ShortcutBinding>();
                 bool requiresSave = false;
 
-                foreach (var defaultBinding in defaultShortcuts)
-                {
+                foreach (var defaultBinding in defaultShortcuts) {
                     var userBinding = Preferences.Default.Shortcuts.FirstOrDefault(s => s.ActionId == defaultBinding.ActionId);
 
-                    if (userBinding != null)
-                    {
+                    if (userBinding != null) {
                         orderedShortcuts.Add(userBinding);
-                    }
-                    else
-                    {
-                        orderedShortcuts.Add(new Preferences.ShortcutBinding
-                        {
+                    } else {
+                        orderedShortcuts.Add(new Preferences.ShortcutBinding {
                             ActionId = defaultBinding.ActionId,
                             KeyName = defaultBinding.KeyName,
                             ModifiersName = defaultBinding.ModifiersName
@@ -422,77 +361,61 @@ namespace OpenUtau.App.ViewModels
                     }
                 }
 
-                foreach (var userBinding in Preferences.Default.Shortcuts)
-                {
+                foreach (var userBinding in Preferences.Default.Shortcuts) {
                     bool isDefault = defaultShortcuts.Any(d => d.ActionId == userBinding.ActionId);
                     bool isValidPlugin = validActionIds.Contains(userBinding.ActionId);
 
-                    if (!isDefault && isValidPlugin)
-                    {
+                    if (!isDefault && isValidPlugin) {
                         orderedShortcuts.Add(userBinding);
                     }
                 }
 
-                if (Preferences.Default.Shortcuts.Count != orderedShortcuts.Count)
-                {
+                if (Preferences.Default.Shortcuts.Count != orderedShortcuts.Count) {
                     requiresSave = true;
-                }
-                else
-                {
-                    for (int i = 0; i < orderedShortcuts.Count; i++)
-                    {
-                        if (Preferences.Default.Shortcuts[i].ActionId != orderedShortcuts[i].ActionId)
-                        {
+                } else {
+                    for (int i = 0; i < orderedShortcuts.Count; i++) {
+                        if (Preferences.Default.Shortcuts[i].ActionId != orderedShortcuts[i].ActionId) {
                             requiresSave = true;
                             break;
                         }
                     }
                 }
 
-                if (requiresSave)
-                {
+                if (requiresSave) {
                     Preferences.Default.Shortcuts = orderedShortcuts;
                     Preferences.Save();
                 }
             }
 
-            if (Preferences.Default.Shortcuts != null)
-            {
-                foreach (var binding in Preferences.Default.Shortcuts)
-                {
-
+            if (Preferences.Default.Shortcuts != null) {
+                foreach (var binding in Preferences.Default.Shortcuts) {
+                    
                     Key parsedKey = Key.None;
                     KeyModifiers parsedMods = KeyModifiers.None;
-
-                    if (!string.IsNullOrEmpty(binding.KeyName))
-                    {
+                    
+                    if (!string.IsNullOrEmpty(binding.KeyName)) {
                         Enum.TryParse(binding.KeyName, out parsedKey);
                     }
-                    if (!string.IsNullOrEmpty(binding.ModifiersName))
-                    {
+                    if (!string.IsNullOrEmpty(binding.ModifiersName)) {
                         Enum.TryParse(binding.ModifiersName, out parsedMods);
                     }
 
                     string lookupKey = "shortcut." + binding.ActionId;
                     string displayName = ThemeManager.GetString(lookupKey);
-
-                    if (string.IsNullOrEmpty(displayName) || displayName == lookupKey)
-                    {
+                    
+                    if (string.IsNullOrEmpty(displayName) || displayName == lookupKey) {
                         displayName = ThemeManager.GetString(binding.ActionId);
                     }
 
-                    if (string.IsNullOrEmpty(displayName) || displayName == binding.ActionId)
-                    {
+                    if (string.IsNullOrEmpty(displayName) || displayName == binding.ActionId) {
                         displayName = binding.ActionId;
                     }
 
-                    if (displayName.StartsWith("shortcut."))
-                    {
+                    if (displayName.StartsWith("shortcut.")) {
                         displayName = displayName.Substring(9);
                     }
 
-                    allShortcuts.Add(new ShortcutItemViewModel
-                    {
+                    allShortcuts.Add(new ShortcutItemViewModel {
                         ActionId = binding.ActionId,
                         ActionName = displayName,
                         Key = parsedKey,
@@ -500,71 +423,57 @@ namespace OpenUtau.App.ViewModels
                     });
                 }
             }
-
+            
             // external batch edits
-            foreach (var type in DocManager.Inst.ExternalBatchEditTypes)
-            {
-                try
-                {
-                    if (Activator.CreateInstance(type) is BatchEdit edit)
-                    {
-
+            foreach (var type in DocManager.Inst.ExternalBatchEditTypes) {
+                try {
+                    if (Activator.CreateInstance(type) is BatchEdit edit) {
+                        
                         var savedSc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == edit.Name);
                         Key savedKey = Key.None;
                         KeyModifiers savedMods = KeyModifiers.None;
-
-                        if (savedSc != null)
-                        {
+                        
+                        if (savedSc != null) {
                             Enum.TryParse(savedSc.KeyName, out savedKey);
                             Enum.TryParse(savedSc.ModifiersName, out savedMods);
                         }
 
                         string pluginName = edit.Name;
-                        if (allShortcuts.Any(s => s.ActionId == pluginName))
-                        {
-                            continue;
+                        if (allShortcuts.Any(s => s.ActionId == pluginName)) {
+                            continue; 
                         }
-
+                        
                         string lookupKey = "shortcut." + pluginName;
                         string displayName = ThemeManager.GetString(lookupKey);
-
-                        if (string.IsNullOrEmpty(displayName) || displayName == lookupKey)
-                        {
+                        
+                        if (string.IsNullOrEmpty(displayName) || displayName == lookupKey) {
                             displayName = pluginName;
                         }
-                        if (displayName.StartsWith("shortcut."))
-                        {
+                        if (displayName.StartsWith("shortcut.")) {
                             displayName = displayName.Substring(9);
                         }
 
-                        allShortcuts.Add(new ShortcutItemViewModel
-                        {
-                            ActionId = pluginName,
+                        allShortcuts.Add(new ShortcutItemViewModel {
+                            ActionId = pluginName, 
                             ActionName = displayName,
                             Key = savedKey,
                             Modifiers = savedMods
                         });
                     }
-                }
-                catch
-                {
+                } catch { 
                 }
             }
-
+            
             // legacy plugins
-            if (DocManager.Inst.Plugins != null)
-            {
-                foreach (var plugin in DocManager.Inst.Plugins)
-                {
-                    try
-                    {
+            if (DocManager.Inst.Plugins != null) {
+                foreach (var plugin in DocManager.Inst.Plugins) {
+                    try {
                         var savedSc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == plugin.Name);
-
+                        
                         Key savedKey = Key.None;
                         KeyModifiers savedMods = KeyModifiers.None;
-
-                        if (savedSc != null)
-                        {
+                        
+                        if (savedSc != null) {
                             Enum.TryParse(savedSc.KeyName, out savedKey);
                             Enum.TryParse(savedSc.ModifiersName, out savedMods);
                         }
@@ -572,44 +481,36 @@ namespace OpenUtau.App.ViewModels
                         string pluginName = plugin.Name;
                         string lookupKey = "shortcut." + pluginName;
                         string displayName = ThemeManager.GetString(lookupKey);
-
-                        if (string.IsNullOrEmpty(displayName) || displayName == lookupKey)
-                        {
+                        
+                        if (string.IsNullOrEmpty(displayName) || displayName == lookupKey) {
                             displayName = pluginName;
                         }
 
-                        if (displayName.StartsWith("shortcut."))
-                        {
+                        if (displayName.StartsWith("shortcut.")) {
                             displayName = displayName.Substring(9);
                         }
 
                         string legacyTag = ThemeManager.GetString("pianoroll.menu.part.legacypluginexp.shortcuts");
-                        if (string.IsNullOrEmpty(legacyTag) || legacyTag == "pianoroll.menu.part.legacypluginexp.shortcuts")
-                        {
+                        if (string.IsNullOrEmpty(legacyTag) || legacyTag == "pianoroll.menu.part.legacypluginexp.shortcuts") {
                             legacyTag = "(legacy)";
                         }
 
                         var existingItem = allShortcuts.FirstOrDefault(s => s.ActionId == pluginName);
-                        if (existingItem != null)
-                        {
-                            if (!existingItem.ActionName.EndsWith(legacyTag))
-                            {
+                        if (existingItem != null) {
+                            if (!existingItem.ActionName.EndsWith(legacyTag)) {
                                 existingItem.ActionName = $"{existingItem.ActionName} {legacyTag}";
                             }
                             continue;
                         }
 
-                        allShortcuts.Add(new ShortcutItemViewModel
-                        {
-                            ActionId = pluginName,
+                        allShortcuts.Add(new ShortcutItemViewModel {
+                            ActionId = pluginName, 
                             ActionName = $"{displayName} {legacyTag}",
                             Key = savedKey,
                             Modifiers = savedMods
                         });
-                    }
-                    catch
-                    {
-
+                    } catch {
+                        
                     }
                 }
             }
@@ -620,35 +521,29 @@ namespace OpenUtau.App.ViewModels
                 .ToList();
 
             allShortcuts.Clear();
-            foreach (var sc in uniqueShortcuts)
-            {
+            foreach (var sc in uniqueShortcuts) {
                 allShortcuts.Add(sc);
             }
 
             this.WhenAnyValue(vm => vm.ShortcutSearchText)
-            .Subscribe(text =>
-            {
+            .Subscribe(text => {
                 FilteredShortcuts.Clear();
                 var lowerText = text?.ToLowerInvariant() ?? string.Empty;
-                foreach (var sc in allShortcuts)
-                {
-                    if (string.IsNullOrEmpty(lowerText) ||
-                        sc.ActionName.ToLowerInvariant().Contains(lowerText) ||
-                        sc.DisplayString.ToLowerInvariant().Contains(lowerText))
-                    {
+                foreach (var sc in allShortcuts) {
+                    if (string.IsNullOrEmpty(lowerText) || 
+                        sc.ActionName.ToLowerInvariant().Contains(lowerText) || 
+                        sc.DisplayString.ToLowerInvariant().Contains(lowerText)) {
                         FilteredShortcuts.Add(sc);
                     }
                 }
             });
 
             var audioOutput = PlaybackManager.Inst.AudioOutput;
-            if (audioOutput != null)
-            {
+            if (audioOutput != null) {
                 AudioOutputDevices = audioOutput.GetOutputDevices();
                 int deviceNumber = audioOutput.DeviceNumber;
                 var device = AudioOutputDevices.FirstOrDefault(d => d.deviceNumber == deviceNumber);
-                if (device != null)
-                {
+                if (device != null) {
                     AudioOutputDevice = device;
                 }
             }
@@ -701,13 +596,6 @@ namespace OpenUtau.App.ViewModels
             DiffSingerPhonemePanelMode = Preferences.Default.DiffSingerPhonemePanelMode;
             DiffSingerLocalRetaking = Preferences.Default.DiffSingerLocalRetaking;
             DiffSingerShowRenderPhraseBoundaries = Preferences.Default.DiffSingerShowRenderPhraseBoundaries;
-            
-            CaptureFilenameFormat = Preferences.Default.CaptureFilenameFormat;
-            CaptureVideoFormat = Preferences.Default.CaptureVideoFormat;
-            CaptureResolutionIndex = Preferences.Default.CaptureResolution switch { 720 => 0, 1080 => 1, 2048 => 2, 4096 => 3, _ => 1 };
-            CaptureExportLocation = Preferences.Default.CaptureExportLocation;
-            CaptureCountdownIndex = Preferences.Default.CaptureCountdown switch { 0 => 0, 3 => 1, 5 => 2, 10 => 3, _ => 0 };
-
             SkipRenderingMutedTracks = Preferences.Default.SkipRenderingMutedTracks;
             ThemeName = Preferences.Default.ThemeName;
             ThemeEditable = !BuiltInThemeLoader.IsBuiltInTheme(ThemeName) && !CustomTheme.IsPackageTheme(ThemeName);
@@ -740,58 +628,46 @@ namespace OpenUtau.App.ViewModels
             MessageBus.Current.Listen<ThemeEditorSavedEvent>()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => RefreshThemes());
-
+            
             this.WhenAnyValue(vm => vm.UseSystemDefaultDevice)
-                .Subscribe(useDefault =>
-                {
+                .Subscribe(useDefault => {
                     Preferences.Default.UseSystemDefaultAudioDevice = useDefault;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.AudioOutputDevice)
                 .WhereNotNull()
                 .SubscribeOn(RxApp.MainThreadScheduler)
-                .Subscribe(device =>
-                {
-                    if (UseSystemDefaultDevice)
-                    {
+                .Subscribe(device => {
+                    if (UseSystemDefaultDevice) {
                         return;
                     }
-                    if (PlaybackManager.Inst.AudioOutput != null)
-                    {
-                        try
-                        {
+                    if (PlaybackManager.Inst.AudioOutput != null) {
+                        try {
                             PlaybackManager.Inst.AudioOutput.SelectDevice(device.guid, device.deviceNumber);
-                        }
-                        catch (Exception e)
-                        {
+                        } catch (Exception e) {
                             DocManager.Inst.ExecuteCmd(new ErrorMessageNotification($"Failed to select device {device.name}", e));
                         }
                     }
                 });
             this.WhenAnyValue(vm => vm.PreferPortAudio)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.PreferPortAudio = index > 0;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.PlaybackAutoScroll)
-                .Subscribe(autoScroll =>
-                {
+                .Subscribe(autoScroll => {
                     Preferences.Default.PlaybackAutoScroll = autoScroll;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.PlayPosMarkerMargin)
-                .Subscribe(playPosMarkerMargin =>
-                {
+                .Subscribe(playPosMarkerMargin => {
                     Preferences.Default.PlayPosMarkerMargin = playPosMarkerMargin;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.PlaybackPitchFollowEnabled)
-                .Subscribe(enabled =>
-                {
+                .Subscribe(enabled => {
                     Preferences.Default.PlaybackPitchFollowEnabled = enabled;
-                    if (!enabled)
-                    {
+                    if (!enabled) {
                         PlaybackPitchFollowShowPath = false;
                         Preferences.Default.PlaybackPitchFollowShowPath = false;
                     }
@@ -799,31 +675,26 @@ namespace OpenUtau.App.ViewModels
                     MessageBus.Current.SendMessage(new PlaybackPitchFollowSettingsChangedEvent());
                 });
             this.WhenAnyValue(vm => vm.PlaybackPitchFollowSemitoneThreshold)
-                .Subscribe(threshold =>
-                {
+                .Subscribe(threshold => {
                     Preferences.Default.PlaybackPitchFollowSemitoneThreshold = Math.Clamp(threshold, 0, 24);
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PlaybackPitchFollowSettingsChangedEvent());
                 });
             this.WhenAnyValue(vm => vm.PlaybackPitchFollowVerticalPosition)
-                .Subscribe(position =>
-                {
+                .Subscribe(position => {
                     Preferences.Default.PlaybackPitchFollowVerticalPosition = Math.Clamp(position, 0.15, 0.85);
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PlaybackPitchFollowSettingsChangedEvent());
                 });
             this.WhenAnyValue(vm => vm.PlaybackPitchFollowFrameSmoothing)
-                .Subscribe(smoothing =>
-                {
+                .Subscribe(smoothing => {
                     Preferences.Default.PlaybackPitchFollowFrameSmoothing = Math.Clamp(smoothing, 0.05, 1);
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PlaybackPitchFollowSettingsChangedEvent());
                 });
             this.WhenAnyValue(vm => vm.PlaybackPitchFollowShowPath)
-                .Subscribe(showPath =>
-                {
-                    if (!Preferences.Default.PlaybackPitchFollowEnabled)
-                    {
+                .Subscribe(showPath => {
+                    if (!Preferences.Default.PlaybackPitchFollowEnabled) {
                         return;
                     }
                     Preferences.Default.PlaybackPitchFollowShowPath = showPath;
@@ -831,47 +702,40 @@ namespace OpenUtau.App.ViewModels
                     MessageBus.Current.SendMessage(new PlaybackPitchFollowSettingsChangedEvent());
                 });
             this.WhenAnyValue(vm => vm.UseModernPlayhead)
-                .Subscribe(useModernPlayhead =>
-                {
+                .Subscribe(useModernPlayhead => {
                     Preferences.Default.UseModernPlayhead = useModernPlayhead;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new NotesViewModel.PlayheadModeChangedEvent(useModernPlayhead));
                 });
             this.WhenAnyValue(vm => vm.LockStartTime)
-                .Subscribe(lockStartTime =>
-                {
+                .Subscribe(lockStartTime => {
                     Preferences.Default.LockStartTime = lockStartTime;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.InstallToAdditionalSingersPath)
-                .Subscribe(additionalSingersPath =>
-                {
+                .Subscribe(additionalSingersPath => {
                     Preferences.Default.InstallToAdditionalSingersPath = additionalSingersPath;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.LoadDeepFolders)
-                .Subscribe(loadDeepFolders =>
-                {
+                .Subscribe(loadDeepFolders => {
                     Preferences.Default.LoadDeepFolderSinger = loadDeepFolders;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.PreRender)
-                .Subscribe(preRender =>
-                {
+                .Subscribe(preRender => {
                     Preferences.Default.PreRender = preRender;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.Language)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(lang =>
-                {
+                .Subscribe(lang => {
                     Preferences.Default.Language = lang?.Name ?? string.Empty;
                     Preferences.Save();
                     App.SetLanguage(Preferences.Default.Language);
                 });
             this.WhenAnyValue(vm => vm.SortingOrder)
-                .Subscribe(so =>
-                {
+                .Subscribe(so => {
                     Preferences.Default.SortingOrder = so?.Name ?? null;
                     Preferences.Save();
                 });
@@ -880,11 +744,9 @@ namespace OpenUtau.App.ViewModels
             this.WhenAnyValue(vm => vm.ThemeName)
                 .Skip(1)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(themeName =>
-                {
+                .Subscribe(themeName => {
                     ThemeEditable = !BuiltInThemeLoader.IsBuiltInTheme(themeName) && !CustomTheme.IsPackageTheme(themeName);
-                    if (!IsThemeEditorOpen)
-                    {
+                    if (!IsThemeEditorOpen) {
                         Preferences.Default.ThemeName = themeName;
                         Preferences.Save();
                         App.SetTheme();
@@ -892,24 +754,21 @@ namespace OpenUtau.App.ViewModels
                 });
             this.WhenAnyValue(vm => vm.DegreeStyle)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(degreeStyle =>
-                {
+                .Subscribe(degreeStyle => {
                     Preferences.Default.DegreeStyle = degreeStyle;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PianorollRefreshEvent("Part"));
                 });
             this.WhenAnyValue(vm => vm.UseTrackColor)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(trackColor =>
-                {
+                .Subscribe(trackColor => {
                     Preferences.Default.UseTrackColor = trackColor;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PianorollRefreshEvent("TrackColor"));
                 });
             this.WhenAnyValue(vm => vm.TintPianoRollBackgroundWithTrackColor)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(tint =>
-                {
+                .Subscribe(tint => {
                     Preferences.Default.TintPianoRollBackgroundWithTrackColor = tint;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PianorollRefreshEvent("TrackColor"));
@@ -917,332 +776,277 @@ namespace OpenUtau.App.ViewModels
             this.WhenAnyValue(vm => vm.DefaultTrackColor)
                 .WhereNotNull()
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(trackColor =>
-                {
+                .Subscribe(trackColor => {
                     Preferences.Default.DefaultTrackColor = trackColor.Name;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.ShowPortrait)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(showPortrait =>
-                {
+                .Subscribe(showPortrait => {
                     Preferences.Default.ShowPortrait = showPortrait;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PianorollRefreshEvent("Portrait"));
                 });
             this.WhenAnyValue(vm => vm.ShowIcon)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(showIcon =>
-                {
+                .Subscribe(showIcon => {
                     Preferences.Default.ShowIcon = showIcon;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PianorollRefreshEvent("Portrait"));
                 });
             this.WhenAnyValue(vm => vm.ShowGhostNotes)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(showGhostNotes =>
-                {
+                .Subscribe(showGhostNotes => {
                     Preferences.Default.ShowGhostNotes = showGhostNotes;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new PianorollRefreshEvent("Part"));
                 });
             this.WhenAnyValue(vm => vm.ShowNoteBorder)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(showNoteBorder =>
-                {
+                .Subscribe(showNoteBorder => {
                     Preferences.Default.ShowNoteBorder = showNoteBorder;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new NotesRefreshEvent());
                 });
             this.WhenAnyValue(vm => vm.SolidTickGridLines)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(solid =>
-                {
+                .Subscribe(solid => {
                     Preferences.Default.SolidTickGridLines = solid;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new TickGridLinesStyleChangedEvent());
                 });
             this.WhenAnyValue(vm => vm.SolidExpPanelGridLines)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(solid =>
-                {
+                .Subscribe(solid => {
                     Preferences.Default.SolidExpPanelGridLines = solid;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new ExpressionCurveStyleChangedEvent());
                 });
             this.WhenAnyValue(vm => vm.NoteCornerRadius)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(r =>
-                {
+                .Subscribe(r => {
                     var c = Math.Clamp(r, 0, 12);
                     Preferences.Default.NoteCornerRadius = c;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new NotesRefreshEvent());
                 });
             this.WhenAnyValue(vm => vm.Beta)
-                .Subscribe(beta =>
-                {
+                .Subscribe(beta => {
                     Preferences.Default.Beta = beta;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.LyricsHelper)
-                .Subscribe(option =>
-                {
+                .Subscribe(option => {
                     ActiveLyricsHelper.Inst.Set(option?.klass);
                     Preferences.Default.LyricHelper = option?.klass?.Name ?? string.Empty;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.LyricsHelperBrackets)
-                .Subscribe(brackets =>
-                {
+                .Subscribe(brackets => {
                     Preferences.Default.LyricsHelperBrackets = brackets;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.OtoEditor)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.OtoEditor = index;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.NumRenderThreads)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.NumRenderThreads = index;
                     HighThreads = index > SafeMaxThreadCount ? true : false;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DefaultRenderer)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.DefaultRenderer = index;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.OnnxRunner)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.OnnxRunner = index;
                     Preferences.Save();
                     ToggleOnnxGpuDisplay(index == "DirectML");
                 });
             this.WhenAnyValue(vm => vm.OnnxGpu)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.OnnxGpu = index.deviceId;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.RememberMid)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.RememberMid = index;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.RememberUst)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.RememberUst = index;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.RememberVsqx)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.RememberVsqx = index;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.ClearCacheOnQuit)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.ClearCacheOnQuit = index;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerSteps)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.DiffSingerSteps = index;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerStepsVariance)
-                 .Subscribe(index =>
-                 {
+                 .Subscribe(index => {
                      Preferences.Default.DiffSingerStepsVariance = index;
                      Preferences.Save();
                  });
             this.WhenAnyValue(vm => vm.DiffSingerStepsPitch)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.DiffSingerStepsPitch = index;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerDepth)
-                .Subscribe(index =>
-                {
+                .Subscribe(index => {
                     Preferences.Default.DiffSingerDepth = index / 100;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerTensorCache)
-                .Subscribe(useCache =>
-                {
+                .Subscribe(useCache => {
                     Preferences.Default.DiffSingerTensorCache = useCache;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerPhonemePanelMode)
-                .Subscribe(mode =>
-                {
+                .Subscribe(mode => {
                     Preferences.Default.DiffSingerPhonemePanelMode = mode;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new NotesRefreshEvent());
                 });
             this.WhenAnyValue(vm => vm.DiffSingerVarianceLocalPitchPatch)
-                .Subscribe(useLocalPatch =>
-                {
+                .Subscribe(useLocalPatch => {
                     Preferences.Default.DiffSingerVarianceLocalPitchPatch = useLocalPatch;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerUnvoicedConsonantAcousticF0Interpolate)
-                .Subscribe(enabled =>
-                {
+                .Subscribe(enabled => {
                     Preferences.Default.DiffSingerUnvoicedConsonantAcousticF0Interpolate = enabled;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerShowAcousticF0PatchPreview)
-                .Subscribe(show =>
-                {
+                .Subscribe(show => {
                     Preferences.Default.DiffSingerShowAcousticF0PatchPreview = show;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerLangCodeHide)
-                .Subscribe(useCache =>
-                {
+                .Subscribe(useCache => {
                     Preferences.Default.DiffSingerLangCodeHide = useCache;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new NotesRefreshEvent());
                 });
             this.WhenAnyValue(vm => vm.DiffSingerLocalRetaking)
-                .Subscribe(value =>
-                {
+                .Subscribe(value => {
                     Preferences.Default.DiffSingerLocalRetaking = value;
                     Preferences.Save();
                 });
             this.WhenAnyValue(vm => vm.DiffSingerShowRenderPhraseBoundaries)
-                .Subscribe(showBoundaries =>
-                {
+                .Subscribe(showBoundaries => {
                     Preferences.Default.DiffSingerShowRenderPhraseBoundaries = showBoundaries;
                     Preferences.Save();
                     MessageBus.Current.SendMessage(new NotesRefreshEvent());
                 });
             this.WhenAnyValue(vm => vm.SkipRenderingMutedTracks)
-                .Subscribe(skipRenderingMutedTracks =>
-                {
+                .Subscribe(skipRenderingMutedTracks => {
                     Preferences.Default.SkipRenderingMutedTracks = skipRenderingMutedTracks;
                     Preferences.Save();
                 });
         }
 
-        public void TestAudioOutputDevice()
-        {
-            try
-            {
+        public void TestAudioOutputDevice() {
+            try {
                 PlaybackManager.Inst.PlayTestSound();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Log.Error(e, "Failed to play test sound.");
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification("Failed to play test sound.", e));
             }
         }
 
-        public void OpenResamplerLocation()
-        {
-            try
-            {
+        public void OpenResamplerLocation() {
+            try {
                 string path = PathManager.Inst.ResamplersPath;
                 Directory.CreateDirectory(path);
                 OS.OpenFolder(path);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
         }
 
-        public void SetAddlSingersPath(string path)
-        {
+        public void SetAddlSingersPath(string path) {
             Preferences.Default.AdditionalSingerPath = path;
             Preferences.Save();
             this.RaisePropertyChanged(nameof(AdditionalSingersPath));
         }
 
-        public void SetVLabelerPath(string path)
-        {
+        public void SetVLabelerPath(string path) {
             Preferences.Default.VLabelerPath = path;
             Preferences.Save();
             this.RaisePropertyChanged(nameof(VLabelerPath));
         }
 
-        public void SetSetParamPath(string path)
-        {
+        public void SetSetParamPath(string path) {
             Preferences.Default.SetParamPath = path;
             Preferences.Save();
             this.RaisePropertyChanged(nameof(SetParamPath));
         }
 
-        public void SetWinePath(string path)
-        {
+        public void SetWinePath(string path) {
             Preferences.Default.WinePath = path;
             Preferences.Save();
             ToolsManager.Inst.Initialize();
             this.RaisePropertyChanged(nameof(WinePath));
         }
 
-        public void RefreshThemes()
-        {
+        public void RefreshThemes() {
             Colors.CustomTheme.ListThemes();
             _ = OudepLoaderRegistry.LoadAllAsync();
             this.RaisePropertyChanged(nameof(ThemeItems));
             RefreshThemePickerItems();
         }
 
-        void RefreshThemePickerItems()
-        {
+        void RefreshThemePickerItems() {
             BuiltInThemePickerItems.Clear();
-            foreach (var name in BuiltInThemeLoader.BaseThemeNames)
-            {
+            foreach (var name in BuiltInThemeLoader.BaseThemeNames) {
                 BuiltInThemePickerItems.Add(ThemePickerItemViewModel.FromThemeName(name));
             }
 
             BuiltInCustomThemePickerItems.Clear();
-            foreach (var name in BuiltInThemeLoader.BuiltInCustomThemeNames)
-            {
+            foreach (var name in BuiltInThemeLoader.BuiltInCustomThemeNames) {
                 BuiltInCustomThemePickerItems.Add(ThemePickerItemViewModel.FromThemeName(name));
             }
 
             CustomThemePickerItems.Clear();
             Colors.CustomTheme.ListThemes();
-            foreach (var name in Colors.CustomTheme.Themes.Keys.OrderBy(key => key, StringComparer.OrdinalIgnoreCase))
-            {
+            foreach (var name in Colors.CustomTheme.Themes.Keys.OrderBy(key => key, StringComparer.OrdinalIgnoreCase)) {
                 CustomThemePickerItems.Add(ThemePickerItemViewModel.FromThemeName(name));
             }
             CustomThemePickerItems.Add(ThemePickerItemViewModel.CreateAddTile());
             SyncThemePickerSelection();
         }
 
-        void SyncThemePickerSelection()
-        {
-            foreach (var item in BuiltInThemePickerItems)
-            {
+        void SyncThemePickerSelection() {
+            foreach (var item in BuiltInThemePickerItems) {
                 item.IsSelected = item.Name == ThemeName;
             }
-            foreach (var item in BuiltInCustomThemePickerItems)
-            {
+            foreach (var item in BuiltInCustomThemePickerItems) {
                 item.IsSelected = item.Name == ThemeName;
             }
-            foreach (var item in CustomThemePickerItems)
-            {
+            foreach (var item in CustomThemePickerItems) {
                 item.IsSelected = !item.IsCreateTile && item.Name == ThemeName;
             }
         }
 
-        public void ToggleOnnxGpuDisplay(bool show)
-        {
+        public void ToggleOnnxGpuDisplay(bool show) {
             ShowOnnxGpu = show;
         }
     }

@@ -1,9 +1,11 @@
-// Made And Checked By DELTA SYNTH & Gemini AI
-// Original by DELTA SYNTH
-// Version: v.1.1
-// History/Summary: Fixed CS1061 IsRest error and updated expression API calls to use UTrack.
-// Summary: AutoMixBatchEdit — auto-adjusts note velocity/dynamics based on pitch contour
-//          for more natural, expressive, and melodic vocal output.
+/*
+AutoMixBatchEdit.cs
+OpenUtau.Core/Editing/AutoMixBatchEdit.cs
+Made And Checked By DELTA SYNTH & Gemini AI
+Original by DELTA SYNTH
+Revision 1.2
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,13 +30,10 @@ namespace OpenUtau.Core.Editing {
         // Expression key for velocity/loudness (standard OpenUtau expression)
         private const string VelKey = "vel";
 
-        public string Name => "AutoMix (Auto Dynamics)";
+        public string Name => "pianoroll.menu.notes.automix";
 
         public void Run(UProject project, UVoicePart part, List<UNote> selectedNotes, DocManager docManager) {
-            if (selectedNotes == null || selectedNotes.Count == 0) return;
-
-            // Calculate average pitch of selected notes
-            var pitchedNotes = selectedNotes.ToList();
+            var pitchedNotes = (selectedNotes != null && selectedNotes.Count > 0) ? selectedNotes : part.notes.ToList();
             if (pitchedNotes.Count == 0) return;
 
             double avgTone = pitchedNotes.Average(n => (double)n.tone);

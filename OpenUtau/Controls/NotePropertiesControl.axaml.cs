@@ -7,42 +7,38 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using OpenUtau.App;
 using OpenUtau.App.ViewModels;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
+using OpenUtau.Core.Util;
 using ReactiveUI;
 using Serilog;
+using SharpCompress;
 
-namespace OpenUtau.App.Controls
-{
-    public partial class NotePropertiesControl : UserControl, ICmdSubscriber
-    {
+namespace OpenUtau.App.Controls {
+    public partial class NotePropertiesControl : UserControl, ICmdSubscriber {
         private readonly NotePropertiesViewModel ViewModel;
         private int scrollStyleApplyGeneration;
 
-        public NotePropertiesControl()
-        {
+        public NotePropertiesControl() {
             InitializeComponent();
             DataContext = ViewModel = new NotePropertiesViewModel();
 
-            foreach (var box in this.GetLogicalDescendants().OfType<TextBox>())
-            {
-                box.AddHandler(GotFocusEvent, OnTextBoxGotFocus);
-                box.AddHandler(LostFocusEvent, OnTextBoxLostFocus);
-            }
-            foreach (var slider in this.GetLogicalDescendants().OfType<Slider>())
-            {
-                slider.AddHandler(PointerPressedEvent, SliderPointerPressed, RoutingStrategies.Tunnel);
-                slider.AddHandler(PointerReleasedEvent, SliderPointerReleased, RoutingStrategies.Tunnel);
-                slider.AddHandler(PointerMovedEvent, SliderPointerMoved, RoutingStrategies.Tunnel);
-            }
-
+foreach (var box in this.GetLogicalDescendants().OfType<TextBox>()) {
+                  box.AddHandler(GotFocusEvent, OnTextBoxGotFocus);
+                  box.AddHandler(LostFocusEvent, OnTextBoxLostFocus);
+              }
+              foreach (var slider in this.GetLogicalDescendants().OfType<Slider>()) {
+                  slider.AddHandler(PointerPressedEvent, SliderPointerPressed, RoutingStrategies.Tunnel);
+                  slider.AddHandler(PointerReleasedEvent, SliderPointerReleased, RoutingStrategies.Tunnel);
+                  slider.AddHandler(PointerMovedEvent, SliderPointerMoved, RoutingStrategies.Tunnel);
+              }
+          
             MessageBus.Current.Listen<PianorollRefreshEvent>()
-                .Subscribe(e =>
-                {
-                    if (e.refreshItem == "Part")
-                    {
+                .Subscribe(e => {
+                    if(e.refreshItem == "Part") {
                         LoadPart(ViewModel.Part);
                     }
                 });
@@ -51,83 +47,65 @@ namespace OpenUtau.App.Controls
 
             AttachedToVisualTree += (_, _) => RefreshWorkspaceChrome();
             Loaded += (_, _) => RefreshWorkspaceChrome();
-            DetachedFromVisualTree += (_, _) =>
-            {
+            DetachedFromVisualTree += (_, _) => {
                 scrollStyleApplyGeneration++;
             };
-            this.GetObservable(IsVisibleProperty).Subscribe(visible =>
-            {
-                if (visible)
-                {
+            this.GetObservable(IsVisibleProperty).Subscribe(visible => {
+                if (visible) {
                     RefreshWorkspaceChrome();
                 }
             });
             MessageBus.Current.Listen<ScrollbarsStyleChangedEvent>()
                 .Subscribe(_ => ScheduleApplyNotePropsScrollStyle());
             MessageBus.Current.Listen<ThemeChangedEvent>()
-                .Subscribe(_ =>
-                {
-                    if (IsVisible)
-                    {
+                .Subscribe(_ => {
+                    if (IsVisible) {
                         RefreshWorkspaceChrome();
                     }
                 });
         }
 
-        public void RefreshWorkspaceChrome()
-        {
-            if (!IsVisible)
-            {
+        public void RefreshWorkspaceChrome() {
+            if (!IsVisible) {
                 return;
             }
             ClosePanelButton.IsVisible = IsHostedInPianoRollDock();
             ScheduleApplyNotePropsScrollStyle();
         }
 
-        void ScheduleApplyNotePropsScrollStyle()
-        {
-            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
-            {
+        void ScheduleApplyNotePropsScrollStyle() {
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                 return;
             }
             int generation = ++scrollStyleApplyGeneration;
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this))
-                {
+            Dispatcher.UIThread.Post(() => {
+                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                     return;
                 }
                 ApplyNotePropsScrollStyle();
             }, DispatcherPriority.Loaded);
         }
 
-        void ApplyNotePropsScrollStyle()
-        {
-            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
-            {
+        void ApplyNotePropsScrollStyle() {
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                 return;
             }
             WorkspaceScrollbarHelper.ApplyScrollViewer(ContentScroll, WorkspaceScrollbarHelper.UseClassicScrollbars);
         }
 
-        bool IsHostedInPianoRollDock()
-        {
+        bool IsHostedInPianoRollDock() {
             return this.GetVisualAncestors().OfType<PianoRoll>().Any();
         }
 
-        void OnCloseDockedPanel(object? sender, RoutedEventArgs e)
-        {
+        void OnCloseDockedPanel(object? sender, RoutedEventArgs e) {
             var pianoRoll = this.GetVisualAncestors().OfType<PianoRoll>().FirstOrDefault();
-            if (pianoRoll?.ViewModel?.NotesViewModel != null)
-            {
+            if (pianoRoll?.ViewModel?.NotesViewModel != null) {
                 pianoRoll.ViewModel.NotesViewModel.ShowNoteParams = false;
             }
         }
 
-        private void LoadPart(UPart? part)
-        {
-            if (NotePropertiesViewModel.PanelControlPressed)
-            {
+        private void LoadPart(UPart? part) {
+            if (NotePropertiesViewModel.PanelControlPressed) {
                 NotePropertiesViewModel.PanelControlPressed = false;
                 DocManager.Inst.EndUndoGroup();
             }
@@ -135,8 +113,7 @@ namespace OpenUtau.App.Controls
 
             ViewModel.LoadPart(part);
             ExpressionsPanel.Children.Clear();
-            foreach (NotePropertyExpViewModel expVM in ViewModel.Expressions)
-            {
+            foreach (NotePropertyExpViewModel expVM in ViewModel.Expressions) {
                 var control = new NotePropertyExpression() { DataContext = expVM };
                 ExpressionsPanel.Children.Add(control);
             }
@@ -145,19 +122,15 @@ namespace OpenUtau.App.Controls
         }
 
         private string textBoxValue = string.Empty;
-        void OnTextBoxGotFocus(object? sender, GotFocusEventArgs args)
-        {
+        void OnTextBoxGotFocus(object? sender, GotFocusEventArgs args) {
             Log.Debug("Note property textbox got focus");
-            if (sender is TextBox text)
-            {
+            if(sender is TextBox text) {
                 textBoxValue = text.Text ?? string.Empty;
             }
         }
-        void OnTextBoxLostFocus(object? sender, RoutedEventArgs args)
-        {
+        void OnTextBoxLostFocus(object? sender, RoutedEventArgs args) {
             Log.Debug("Note property textbox lost focus");
-            if (sender is TextBox textBox && textBoxValue != textBox.Text && textBox.Tag is string tag && !string.IsNullOrEmpty(tag))
-            {
+            if (sender is TextBox textBox && textBoxValue != textBox.Text && textBox.Tag is string tag && !string.IsNullOrEmpty(tag)) {
                 DocManager.Inst.StartUndoGroup("command.property.edit");
                 NotePropertiesViewModel.PanelControlPressed = true;
                 ViewModel.SetNoteParams(tag, textBox.Text);
@@ -166,21 +139,15 @@ namespace OpenUtau.App.Controls
             }
         }
 
-        void SliderPointerPressed(object? sender, PointerPressedEventArgs args)
-        {
+        void SliderPointerPressed(object? sender, PointerPressedEventArgs args) {
             Log.Debug("Slider pressed");
-            if (sender is Control control)
-            {
+            if (sender is Control control) {
                 var point = args.GetCurrentPoint(control);
-                if (point.Properties.IsLeftButtonPressed)
-                {
+                if (point.Properties.IsLeftButtonPressed) {
                     DocManager.Inst.StartUndoGroup("command.property.edit");
                     NotePropertiesViewModel.PanelControlPressed = true;
-                }
-                else if (point.Properties.IsRightButtonPressed)
-                {
-                    if (control.Tag is string tag && !string.IsNullOrEmpty(tag))
-                    {
+                } else if (point.Properties.IsRightButtonPressed) {
+                    if (control.Tag is string tag && !string.IsNullOrEmpty(tag)) {
                         DocManager.Inst.StartUndoGroup("command.property.reset");
                         NotePropertiesViewModel.PanelControlPressed = true;
                         ViewModel.SetNoteParams(tag, null);
@@ -190,38 +157,29 @@ namespace OpenUtau.App.Controls
                 }
             }
         }
-        void SliderPointerReleased(object? sender, PointerReleasedEventArgs args)
-        {
+        void SliderPointerReleased(object? sender, PointerReleasedEventArgs args) {
             Log.Debug("Slider released");
-            if (NotePropertiesViewModel.PanelControlPressed)
-            {
-                if (sender is Slider slider && slider.Tag is string tag && !string.IsNullOrEmpty(tag))
-                {
+            if (NotePropertiesViewModel.PanelControlPressed) {
+                if (sender is Slider slider && slider.Tag is string tag && !string.IsNullOrEmpty(tag)) {
                     ViewModel.SetNoteParams(tag, (float)slider.Value);
                 }
                 NotePropertiesViewModel.PanelControlPressed = false;
                 DocManager.Inst.EndUndoGroup();
             }
         }
-        void SliderPointerMoved(object? sender, PointerEventArgs args)
-        {
-            if (sender is Slider slider && slider.Tag is string tag && !string.IsNullOrEmpty(tag))
-            {
+        void SliderPointerMoved(object? sender, PointerEventArgs args) {
+            if (sender is Slider slider && slider.Tag is string tag && !string.IsNullOrEmpty(tag)) {
                 ViewModel.SetNoteParams(tag, (float)slider.Value);
             }
         }
 
-        void VibratoEnableClicked(object sender, RoutedEventArgs e)
-        {
+        void VibratoEnableClicked(object sender, RoutedEventArgs e) {
             ViewModel.SetVibratoEnable();
         }
 
-        void OnSavePortamentoPreset(object sender, RoutedEventArgs e)
-        {
-            if (VisualRoot is Window window)
-            {
-                var dialog = new TypeInDialog()
-                {
+        void OnSavePortamentoPreset(object sender, RoutedEventArgs e) {
+            if (VisualRoot is Window window) {
+                var dialog = new TypeInDialog() {
                     Title = ThemeManager.GetString("notedefaults.preset.namenew"),
                     onFinish = name => ViewModel.SavePortamentoPreset(name),
                 };
@@ -229,17 +187,13 @@ namespace OpenUtau.App.Controls
             }
         }
 
-        void OnRemovePortamentoPreset(object sender, RoutedEventArgs e)
-        {
+        void OnRemovePortamentoPreset(object sender, RoutedEventArgs e) {
             ViewModel.RemoveAppliedPortamentoPreset();
         }
 
-        void OnSaveVibratoPreset(object sender, RoutedEventArgs e)
-        {
-            if (VisualRoot is Window window)
-            {
-                var dialog = new TypeInDialog()
-                {
+        void OnSaveVibratoPreset(object sender, RoutedEventArgs e) {
+            if (VisualRoot is Window window) {
+                var dialog = new TypeInDialog() {
                     Title = ThemeManager.GetString("notedefaults.preset.namenew"),
                     onFinish = name => ViewModel.SaveVibratoPreset(name),
                 };
@@ -247,15 +201,12 @@ namespace OpenUtau.App.Controls
             }
         }
 
-        void OnRemoveVibratoPreset(object sender, RoutedEventArgs e)
-        {
+        void OnRemoveVibratoPreset(object sender, RoutedEventArgs e) {
             ViewModel.RemoveAppliedVibratoPreset();
         }
 
-        private void OnKeyDown(object? sender, KeyEventArgs e)
-        {
-            switch (e.Key)
-            {
+        private void OnKeyDown(object? sender, KeyEventArgs e) {
+            switch (e.Key) {
                 case Key.Enter:
                     this.Focus();
                     e.Handled = true;
@@ -265,48 +216,31 @@ namespace OpenUtau.App.Controls
             }
         }
 
-        public void OnNext(UCommand cmd, bool isUndo)
-        {
-            if (cmd is UNotification notif)
-            {
-                if (cmd is LoadPartNotification)
-                {
+        public void OnNext(UCommand cmd, bool isUndo) {
+            if (cmd is UNotification notif) {
+                if (cmd is LoadPartNotification) {
                     LoadPart(notif.part);
-                }
-                else if (cmd is LoadProjectNotification)
-                {
+                } else if (cmd is LoadProjectNotification) {
                     LoadPart(null);
-                }
-                else if (cmd is SingersRefreshedNotification srn && srn.singer != null && ViewModel.Part != null)
-                {
+                } else if (cmd is SingersRefreshedNotification srn && srn.singer != null && ViewModel.Part != null) {
                     var singer = DocManager.Inst.Project.tracks[ViewModel.Part.trackNo].Singer;
-                    if (singer != null && singer == srn.singer)
-                    {
+                    if (singer != null && singer == srn.singer) {
                         LoadPart(ViewModel.Part);
                     }
                 }
-            }
-            else if (cmd is TrackCommand)
-            {
-                if (cmd is RemoveTrackCommand removeTrack && ViewModel.Part != null && removeTrack.removedParts.Contains(ViewModel.Part))
-                {
+            } else if (cmd is TrackCommand) {
+                if (cmd is RemoveTrackCommand removeTrack && ViewModel.Part != null && removeTrack.removedParts.Contains(ViewModel.Part)) {
                     LoadPart(null);
-                }
-                else if (cmd is TrackChangeRenderSettingCommand changeRenderer && ViewModel.Part != null && changeRenderer.track.TrackNo == ViewModel.Part.trackNo)
-                {
+                } else if (cmd is TrackChangeRenderSettingCommand changeRenderer && ViewModel.Part != null && changeRenderer.track.TrackNo == ViewModel.Part.trackNo) {
                     LoadPart(ViewModel.Part);
                 }
-            }
-            else if (cmd is ConfigureExpressionsCommand && ViewModel.Part != null)
-            {
+            } else if (cmd is ConfigureExpressionsCommand && ViewModel.Part != null) {
                 LoadPart(ViewModel.Part);
             }
         }
 
-        public void OnPhonemizerButtonClicked(object? sender, RoutedEventArgs e)
-        {
-            if (ViewModel.IsPhonemizerEnabled && sender is Button button && button.ContextMenu != null)
-            {
+        public void OnPhonemizerButtonClicked(object? sender, RoutedEventArgs e) {
+            if (ViewModel.IsPhonemizerEnabled && sender is Button button && button.ContextMenu != null) {
                 button.ContextMenu.PlacementTarget = button;
                 button.ContextMenu.Open();
             }

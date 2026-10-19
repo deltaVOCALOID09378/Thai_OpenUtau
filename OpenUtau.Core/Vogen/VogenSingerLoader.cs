@@ -49,7 +49,7 @@ namespace OpenUtau.Core.Vogen {
             }
             IEnumerable<string> files;
             if (Preferences.Default.LoadDeepFolderSinger) {
-                files = Directory.EnumerateFiles(basePath, "*.vogeon", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true });
+                files = Directory.EnumerateFiles(basePath, "*.vogeon", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 4 });
             } else {
                 // TopDirectoryOnly
                 files = Directory.EnumerateFiles(basePath, "*.vogeon");

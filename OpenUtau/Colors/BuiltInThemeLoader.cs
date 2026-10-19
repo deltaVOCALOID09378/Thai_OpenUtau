@@ -7,8 +7,7 @@ using Avalonia.Media;
 /// Built-in theme snapshots. Values must stay in sync with DarkTheme.axaml / LightTheme.axaml.
 /// ResourceInclude dictionaries are not enumerable reliably at theme-creation time.
 /// </summary>
-public static class BuiltInThemeLoader
-{
+public static class BuiltInThemeLoader {
     public const string LightThemeName = "Light";
     public const string DarkThemeName = "Dark";
     public const string OriginalLightThemeName = "OriginalLight";
@@ -28,8 +27,7 @@ public static class BuiltInThemeLoader
         WarmThemeName,
     ];
 
-    public static ThemeYaml CreateFromBuiltIn(string baseTheme, string name)
-    {
+    public static ThemeYaml CreateFromBuiltIn(string baseTheme, string name) {
         var yaml = string.Equals(baseTheme, DarkThemeName, System.StringComparison.OrdinalIgnoreCase)
             ? CreateDark()
             : CreateLight();
@@ -37,15 +35,12 @@ public static class BuiltInThemeLoader
         return yaml;
     }
 
-    public static bool IsBuiltInTheme(string? name)
-    {
+    public static bool IsBuiltInTheme(string? name) {
         return TryCreateThemeByName(name, out _);
     }
 
-    public static bool TryCreateThemeByName(string? name, out ThemeYaml yaml)
-    {
-        switch (name)
-        {
+    public static bool TryCreateThemeByName(string? name, out ThemeYaml yaml) {
+        switch (name) {
             case LightThemeName:
                 yaml = CreateLight();
                 return true;
@@ -70,10 +65,8 @@ public static class BuiltInThemeLoader
         }
     }
 
-    public static ThemeYaml CreateDark()
-    {
-        return new ThemeYaml
-        {
+    public static ThemeYaml CreateDark() {
+        return new ThemeYaml {
             IsDarkMode = true,
             BackgroundColor = "#212121",
             BackgroundColorPointerOver = "#2F2F2F",
@@ -117,22 +110,20 @@ public static class BuiltInThemeLoader
             AppTopBarTransportHoverColor = "#454545",
             AppTopBarValueStripColor = "#1C1C1C",
             AppTopBarValueDividerColor = "#3A3A3A",
-            WhiteKeyColorLeft = "#F3F1EC",
-            WhiteKeyColorRight = "#C8C8C4",
-            WhiteKeyNameColor = "#1A1A1A",
+            WhiteKeyColorLeft = "#C0C0C0",
+            WhiteKeyColorRight = "#E0E0E0",
+            WhiteKeyNameColor = "#212121",
             CenterKeyColorLeft = "#A9A6CD",
             CenterKeyColorRight = "#D3CFFF",
             CenterKeyNameColor = "#4433FF",
-            BlackKeyColorLeft = "#363636",
-            BlackKeyColorRight = "#090909",
-            BlackKeyNameColor = "#F0F0F0",
+            BlackKeyColorLeft = "Transparent",
+            BlackKeyColorRight = "Transparent",
+            BlackKeyNameColor = "#FCFCFC",
         };
     }
 
-    public static ThemeYaml CreateLight()
-    {
-        return new ThemeYaml
-        {
+    public static ThemeYaml CreateLight() {
+        return new ThemeYaml {
             IsDarkMode = false,
             BackgroundColor = "#FCFCFC",
             BackgroundColorPointerOver = "#F0F0F0",
@@ -176,23 +167,21 @@ public static class BuiltInThemeLoader
             AppTopBarTransportHoverColor = "#F4F4F8",
             AppTopBarValueStripColor = "#D8D8DE",
             AppTopBarValueDividerColor = "#C0C0C8",
-            WhiteKeyColorLeft = "#FFFEFA",
-            WhiteKeyColorRight = "#DEDEDA",
+            WhiteKeyColorLeft = "#FCFCFC",
+            WhiteKeyColorRight = "#FCFCFC",
             WhiteKeyNameColor = "#343434",
             CenterKeyColorLeft = "#A9A6CD",
             CenterKeyColorRight = "#D3CFFF",
             CenterKeyNameColor = "#111111",
-            BlackKeyColorLeft = "#414148",
-            BlackKeyColorRight = "#15151A",
+            BlackKeyColorLeft = "#45445C",
+            BlackKeyColorRight = "#45445C",
             BlackKeyNameColor = "#FCFCFC",
         };
     }
 
     /// <summary>Classic OpenUtau light palette (stakira/OpenUtau) with fork-only keys filled in.</summary>
-    public static ThemeYaml CreateOriginalLight()
-    {
-        return new ThemeYaml
-        {
+    public static ThemeYaml CreateOriginalLight() {
+        return new ThemeYaml {
             Name = OriginalLightThemeName,
             IsDarkMode = false,
             BackgroundColor = "#FFFFFF",
@@ -237,8 +226,8 @@ public static class BuiltInThemeLoader
             AppTopBarTransportHoverColor = "#E0E0E0",
             AppTopBarValueStripColor = "#E8E8E8",
             AppTopBarValueDividerColor = "#D0D0D0",
-            WhiteKeyColorLeft = "#FFF8FA",
-            WhiteKeyColorRight = "#F0DCE4",
+            WhiteKeyColorLeft = "Transparent",
+            WhiteKeyColorRight = "Transparent",
             WhiteKeyNameColor = "#FF347C",
             CenterKeyColorLeft = "#FFDDE6",
             CenterKeyColorRight = "#FFCEDC",
@@ -250,10 +239,8 @@ public static class BuiltInThemeLoader
     }
 
     /// <summary>Classic OpenUtau dark palette (stakira/OpenUtau) with fork-only keys filled in.</summary>
-    public static ThemeYaml CreateOriginalDark()
-    {
-        return new ThemeYaml
-        {
+    public static ThemeYaml CreateOriginalDark() {
+        return new ThemeYaml {
             Name = OriginalDarkThemeName,
             IsDarkMode = true,
             BackgroundColor = "#303030",
@@ -304,21 +291,19 @@ public static class BuiltInThemeLoader
             CenterKeyColorLeft = "#CCA5B0",
             CenterKeyColorRight = "#FFCEDC",
             CenterKeyNameColor = "#FF347C",
-            BlackKeyColorLeft = "#36101F",
-            BlackKeyColorRight = "#13070B",
+            BlackKeyColorLeft = "Transparent",
+            BlackKeyColorRight = "Transparent",
             BlackKeyNameColor = "#FFFFFF",
         };
     }
 
-    public static ThemeYaml CreateCold()
-    {
+    public static ThemeYaml CreateCold() {
         var yaml = CreateDark();
         ApplyPresetTint(yaml, surfaceR: -1, surfaceG: -1, surfaceB: 2, accentR: 0, accentG: 0, accentB: 1);
         return yaml;
     }
 
-    public static ThemeYaml CreateWarm()
-    {
+    public static ThemeYaml CreateWarm() {
         var yaml = CreateDark();
         ApplyPresetTint(yaml, surfaceR: 2, surfaceG: 0, surfaceB: -1, accentR: 1, accentG: 0, accentB: -1);
         return yaml;
@@ -367,27 +352,21 @@ public static class BuiltInThemeLoader
     static void ApplyPresetTint(
         ThemeYaml yaml,
         int surfaceR, int surfaceG, int surfaceB,
-        int accentR, int accentG, int accentB)
-    {
-        foreach (var key in SurfaceTintKeys)
-        {
+        int accentR, int accentG, int accentB) {
+        foreach (var key in SurfaceTintKeys) {
             yaml.SetColor(key, TintHex(yaml.GetColor(key), surfaceR, surfaceG, surfaceB));
         }
-        foreach (var key in AccentTintKeys)
-        {
+        foreach (var key in AccentTintKeys) {
             yaml.SetColor(key, TintHex(yaml.GetColor(key), accentR, accentG, accentB));
         }
     }
 
-    static string TintHex(string? color, int deltaR, int deltaG, int deltaB)
-    {
+    static string TintHex(string? color, int deltaR, int deltaG, int deltaB) {
         if (string.IsNullOrWhiteSpace(color)
-            || string.Equals(color, "Transparent", StringComparison.OrdinalIgnoreCase))
-        {
+            || string.Equals(color, "Transparent", StringComparison.OrdinalIgnoreCase)) {
             return color ?? "#000000";
         }
-        if (!ThemeColorStorage.TryParse(color, out var parsed))
-        {
+        if (!ThemeColorStorage.TryParse(color, out var parsed)) {
             return color;
         }
         return ThemeColorStorage.ToStorageString(Color.FromArgb(

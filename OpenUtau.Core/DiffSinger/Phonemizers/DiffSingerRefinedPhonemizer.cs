@@ -322,7 +322,7 @@ namespace OpenUtau.Core.DiffSinger {
             try {
                 var linguisticModelBytes = File.ReadAllBytes(linguisticModelPath);
                 linguisticHash = XXH64.DigestOf(linguisticModelBytes);
-                linguisticModel = new InferenceSession(linguisticModelBytes);
+                linguisticModel = Onnx.getInferenceSession(linguisticModelBytes);
             } catch (Exception e) {
                 Log.Error(e, $"failed to load linguistic model from {linguisticModelPath}");
                 return false;
@@ -333,7 +333,7 @@ namespace OpenUtau.Core.DiffSinger {
             try {
                 var durationModelBytes = File.ReadAllBytes(durationModelPath);
                 durationHash = XXH64.DigestOf(durationModelBytes);
-                durationModel = new InferenceSession(durationModelBytes);
+                durationModel = Onnx.getInferenceSession(durationModelBytes);
             } catch (Exception e) {
                 Log.Error(e, $"failed to load duration model from {durationModelPath}");
                 return false;

@@ -164,7 +164,8 @@ namespace OpenUtau.Core.SingerHub { // v1.0 - 06/07/2026 - กำหนดเน
                     if (trimmed.Length == 0) { // v1.0 - 06/07/2026 - ถ้าบรรทัดว่าง
                         continue; // v1.0 - 06/07/2026 - ข้ามไป
                     }
-                    return trimmed.StartsWith("DELTA SYNTH", StringComparison.OrdinalIgnoreCase); // v1.0 - 06/07/2026 - ค้นหาคำว่า "DELTA SYNTH" ในบรรทัดแรกที่พบ
+                    return trimmed.StartsWith("DELTA SYNTH", StringComparison.OrdinalIgnoreCase)
+                        || trimmed.StartsWith("LUNAI", StringComparison.OrdinalIgnoreCase);
                 }
                 return false; // v1.0 - 06/07/2026 - ถ้าวนจนจบแล้วไม่เจอ คืนค่าเท็จ
             } catch { // v1.0 - 06/07/2026 - หากมีปัญหาการอ่านไฟล์

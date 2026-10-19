@@ -1,21 +1,12 @@
-// Version: 0.1
-// Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT
-// Original By OpenUtau Contributors
-
 using System;
 using System.Globalization;
 using System.Text;
 using Avalonia.Data.Converters;
 
-namespace OpenUtau.App.ViewModels
-{
-    // [DELTA SYNTH] ใช้สำหรับแปลงรูปแบบภาษาในระบบ UI
-    public class CultureNameConverter : IValueConverter
-    {
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            if (value is CultureInfo cultureInfo)
-            {
+namespace OpenUtau.App.ViewModels {
+    public class CultureNameConverter : IValueConverter {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
+            if (value is CultureInfo cultureInfo) {
                 return cultureInfo == CultureInfo.InvariantCulture ? ThemeManager.GetString("languages.invariant") : cultureInfo.NativeName;
             }
             return string.Empty;
@@ -23,14 +14,12 @@ namespace OpenUtau.App.ViewModels
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
-    public class EncodingNameConverter : IValueConverter
-    {
+    public class EncodingNameConverter : IValueConverter {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => (value as Encoding)?.EncodingName ?? string.Empty;
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
-    public class ObjectToStringConverter : IValueConverter
-    {
+    public class ObjectToStringConverter : IValueConverter {
         public static readonly ObjectToStringConverter Instance = new ObjectToStringConverter();
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value?.ToString() ?? string.Empty;
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();

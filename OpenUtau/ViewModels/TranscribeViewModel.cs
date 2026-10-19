@@ -1,20 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Core.Analysis;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
-    public enum TranscribeAlgorithm
-    {
+namespace OpenUtau.App.ViewModels {
+    public enum TranscribeAlgorithm {
         SOME,
         GAME,
     }
 
-    public class TranscribeViewModel : ViewModelBase
-    {
+    public class TranscribeViewModel : ViewModelBase {
         // --- Availability ---
         public bool SomeAvailable { get; }
         public bool GameAvailable { get; }
@@ -24,13 +21,11 @@ namespace OpenUtau.App.ViewModels
         [Reactive] public TranscribeAlgorithm SelectedAlgorithm { get; set; }
 
         // Convenience bool bindings for RadioButtons
-        public bool UseSome
-        {
+        public bool UseSome {
             get => SelectedAlgorithm == TranscribeAlgorithm.SOME;
             set { if (value) SelectedAlgorithm = TranscribeAlgorithm.SOME; }
         }
-        public bool UseGame
-        {
+        public bool UseGame {
             get => SelectedAlgorithm == TranscribeAlgorithm.GAME;
             set { if (value) SelectedAlgorithm = TranscribeAlgorithm.GAME; }
         }
@@ -88,8 +83,7 @@ namespace OpenUtau.App.ViewModels
             ? languageCodes[LanguageDisplayIndex]
             : null;
 
-        public TranscribeViewModel()
-        {
+        public TranscribeViewModel() {
             // Check SOME availability
             SomeAvailable = Some.IsInstalled();
 
@@ -100,19 +94,15 @@ namespace OpenUtau.App.ViewModels
             RmvpeAvailable = RmvpeTranscriber.IsInstalled();
 
             // Default to GAME if available, otherwise fall back to SOME
-            if (GameAvailable)
-            {
+            if (GameAvailable) {
                 SelectedAlgorithm = TranscribeAlgorithm.GAME;
-            }
-            else if (SomeAvailable)
-            {
+            } else if (SomeAvailable) {
                 SelectedAlgorithm = TranscribeAlgorithm.SOME;
             }
 
             // Load GAME config (no model sessions) to populate options
             GameConfig? gameConfig = null;
-            if (GameAvailable)
-            {
+            if (GameAvailable) {
                 gameConfig = Game.LoadConfig();
             }
 
@@ -123,10 +113,8 @@ namespace OpenUtau.App.ViewModels
             LanguageDisplayOptions = new List<string> {
                 ThemeManager.GetString("dialogs.transcribe.game.language.universal")
             };
-            if (gameConfig?.Languages != null)
-            {
-                foreach (var key in gameConfig.Languages.Keys.OrderBy(k => k))
-                {
+            if (gameConfig?.Languages != null) {
+                foreach (var key in gameConfig.Languages.Keys.OrderBy(k => k)) {
                     languageCodes.Add(key);
                     LanguageDisplayOptions.Add(key);
                 }
@@ -134,8 +122,7 @@ namespace OpenUtau.App.ViewModels
 
             // Propagate SelectedAlgorithm changes to derived properties
             this.WhenAnyValue(vm => vm.SelectedAlgorithm)
-                .Subscribe(_ =>
-                {
+                .Subscribe(_ => {
                     this.RaisePropertyChanged(nameof(UseSome));
                     this.RaisePropertyChanged(nameof(UseGame));
                     this.RaisePropertyChanged(nameof(GameOptionsVisible));
@@ -144,10 +131,8 @@ namespace OpenUtau.App.ViewModels
         }
 
         /// <summary>Build a GameOptions instance from the current ViewModel state.</summary>
-        public GameOptions BuildGameOptions()
-        {
-            return new GameOptions
-            {
+        public GameOptions BuildGameOptions() {
+            return new GameOptions {
                 SamplingSteps = SamplingSteps,
                 BoundaryThreshold = BoundaryThreshold,
                 BoundaryRadius = BoundaryRadius,
@@ -160,10 +145,8 @@ namespace OpenUtau.App.ViewModels
         /// Returns a batching strategy based on the current BatchSize and MaxBatchDuration.
         /// BatchSize=1 effectively disables batching.
         /// </summary>
-        public MidiExtractor<GameOptions>.BatchingStrategy? BuildBatchingStrategy()
-        {
-            return new MidiExtractor<GameOptions>.BatchingStrategy
-            {
+        public MidiExtractor<GameOptions>.BatchingStrategy? BuildBatchingStrategy() {
+            return new MidiExtractor<GameOptions>.BatchingStrategy {
                 max_batch_size = BatchSize,
                 max_batch_duration = MaxBatchDuration,
             };

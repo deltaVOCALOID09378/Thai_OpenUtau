@@ -1,11 +1,10 @@
 using Avalonia.Media;
 using OpenUtau.Colors;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace OpenUtau.App.ViewModels
-{
-    public class ThemePickerItemViewModel : ViewModelBase
-    {
+namespace OpenUtau.App.ViewModels {
+    public class ThemePickerItemViewModel : ViewModelBase {
         public string Name { get; init; } = string.Empty;
         public string DisplayName { get; init; } = string.Empty;
         public bool IsBuiltIn { get; init; }
@@ -20,12 +19,10 @@ namespace OpenUtau.App.ViewModels
         public IBrush NoteBrush { get; init; } = Brushes.Transparent;
         public IBrush AccentBrush { get; init; } = Brushes.Transparent;
 
-        public static ThemePickerItemViewModel FromThemeName(string name)
-        {
+        public static ThemePickerItemViewModel FromThemeName(string name) {
             var colors = ThemePreviewFactory.GetPreviewColors(name);
             var displayName = GetDisplayName(name);
-            return new ThemePickerItemViewModel
-            {
+            return new ThemePickerItemViewModel {
                 Name = name,
                 DisplayName = displayName,
                 IsBuiltIn = BuiltInThemeLoader.IsBuiltInTheme(name),
@@ -39,17 +36,14 @@ namespace OpenUtau.App.ViewModels
             };
         }
 
-        public static ThemePickerItemViewModel CreateAddTile()
-        {
-            return new ThemePickerItemViewModel
-            {
+        public static ThemePickerItemViewModel CreateAddTile() {
+            return new ThemePickerItemViewModel {
                 IsCreateTile = true,
                 DisplayName = ThemeManager.GetString("prefs.appearance.customtheme.create.short"),
             };
         }
 
-        static string GetDisplayName(string name)
-        {
+        static string GetDisplayName(string name) {
             var key = $"prefs.appearance.theme.name.{name.ToLowerInvariant()}";
             var localized = ThemeManager.GetString(key);
             return localized == key ? name : localized;

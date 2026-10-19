@@ -1,25 +1,14 @@
-/*
-File: VoiceColorMappingDialog.xaml.cs
-Version: 1.0
-Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT
-Original By OpenUtau Contributors
-*/
-using System;
+﻿using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
-namespace OpenUtau.App.Views
-{
-    public partial class VoiceColorMappingDialog : Window
-    {
-        // Event Delegate สำหรับดักจับการดำเนินการเมื่อจบหน้าต่าง
+namespace OpenUtau.App.Views {
+    public partial class VoiceColorMappingDialog : Window {
         public Action? onFinish;
-        
         public bool Apply { get; private set; } = false;
 
-        public VoiceColorMappingDialog()
-        {
+        public VoiceColorMappingDialog() {
             InitializeComponent();
         }
 
@@ -27,29 +16,22 @@ namespace OpenUtau.App.Views
 
         private void Cancel_OnClick(object sender, RoutedEventArgs e) => Close();
 
-        // เมื่อทำงานเสร็จสมบูรณ์ระบบจะเรียก Action คืนกลับไป (Delegate Pattern)
-        private void Finish()
-        {
+        private void Finish() {
             Apply = true;
-            onFinish?.Invoke();
+            if (onFinish != null) {
+                onFinish.Invoke();
+            }
             Close();
         }
 
-        // ดักจับการกดยกเลิกและตกลงผ่านคีย์บอร์ดโดยตรง
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (e.Key == Key.Escape)
-            {
+        protected override void OnKeyDown(KeyEventArgs e) {
+            if (e.Key == Key.Escape) {
                 e.Handled = true;
                 Close();
-            }
-            else if (e.Key == Key.Enter)
-            {
+            } else if (e.Key == Key.Enter) {
                 e.Handled = true;
                 Finish();
-            }
-            else
-            {
+            } else {
                 base.OnKeyDown(e);
             }
         }

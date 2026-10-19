@@ -1,90 +1,76 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
+    <RollForward>LatestMajor</RollForward>
     <OutputType>WinExe</OutputType>
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625;CS8632;CS0649;CS0414;CS0219;AVLN3001;xUnit1013;xUnit2013;CS0612;CS0162;CS8619;CS0164;CS8629;CS0108;CS8981;CS0472;CS8769;CS8767;CS8612;CS8714;CS0168;CS0618</NoWarn>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <Version>1.2.1</Version>
-    <AssemblyName>OpenUtau</AssemblyName>
-    <Product>Thai OpenUtau</Product>
-    <Company>DELTA SYNTH</Company>
-    <Authors>DELTA SYNTH</Authors>
-    <PackageProjectUrl>https://patiphatwongyai.wixsite.com/deltasynth</PackageProjectUrl>
-    <ApplicationIcon>Assets\Thai OpenUtau Logo type.ico</ApplicationIcon>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Version>0.0.0</Version>
+    <ApplicationIcon>Assets\Thai OpenUtau Logo.ico</ApplicationIcon>
     <PublishReadyToRun>true</PublishReadyToRun>
     <DebugType>embedded</DebugType>
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <CFBundleName>Thai OpenUtau</CFBundleName>
-    <CFBundleDisplayName>Thai OpenUtau</CFBundleDisplayName>
+    <CFBundleName>OpenUtau</CFBundleName>
+    <CFBundleDisplayName>OpenUtau</CFBundleDisplayName>
     <CFBundleIdentifier>com.stakira.openutau</CFBundleIdentifier>
-    <CFBundleVersion>1.2.1</CFBundleVersion>
-    <CFBundleShortVersionString>1.2.1</CFBundleShortVersionString>
+    <CFBundleVersion>0.0.0</CFBundleVersion>
+    <CFBundleShortVersionString>0.0.0</CFBundleShortVersionString>
     <CFBundlePackageType>APPL</CFBundlePackageType>
     <CFBundleSignature>????</CFBundleSignature>
     <CFBundleExecutable>OpenUtau</CFBundleExecutable>
-    <CFBundleIconFile>Thai OpenUtau Logo type.icns</CFBundleIconFile>
+    <CFBundleIconFile>OpenUtau.icns</CFBundleIconFile>
     <NSPrincipalClass>NSApplication</NSPrincipalClass>
     <NSHighResolutionCapable>true</NSHighResolutionCapable>
     <CFBundleDocumentTypes>
-      <array>
-        <dict>
-          <key>CFBundleTypeName</key>
-          <string>Thai OpenUtau Sequence File</string>
-          <key>CFBundleTypeExtensions</key>
-          <array>
-            <string>ustx</string>
-          </array>
-          <key>CFBundleTypeIconFile</key>
-          <string>Thai OpenUtau Logo type.icns</string>
-          <key>CFBundleTypeRole</key>
-          <string>Editor</string>
-          <key>LSItemContentTypes</key>
-          <array>
-            <string>com.stakira.openutau.ustx</string>
-          </array>
-        </dict>
-      </array>
-    </CFBundleDocumentTypes>
+        <array>
+            <dict>
+                <key>CFBundleTypeName</key>
+                <string>OpenUtau Sequence File</string>
+                <key>CFBundleTypeExtensions</key>
+                <array>
+                    <string>ustx</string>
+                </array>
+                <key>CFBundleTypeIconFile</key>
+                <string>OpenUtau.icns</string>
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+                <key>LSItemContentTypes</key>
+                <array>
+                    <string>com.stakira.openutau.ustx</string>
+                </array>
+            </dict>
+        </array>          
+  </CFBundleDocumentTypes>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
-    <!-- Incomplete, unreferenced prototype; preserve its source without loading it at runtime. -->
-    <AvaloniaResource Remove="Views\AutoPitchwriterDialog.axaml" />
-    <AvaloniaXaml Remove="Views\AutoPitchwriterDialog.axaml" />
-    <Compile Remove="Views\AutoPitchwriterDialog.axaml.cs" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Avalonia Framework -->
-    <PackageReference Include="Avalonia" Version="11.3.18" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.18" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.18" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.18" />
-
-    <!-- Avalonia Controls -->
-    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.18" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.13" />
-    <PackageReference Include="Material.Avalonia" Version="3.13.3" />
-
-    <!-- Utilities -->
+    <PackageReference Include="Avalonia" Version="11.2.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.4" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.4" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.2.4" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.4" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.4" />
     <PackageReference Include="Dotnet.Bundle" Version="0.9.13" />
+    <PackageReference Include="Material.Avalonia" Version="3.13.3" />
     <PackageReference Include="NetSparkleUpdater.SparkleUpdater" Version="2.2.3" />
     <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
-
-    <!-- Logging (Serilog) -->
     <PackageReference Include="Serilog" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.2" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenUtau.Core\OpenUtau.Core.csproj" />
@@ -115,10 +101,34 @@
     <None Include="..\runtimes\linux-arm64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="." />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Controls\NotePropertyExpression.axaml.cs">
+      <DependentUpon>NotePropertyExpression.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Controls\NotePropertiesControl.axaml.cs">
+      <DependentUpon>NotePropertiesControl.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Resources\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Views\PasteParamDialog.axaml.cs">
+      <DependentUpon>PasteParamDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\GenerateHarmonyDialog.axaml.cs">
+      <DependentUpon>GenerateHarmonyDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\CreateCustomTrackColorDialog.axaml.cs">
+      <DependentUpon>CreateCustomTrackColorDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Controls\TrackColorPickerControl.axaml.cs">
+      <DependentUpon>TrackColorPickerControl.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\TrackSettingsDialog.axaml.cs">
+      <DependentUpon>TrackSettingsDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\TrackColorDialog.axaml.cs">
+      <DependentUpon>TrackColorDialog.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -127,4 +137,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <PropertyGroup>
+    <DefineConstants Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(DefineConstants);MACOS</DefineConstants>
+  </PropertyGroup>
 </Project>

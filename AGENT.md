@@ -343,3 +343,14 @@ safePos = Math.Max(originalPos, prevPos + 10);
 - รักษาความเข้ากันได้ของตารางพยางค์เดิม (VCCV, CVVC, Arpasing)
 - ระบบอ้างอิงเสียงต้องสามารถ fallback กลับไปใช้ภาษาหลักได้
 - การเปลี่ยนแปลงในระบบแปลพยางค์ (Phonemizer) ต้องรองรับ Backward Compatibility 100% กับ .ustx เดิม
+
+---
+
+# 22. Mandatory Runtime Log Verification
+
+ทุกครั้งที่มีการปรับปรุง แก้ไข หรือเพิ่มประสิทธิภาพการทำงานของตัวโปรแกรม (รวมถึงการใช้งานคำสั่ง `/gcp-pipeline-resource-provisioning`, `/azure-diagnostics`, `/compile`, `/audit_all_files`) จะต้องปฏิบัติตามมาตรฐานดังต่อไปนี้:
+1. **Log Inspection**: ตรวจสอบผลการทำงานและข้อผิดพลาดจริงจากโฟลเดอร์ `C:\Users\patip\OneDrive\Documents\OpenUtau\Logs` เสมอ
+2. **Crash & Root-Cause Elimination**: แยกแยะข้อความ `[FTL]` (Fatal) และ `[ERR]` (Error) ออกจาก `[INF]` / `[WRN]` เพื่อขจัดสาเหตุที่แท้จริง
+3. **Log Spam Prevention**: ควบคุมระดับการบันทึก (Logging Level) ให้เหมาะสม ไม่ปล่อยให้ไฟล์ Log มีขนาดใหญ่เกินความจำเป็น (ป้องกันไฟล์ขยายตัวระดับ 60MB - 400MB+)
+4. **Snappy Startup & Graceful Exit Verification**: ตรวจสอบเวลาตั้งแต่ `Initializing application` จนถึง `Initialized application` และตรวจสอบกระบวนการ `Clearing cache` จนถึง `Exited` ให้รวดเร็ว ไม่บล็อก UI Thread
+

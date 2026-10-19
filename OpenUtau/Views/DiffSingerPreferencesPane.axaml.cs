@@ -4,67 +4,56 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using OpenUtau.App;
 using OpenUtau.App.Controls;
+using OpenUtau.App.ViewModels;
+using OpenUtau.Core.Util;
 using ReactiveUI;
 
-namespace OpenUtau.App.Views
-{
-    public partial class DiffSingerPreferencesPane : UserControl
-    {
+namespace OpenUtau.App.Views {
+    public partial class DiffSingerPreferencesPane : UserControl {
         int scrollStyleApplyGeneration;
 
-        public DiffSingerPreferencesPane()
-        {
+        public DiffSingerPreferencesPane() {
             InitializeComponent();
-            AttachedToVisualTree += (_, _) =>
-            {
+            AttachedToVisualTree += (_, _) => {
                 ClosePanelButton.IsVisible = IsHostedInPianoRollDock();
                 ScheduleApplyScrollStyle();
             };
-            DetachedFromVisualTree += (_, _) =>
-            {
+            DetachedFromVisualTree += (_, _) => {
                 scrollStyleApplyGeneration++;
             };
             MessageBus.Current.Listen<ScrollbarsStyleChangedEvent>()
                 .Subscribe(_ => ScheduleApplyScrollStyle());
         }
 
-        void ScheduleApplyScrollStyle()
-        {
-            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
-            {
+        void ScheduleApplyScrollStyle() {
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                 return;
             }
             int generation = ++scrollStyleApplyGeneration;
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this))
-                {
+            Dispatcher.UIThread.Post(() => {
+                if (generation != scrollStyleApplyGeneration || !WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                     return;
                 }
                 ApplyScrollStyle();
             }, DispatcherPriority.Loaded);
         }
 
-        void ApplyScrollStyle()
-        {
-            if (!WorkspaceScrollbarHelper.IsInVisualTree(this))
-            {
+        void ApplyScrollStyle() {
+            if (!WorkspaceScrollbarHelper.IsInVisualTree(this)) {
                 return;
             }
             WorkspaceScrollbarHelper.ApplyScrollViewer(ContentScroll, WorkspaceScrollbarHelper.UseClassicScrollbars);
         }
 
-        bool IsHostedInPianoRollDock()
-        {
+        bool IsHostedInPianoRollDock() {
             return this.GetVisualAncestors().OfType<PianoRoll>().Any();
         }
 
-        void OnCloseDockedPanel(object? sender, RoutedEventArgs e)
-        {
+        void OnCloseDockedPanel(object? sender, RoutedEventArgs e) {
             var pianoRoll = this.GetVisualAncestors().OfType<PianoRoll>().FirstOrDefault();
-            if (pianoRoll?.ViewModel != null)
-            {
+            if (pianoRoll?.ViewModel != null) {
                 pianoRoll.ViewModel.ShowDiffSingerPanel = false;
             }
         }
