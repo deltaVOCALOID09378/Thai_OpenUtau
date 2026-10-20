@@ -48,27 +48,24 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [INFO] Starting compilation in Release mode...
+echo [INFO] Starting self-contained compilation in Release mode...
 echo.
 
-dotnet build --configuration Release
+dotnet publish OpenUtau\OpenUtau.csproj -c Release -r win-x64 --self-contained true -o "All Rendered File"
 
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo [SUCCESS] Compilation completed flawlessly! The system is stable and ready.
-    echo [INFO] Packing all compiled files into "All Rendered File" folder...
+    echo [INFO] Preparing DirectML and Essential Audio Engines...
     
-    if not exist "All Rendered File" (
-        mkdir "All Rendered File"
+    if exist "PrepareDirectML.ps1" (
+        powershell -NoProfile -ExecutionPolicy Bypass -File "PrepareDirectML.ps1" -Architecture x64 -Destination "All Rendered File" >nul 2>&1
     )
-    
-    if exist "bin\Release" (
-        xcopy "bin\Release\*" "All Rendered File\" /s /e /y /i /q >nul 2>&1
-        echo [SUCCESS] All files have been successfully consolidated into "All Rendered File".
-    ) else (
-        echo [WARNING] Could not find the "bin\Release" directory to extract the files.
-    )
-    
+    if exist "Resamplers" xcopy "Resamplers" "All Rendered File\Resamplers\" /s /e /y /i /q >nul 2>&1
+    if exist "Wavtools" xcopy "Wavtools" "All Rendered File\Wavtools\" /s /e /y /i /q >nul 2>&1
+    if not exist "All Rendered File\Singers" mkdir "All Rendered File\Singers" >nul 2>&1
+    if exist "Singers" xcopy "Singers" "All Rendered File\Singers\" /s /e /y /i /q >nul 2>&1
+    echo [SUCCESS] All files and audio engines have been successfully consolidated into "All Rendered File".
 ) else (
     echo.
     echo [FAILED] Compilation errors were detected. Please check the logs above.

@@ -9,6 +9,13 @@ if "%ROOT_DIR:~-1%"=="\" set "ROOT_DIR=%ROOT_DIR:~0,-1%"
 set "APP_EXE="
 set "APP_DIR="
 
+:: Check Publish (Self-Contained Release - Priority 1)
+if exist "%ROOT_DIR%\Publish\OpenUtau.exe" (
+    set "APP_EXE=%ROOT_DIR%\Publish\OpenUtau.exe"
+    set "APP_DIR=%ROOT_DIR%\Publish"
+    goto :launch
+)
+
 :: Check All Rendered File
 if exist "%ROOT_DIR%\All Rendered File\OpenUtau.exe" (
     set "APP_EXE=%ROOT_DIR%\All Rendered File\OpenUtau.exe"
