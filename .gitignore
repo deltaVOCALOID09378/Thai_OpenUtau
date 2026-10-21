@@ -141,3 +141,18 @@ test.cs
 test.csproj
 PianoRoll_backup.cs
 Program_backup.cs
+
+# ===================================================
+# 12. Google Drive Sync Conflict & Pointer Files
+# ===================================================
+* (1).*
+*(1).*
+* (2).*
+*(2).*
+* - Copy.*
+*_copy.*
+*.gdoc
+*.gsheet
+*.gslides
+*.gdraw
+.freebuff/
