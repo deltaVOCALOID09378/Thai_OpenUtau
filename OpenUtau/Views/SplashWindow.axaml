@@ -1,8 +1,16 @@
+<!-- ============================================================================ -->
+<!-- วัน/เดือน/ปี: 21 ตุลาคม 2569 (2026-10-21) -->
+<!-- ชื่อไฟล์: SplashWindow.axaml -->
+<!-- ลำดับเวอร์ชัน: 1.6 -->
+<!-- เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ] -->
+<!-- ตำแหน่งที่จัดวาง: OpenUtau/Views/SplashWindow.axaml -->
+<!-- รายละเอียดการแก้ไขงาน: ขยายขนาดหน้าต่าง (Width=480, Height=230) เพื่อรองรับภาพโลโก้ที่กว้างขึ้น และปรับสมดุล Layout ภายใน -->
+<!-- ============================================================================ -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" Width="440" Height="220"
+        mc:Ignorable="d" Width="480" Height="230"
         x:Class="OpenUtau.App.Views.SplashWindow"
         Title="Thai OpenUtau by DELTA SYNTH"
         Icon="/Assets/Thai OpenUtau Logo.ico"
@@ -14,30 +22,33 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WorkspaceCanvasBrush}">
   <Border BorderBrush="#CC2200" BorderThickness="1.5" CornerRadius="4" ClipToBounds="True">
-    <Grid RowDefinitions="*,Auto,Auto" Margin="20,16,20,16">
-      <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <Image Width="150" Height="150" HorizontalAlignment="Center"
-               Source="/Assets/Thai OpenUtau Logo.svg"/>
+    <Grid RowDefinitions="*,Auto,Auto" Margin="24,18,24,18">
+      <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+        <Image Width="100" Height="100" HorizontalAlignment="Center"
+               Source="/Assets/Thai OpenUtau Logo.png"
+               RenderOptions.BitmapInterpolationMode="HighQuality"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
-          <Image x:Name="LogoTypeDark" Height="18"
-                 Source="/Assets/logotype-w.png" IsVisible="{Binding IsDarkMode}"/>
-          <Image x:Name="LogoTypeLight" Height="18"
-                 Source="/Assets/logotype.png" IsVisible="{Binding !IsDarkMode}"/>
+          <Image x:Name="LogoTypeDark" Height="20"
+                 Source="/Assets/logotype-w.png" IsVisible="{Binding IsDarkMode}"
+                 RenderOptions.BitmapInterpolationMode="HighQuality"/>
+          <Image x:Name="LogoTypeLight" Height="20"
+                 Source="/Assets/logotype.png" IsVisible="{Binding !IsDarkMode}"
+                 RenderOptions.BitmapInterpolationMode="HighQuality"/>
         </StackPanel>
       </StackPanel>
 
-      <Grid Grid.Row="1" Margin="4,12,4,6" ColumnDefinitions="*,Auto">
+      <Grid Grid.Row="1" Margin="4,14,4,8" ColumnDefinitions="*,Auto">
         <TextBlock x:Name="StatusText" Grid.Column="0"
-                   Text="กำลังเริ่มต้นระบบ.... (Initializing....)"
+                   Text="กำลังเริ่มต้นระบบ... (Initializing...)"
                    FontFamily="Leelawadee UI, Microsoft Sans Serif, Segoe UI, sans-serif"
-                   FontSize="16"
+                   FontSize="12"
                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
         <TextBlock x:Name="PercentText" Grid.Column="1"
                    Text="0%"
                    FontFamily="Leelawadee UI, Microsoft Sans Serif, Segoe UI, sans-serif"
                    FontWeight="SemiBold"
-                   FontSize="16"
+                   FontSize="12"
                    Foreground="#CC2200"
                    VerticalAlignment="Center"/>
       </Grid>
@@ -46,7 +57,9 @@
                    Height="4" HorizontalAlignment="Stretch"
                    Minimum="0" Maximum="100" Value="0"
                    IsIndeterminate="False"
-                   Foreground="#CC2200"/>
+                   Foreground="#CC2200"
+                   Background="#2A2A2A"
+                   CornerRadius="2"/>
     </Grid>
   </Border>
 </Window>

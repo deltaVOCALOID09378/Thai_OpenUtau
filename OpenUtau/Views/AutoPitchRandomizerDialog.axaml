@@ -1,57 +1,128 @@
+<!-- ============================================================================ -->
+<!-- วัน/เดือน/ปี: 21 ตุลาคม 2569 (2026-10-21) -->
+<!-- ชื่อไฟล์: AutoPitchRandomizerDialog.axaml -->
+<!-- ลำดับเวอร์ชัน: 1.0 -->
+<!-- เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ] -->
+<!-- ตำแหน่งที่จัดวาง: OpenUtau/Views/AutoPitchRandomizerDialog.axaml -->
+<!-- รายละเอียดการแก้ไขงาน: ปรับปรุง UI หน้าต่าง AutoPitch Randomizer ให้เป็น Floating Dark Card ตามมาตรฐานองค์กร DELTA SYNTH -->
+<!--                       ควบคุมโทนสีแดง-ดำ (#CC2200, #1A1A1A) รองรับฟอนต์ Leelawadee UI และคง Control Names เดิมครบถ้วน -->
+<!-- ============================================================================ -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="380" d:DesignHeight="290"
         x:Class="OpenUtau.App.Views.AutoPitchRandomizerDialog"
         Title="AutoPitch Randomizer"
-        Width="350" Height="250"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
+        Width="380" Height="290" MinWidth="380" MinHeight="290"
         WindowStartupLocation="CenterOwner"
-        CanResize="False">
-  <StackPanel Margin="20" Spacing="15">
-    <TextBlock Text="Select Pitch/Vibrato Pattern:" FontWeight="Bold" FontSize="14"/>
-    <ComboBox Name="PatternComboBox" 
-              SelectedIndex="0" 
-              HorizontalAlignment="Stretch"
-              FontFamily="Leelawadee UI"
-              Background="#2A2A2A"
-              Foreground="#F0F0F0">
-      <ComboBoxItem Content="1. Wave / คลื่น"/>
-      <ComboBoxItem Content="2. Drunk Walk / เดินสุ่ม"/>
-      <ComboBoxItem Content="3. Drop / ลดระดับ"/>
-      <ComboBoxItem Content="4. Rise / ยกระดับ"/>
-      <ComboBoxItem Content="5. Triangle / สามเหลี่ยม"/>
-      <ComboBoxItem Content="6. Jitter / สั่นสุ่ม"/>
-    </ComboBox>
+        CanResize="False"
+        Background="Transparent"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        ExtendClientAreaToDecorationsHint="True"
+        SystemDecorations="BorderOnly"
+        FontFamily="Leelawadee UI, Leelawadee, sans-serif">
 
-    <TextBlock Text="Intensity / ระดับความแรง:" 
-               Margin="0,4,0,0" 
-               Foreground="#F0F0F0"
-               FontFamily="Leelawadee UI"/>
-               
-    <Slider Name="IntensitySlider" 
-            Minimum="0" 
-            Maximum="100" 
-            Value="50" 
-            TickFrequency="10" 
-            IsSnapToTickEnabled="True"/>
+  <!-- กรอบหน้าต่างหลักลอยตัว สไตล์ Modern Clean ของ DELTA SYNTH -->
+  <Border Background="#1A1A1A"
+          BorderBrush="#CC2200"
+          BorderThickness="1.5"
+          CornerRadius="14"
+          Padding="22,18,22,18"
+          BoxShadow="0 12 36 0 #A0000000">
+    <Grid RowDefinitions="Auto, Auto, Auto, Auto, *">
 
-    <StackPanel Orientation="Horizontal" 
-                HorizontalAlignment="Right" 
-                Spacing="10" 
-                Margin="0,12,0,0">
-      <Button Content="Cancel / ยกเลิก" 
-              Name="CancelBtn" 
-              Width="110" 
-              HorizontalContentAlignment="Center"
-              FontFamily="Leelawadee UI"
-              Background="#333333"
-              Foreground="#F0F0F0"/>
-      <Button Content="Apply / ตกลง" 
-              Name="ApplyBtn" 
-              Width="110" 
-              HorizontalContentAlignment="Center" 
-              FontFamily="Leelawadee UI"
-              Background="#CC2200" 
-              Foreground="#F0F0F0"
-              FontWeight="Bold"/>
-    </StackPanel>
-  </StackPanel>
+      <!-- หัวข้อไตเติลและคำอธิบายสองภาษา -->
+      <StackPanel Grid.Row="0" Margin="0,0,0,12" Spacing="3">
+        <TextBlock Text="AutoPitch Randomizer / สุ่มรูปแบบพิตช์และลูกคอ"
+                   FontWeight="Bold"
+                   FontSize="14"
+                   Foreground="#F0F0F0"/>
+        <TextBlock Text="เลือกรูปแบบคลื่นพิตช์ (Pattern) และปรับระดับความแรงในการสุ่ม"
+                   FontSize="11"
+                   Foreground="#8A8A8A"/>
+      </StackPanel>
+
+      <!-- เมนูเลือกรูปแบบพิตช์ (Pattern Selection) -->
+      <StackPanel Grid.Row="1" Margin="0,0,0,10" Spacing="6">
+        <TextBlock Text="Select Pitch/Vibrato Pattern / รูปแบบคลื่น:"
+                   FontSize="12"
+                   Foreground="#CCCCCC"
+                   FontWeight="SemiBold"/>
+        <ComboBox Name="PatternComboBox"
+                  SelectedIndex="0"
+                  HorizontalAlignment="Stretch"
+                  Height="32"
+                  Background="#2A2A2A"
+                  Foreground="#F0F0F0"
+                  BorderBrush="#444444"
+                  BorderThickness="1"
+                  CornerRadius="6">
+          <ComboBoxItem Content="1. Wave / คลื่นลูกเอื้อน"/>
+          <ComboBoxItem Content="2. Drunk Walk / เดินสุ่มธรรมชาติ"/>
+          <ComboBoxItem Content="3. Drop / ลดระดับเสียง"/>
+          <ComboBoxItem Content="4. Rise / ยกระดับเสียง"/>
+          <ComboBoxItem Content="5. Triangle / สามเหลี่ยมสมมาตร"/>
+          <ComboBoxItem Content="6. Jitter / สั่นสุ่มความถี่สูง"/>
+        </ComboBox>
+      </StackPanel>
+
+      <!-- แถบกำหนดระดับความแรง (Intensity Slider) -->
+      <StackPanel Grid.Row="2" Margin="0,0,0,14" Spacing="4">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0"
+                     Text="Intensity / ระดับความแรง:"
+                     FontSize="12"
+                     Foreground="#CCCCCC"
+                     VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="1"
+                     Text="{Binding #IntensitySlider.Value, StringFormat={}{0:0}%}"
+                     FontSize="12"
+                     FontWeight="SemiBold"
+                     Foreground="#CC2200"
+                     VerticalAlignment="Center"/>
+        </Grid>
+        <Slider Name="IntensitySlider"
+                Minimum="0"
+                Maximum="100"
+                Value="50"
+                TickFrequency="10"
+                IsSnapToTickEnabled="True"
+                Foreground="#CC2200"
+                Margin="0,2,0,0"/>
+      </StackPanel>
+
+      <!-- ปุ่มคำสั่งด้านล่าง (Cancel & Apply Action Buttons) -->
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="10"
+                  Margin="0,4,0,0">
+        <Button Content="Cancel / ยกเลิก"
+                Name="CancelBtn"
+                Width="110" Height="32"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="#333333"
+                Foreground="#F0F0F0"
+                CornerRadius="6"
+                BorderThickness="0"
+                Cursor="Hand"/>
+        <Button Content="Apply / ตกลง"
+                Name="ApplyBtn"
+                Width="110" Height="32"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="#CC2200"
+                Foreground="#F0F0F0"
+                FontWeight="Bold"
+                CornerRadius="6"
+                BorderThickness="0"
+                Cursor="Hand"/>
+      </StackPanel>
+
+    </Grid>
+  </Border>
 </Window>

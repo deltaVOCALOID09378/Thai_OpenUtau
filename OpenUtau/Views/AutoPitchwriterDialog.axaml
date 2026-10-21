@@ -1,28 +1,138 @@
+<!-- ============================================================================ -->
+<!-- วัน/เดือน/ปี: 21 ตุลาคม 2569 (2026-10-21) -->
+<!-- ชื่อไฟล์: AutoPitchwriterDialog.axaml -->
+<!-- ลำดับเวอร์ชัน: 1.0 -->
+<!-- เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai (Delta) & Gemini AI ] -->
+<!-- ตำแหน่งที่จัดวาง: OpenUtau/Views/AutoPitchwriterDialog.axaml -->
+<!-- รายละเอียดการแก้ไขงาน: ยกระดับ UI หน้าต่าง AutoPitchwriter ตามมาตรฐาน Modern Clean ของ DELTA SYNTH -->
+<!--                       รองรับสองภาษา (ไทย-อังกฤษ) ปรับสีแบรนด์เข้มข้น และคงชื่อ Control เดิมครบถ้วน -->
+<!-- ============================================================================ -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="300"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="340"
         x:Class="OpenUtau.App.Views.AutoPitchwriterDialog"
-        Title="The AutoPitchwriter"
-        WindowStartupLocation="CenterScreen"
-        Width="450" Height="300" MinWidth="450" MinHeight="300"
-        CanResize="False">
-    <StackPanel Margin="10" Spacing="10">
-        <CheckBox Name="chkThunderbolt" Content="Thunderbolt shape" IsChecked="True"/>
-        <CheckBox Name="chkPitchDropRise" Content="Pitch-drop / Pitch-rise"/>
-        <CheckBox Name="chkSlope" Content="The Slope"/>
-        
-    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,5,0,0">
-        <TextBlock Text="Base portamento: Start" VerticalAlignment="Center" FontFamily="Leelawadee UI"/>
-        <TextBox Name="txtPortamentoStart" Text="-25" Width="60" FontFamily="Leelawadee UI"/>
-        <TextBlock Text="Length" VerticalAlignment="Center" FontFamily="Leelawadee UI"/>
-        <TextBox Name="txtPortamentoLength" Text="50" Width="60" FontFamily="Leelawadee UI"/>
-    </StackPanel>
+        Title="The AutoPitchwriter (DELTA SYNTH Contextual Engine)"
+        Icon="/Assets/Thai OpenUtau Logo.ico"
+        WindowStartupLocation="CenterOwner"
+        Width="460" Height="340" MinWidth="460" MinHeight="340"
+        CanResize="False"
+        Background="Transparent"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        ExtendClientAreaToDecorationsHint="True"
+        SystemDecorations="BorderOnly"
+        FontFamily="Leelawadee UI, Leelawadee, sans-serif">
 
-    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,20,0,0">
-        <Button Content="Default / คืนค่า" Click="OnDefaultClick" Width="100" FontFamily="Leelawadee UI" Background="#333333" Foreground="#F0F0F0"/>
-        <Button Content="Run / ทำงาน" Click="OnRunClick" Width="100" FontFamily="Leelawadee UI" Background="#CC2200" Foreground="#F0F0F0" FontWeight="Bold"/>
-    </StackPanel>
-</StackPanel>
+  <!-- กรอบหลักแบบลอยตัวสีดำ มิติเงาลึก และเส้นขอบแดงมาตรฐาน DELTA SYNTH -->
+  <Border Background="#1A1A1A" 
+          BorderBrush="#CC2200" 
+          BorderThickness="1.5" 
+          CornerRadius="12" 
+          Padding="20"
+          BoxShadow="0 10 30 0 #A0000000">
+    <Grid RowDefinitions="Auto, *, Auto, Auto">
+
+      <!-- ส่วนหัวชื่อหน้าต่างและไตเติล -->
+      <StackPanel Grid.Row="0" Margin="0,0,0,14" Spacing="4">
+        <TextBlock Text="The AutoPitchwriter / กำหนดรูปแบบเส้นเสียงอัตโนมัติ" 
+                   FontWeight="Bold" 
+                   FontSize="15" 
+                   Foreground="#F0F0F0"/>
+        <TextBlock Text="เลือกรูปแบบเส้นพิตช์ (Pitch Curve Shapes) และกำหนดค่า Portamento พื้นฐาน" 
+                   FontSize="11" 
+                   Foreground="#A0A0A0"/>
+      </StackPanel>
+
+      <!-- พื้นที่เลือกรูปแบบเส้นพิตช์ (Contextual Pitch Shapes Selection) -->
+      <Border Grid.Row="1" Background="#222222" CornerRadius="8" Padding="12" Margin="0,0,0,14" BorderBrush="#333333" BorderThickness="1">
+        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+          <!-- แถวที่ 1 -->
+          <CheckBox Grid.Row="0" Grid.Column="0" Name="chkThunderbolt" 
+                    Content="1. Thunderbolt / สายฟ้า" 
+                    IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
+          <CheckBox Grid.Row="0" Grid.Column="1" Name="chkPitchDropRise" 
+                    Content="2. Drop/Rise / ช้อน-รูดเสียง" 
+                    IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
+
+          <!-- แถวที่ 2 -->
+          <CheckBox Grid.Row="1" Grid.Column="0" Name="chkSlope" 
+                    Content="3. The Slope / สโลปเชื่อมเสียง" 
+                    IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
+          <CheckBox Grid.Row="1" Grid.Column="1" Name="chkW辯Shape" 
+                    Content="4. W-Shape / คลื่นดับเบิ้ล" 
+                    IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
+
+          <!-- แถวที่ 3 -->
+          <CheckBox Grid.Row="2" Grid.Column="0" Name="chkUPitchDrop" 
+                    Content="5. U-Drop / ดิ่งทอดหางเสียง" 
+                    IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,2"/>
+          <CheckBox Grid.Row="2" Grid.Column="1" Name="chkPitchDent" 
+                    Content="6. Pitch Dent / รอยบุ๋มเน้นคำ" 
+                    IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,2"/>
+        </Grid>
+      </Border>
+
+      <!-- แถบกำหนดค่าพารามิเตอร์ Portamento -->
+      <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,*" Margin="0,0,0,16" VerticalAlignment="Center">
+        <TextBlock Grid.Column="0" Text="Portamento Start / เริ่มต้น (ms):" 
+                   VerticalAlignment="Center" 
+                   Foreground="#F0F0F0" 
+                   FontSize="12" 
+                   Margin="0,0,8,0"/>
+        <TextBox Grid.Column="1" Name="txtPortamentoStart" 
+                 Text="-25" 
+                 Height="28" 
+                 VerticalContentAlignment="Center" 
+                 HorizontalContentAlignment="Center" 
+                 Background="#2A2A2A" 
+                 Foreground="#F0F0F0" 
+                 BorderBrush="#444444" 
+                 CornerRadius="4" 
+                 Margin="0,0,14,0"/>
+
+        <TextBlock Grid.Column="2" Text="Length / ความยาว (ms):" 
+                   VerticalAlignment="Center" 
+                   Foreground="#F0F0F0" 
+                   FontSize="12" 
+                   Margin="0,0,8,0"/>
+        <TextBox Grid.Column="3" Name="txtPortamentoLength" 
+                 Text="50" 
+                 Height="28" 
+                 VerticalContentAlignment="Center" 
+                 HorizontalContentAlignment="Center" 
+                 Background="#2A2A2A" 
+                 Foreground="#F0F0F0" 
+                 BorderBrush="#444444" 
+                 CornerRadius="4"/>
+      </Grid>
+
+      <!-- ปุ่มคำสั่งควบคุมการทำงานด้านล่าง -->
+      <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+        <Button Content="Default / คืนค่า" 
+                Click="OnDefaultClick" 
+                Width="120" Height="32" 
+                HorizontalContentAlignment="Center" 
+                VerticalContentAlignment="Center" 
+                Background="#333333" 
+                Foreground="#F0F0F0" 
+                CornerRadius="6" 
+                BorderThickness="0" 
+                Cursor="Hand"/>
+        <Button Content="Run / ทำงาน" 
+                Click="OnRunClick" 
+                Width="120" Height="32" 
+                HorizontalContentAlignment="Center" 
+                VerticalContentAlignment="Center" 
+                Background="#CC2200" 
+                Foreground="#F0F0F0" 
+                FontWeight="Bold" 
+                CornerRadius="6" 
+                BorderThickness="0" 
+                Cursor="Hand"/>
+      </StackPanel>
+
+    </Grid>
+  </Border>
 </Window>

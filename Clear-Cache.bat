@@ -1,16 +1,31 @@
 @echo off
+REM ============================================================================
+REM Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+REM File Name    : Clear-Cache.bat
+REM Version      : 1.4
+REM Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+REM File Location: Clear-Cache.bat
+REM Description  : Clean obsolete DLLs, audio render caches, and build junk files. Supports Drag & Drop and --nopause flag.
+REM ============================================================================
 setlocal enabledelayedexpansion
-title DELTA SYNTH - Thai OpenUtau Cache & Junk Cleaner
+title DELTA SYNTH - Thai OpenUtau Cache and Junk Cleaner
 
-:: Set code page for UTF-8 and English/Thai display
+:: Set code page for UTF-8 and English display
 chcp 65001 >nul
 
+set "NO_PAUSE=0"
 set "TARGET_DIR=%~1"
+if /i "%~1"=="--nopause" (
+    set "NO_PAUSE=1"
+    set "TARGET_DIR=%~2"
+) else if /i "%~2"=="--nopause" (
+    set "NO_PAUSE=1"
+)
 if "%TARGET_DIR%"=="" set "TARGET_DIR=%~dp0"
 if "%TARGET_DIR:~-1%"=="\" set "TARGET_DIR=%TARGET_DIR:~0,-1%"
 
 echo ======================================================================
-echo    DELTA SYNTH - Thai OpenUtau Cache & Artifact Cleaner v1.0
+echo    DELTA SYNTH - Thai OpenUtau Cache and Artifact Cleaner v1.4
 echo    Clean Old DLLs, Build Residues, Audio Render Caches and Temp Logs
 echo ======================================================================
 echo Target Directory: "%TARGET_DIR%"
@@ -82,4 +97,4 @@ echo    [SUCCESS] All Cache, Old DLLs, and Junk Files Successfully Cleared!
 echo    Source Code, Voicebanks, and Configurations Preserved Safely.
 echo ======================================================================
 echo.
-pause
+if "%NO_PAUSE%"=="0" pause
