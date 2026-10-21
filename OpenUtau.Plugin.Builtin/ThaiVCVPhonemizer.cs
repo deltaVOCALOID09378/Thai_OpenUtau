@@ -1,12 +1,13 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// Made And Checked By DELTA SYNTH & All Agentic AI
-// Original by Patiphat Wongyai
-// Version: v.2.5
-// Description: ระบบแปลงหน่วยเสียงสไตล์ VCV (Vowel-Consonant-Vowel)
-// ขยายพื้นที่การครอสเฟด (VC transition) เป็น 80% และ Ending C เป็น 88%
-// (VC Transition width = 80%, Ending C width = 88% for clearer articulation)
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : ThaiVCVPhonemizer.cs
+// Version      : 2.7
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
+// File Location: OpenUtau.Plugin.Builtin/ThaiVCVPhonemizer.cs
+// Description  : ระบบแปลงหน่วยเสียงสไตล์ VCV (Vowel-Consonant-Vowel) พร้อมระบบป้องกัน Null
+//                ขยายพื้นที่การครอสเฟด (VC transition 80%, Ending C 88%) เพื่อความชัดเจน
 // ============================================================================
 
 using System;
@@ -216,6 +217,7 @@ namespace OpenUtau.Plugin.Builtin {
 
         private bool checkOtoUntilHit(string[] input, Note note, out UOto oto) {
             oto = default;
+            if (singer == null) return false;
             var attr = note.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
             foreach (string test in input) {
                 if (test == null) continue;

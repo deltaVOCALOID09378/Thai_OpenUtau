@@ -16,8 +16,8 @@
   <Border BorderBrush="#CC2200" BorderThickness="1.5" CornerRadius="4" ClipToBounds="True">
     <Grid RowDefinitions="*,Auto,Auto" Margin="20,16,20,16">
       <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <Image Width="92" Height="92" HorizontalAlignment="Center"
-               Source="/Assets/Thai OpenUtau Logo.png"/>
+        <Image Width="150" Height="150" HorizontalAlignment="Center"
+               Source="/Assets/Thai OpenUtau Logo.svg"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
           <Image x:Name="LogoTypeDark" Height="18"
                  Source="/Assets/logotype-w.png" IsVisible="{Binding IsDarkMode}"/>
@@ -28,16 +28,16 @@
 
       <Grid Grid.Row="1" Margin="4,12,4,6" ColumnDefinitions="*,Auto">
         <TextBlock x:Name="StatusText" Grid.Column="0"
-                   Text="กำลังเริ่มต้นระบบ... (Initializing...)"
+                   Text="กำลังเริ่มต้นระบบ.... (Initializing....)"
                    FontFamily="Leelawadee UI, Microsoft Sans Serif, Segoe UI, sans-serif"
-                   FontSize="11"
+                   FontSize="16"
                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
         <TextBlock x:Name="PercentText" Grid.Column="1"
                    Text="0%"
                    FontFamily="Leelawadee UI, Microsoft Sans Serif, Segoe UI, sans-serif"
                    FontWeight="SemiBold"
-                   FontSize="11"
+                   FontSize="16"
                    Foreground="#CC2200"
                    VerticalAlignment="Center"/>
       </Grid>

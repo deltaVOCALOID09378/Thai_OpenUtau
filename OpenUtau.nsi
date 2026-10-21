@@ -1,6 +1,11 @@
-; Made And Checked By DELTA SYNTH & Gemini AI
-; Credit: DELTA SYNTH & Gemini, UTAU THAILAND, stakira, Ferina and Printmov
-; Version: 1.2
+; ============================================================================
+; Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+; File Name    : OpenUtau.nsi
+; Version      : 1.4
+; Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by UTAU THAILAND, stakira, Ferina and Printmov ]
+; File Location: OpenUtau.nsi
+; Description  : Professional NSIS installer configuration with corrected icon asset path.
+; ============================================================================
 
 ManifestDPIAware true
 
@@ -16,7 +21,7 @@ ManifestDPIAware true
 
 ; --- การตั้งค่าอินเทอร์เฟซ (MUI Settings) ---
 !define MUI_ABORTWARNING
-!define MUI_ICON "OpenUtau\Assets\Thai OpenUtau Logo type.ico"
+!define MUI_ICON "OpenUtau\Assets\Thai OpenUtau Logo.ico"
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 
 ; การตั้งค่าภาษาใน Registry

@@ -1,11 +1,14 @@
 @echo off
-:: ==========================================
-:: File: Install_ThaiVCCV_Delta.bat
-:: Version: 1.0
-:: Made And Checked By DELTA SYNTH & All Agentic AI
-:: Description: Standalone installation script for ThaiVCCVPhonemizer.cs
-:: ==========================================
-title DELTA SYNTH - OpenUtau Plugin Installer
+:: ============================================================================
+:: Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+:: File Name    : Install_ThaiVCCV_Delta.bat
+:: Version      : 1.2
+:: Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+:: File Location: Install_ThaiVCCV_Delta.bat
+:: Description  : Standalone installation script for ThaiVCCVPhonemizer.cs with
+::                direct Drag-and-Drop and interactive prompt support.
+:: ============================================================================
+title DELTA SYNTH - OpenUtau Plugin Installer V1.2
 color 0B
 chcp 65001 >nul
 
@@ -13,15 +16,21 @@ echo =======================================================
 echo      DELTA SYNTH - Thai VCCV Phonemizer Installer
 echo =======================================================
 echo.
-echo Please drag and drop the OpenUtau root directory here.
-set /p target_dir="Target Path: "
+
+set "target_dir=%~1"
+if "%target_dir%"=="" (
+    echo Please drag and drop the OpenUtau root directory here.
+    set /p target_dir="Target Path: "
+)
 
 set "target_dir=%target_dir:"=%"
 
 if not exist "%target_dir%\OpenUtau.sln" (
-    echo [ERROR] The specified folder is not a valid OpenUtau project root.
-    pause
-    exit /b 1
+    if not exist "%target_dir%\Thai OpenUtau.sln" (
+        echo [ERROR] The specified folder is not a valid OpenUtau project root.
+        pause
+        exit /b 1
+    )
 )
 
 set "plugin_dir=%target_dir%\OpenUtau.Plugin.Builtin"

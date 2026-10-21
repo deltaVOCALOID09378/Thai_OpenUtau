@@ -1,4 +1,14 @@
-﻿using System;
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : LoadingWindow.axaml.cs
+// Version      : 1.4
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+// File Location: OpenUtau/Views/LoadingWindow.axaml.cs
+// Description  : ยกระดับ UI หน้าต่าง Loading และเสริมความรัดกุมของ CancellationTokenSource
+//                ด้วย try-finally และการจัดการ OperationCanceledException ตามมาตรฐาน .NET Backend
+// ============================================================================
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -22,9 +32,9 @@ namespace OpenUtau.App.Views {
 
         public static void InitializeLoadingWindow() {
             loadingDialog = new LoadingWindow() {
-                Title = "Loading"
+                Title = "Thai OpenUtau Loading"
             };
-            loadingDialog.Text.Text = "Loading...";
+            loadingDialog.Text.Text = "กำลังโหลดระบบ... / Loading...";
         }
 
         private static void ShowLoadingWindow(Window parent) {
@@ -57,39 +67,47 @@ namespace OpenUtau.App.Views {
         /// Returns a task that shows a loading popup for a task after a time delay (Default 250ms)
         /// </summary>
         public static async Task LoadForAsyncTask(Task loadingTask, Window parentWindow, int timeBeforeLoadingPopup = 250) {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Task loadingPopupTask = ShowLoadingAfterTime(cts.Token, parentWindow, 1);
+            using var cts = new CancellationTokenSource();
+            isCurrentlyLoading = true;
+            Task loadingPopupTask = ShowLoadingAfterTime(cts.Token, parentWindow, timeBeforeLoadingPopup);
 
-            await loadingTask;
-
-            // Cancel loading box creation task early once window successfully created
-            cts.Cancel();
-            // Close loading box if opened
-            CloseLoadingWindow();
-            isCurrentlyLoading = false;
+            try {
+                await loadingTask;
+            } finally {
+                // Cancel loading box creation task early once window successfully created or faulted
+                cts.Cancel();
+                // Close loading box if opened
+                CloseLoadingWindow();
+                isCurrentlyLoading = false;
+            }
         }
 
         /// <summary>
         /// Returns a task that shows a loading popup for a task after a time delay (Default 250ms)
         /// </summary>
         public static async Task<T> LoadForAsyncTask<T>(Task<T> loadingTask, Window parentWindow, int timeBeforeLoadingPopup = 250) {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Task loadingPopupTask = ShowLoadingAfterTime(cts.Token, parentWindow, 1);
+            using var cts = new CancellationTokenSource();
+            isCurrentlyLoading = true;
+            Task loadingPopupTask = ShowLoadingAfterTime(cts.Token, parentWindow, timeBeforeLoadingPopup);
 
-            await loadingTask;
-
-            // Cancel loading box creation task early once window successfully created
-            cts.Cancel();
-            // Close loading box if opened
-            CloseLoadingWindow();
-            isCurrentlyLoading = false;
-
-            return loadingTask.Result;
+            try {
+                return await loadingTask;
+            } finally {
+                // Cancel loading box creation task early once window successfully created or faulted
+                cts.Cancel();
+                // Close loading box if opened
+                CloseLoadingWindow();
+                isCurrentlyLoading = false;
+            }
         }
 
         private static async Task ShowLoadingAfterTime(CancellationToken ct, Window parentWindow, int milisDelay) {
-            // Must have at least 1ms of delay opening loading window to avoid strange race conditions with UI thread (?)
-            await Task.Delay(Math.Max(milisDelay, 1), ct);
+            try {
+                // Must have at least 1ms of delay opening loading window to avoid strange race conditions with UI thread (?)
+                await Task.Delay(Math.Max(milisDelay, 1), ct);
+            } catch (OperationCanceledException) {
+                return;
+            }
 
             if (ct.IsCancellationRequested) {
                 return;

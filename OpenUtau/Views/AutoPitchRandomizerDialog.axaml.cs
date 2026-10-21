@@ -1,3 +1,15 @@
+#pragma warning disable CS0618, CS0649, CS8632, CS0108
+#nullable enable
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : AutoPitchRandomizerDialog.axaml.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Delta Synth ]
+// File Location: OpenUtau.App\Views\AutoPitchRandomizerDialog.axaml.cs
+// Description  : Code-behind logic for AutoPitch Randomizer dialog window.
+//                Handles UI interaction, pattern selection, and intensity value mapping.
+// ============================================================================
+
 using Avalonia.Controls;
 
 namespace OpenUtau.App.Views

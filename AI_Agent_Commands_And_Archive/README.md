@@ -15,6 +15,7 @@ AI_Agent_Commands_And_Archive/
 ├── Command_Runners/          # สคริปต์และตัวรันคำสั่งสำหรับ Agent และระบบ Automation
 ├── Unused_Files/             # ไฟล์ที่ไม่ได้ใช้งานหลัก (เช่น Solution รอง, Log อดีต, Text Dump)
 │   ├── OpenUtau.slnx         # Solution แบบ XML เดิม (สำรองไว้ ไม่ใช้ใน Root เพื่อให้ `dotnet build` รันได้ 100%)
+│   ├── Strings.xaml          # Loose copy of Thai strings (archived for workspace hygiene)
 │   ├── All File of (Thai OpenUtau Type5).txt
 │   ├── LunaiFiles.txt
 │   └── msbuild.log

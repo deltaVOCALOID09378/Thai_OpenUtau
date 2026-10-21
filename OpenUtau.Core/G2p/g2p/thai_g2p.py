@@ -1,8 +1,18 @@
+# ==============================================================================
+# Date (BE/AD)    : 21 ตุลาคม 2569 / 21 October 2026
+# File Name       : Program.thai_g2p_lyrics.py
+# Version         : 1.0
+# Credits         : Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Thai G2P Dev Team ]
+# Location        : runtime\Program.thai_g2p_lyrics.py
+# Description     : Upgrade Thai G2P engine to handle all types of Thai song lyrics (repetitive words, 
+#                   English loanwords, punctuation removal, slangs, interjections, multi-line formatting).
+# ==============================================================================
+
 import re
 from typing import List
-from pythainlp.tokenize import syllable_tokenize
+from pythainlp.tokenize import syllable_tokenize, word_tokenize
 
-# พจนานุกรมคำศัพท์ 54 คำจากการทดสอบ (test_thai_g2p.py)
+# พจนานุกรมคำศัพท์ 54 คำจากการทดสอบ (test_thai_g2p.py) - Primary Reference
 TEST_DICTIONARY = {
     # Tier 1: Core
     "ตา": ["t", "a"],
@@ -64,10 +74,25 @@ TEST_DICTIONARY = {
     "ฉันรักภาษาไทย": ["ch", "a", "n", "r", "a", "k", "ph", "a", "s", "a", "th", "a", "i"]
 }
 
-# พจนานุกรมหน่วยเสียงเพิ่มเติมเฉพาะกิจเพื่อการรองรับที่ครอบคลุม
+# พจนานุกรมหน่วยเสียงเพิ่มเติมเฉพาะกิจและคำติดปากในเนื้อเพลง/คำทับศัพท์
 EXTRA_DICTIONARY = {
     "ทดสอบ": ["th", "Q", "t", "s", "Q", "p"],
     "หรูหรา": ["r", "u", "r", "a"],
+    # คำอุทานและคำในเนื้อเพลง (Interjections & Lyric Words)
+    "เธอ": ["th", "3"],
+    "ฉัน": ["ch", "a", "n"],
+    "เธอเลย": ["th", "3", "l", "3", "y"],
+    "เย้": ["y", "e"],
+    "โฮ้": ["h", "o"],
+    "ฮา": ["h", "a"],
+    "อู้ว": ["u"],
+    "เย่": ["y", "e"],
+    "เฮ": ["h", "e"],
+    "โว้ว": ["w", "o"],
+    "เลิฟ": ["l", "3", "f"],
+    "ยู": ["y", "u"],
+    "ไอ": ["a", "i"],
+    "ฮาร์ท": ["h", "a", "t"],
 }
 
 C_MAPPING = {
@@ -118,7 +143,7 @@ TRUE_CLUSTERS = {
 }
 
 def clean_syllable(syl: str) -> str:
-    # ลบการันต์์ และตัวอักษรหน้าการันต์
+    # ลบการันต์ และตัวอักษรหน้าการันต์
     syl = re.sub(r'.์', '', syl)
     # ลบวรรณยุกต์และไม้ไต่คู้
     syl = re.sub(r'[่้๊๋็]', '', syl)
@@ -217,6 +242,34 @@ def g2p_syllable(syl: str) -> List[str]:
     # กรณีสู้ไม่ได้จริงๆ ส่งคืนแบบแปลงตามพยัญชนะ
     return convert_c(syl)
 
+def process_yamok_lyrics(text: str) -> str:
+    """
+    จัดการไม้ยมก (ๆ) ในเนื้อเพลง เพื่อขยายคำซ้ำตามรูปแบบไวยากรณ์ไทย
+    """
+    words = text.split()
+    processed_words = []
+    for i, w in enumerate(words):
+        if 'ๆ' in w:
+            clean_w = w.replace('ๆ', '')
+            if clean_w:
+                processed_words.extend([clean_w, clean_w])
+            elif processed_words:
+                processed_words.append(processed_words[-1])
+        else:
+            processed_words.append(w)
+    return " ".join(processed_words)
+
+def clean_lyric_text(text: str) -> str:
+    """
+    ทําความสะอาดเนื้อเพลง ลบเครื่องหมายวรรคตอนและสัญลักษณ์ดนตรีที่ไม่จำเป็น
+    """
+    # ลบวงเล็บป้องโต้ เช่น (ซ้ำ), (2x), [Chorus]
+    text = re.sub(r'\[.*?\]|\(.*?\)', '', text)
+    # ลบสัญลักษณ์พิเศษ เครื่องหมายวรรคตอน
+    text = re.sub(r'[!\"#$%&\'()*+,\-./:;<=>?@\[\\\]^_`{|}~♪♫🎶]', ' ', text)
+    # ลบเว้นวรรคส่วนเกิน
+    return re.sub(r'\s+', ' ', text).strip()
+
 def g2p_thai(word: str) -> List[str]:
     # 1. ค้นหาในพจนานุกรมคำหลักและคำเพิ่มเติม
     if word in TEST_DICTIONARY:
@@ -232,6 +285,46 @@ def g2p_thai(word: str) -> List[str]:
             # ค้นหาพยางค์ย่อยในดิคชันนารี (เผื่อเจอคำสั้น)
             if syl in TEST_DICTIONARY:
                 result.extend(TEST_DICTIONARY[syl])
+            elif syl in EXTRA_DICTIONARY:
+                result.extend(EXTRA_DICTIONARY[syl])
             else:
                 result.extend(g2p_syllable(syl))
     return result
+
+def g2p_thai_lyrics(lyrics: str) -> List[List[str]]:
+    """
+    ประมวลผลเนื้อเพลงไทยแบบเต็ม รองรับหลายบรรทัด ไม้ยมก คำอุทาน และสัญลักษณ์เพลง
+    คืนค่าเป็นรายการหน่วยเสียงแยกตามบรรทัด
+    """
+    lines = lyrics.splitlines()
+    lyrics_phonemes = []
+    
+    for line in lines:
+        cleaned = clean_lyric_text(line)
+        if not cleaned:
+            continue
+        processed = process_yamok_lyrics(cleaned)
+        
+        line_phonemes = []
+        words = word_tokenize(processed, engine="newmm")
+        
+        for w in words:
+            w_strip = w.strip()
+            if w_strip:
+                ph = g2p_thai(w_strip)
+                if ph:
+                    line_phonemes.extend(ph)
+                    
+        if line_phonemes:
+            lyrics_phonemes.append(line_phonemes)
+            
+    return lyrics_phonemes
+
+if __name__ == "__main__":
+    test_lyric = "มากๆ ♪ (รักเธอๆ) จริงๆ เลยนะเย้!"
+    print("--- Testing Thai G2P Lyric Processing Engine ---")
+    print("Original Lyrics:", test_lyric)
+    phonemes = g2p_thai_lyrics(test_lyric)
+    print("Converted Phonemes Result:")
+    for idx, line in enumerate(phonemes, 1):
+        print(f"Line {idx}:", line)

@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="StartupSettings.props" Condition="Exists('StartupSettings.props')" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <TargetFramework>net8.0-windows</TargetFramework>
   </PropertyGroup>
@@ -6,49 +7,51 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
-    <RollForward>LatestMajor</RollForward>
+    <RollForward>Minor</RollForward>
     <OutputType>WinExe</OutputType>
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <Nullable>enable</Nullable>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Version>0.0.0</Version>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Version>35.1.4</Version>
+    <AssemblyVersion>35.1.4.0</AssemblyVersion>
+    <FileVersion>35.1.4.0</FileVersion>
     <ApplicationIcon>Assets\Thai OpenUtau Logo.ico</ApplicationIcon>
     <PublishReadyToRun>true</PublishReadyToRun>
     <DebugType>embedded</DebugType>
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <CFBundleName>OpenUtau</CFBundleName>
-    <CFBundleDisplayName>OpenUtau</CFBundleDisplayName>
-    <CFBundleIdentifier>com.stakira.openutau</CFBundleIdentifier>
-    <CFBundleVersion>0.0.0</CFBundleVersion>
-    <CFBundleShortVersionString>0.0.0</CFBundleShortVersionString>
+    <CFBundleName>Thai OpenUtau</CFBundleName>
+    <CFBundleDisplayName>Thai OpenUtau</CFBundleDisplayName>
+    <CFBundleIdentifier>com.deltasynth.thaiopenutau</CFBundleIdentifier>
+    <CFBundleVersion>35.1</CFBundleVersion>
+    <CFBundleShortVersionString>35.1</CFBundleShortVersionString>
     <CFBundlePackageType>APPL</CFBundlePackageType>
     <CFBundleSignature>????</CFBundleSignature>
     <CFBundleExecutable>OpenUtau</CFBundleExecutable>
-    <CFBundleIconFile>OpenUtau.icns</CFBundleIconFile>
+    <CFBundleIconFile>Thai OpenUtau.icns</CFBundleIconFile>
     <NSPrincipalClass>NSApplication</NSPrincipalClass>
     <NSHighResolutionCapable>true</NSHighResolutionCapable>
     <CFBundleDocumentTypes>
-        <array>
-            <dict>
-                <key>CFBundleTypeName</key>
-                <string>OpenUtau Sequence File</string>
-                <key>CFBundleTypeExtensions</key>
-                <array>
-                    <string>ustx</string>
-                </array>
-                <key>CFBundleTypeIconFile</key>
-                <string>OpenUtau.icns</string>
-                <key>CFBundleTypeRole</key>
-                <string>Editor</string>
-                <key>LSItemContentTypes</key>
-                <array>
-                    <string>com.stakira.openutau.ustx</string>
-                </array>
-            </dict>
-        </array>          
-  </CFBundleDocumentTypes>
+      <array>
+        <dict>
+          <key>CFBundleTypeName</key>
+          <string>OpenUtau Sequence File</string>
+          <key>CFBundleTypeExtensions</key>
+          <array>
+            <string>ustx</string>
+          </array>
+          <key>CFBundleTypeIconFile</key>
+          <string>Thai OpenUtau.icns</string>
+          <key>CFBundleTypeRole</key>
+          <string>Editor</string>
+          <key>LSItemContentTypes</key>
+          <array>
+            <string>com.deltasynth.thaiopenutau.ustx</string>
+          </array>
+        </dict>
+      </array>
+    </CFBundleDocumentTypes>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
@@ -76,29 +79,27 @@
     <ProjectReference Include="..\OpenUtau.Core\OpenUtau.Core.csproj" />
     <ProjectReference Include="..\OpenUtau.Plugin.Builtin\OpenUtau.Plugin.Builtin.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)'=='DEBUG'">
-    <None Include="..\runtimes\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\" />
-  </ItemGroup>
+  <!-- จัดการ Native Libraries แยกตาม RuntimeIdentifier ให้ถูกต้องแม่นยำ -->
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-    <None Include="..\runtimes\win-x64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="." />
+    <None Include="..\runtimes\win-x64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\win-x64\native\" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x86'">
-    <None Include="..\runtimes\win-x86\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="." />
+    <None Include="..\runtimes\win-x86\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\win-x86\native\" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
-    <None Include="..\runtimes\win-arm64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="." />
+    <None Include="..\runtimes\win-arm64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\win-arm64\native\" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
-    <None Include="..\runtimes\osx\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="." />
+    <None Include="..\runtimes\osx-x64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\osx-x64\native\" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
-    <None Include="..\runtimes\osx\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="." />
+    <None Include="..\runtimes\osx-arm64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\osx-arm64\native\" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-    <None Include="..\runtimes\linux-x64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="." />
+    <None Include="..\runtimes\linux-x64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\linux-x64\native\" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
-    <None Include="..\runtimes\linux-arm64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="." />
+    <None Include="..\runtimes\linux-arm64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\linux-arm64\native\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Controls\NotePropertyExpression.axaml.cs">

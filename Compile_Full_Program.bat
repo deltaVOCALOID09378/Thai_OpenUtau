@@ -1,9 +1,9 @@
 @echo off
 rem ======================================================================
-rem Date         : 11/10/2026 (B.E. 2569 / A.D. 2026)
+rem Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
 rem File Name    : Compile_Full_Program.bat
-rem Version      : 3.1.0 (Full Standalone Release Builder)
-rem Author Credit: Made And Checked By DELTA SYNTH[ Delta Synth ] & All Code Agentic AI Engine
+rem Version      : 3.3.0 (Full Standalone Release Builder)
+rem Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
 rem File Location: Root Directory of the Project (E:\Program Developing\Thai_OpenUtau\)
 rem Description  : Professional full-stack compilation and publishing pipeline for Thai OpenUtau.
 rem                Builds OpenUtau in Release mode and produces a fully consolidated,
@@ -11,7 +11,7 @@ rem                ready-to-run application in the "Publish" folder.
 rem ======================================================================
 
 setlocal enabledelayedexpansion
-title DELTA SYNTH - Thai OpenUtau Full Program Compiler v3.1.0
+title DELTA SYNTH - Thai OpenUtau Full Program Compiler v3.3.0
 color 0B
 chcp 65001 >nul
 
@@ -61,7 +61,7 @@ where dotnet >nul 2>&1
 if !errorlevel! neq 0 (
     color 0C
     echo [ERROR] The "dotnet" CLI tool was not found in System PATH.
-    echo Please install the .NET 8.0 SDK (x64) from: https://dotnet.microsoft.com/download/dotnet/8.0
+    echo Please install the .NET 8.0 SDK from: https://dotnet.microsoft.com/download/dotnet/8.0
     echo.
     pause
     exit /b 1
@@ -71,6 +71,13 @@ for /f "tokens=*" %%v in ('dotnet --version 2^>nul') do set "DOTNET_VER=%%v"
 echo [*] .NET SDK Version detected: %DOTNET_VER%
 echo [OK] Toolchain confirmed ready.
 echo.
+
+rem Step 2.5: Automated Version Bumping (DELTA SYNTH Formula)
+if exist "%PROJECT_ROOT%\BumpVersion.ps1" (
+    echo [*] Executing DELTA SYNTH automated version bumper...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT_ROOT%\BumpVersion.ps1"
+    echo.
+)
 
 rem Step 3: Full Application Compilation and Publishing
 set "OUTPUT_DIR=%PROJECT_ROOT%\Publish"
@@ -107,7 +114,7 @@ rem Consolidate Legacy Plugins (including Canon AutoPitchwriter)
 if exist "%PROJECT_ROOT%\Plugins" (
     if not exist "%OUTPUT_DIR%\Plugins" mkdir "%OUTPUT_DIR%\Plugins" >nul 2>&1
     xcopy "%PROJECT_ROOT%\Plugins\*" "%OUTPUT_DIR%\Plugins\" /s /e /y /q >nul 2>&1
-    echo [*] Plugins directory consolidated (Canon AutoPitchwriter ready).
+    echo [*] Plugins directory consolidated - Canon AutoPitchwriter ready.
 )
 
 rem Consolidate Builtin Plugin
@@ -138,6 +145,29 @@ if exist "%PROJECT_ROOT%\Resamplers" (
     if not exist "%OUTPUT_DIR%\Resamplers" mkdir "%OUTPUT_DIR%\Resamplers" >nul 2>&1
     xcopy "%PROJECT_ROOT%\Resamplers\*" "%OUTPUT_DIR%\Resamplers\" /s /e /y /q >nul 2>&1
     echo [*] Resamplers directory consolidated.
+)
+
+rem Consolidate Thai Dictionaries
+if exist "%PROJECT_ROOT%\Dictionaries" (
+    if not exist "%OUTPUT_DIR%\Dictionaries" mkdir "%OUTPUT_DIR%\Dictionaries" >nul 2>&1
+    xcopy "%PROJECT_ROOT%\Dictionaries\*" "%OUTPUT_DIR%\Dictionaries\" /s /e /y /q >nul 2>&1
+    echo [*] Dictionaries consolidated to Publish.
+)
+if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary" (
+    if not exist "%OUTPUT_DIR%\Dictionary" mkdir "%OUTPUT_DIR%\Dictionary" >nul 2>&1
+    xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%OUTPUT_DIR%\Dictionary\" /s /e /y /q >nul 2>&1
+    if not exist "%OUTPUT_DIR%\Dictionaries" mkdir "%OUTPUT_DIR%\Dictionaries" >nul 2>&1
+    xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%OUTPUT_DIR%\Dictionaries\" /s /e /y /q >nul 2>&1
+    echo [*] Builtin Dictionary consolidated to Publish.
+)
+
+rem Consolidate to All Rendered File if present
+set "ALL_RENDERED=%PROJECT_ROOT%\All Rendered File"
+if exist "%ALL_RENDERED%" (
+    if not exist "%ALL_RENDERED%\Dictionaries" mkdir "%ALL_RENDERED%\Dictionaries" >nul 2>&1
+    if exist "%PROJECT_ROOT%\Dictionaries" xcopy "%PROJECT_ROOT%\Dictionaries\*" "%ALL_RENDERED%\Dictionaries\" /s /e /y /q >nul 2>&1
+    if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary" xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%ALL_RENDERED%\Dictionaries\" /s /e /y /q >nul 2>&1
+    echo [*] Dictionaries deployed to All Rendered File.
 )
 
 rem Deploy Quick Launcher in Publish Folder

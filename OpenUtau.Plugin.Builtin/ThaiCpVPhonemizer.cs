@@ -1,11 +1,13 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// Made And Checked By DELTA SYNTH & All Agentic AI
-// Original by Patiphat Wongyai
-// Version: v.3.6
-// Description: ระบบแปลงหน่วยเสียงสไตล์ C+V (Consonant + Vowel)
-// ขยายพื้นที่พยัญชนะนำ (Consonant Space Widening): CCV จาก 4% เป็น 7%, V start จาก 5% เป็น 9%
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : ThaiCpVPhonemizer.cs
+// Version      : 3.8
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
+// File Location: OpenUtau.Plugin.Builtin/ThaiCpVPhonemizer.cs
+// Description  : ระบบแปลงหน่วยเสียงสไตล์ C+V (Consonant + Vowel) พร้อมระบบป้องกัน Null
+//                และขยายพื้นที่พยัญชนะนำ (Consonant Space Widening): CCV 7%, V start 9%
 // ============================================================================
 
 using System;
@@ -204,6 +206,7 @@ namespace OpenUtau.Plugin.Builtin {
 
         private bool checkOtoUntilHit(string[] input, Note note, out UOto oto) {
             oto = default;
+            if (singer == null) return false;
             var attr = note.phonemeAttributes?.FirstOrDefault(attr => attr.index == 0) ?? default;
             foreach (string test in input) {
                 if (singer.TryGetMappedOto(test, note.tone + attr.toneShift, attr.voiceColor, out var otoCandidacy)) {

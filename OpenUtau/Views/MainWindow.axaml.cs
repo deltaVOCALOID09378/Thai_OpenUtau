@@ -1,5 +1,12 @@
-// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
-// Original by OpenUtau Authors
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : MainWindow.axaml.cs
+// Version      : 1.4
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/Views/MainWindow.axaml.cs
+// Description  : Main application workspace controller with graceful shutdown lifecycle,
+//                audio buffer teardown, secondary window cleanup, and preference persistence.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

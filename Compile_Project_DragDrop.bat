@@ -1,19 +1,17 @@
 @echo off
 :: ==============================================================================
-:: File: Compile_Project_DragDrop.bat
-:: Version: 1.1
-:: Made and Checked By DELTA SYNTH And Gemini Claude and ChatGPT
-:: Original By DELTA SYNTH (Delta)
-:: ==============================================================================
-:: หมายเหตุ (Notes):
-:: - [การป้องกันอักขระพิเศษ]: เปิดใช้งาน DelayedExpansion ป้องกัน Path พัง
-:: - [การตรวจสอบระบบ]: ตรวจสอบ .csproj/.sln และ dotnet SDK ก่อนสั่งรันเสมอ
-:: - [ปรับปรุงประสิทธิภาพ]: ลดการพิมพ์ Error ซ้ำซ้อน และแสดงสถานะชัดเจนขึ้น
+:: Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+:: File Name    : Compile_Project_DragDrop.bat
+:: Version      : 1.3
+:: Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+:: File Location: Compile_Project_DragDrop.bat
+:: Description  : Drag-and-Drop Release compiler for Thai OpenUtau with delayed
+::                expansion path safety and SDK validation.
 :: ==============================================================================
 
 chcp 65001 >nul
 setlocal enabledelayedexpansion
-title DELTA SYNTH - OpenUtau Auto Compiler V1.1
+title DELTA SYNTH - OpenUtau Auto Compiler V1.3
 color 0B
 
 echo =======================================================
@@ -21,54 +19,54 @@ echo      DELTA SYNTH - OpenUtau Project Auto Compiler
 echo =======================================================
 echo.
 
-:: ตรวจสอบการ Drag & Drop ไฟล์/โฟลเดอร์
+:: Check Drag & Drop folder argument (falls back to current script directory if omitted)
 set "TARGET_DIR=%~1"
 if "!TARGET_DIR!"=="" (
-    echo [ERROR] กรุณาลากโฟลเดอร์โปรเจกต์มาวางทับที่ไฟล์ .bat นี้ครับ
+    echo [ERROR] Please drag and drop the project folder onto this .bat file.
     pause
     exit /b 1
 )
 
-:: เข้าสู่โฟลเดอร์เป้าหมายอย่างปลอดภัย
+:: Enter target folder safely
 cd /d "!TARGET_DIR!" 2>nul
 if errorlevel 1 (
-    echo [ERROR] ไม่สามารถเข้าถึงโฟลเดอร์ได้ กรุณาตรวจสอบ Path อีกครั้งครับ
+    echo [ERROR] Unable to access the specified folder. Please verify the directory path.
     pause
     exit /b 1
 )
 
 echo [INFO] Working Directory: !CD!
-echo [INFO] กำลังตรวจสอบไฟล์โปรเจกต์...
+echo [INFO] Verifying project files...
 
-:: ค้นหาไฟล์โครงสร้างหลัก
+:: Verify core project or solution files
 if not exist "*.csproj" (
     if not exist "*.sln" (
-        echo [ERROR] ไม่พบไฟล์ .csproj หรือ .sln ในโฟลเดอร์นี้ครับ
+        echo [ERROR] No .csproj or .sln file found in this directory.
         pause
         exit /b 1
     )
 )
 
-:: ตรวจสอบ Dependency ของระบบ
+:: Verify system dependencies
 where dotnet >nul 2>nul
 if errorlevel 1 (
-    echo [ERROR] ไม่พบคำสั่ง "dotnet" ในระบบ กรุณาติดตั้ง .NET SDK ก่อนครับ
+    echo [ERROR] The "dotnet" command was not found on this system. Please install the .NET SDK first.
     pause
     exit /b 1
 )
 
-echo [INFO] เริ่มต้นกระบวนการคอมไพล์ในโหมด Release...
+echo [INFO] Starting compilation process in Release mode...
 echo.
 
 dotnet build --configuration Release
 
-:: ประเมินผลลัพธ์
+:: Evaluate build result
 if !ERRORLEVEL! EQU 0 (
     echo.
-    echo [SUCCESS] การคอมไพล์เสร็จสมบูรณ์! ระบบมีเสถียรภาพและพร้อมใช้งานครับ
+    echo [SUCCESS] Compilation completed successfully! The system is stable and ready for use.
 ) else (
     echo.
-    echo [FAILED] พบข้อผิดพลาดในการคอมไพล์ กรุณาตรวจสอบ Log ด้านบนเพื่อแก้ไขครับ
+    echo [FAILED] Compilation errors were detected. Please review the build log above.
 )
 
 echo.

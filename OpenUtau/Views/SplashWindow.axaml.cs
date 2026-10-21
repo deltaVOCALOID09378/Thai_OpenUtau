@@ -1,5 +1,12 @@
-// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
-// Original by OpenUtau Authors
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : SplashWindow.axaml.cs
+// Version      : 1.4
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/Views/SplashWindow.axaml.cs
+// Description  : Non-blocking parallel initialization of Tools, Singers, Plugins,
+//                and Audio Output using Task.WhenAll with bilingual progress telemetry.
+// ============================================================================
 using System;
 using System.Reactive.Disposables;
 using System.Threading;
@@ -61,7 +68,7 @@ namespace OpenUtau.App.Views {
         private void Start() {
             var mainThread = Thread.CurrentThread;
             var mainScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            Task.Run(() => {
+            Task.Run(async () => {
                 Log.Information("Initializing OpenUtau.");
                 SetProgress(15, "กำลังเตรียมพร้อมสภาพแวดล้อมระบบ (Initializing Environment)...");
                 
@@ -81,8 +88,8 @@ namespace OpenUtau.App.Views {
                     InitAudio();
                 });
                 
-                // Wait for all critical initialization tasks concurrently
-                Task.WaitAll(t1, t3, tAudio);
+                // Non-blocking await for all critical initialization tasks concurrently
+                await Task.WhenAll(t1, t2, t3, tAudio).ConfigureAwait(false);
                 
                 SetProgress(85, "กำลังเริ่มต้นเอนจินประมวลผลเสียง (Initializing Audio Engine)...");
                 DocManager.Inst.PostOnUIThread = action => Avalonia.Threading.Dispatcher.UIThread.Post(action);

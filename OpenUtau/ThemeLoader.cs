@@ -1,3 +1,12 @@
+// ============================================================================
+// Date: 21 ตุลาคม 2569 (21 October 2026)
+// File Name: ThemeLoader.cs
+// Version: 1.0
+// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+// Location: OpenUtau/ThemeLoader.cs
+// Description: ปรับปรุงระบบบันทึก Log เมื่อไม่พบ Loader ที่ลงทะเบียนไว้ให้แจ้งเตือนเป็น Warning เพื่อการตรวจสอบที่ชัดเจนขึ้น
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.IO;

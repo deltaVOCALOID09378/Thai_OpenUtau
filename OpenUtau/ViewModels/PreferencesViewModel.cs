@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : PreferencesViewModel.cs
+// Version      : 1.6
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/ViewModels/PreferencesViewModel.cs
+// Description  : Enhanced audio routing enabling immediate Speaker/Headphone selection and reactive switching.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -326,6 +334,7 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public PreferencesViewModel() {
+            bool isAudioInitializing = true;
             ListenForShortcutCommand = ReactiveCommand.Create<ShortcutItemViewModel>(ListenForShortcut);
 
             var validActionIds = new HashSet<string>();
@@ -545,6 +554,8 @@ namespace OpenUtau.App.ViewModels {
                 var device = AudioOutputDevices.FirstOrDefault(d => d.deviceNumber == deviceNumber);
                 if (device != null) {
                     AudioOutputDevice = device;
+                } else if (AudioOutputDevices != null && AudioOutputDevices.Count > 0) {
+                    AudioOutputDevice = AudioOutputDevices[0];
                 }
             }
             UseSystemDefaultDevice = Preferences.Default.UseSystemDefaultAudioDevice;
@@ -631,18 +642,41 @@ namespace OpenUtau.App.ViewModels {
             
             this.WhenAnyValue(vm => vm.UseSystemDefaultDevice)
                 .Subscribe(useDefault => {
+                    if (isAudioInitializing) {
+                        return;
+                    }
                     Preferences.Default.UseSystemDefaultAudioDevice = useDefault;
                     Preferences.Save();
+                    if (useDefault) {
+                        if (PlaybackManager.Inst.AudioOutput != null) {
+                            try {
+                                PlaybackManager.Inst.AudioOutput.SelectDevice(Guid.Empty, -1);
+                            } catch (Exception ex) {
+                                Log.Warning(ex, "Failed to switch to default audio device.");
+                            }
+                        }
+                    } else if (AudioOutputDevice != null) {
+                        if (PlaybackManager.Inst.AudioOutput != null) {
+                            try {
+                                PlaybackManager.Inst.AudioOutput.SelectDevice(AudioOutputDevice.guid, AudioOutputDevice.deviceNumber);
+                            } catch (Exception ex) {
+                                Log.Warning(ex, $"Failed to switch to audio device {AudioOutputDevice.name}.");
+                            }
+                        }
+                    }
                 });
             this.WhenAnyValue(vm => vm.AudioOutputDevice)
                 .WhereNotNull()
                 .SubscribeOn(RxApp.MainThreadScheduler)
                 .Subscribe(device => {
-                    if (UseSystemDefaultDevice) {
+                    if (isAudioInitializing) {
                         return;
                     }
                     if (PlaybackManager.Inst.AudioOutput != null) {
                         try {
+                            if (UseSystemDefaultDevice) {
+                                UseSystemDefaultDevice = false;
+                            }
                             PlaybackManager.Inst.AudioOutput.SelectDevice(device.guid, device.deviceNumber);
                         } catch (Exception e) {
                             DocManager.Inst.ExecuteCmd(new ErrorMessageNotification($"Failed to select device {device.name}", e));
@@ -961,6 +995,25 @@ namespace OpenUtau.App.ViewModels {
                     Preferences.Default.SkipRenderingMutedTracks = skipRenderingMutedTracks;
                     Preferences.Save();
                 });
+            isAudioInitializing = false;
+        }
+
+        public void RefreshAudioOutputDevices() {
+            try {
+                var audioOutput = PlaybackManager.Inst.AudioOutput;
+                if (audioOutput != null) {
+                    AudioOutputDevices = audioOutput.GetOutputDevices();
+                    int deviceNumber = audioOutput.DeviceNumber;
+                    var device = AudioOutputDevices?.FirstOrDefault(d => d.deviceNumber == deviceNumber);
+                    if (device != null) {
+                        AudioOutputDevice = device;
+                    } else if (AudioOutputDevices != null && AudioOutputDevices.Count > 0) {
+                        AudioOutputDevice = AudioOutputDevices[0];
+                    }
+                }
+            } catch (Exception ex) {
+                Log.Warning(ex, "Failed to refresh audio output devices.");
+            }
         }
 
         public void TestAudioOutputDevice() {

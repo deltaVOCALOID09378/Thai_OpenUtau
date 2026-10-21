@@ -2,21 +2,66 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="240"
         x:Class="OpenUtau.App.Views.LoadingWindow" SizeToContent="WidthAndHeight" CanResize="False"
-        Title="Loading" MinWidth="300" MinHeight="150"
+        Title="Thai OpenUtau Loading" MinWidth="380" MinHeight="200"
         Icon="/Assets/Thai OpenUtau Logo.ico" 
         WindowStartupLocation="CenterScreen"
         ExtendClientAreaChromeHints="NoChrome"
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaToDecorationsHint="True"
-        SystemDecorations="BorderOnly">
+        SystemDecorations="BorderOnly"
+        Background="Transparent"
+        FontFamily="Leelawadee UI, Leelawadee, sans-serif">
 
-    <Grid>
-        <Image Margin="20" Width="80" Height="80"
-           VerticalAlignment="Top" HorizontalAlignment="Center"
-           Source="/Assets/Thai OpenUtau Logo.ico"/>
-        <TextBlock Margin="0,110,0,10" Grid.Row="0"  HorizontalAlignment="Center" VerticalAlignment="Center" Name="Text" TextWrapping="Wrap" MaxWidth="560"> Loading... </TextBlock>
+<!-- กรอบหลักออกแบบใหม่ให้ดูลึกและเรียบหรูขึ้น -->
+<Border Background="#1A1A1A" 
+        BorderBrush="#CC2200" 
+        BorderThickness="1" 
+        CornerRadius="16" 
+        Padding="40,30,40,25"
+        BoxShadow="0 12 40 0 #C0000000">
+    <Grid RowDefinitions="Auto, Auto, Auto, Auto">
+        
+        <!-- โลโก้แบรนด์ (ปรับให้เรนเดอร์ภาพคมชัดสูง) -->
+        <Image Grid.Row="0" Margin="0,0,0,20" Width="96" Height="96"
+               VerticalAlignment="Center" HorizontalAlignment="Center"
+               RenderOptions.BitmapInterpolationMode="HighQuality"
+               Source="/Assets/Thai OpenUtau Logo.ico"/>
+        
+        <!-- ข้อความสถานะหลัก (ปรับน้ำหนักฟอนต์ให้ดูโมเดิร์น) -->
+        <TextBlock Grid.Row="1" Name="Text" 
+                   Foreground="#F0F0F0" 
+                   FontSize="16" 
+                   FontWeight="SemiBold"
+                   TextWrapping="Wrap" 
+                   MaxWidth="320" 
+                   Margin="0,0,0,20"
+                   TextAlignment="Center">
+            กำลังโหลดระบบ... / Loading...
+        </TextBlock>
+        
+        <!-- แถบประมวลผล (ปรับพื้นหลังแถบให้กลืนกับ UI มากขึ้น) -->
+        <ProgressBar Grid.Row="2" 
+                     IsIndeterminate="True" 
+                     Foreground="#CC2200" 
+                     Background="#2A2A2A" 
+                     Height="4" 
+                     Margin="0,0,0,20" 
+                     Width="280" 
+                     CornerRadius="2"/>
+                     
+        <!-- ข้อความลิขสิทธิ์องค์กร (ใช้ตัวพิมพ์ใหญ่และช่องไฟเพื่อความพรีเมียม) -->
+        <TextBlock Grid.Row="3"
+                   Foreground="#808080" 
+                   FontSize="11" 
+                   FontWeight="Regular"
+                   TextAlignment="Center"
+                   LetterSpacing="1"
+                   Opacity="0.6">
+            THAI OPENUTAU BY DELTA SYNTH
+        </TextBlock>
+        
     </Grid>
+</Border>
 </Window>
-

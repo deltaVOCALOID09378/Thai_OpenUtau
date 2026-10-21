@@ -1,12 +1,14 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
-#pragma warning disable CS8632
-// ==========================================
-// Made And Checked By DELTA SYNTH & Gemini AI
-// Original by Patiphat Wongyai
-// Version: v.4.6
-// History/Summary: Implemented Safety Position Buffer (prevPos + 10) to prevent phoneme overlapping. Multi-syllable + note support.
-// ==========================================
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : ThaiArpasingPhonemizer.cs
+// Version      : 4.8
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
+// File Location: OpenUtau.Plugin.Builtin/ThaiArpasingPhonemizer.cs
+// Description  : Thai Arpasing Phonemizer with Safety Position Buffer (prevPos + 10),
+//                unified ThaiDictionaryManager caching, and singer-level overrides.
+// ============================================================================
 
 using System;
 using System.Collections.Generic;
@@ -114,13 +116,12 @@ namespace OpenUtau.Plugin.Builtin {
         private void LoadCustomDictionary() {
             if (isDictLoaded) return;
             try {
-                string[] dictPaths = {
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionaries", "dsdict-th.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th.txt"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dictionary", "words_th_dict.txt")
-                };
-                foreach (var path in dictPaths) {
-                    LoadDictFile(path);
+                ThaiDictionaryManager.ApplyToDictionary(CustomDictionary);
+                if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
+                    string[] singerDicts = { "dsdict-th.txt", "words_th.txt", "words_th_dict.txt", "th_custom_dict.txt" };
+                    foreach (var dict in singerDicts) {
+                        LoadDictFile(Path.Combine(singer.Location, dict));
+                    }
                 }
             } catch (Exception ex) {
                 Log.Error(ex, "Failed to load custom dictionary.");
@@ -143,6 +144,7 @@ namespace OpenUtau.Plugin.Builtin {
 
         private bool checkOtoUntilHit(string[] input, Note note, out UOto oto) {
             oto = default;
+            if (singer == null) return false;
             var attr = note.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
             foreach (string test in input) {
                 if (singer.TryGetMappedOto(test, note.tone + attr.toneShift, attr.voiceColor, out var otoCandidacy)) {

@@ -1,18 +1,17 @@
 @echo off
 rem ======================================================================
-rem Date         : 11/10/2026 (B.E. 2569 / A.D. 2026)
+rem Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
 rem File Name    : Package_Program.bat
-rem Version      : 1.0
-rem Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
-rem Original by  : DELTA SYNTH
-rem Location     : Root and Scripts Directory
-rem Description  : Professional Standalone Packaging Pipeline for Thai OpenUtau.
+rem Version      : 1.6
+rem Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+rem Location     : Package_Program.bat
+rem Description  : Professional Standalone Packaging Pipeline for Thai OpenUtau with dictionary bundling.
 rem                Creates Standalone ZIP Archive and Executable SFX Installer.
 rem                Supports Drag & Drop of any published directory.
 rem ======================================================================
 
 setlocal enabledelayedexpansion
-title DELTA SYNTH - Thai OpenUtau Packaging Pipeline v1.0
+title DELTA SYNTH - Thai OpenUtau Packaging Pipeline v1.6
 color 0B
 chcp 65001 >nul
 
@@ -56,6 +55,23 @@ echo  - Target Path : %TARGET_DIR%
 echo  - Executable  : %TARGET_DIR%\OpenUtau.exe
 echo.
 
+rem Consolidate Thai Dictionaries into Package Target
+if exist "%PROJECT_ROOT%\Dictionaries" (
+    if not exist "%TARGET_DIR%\Dictionaries" mkdir "%TARGET_DIR%\Dictionaries" >nul 2>&1
+    xcopy "%PROJECT_ROOT%\Dictionaries\*" "%TARGET_DIR%\Dictionaries\" /s /e /y /q >nul 2>&1
+)
+if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary" (
+    if not exist "%TARGET_DIR%\Dictionary" mkdir "%TARGET_DIR%\Dictionary" >nul 2>&1
+    xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%TARGET_DIR%\Dictionary\" /s /e /y /q >nul 2>&1
+    if not exist "%TARGET_DIR%\Dictionaries" mkdir "%TARGET_DIR%\Dictionaries" >nul 2>&1
+    xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%TARGET_DIR%\Dictionaries\" /s /e /y /q >nul 2>&1
+)
+if exist "%PROJECT_ROOT%\All Rendered File" (
+    if not exist "%PROJECT_ROOT%\All Rendered File\Dictionaries" mkdir "%PROJECT_ROOT%\All Rendered File\Dictionaries" >nul 2>&1
+    if exist "%PROJECT_ROOT%\Dictionaries" xcopy "%PROJECT_ROOT%\Dictionaries\*" "%PROJECT_ROOT%\All Rendered File\Dictionaries\" /s /e /y /q >nul 2>&1
+    if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary" xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%PROJECT_ROOT%\All Rendered File\Dictionaries\" /s /e /y /q >nul 2>&1
+)
+
 rem Step 2: Prepare Export Directories
 set "EXPORT_DIR=%PROJECT_ROOT%\Published\Version no. 3.0.0"
 if not exist "%EXPORT_DIR%" mkdir "%EXPORT_DIR%" >nul 2>&1
@@ -80,7 +96,7 @@ rem Step 3: Create Standalone ZIP Archive
 echo.
 echo [3/3] Packaging distribution assets...
 if exist "%SEVENZIP%" (
-    echo [*] Creating Standalone ZIP Archive with 7-Zip (Ultra Compression)...
+    echo [*] Creating Standalone ZIP Archive with 7-Zip - Ultra Compression...
     "%SEVENZIP%" a -tzip -mx=9 "%EXPORT_DIR%\Thai_OpenUtau_v3.0.0_Standalone.zip" "%TARGET_DIR%\*" >nul 2>&1
     if !errorlevel! equ 0 (
         copy /y "%EXPORT_DIR%\Thai_OpenUtau_v3.0.0_Standalone.zip" "%PROJECT_ROOT%\" >nul 2>&1
@@ -102,7 +118,7 @@ if exist "%SEVENZIP%" (
 rem Step 4: Create Standalone Self-Extracting Installer (SFX)
 if exist "%RAR_EXE%" (
     echo.
-    echo [*] Creating Standalone GUI Installer (SFX) with RAR Engine...
+    echo [*] Creating Standalone GUI Installer - SFX with RAR Engine...
     (
         echo Path=Thai OpenUtau
         echo SavePath
@@ -112,12 +128,12 @@ if exist "%RAR_EXE%" (
         echo Title=DELTA SYNTH - Thai OpenUtau v3.0.0 Installer
         echo Text
         echo {
-        echo ยินดีต้อนรับสู่ตัวติดตั้ง Thai OpenUtau v3.0.0 โดย DELTA SYNTH
-        echo ระบบประมวลผลเสียงภาษาไทยครบวงจร ^(VCCV, VCV, CpV, Arpasing^)
-        echo พร้อมเอนจิน Native Worldline DSP, Moresampler และ AutoPitchwriter
+        echo Welcome to Thai OpenUtau v3.0.0 Installer by DELTA SYNTH
+        echo Complete Thai Vocal Synthesis Suite ^(VCCV, VCV, CpV, Arpasing^)
+        echo Powered by Native Worldline DSP, Moresampler, and AutoPitchwriter
         echo }
-        echo Shortcut=D, "Start-The-Program.bat", "", "Thai OpenUtau โดย DELTA SYNTH", "Thai OpenUtau"
-        echo Shortcut=P, "Start-The-Program.bat", "", "Thai OpenUtau โดย DELTA SYNTH", "Thai OpenUtau"
+        echo Shortcut=D, "Start-The-Program.bat", "", "Thai OpenUtau by DELTA SYNTH", "Thai OpenUtau"
+        echo Shortcut=P, "Start-The-Program.bat", "", "Thai OpenUtau by DELTA SYNTH", "Thai OpenUtau"
     ) > "%TEMP%\sfx_config.txt"
 
     "%RAR_EXE%" a -r -ep1 -sfx -m5 -z"%TEMP%\sfx_config.txt" -y "%EXPORT_DIR%\Thai_OpenUtau_Installer_v3.0.0.exe" "%TARGET_DIR%\*" >nul 2>&1

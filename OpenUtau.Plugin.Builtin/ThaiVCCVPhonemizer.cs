@@ -1,12 +1,12 @@
-#nullable enable
-// ==========================================
-// File: ThaiVCCVPhonemizer.cs
-// Version: 18.2
-// Path: OpenUtau.Plugin.Builtin/ThaiVCCVPhonemizer.cs
-// Role: Thai VCCV Phonemizer
-// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
-// Original by PRINTmov
-// ==========================================
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : ThaiVCCVPhonemizer.cs
+// Version      : 18.8
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by PRINTmov ]
+// File Location: OpenUtau.Plugin.Builtin/ThaiVCCVPhonemizer.cs
+// Description  : Thai VCCV Phonemizer with DiffSinger hint-to-syllables parsing,
+//                Melisma (+) support, explicit fallback for 'อ', and raw phoneme bypass.
+// ============================================================================
 
 using System;
 using System.Collections.Generic;
@@ -26,7 +26,7 @@ namespace OpenUtau.Plugin.Builtin {
         static readonly string[] vowels = new string[] { "a", "i", "u", "e", "o", "@", "Q", "3", "6", "1", "ia", "ua", "I", "aw", "am" };
         static readonly string[] diphthongs = new string[] { "r", "l", "w" };
         static readonly string[] consonants = new string[] { "b", "ch", "d", "f", "g", "h", "j", "k", "kh", "l", "m", "n", "p", "ph", "r", "s", "t", "th", "w", "y", "-" };
-        static readonly string[] endingConsonants = new string[] { "b", "ch", "d", "f", "g", "h", "j", "k", "kh", "l", "m", "n", "p", "ph", "r", "s", "t", "th", "w", "y", "w," };
+        static readonly string[] endingConsonants = new string[] { "b", "ch", "d", "f", "g", "h", "j", "k", "kh", "l", "m", "n", "p", "ph", "r", "s", "t", "th", "w", "y" };
 
         private static readonly List<(string Key, string Value)> VowelMapping = new List<(string Key, string Value)> {
             ("เcือะ", "6"), ("เcือx", "6"), ("แcะ", "@"), ("แcx", "@"), ("เcอะ", "3"), ("เcิร์x", "3"), ("เcอx", "3"), ("เcอ", "3"), 
@@ -82,6 +82,7 @@ namespace OpenUtau.Plugin.Builtin {
 
         private Dictionary<string, string> CustomDictionary = new Dictionary<string, string>();
         private bool isDictLoaded = false;
+        private readonly object dictLock = new object();
         private USinger? singer;
 
         public override void SetSinger(USinger singer) {
@@ -157,25 +158,33 @@ namespace OpenUtau.Plugin.Builtin {
 
         private void LoadCustomDictionary() {
             if (isDictLoaded) return;
-            try {
-                if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
-                    string[] singerDicts = { "dsdict-th.txt", "th_vccv_custom_dict.txt", "th_custom_dict.txt" };
-                    foreach (var dict in singerDicts) {
-                        string path = Path.Combine(singer.Location, dict);
-                        if (File.Exists(path)) {
-                            var lines = File.ReadAllLines(path, Encoding.UTF8);
-                            foreach (var line in lines) {
-                                if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
-                                var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                                if (parts.Length >= 2) {
-                                    CustomDictionary[parts[0].Trim()] = ConvertDiffsingerToSyllables(parts[1].Trim());
+            
+            lock (dictLock) {
+                if (isDictLoaded) return;
+                
+                try {
+                    // โหลดพจนานุกรมภาษาไทยส่วนกลาง (Load unified Thai dictionary cache)
+                    ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => ConvertDiffsingerToSyllables(phonemes));
+
+                    if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
+                        string[] singerDicts = { "dsdict-th.txt", "th_vccv_custom_dict.txt", "th_custom_dict.txt" };
+                        foreach (var dict in singerDicts) {
+                            string path = Path.Combine(singer.Location, dict);
+                            if (File.Exists(path)) {
+                                var lines = File.ReadAllLines(path, Encoding.UTF8);
+                                foreach (var line in lines) {
+                                    if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+                                    var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                    if (parts.Length >= 2) {
+                                        CustomDictionary[parts[0].Trim()] = ConvertDiffsingerToSyllables(parts[1].Trim());
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            } catch (Exception ex) { Log.Error(ex, "เกิดข้อผิดพลาดในการโหลดพจนานุกรมแบบกำหนดเอง (Failed to load custom dictionary)"); }
-            isDictLoaded = true;
+                } catch (Exception ex) { Log.Error(ex, "เกิดข้อผิดพลาดในการโหลดพจนานุกรมแบบกำหนดเอง (Failed to load custom dictionary)"); }
+                isDictLoaded = true;
+            }
         }
 
         private bool checkOtoUntilHit(string[] input, Note note, out UOto oto) {
@@ -224,6 +233,20 @@ namespace OpenUtau.Plugin.Builtin {
             
             if (CustomDictionary.ContainsKey(input)) {
                 return CustomDictionary[input].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+
+            // [DELTA SYNTH] Direct Phoneme Input Fallback / Phonetic Hint
+            // หากผู้ใช้ป้อนคำอ่านแบบโรมาจิหรือ Hint แยกช่องไฟ (เช่น "j a n") ให้แปลงเป็นพยางค์ก่อนเข้า ParseInput
+            if (!ThaiCharRegex.IsMatch(input) && !input.Contains("+")) {
+                var rawTokens = input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (rawTokens.Length > 1) {
+                    bool allTokensAreValidSyllables = rawTokens.All(t => ParseInput(t).Vowel != null);
+                    if (!allTokensAreValidSyllables) {
+                        string converted = ConvertDiffsingerToSyllables(input);
+                        return converted.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    }
+                }
+                return rawTokens;
             }
 
             input = input.Replace(" ", "");
@@ -317,19 +340,23 @@ namespace OpenUtau.Plugin.Builtin {
             var firstNote = notes[0];
             var currentLyric = GetLyricOrHint(firstNote);
 
-            if (currentLyric == "-") {
+            // [DELTA SYNTH] Melisma and Multi-syllable Vowel Extension Handling (+)
+            if (currentLyric.StartsWith("+") || currentLyric == "-") {
                 List<string> tests = new List<string>();
-                string prevTemp = prevNeighbour != null ? prevNeighbour.Value.lyric : "";
+                string prevTemp = prevNeighbour != null ? GetLyricOrHint(prevNeighbour.Value) : "";
                 var prevThStrs = WordToPhonemes(prevTemp);
                 var prevTh = ParseInput(prevThStrs.Length > 0 ? prevThStrs.Last() : "");
 
-                if (prevNeighbour != null) {
-                    string? endSound = prevTh.Vowel;
-                    if (endSound != null && checkOtoUntilHit(new[] { endSound + " -", endSound + "-" }, firstNote, out var tempOto)) tests.Add(tempOto.Alias);
+                if (prevNeighbour != null && prevTh.Vowel != null) {
+                    string v = prevTh.Vowel;
+                    if (checkOtoUntilHit(new[] { v + " -", v + "-", v }, firstNote, out var tempOto)) tests.Add(tempOto.Alias);
                 }
+
                 if (tests.Count == 0 && checkOtoUntilHit(new[] { "-" }, firstNote, out var fallbackOto)) tests.Add(fallbackOto.Alias);
                 
-                if (tests.Count > 0) phonemes.Add(new Phoneme { phoneme = tests[0], position = 0 });
+                if (tests.Count > 0) {
+                    phonemes.Add(new Phoneme { phoneme = tests[0], position = 0 });
+                }
                 return new Result { phonemes = phonemes.ToArray() };
             }
 
@@ -342,7 +369,7 @@ namespace OpenUtau.Plugin.Builtin {
             var syllables = WordToPhonemes(currentLyric);
             if (syllables.Length == 0) return new Result { phonemes = phonemes.ToArray() };
 
-            string prevTempNote = prevNeighbour != null ? prevNeighbour.Value.lyric : "";
+            string prevTempNote = prevNeighbour != null ? GetLyricOrHint(prevNeighbour.Value) : "";
             var prevSyllables = WordToPhonemes(prevTempNote);
             var prevThLast = ParseInput(prevSyllables.Length > 0 ? prevSyllables.Last() : "");
 
@@ -394,7 +421,11 @@ namespace OpenUtau.Plugin.Builtin {
 
                 if (noteTh.Consonant != null) {
                     if (noteTh.Dipthong == null && noteTh.Vowel != null) {
-                        if (checkOtoUntilHit(new[] { noteTh.Consonant + noteTh.Vowel, noteTh.Consonant + " " + noteTh.Vowel }, currentNote, out var tempOto)) tests.Add(tempOto.Alias);
+                        // [DELTA SYNTH] Fallback for "อ" (-) to plain vowel if "- V" is missing
+                        var cvFallbacks = new List<string> { noteTh.Consonant + noteTh.Vowel, noteTh.Consonant + " " + noteTh.Vowel };
+                        if (noteTh.Consonant == "-") cvFallbacks.Add(noteTh.Vowel);
+                        
+                        if (checkOtoUntilHit(cvFallbacks.ToArray(), currentNote, out var tempOto)) tests.Add(tempOto.Alias);
                     } else if (noteTh.Dipthong != null && noteTh.Vowel != null) {
                         if (checkOtoUntilHit(new[] { noteTh.Consonant + noteTh.Dipthong + noteTh.Vowel }, currentNote, out var tempOto)) {
                             tests.Add(tempOto.Alias);
@@ -441,12 +472,13 @@ namespace OpenUtau.Plugin.Builtin {
                     }
                 }
 
+                // Raw Phoneme Injection
                 if (tests.Count <= 0 && checkOtoUntilHit(new[] { syllable }, currentNote, out var fallbackOto)) tests.Add(syllable);
 
                 var testsArray = tests.ToArray();
                 if (checkOtoUntilHit(testsArray, currentNote, out var oto)) {
 
-                    if (sIdx == 0 && currentLyric != "-" && prevNeighbour == null && checkOtoUntilHit(new[] { "breath" }, currentNote, out var breathOto)) {
+                    if (sIdx == 0 && currentLyric != "-" && !currentLyric.StartsWith("+") && prevNeighbour == null && checkOtoUntilHit(new[] { "breath" }, currentNote, out var breathOto)) {
                         int space = prev != null ? currentNote.position - (prev.Value.position + prev.Value.duration) : currentNote.position;
                         int breathPosition = space > 0 ? -Math.Min(space, 240) : -120;
                         if (breathPosition > -120) breathPosition = -120;

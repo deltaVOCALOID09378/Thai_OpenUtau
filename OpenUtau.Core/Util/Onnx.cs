@@ -1,3 +1,12 @@
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : Onnx.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+// File Location: OpenUtau.Core/Util/Onnx.cs
+// Description  : ONNX Runtime session manager with DirectML hardware enumeration,
+//                ORT_ENABLE_ALL graph optimization, and balanced CPU thread allocation.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : MiniAudioOutput.cs
+// Version      : 1.4
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/Audio/MiniAudioOutput.cs
+// Description  : Enhanced audio output routing with independent Speaker/Headphone device selection and hot-swap.
+// ============================================================================
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -29,6 +37,11 @@ namespace OpenUtau.Audio {
                 var f = (ou_audio_data_callback_t)DataCallback;
                 GCHandle.Alloc(f);
                 callbackPtr = Marshal.GetFunctionPointerForDelegate(f);
+            }
+            try {
+                UpdateDeviceList();
+            } catch (Exception ex) {
+                Log.Warning(ex, "Failed to enumerate audio devices during startup.");
             }
             if (Preferences.Default.UseSystemDefaultAudioDevice) {
                 nativeContext = ou_init_audio_device_auto(callbackPtr);
@@ -154,10 +167,22 @@ namespace OpenUtau.Audio {
         }
 
         public void SelectDevice(Guid guid, int deviceNumber) {
-            if (Preferences.Default.UseSystemDefaultAudioDevice) {
+            if (guid == Guid.Empty || deviceNumber < 0) {
+                if (nativeContext != IntPtr.Zero) {
+                    try {
+                        ou_free_audio_device(nativeContext);
+                    } catch { }
+                    nativeContext = IntPtr.Zero;
+                    selectedDevice = Guid.Empty;
+                }
+                nativeContext = ou_init_audio_device_auto(callbackPtr);
+                Preferences.Default.UseSystemDefaultAudioDevice = true;
+                Preferences.Save();
                 return;
             }
-            if (selectedDevice != Guid.Empty && selectedDevice == guid) {
+
+            Preferences.Default.UseSystemDefaultAudioDevice = false;
+            if (selectedDevice != Guid.Empty && selectedDevice == guid && nativeContext != IntPtr.Zero) {
                 return;
             }
             if (nativeContext != IntPtr.Zero) {
@@ -165,12 +190,15 @@ namespace OpenUtau.Audio {
                 nativeContext = IntPtr.Zero;
                 selectedDevice = Guid.Empty;
             }
+            if (devices.Count == 0) {
+                UpdateDeviceList();
+            }
             for (int i = 0; i < devices.Count; i++) {
                 if (devices[i].guid == guid) {
                     deviceNumber = i;
                     break;
                 }
-                if (i == devices.Count - 1) {
+                if (i == devices.Count - 1 && devices.Count > 0) {
                     guid = devices[0].guid;
                     deviceNumber = devices[0].deviceNumber;
                 }
@@ -199,8 +227,10 @@ namespace OpenUtau.Audio {
         }
 
         public List<AudioOutputDevice> GetOutputDevices() {
-            if (Preferences.Default.UseSystemDefaultAudioDevice) {
-                return new List<AudioOutputDevice>();
+            try {
+                UpdateDeviceList();
+            } catch (Exception ex) {
+                Log.Warning(ex, "Failed to refresh audio device list.");
             }
             return devices;
         }

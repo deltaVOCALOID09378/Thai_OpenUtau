@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : MainWindowViewModel.cs
+// Version      : 1.4
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/ViewModels/MainWindowViewModel.cs
+// Description  : Window Title header telemetry with Full Name, Version, Project Location, and Save Status.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,9 +58,36 @@ namespace OpenUtau.App.ViewModels {
     public class MainWindowViewModel : ViewModelBase, ICmdSubscriber {
         DispatcherTimer? progressTextClearTimer;
 
-        public string Title => !ProjectSaved
-            ? $"{AppVersion}"
-            : $"{(DocManager.Inst.ChangesSaved ? "" : "*")}{AppVersion} [{DocManager.Inst.Project.FilePath}]";
+        public string Title {
+            get {
+                string app = AppVersion;
+                string projectPath;
+                if (!string.IsNullOrEmpty(DocManager.Inst.Project?.FilePath)) {
+                    projectPath = DocManager.Inst.Project.FilePath;
+                } else if (!string.IsNullOrEmpty(DocManager.Inst.Project?.name)) {
+                    projectPath = DocManager.Inst.Project.name;
+                } else if (Page == 0) {
+                    projectPath = "No Project";
+                } else {
+                    projectPath = "Untitled";
+                }
+
+                // สถานะการบันทึก แสดง เพียง "Not save" กับ "Saved" เท่านั้น
+                string saveStatus;
+                if (Page == 0 && string.IsNullOrEmpty(DocManager.Inst.Project?.FilePath)) {
+                    saveStatus = "Saved";
+                } else if (DocManager.Inst.ChangesSaved && ProjectSaved) {
+                    saveStatus = "Saved";
+                } else {
+                    saveStatus = "Not save";
+                }
+
+                return $"{app} - [{projectPath}] [{saveStatus}]";
+            }
+        }
+
+
+
         public double Width => Preferences.Default.MainWindowSize.Width;
         public double Height => Preferences.Default.MainWindowSize.Height;
 
@@ -77,7 +112,15 @@ namespace OpenUtau.App.ViewModels {
 
         [Reactive] public string ClearCacheHeader { get; set; }
         public bool ProjectSaved => !string.IsNullOrEmpty(DocManager.Inst.Project.FilePath) && DocManager.Inst.Project.Saved;
-        public string AppVersion => $"Thai OpenUtau by DELTA SYNTH v{System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version}";
+        public string AppVersion {
+            get {
+                var ver = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+                string verStr = (ver != null && (ver.Major > 0 || ver.Minor > 0 || ver.Build > 0))
+                    ? $"{ver.Major}.{ver.Minor}.{Math.Max(0, ver.Build)}"
+                    : "3.2.0";
+                return $"Thai OpenUtau by DELTA SYNTH v{verStr}";
+            }
+        }
         [Reactive] public double Progress { get; set; }
         [Reactive] public string ProgressText { get; set; }
         public string TracksCountText => $"{DocManager.Inst.Project?.tracks?.Count ?? 0} Tracks";
@@ -171,6 +214,8 @@ namespace OpenUtau.App.ViewModels {
                 });
             this.WhenAnyValue(vm => vm.ProgressText)
                 .Subscribe(_ => this.RaisePropertyChanged(nameof(DisplayStatusText)));
+            this.WhenAnyValue(vm => vm.Page)
+                .Subscribe(_ => this.RaisePropertyChanged(nameof(Title)));
         }
 
         public void ClampWorkspaceRowHeights(double workspaceHeight) {

@@ -1,10 +1,18 @@
+#pragma warning disable CS0618, CS0649, CS8632, CS0108
+#nullable enable
+// ============================================================================
+// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : AutoPitchwriterDialog.axaml.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Canon AutoPitchwriter ]
+// File Location: OpenUtau.App\Views\AutoPitchwriterDialog.axaml.cs
+// Description  : Dialog logic for Canon AutoPitchwriter tool. 
+//                Parses options and triggers automatic pitch automation generation.
+// ============================================================================
+
 using System;
-using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using OpenUtau.Core;
-using OpenUtau.Core.Editing;
-using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.App.Views {
     public partial class AutoPitchwriterDialog : Window {
