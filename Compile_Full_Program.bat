@@ -131,6 +131,10 @@ if exist "%PROJECT_ROOT%\worldline.dll" (
     copy /y "%PROJECT_ROOT%\worldline.dll" "%OUTPUT_DIR%\" >nul 2>&1
     echo [*] worldline.dll consolidated.
 )
+if exist "%PROJECT_ROOT%\All Rendered File\DirectML.dll" (
+    copy /y "%PROJECT_ROOT%\All Rendered File\DirectML.dll" "%OUTPUT_DIR%\" >nul 2>&1
+    echo [*] DirectML.dll consolidated.
+)
 if exist "%PROJECT_ROOT%\SDL3.dll" (
     copy /y "%PROJECT_ROOT%\SDL3.dll" "%OUTPUT_DIR%\" >nul 2>&1
     echo [*] SDL3.dll consolidated.
