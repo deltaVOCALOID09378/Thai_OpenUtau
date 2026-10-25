@@ -1,7 +1,7 @@
 // ========================================================================
-// Date: 29/09/2569 (BE) / 29/09/2026 (CE)
+// Date: 25/10/2569 (BE) / 25/10/2026 (CE)
 // File: ScreenCaptureService.cs
-// Version: 2.2.0
+// Version: 2.4.0
 // Made And Checked By DELTA SYNTH [Patiphat Wongyai] & All Code Agentic AI Engine
 // [ Original by "OpenUtau Authors" ]
 // Location: OpenUtau/Capture/ScreenCaptureService.cs
@@ -156,7 +156,7 @@ namespace OpenUtau.App.Capture {
 
                 using var rtb = new RenderTargetBitmap(new PixelSize(width, height), dpi);
                 rtb.Render(control);
-                rtb.Save(fullPath);
+                await Task.Run(() => rtb.Save(fullPath));
 
                 Log.Information("Piano Roll screenshot captured: {FullPath}", fullPath);
                 DocManager.Inst.ExecuteCmd(new UserMessageNotification($"📸 แคปภาพสำเร็จ: {filename}"));

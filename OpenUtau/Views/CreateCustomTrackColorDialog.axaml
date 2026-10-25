@@ -1,33 +1,124 @@
+<!-- ============================================================================ -->
+<!-- วัน/เดือน/ปี: 21 ตุลาคม 2569 (2026-10-21) -->
+<!-- ชื่อไฟล์: CreateCustomTrackColorDialog.axaml -->
+<!-- ลำดับเวอร์ชัน: 1.4 -->
+<!-- เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ] -->
+<!-- ตำแหน่งที่จัดวาง: OpenUtau/Views/CreateCustomTrackColorDialog.axaml -->
+<!-- รายละเอียดการแก้ไขงาน: ยกระดับ UI หน้าต่างสร้างและปรับแต่งสีแทร็กสู่ Floating Modern Dark Card ตามมาตรฐานองค์กร DELTA SYNTH -->
+<!--                       ควบคุมโทนสีแดง-ดำ (#CC2200, #1A1A1A) บังคับใช้ฟอนต์ Leelawadee UI และคง Control Names เดิมครบถ้วน 100% -->
+<!-- ============================================================================ -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="320"
         x:Class="OpenUtau.App.Views.CreateCustomTrackColorDialog"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource prefs.appearance.customtrackcolor.create.title}"
-        Height="300" Width="380" WindowStartupLocation="CenterOwner">
-  <StackPanel Margin="{Binding $parent.WindowDecorationMargin}" Spacing="8">
-    <TextBlock Margin="12,12,12,0"
-               Text="{DynamicResource prefs.appearance.customtrackcolor.create.prompt}"
-               TextWrapping="Wrap"/>
-    <TextBox Name="NameBox" Margin="12,0"/>
+        Width="400" Height="320" MinWidth="400" MinHeight="320"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="Transparent"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        ExtendClientAreaToDecorationsHint="True"
+        SystemDecorations="BorderOnly"
+        FontFamily="Leelawadee UI, Leelawadee, sans-serif">
 
-    <Grid Margin="12,0" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-      <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,0,8"
-                 Text="{DynamicResource prefs.appearance.customtrackcolor.create.base}"/>
-      <ColorPicker Name="BaseColorPicker" Grid.Row="0" Grid.Column="1"
-                   Color="#7266EE" ColorSpectrumShape="Ring" MinWidth="180" Margin="0,0,0,8"/>
+  <!-- กรอบหน้าต่างหลักลอยตัว สไตล์ Modern Clean ของ DELTA SYNTH -->
+  <Border Background="#1A1A1A"
+          BorderBrush="#CC2200"
+          BorderThickness="1.5"
+          CornerRadius="14"
+          Padding="22,18,22,18"
+          BoxShadow="0 12 36 0 #A0000000">
+    <Grid RowDefinitions="Auto, Auto, Auto, Auto">
 
-      <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
-                 Text="{DynamicResource prefs.appearance.customtrackcolor.create.bright}"/>
-      <ColorPicker Name="BrightColorPicker" Grid.Row="1" Grid.Column="1"
-                   Color="#B9B4F9" ColorSpectrumShape="Ring" MinWidth="180"/>
+      <!-- ข้อความแจ้งและคำอธิบายการสร้างสีแทร็ก -->
+      <TextBlock Grid.Row="0"
+                 Text="{DynamicResource prefs.appearance.customtrackcolor.create.prompt}"
+                 Foreground="#F0F0F0"
+                 FontSize="13"
+                 FontWeight="SemiBold"
+                 TextWrapping="Wrap"
+                 Margin="0,0,0,12"/>
+
+      <!-- ช่องกรอกชื่อสีแทร็กใหม่ -->
+      <TextBox Grid.Row="1"
+               Name="NameBox"
+               Height="32"
+               VerticalContentAlignment="Center"
+               Background="#2A2A2A"
+               Foreground="#F0F0F0"
+               BorderBrush="#444444"
+               BorderThickness="1"
+               CornerRadius="6"
+               Margin="0,0,0,14"/>
+
+      <!-- แถบกำหนดคู่สี Base Color และ Bright Color -->
+      <Border Grid.Row="2"
+              Background="#222222"
+              BorderBrush="#333333"
+              BorderThickness="1"
+              CornerRadius="8"
+              Padding="12,10"
+              Margin="0,0,0,16">
+        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+          <TextBlock Grid.Row="0" Grid.Column="0"
+                     VerticalAlignment="Center"
+                     Margin="0,0,8,10"
+                     Foreground="#CCCCCC"
+                     FontSize="12"
+                     Text="{DynamicResource prefs.appearance.customtrackcolor.create.base}"/>
+          <ColorPicker Grid.Row="0" Grid.Column="1"
+                       Name="BaseColorPicker"
+                       Color="#7266EE"
+                       ColorSpectrumShape="Ring"
+                       MinWidth="180"
+                       Margin="0,0,0,10"/>
+
+          <TextBlock Grid.Row="1" Grid.Column="0"
+                     VerticalAlignment="Center"
+                     Margin="0,0,8,0"
+                     Foreground="#CCCCCC"
+                     FontSize="12"
+                     Text="{DynamicResource prefs.appearance.customtrackcolor.create.bright}"/>
+          <ColorPicker Grid.Row="1" Grid.Column="1"
+                       Name="BrightColorPicker"
+                       Color="#B9B4F9"
+                       ColorSpectrumShape="Ring"
+                       MinWidth="180"/>
+        </Grid>
+      </Border>
+
+      <!-- ปุ่มคำสั่งด้านล่าง Cancel และ Apply -->
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  Spacing="10"
+                  HorizontalAlignment="Right">
+        <Button Name="CancelButton"
+                MinWidth="88" Height="32"
+                Content="{DynamicResource button.cancel}"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="#333333"
+                Foreground="#F0F0F0"
+                CornerRadius="6"
+                BorderThickness="0"
+                Cursor="Hand"/>
+        <Button Name="OkButton"
+                MinWidth="88" Height="32"
+                Content="{DynamicResource button.apply}"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="#CC2200"
+                Foreground="#F0F0F0"
+                FontWeight="Bold"
+                CornerRadius="6"
+                BorderThickness="0"
+                Cursor="Hand"/>
+      </StackPanel>
+
     </Grid>
-
-    <StackPanel Orientation="Horizontal" Spacing="10" Margin="12,4,12,12" HorizontalAlignment="Right">
-      <Button Name="CancelButton" MinWidth="72" Content="{DynamicResource button.cancel}"/>
-      <Button Name="OkButton" MinWidth="72" Content="{DynamicResource button.apply}"/>
-    </StackPanel>
-  </StackPanel>
+  </Border>
 </Window>

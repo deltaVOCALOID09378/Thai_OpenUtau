@@ -9,6 +9,7 @@
 
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
+set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
 
 echo ====================================================================
 echo Thai OpenUtau By DELTA SYNTH - All-in-One Builder (EXE, MSI, ZIP)

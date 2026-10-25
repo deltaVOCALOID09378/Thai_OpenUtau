@@ -1,0 +1,22 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hook": {
+          "type": "command",
+          "command": "npx protect-mcp@latest evaluate --policy ./protect.cedar --tool \"$TOOL_NAME\" --input \"$TOOL_INPUT\" || exit 2"
+        }
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hook": {
+          "type": "command",
+          "command": "npx protect-mcp@latest sign --tool \"$TOOL_NAME\" --input \"$TOOL_INPUT\" --output \"$TOOL_OUTPUT\" --receipts ./receipts/"
+        }
+      }
+    ]
+  }
+}

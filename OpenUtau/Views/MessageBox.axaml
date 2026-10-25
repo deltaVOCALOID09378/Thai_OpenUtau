@@ -1,70 +1,115 @@
+<!-- ============================================================================ -->
+<!-- วัน/เดือน/ปี: 21 ตุลาคม 2569 (2026-10-21) -->
+<!-- ชื่อไฟล์: MessageBox.axaml -->
+<!-- ลำดับเวอร์ชัน: 1.0 -->
+<!-- เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ] -->
+<!-- ตำแหน่งที่จัดวาง: OpenUtau/Views/MessageBox.axaml -->
+<!-- รายละเอียดการแก้ไขงาน: ยกระดับ UI หน้าต่างแจ้งเตือนสู่ Floating Modern Dark Card ตามมาตรฐาน DELTA SYNTH -->
+<!--                       ควบคุมโทนสีแดง-ดำ (#CC2200, #1A1A1A) บังคับใช้ฟอนต์ Leelawadee UI และคง Control Names เดิมครบ 100% -->
+<!-- ============================================================================ -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="OpenUtau.App.Views.MessageBox" SizeToContent="WidthAndHeight" CanResize="False"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="300"
+        x:Class="OpenUtau.App.Views.MessageBox"
+        SizeToContent="WidthAndHeight" CanResize="False"
         Icon="/Assets/Thai OpenUtau Logo.ico"
-        Title="MessageBox" MinWidth="300" MinHeight="150"
-        WindowStartupLocation="CenterScreen">
-  <ScrollViewer MaxHeight="700" VerticalScrollBarVisibility="Auto">
-    <Grid Margin="{Binding $parent.WindowDecorationMargin}">
-      <Grid.RowDefinitions>
-        <RowDefinition Height="*"/>
-        <RowDefinition Height="50"/>
-      </Grid.RowDefinitions>
+        Title="MessageBox" MinWidth="340" MinHeight="180"
+        WindowStartupLocation="CenterScreen"
+        Background="Transparent"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        ExtendClientAreaToDecorationsHint="True"
+        SystemDecorations="BorderOnly"
+        FontFamily="Leelawadee UI, Leelawadee, sans-serif">
 
-      <!-- Show simple text -->
-      <TextBlock Margin="20" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Name="Text" TextWrapping="Wrap" MaxWidth="560"/>
+  <!-- กรอบหน้าต่างหลักลอยตัว สไตล์ Modern Clean ของ DELTA SYNTH -->
+  <Border Background="#1A1A1A"
+          BorderBrush="#CC2200"
+          BorderThickness="1.5"
+          CornerRadius="14"
+          Padding="16"
+          BoxShadow="0 12 36 0 #A0000000">
+    <ScrollViewer MaxHeight="700" VerticalScrollBarVisibility="Auto">
+      <Grid Margin="{Binding $parent.WindowDecorationMargin}">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-      <!-- Show text with URL button -->
-      <StackPanel Margin="20" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Name="TextPanel" MaxWidth="560">
-        <StackPanel.Styles>
-          <Style Selector="TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="LineHeight" Value="22"/>
-          </Style>
-          <Style Selector="Button">
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush1}" />
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Template">
-              <ControlTemplate>
-                <ContentPresenter Content="{TemplateBinding Content}">
-                  <ContentPresenter.Styles>
-                    <Style Selector="TextBlock">
-                      <Setter Property="Foreground" Value="{TemplateBinding Foreground}"/>
-                      <Setter Property="FontSize" Value="{TemplateBinding FontSize}"/>
-                      <Setter Property="TextDecorations" Value="Underline"/>
-                    </Style>
-                  </ContentPresenter.Styles>
-                </ContentPresenter>
-              </ControlTemplate>
-            </Setter>
-          </Style>
-          <Style Selector="Expander">
-            <Setter Property="Margin" Value="0, 20, 0, 0" />
-            <Setter Property="Width" Value="560" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-          </Style>
-        </StackPanel.Styles>
-      </StackPanel>
+        <!-- แสดงข้อความธรรมดา (Simple Text) -->
+        <TextBlock Margin="16" Grid.Row="0"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Name="Text" TextWrapping="Wrap" MaxWidth="560"
+                   Foreground="#F0F0F0" FontSize="13" LineHeight="20"/>
 
-      <StackPanel Grid.Row="1" HorizontalAlignment="Center" Orientation="Horizontal" Name="Buttons">
-        <StackPanel.Styles>
-          <Style Selector="Button">
-            <Setter Property="Margin" Value="15,0,15,0"/>
-            <Setter Property="MinWidth" Value="80"/>
-          </Style>
-          <Style Selector="Button TextBlock">
-            <Setter Property="TextAlignment" Value="Center"/>
-          </Style>
-        </StackPanel.Styles>
-      </StackPanel>
-    </Grid>
-  </ScrollViewer>
+        <!-- แสดงข้อความพร้อมปุ่มลิงก์ URL (Text with URL button) -->
+        <StackPanel Margin="16" Grid.Row="0"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Name="TextPanel" MaxWidth="560">
+          <StackPanel.Styles>
+            <Style Selector="TextBlock">
+              <Setter Property="TextWrapping" Value="Wrap"/>
+              <Setter Property="LineHeight" Value="22"/>
+              <Setter Property="Foreground" Value="#F0F0F0"/>
+              <Setter Property="FontSize" Value="13"/>
+            </Style>
+            <Style Selector="Button">
+              <Setter Property="Foreground" Value="#CC2200" />
+              <Setter Property="Margin" Value="0" />
+              <Setter Property="Padding" Value="0" />
+              <Setter Property="Cursor" Value="Hand" />
+              <Setter Property="BorderThickness" Value="0" />
+              <Setter Property="Background" Value="Transparent" />
+              <Setter Property="Template">
+                <ControlTemplate>
+                  <ContentPresenter Content="{TemplateBinding Content}">
+                    <ContentPresenter.Styles>
+                      <Style Selector="TextBlock">
+                        <Setter Property="Foreground" Value="{TemplateBinding Foreground}"/>
+                        <Setter Property="FontSize" Value="{TemplateBinding FontSize}"/>
+                        <Setter Property="TextDecorations" Value="Underline"/>
+                      </Style>
+                    </ContentPresenter.Styles>
+                  </ContentPresenter>
+                </ControlTemplate>
+              </Setter>
+            </Style>
+            <Style Selector="Expander">
+              <Setter Property="Margin" Value="0, 16, 0, 0" />
+              <Setter Property="Width" Value="560" />
+              <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+          </StackPanel.Styles>
+        </StackPanel>
+
+        <!-- แถบปุ่มคำสั่งด้านล่าง (Action Buttons) -->
+        <StackPanel Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Name="Buttons"
+                    Margin="0,16,0,8">
+          <StackPanel.Styles>
+            <Style Selector="Button">
+              <Setter Property="Margin" Value="10,0,10,0"/>
+              <Setter Property="MinWidth" Value="88"/>
+              <Setter Property="Height" Value="32"/>
+              <Setter Property="Background" Value="#333333"/>
+              <Setter Property="Foreground" Value="#F0F0F0"/>
+              <Setter Property="CornerRadius" Value="6"/>
+              <Setter Property="BorderThickness" Value="0"/>
+              <Setter Property="Cursor" Value="Hand"/>
+              <Setter Property="HorizontalContentAlignment" Value="Center"/>
+              <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+            <Style Selector="Button TextBlock">
+              <Setter Property="TextAlignment" Value="Center"/>
+              <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+          </StackPanel.Styles>
+        </StackPanel>
+      </Grid>
+    </ScrollViewer>
+  </Border>
 </Window>
-

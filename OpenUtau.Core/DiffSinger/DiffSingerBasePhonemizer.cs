@@ -1,3 +1,11 @@
+// ============================================================================
+// วัน/เดือน/ปี: 22 ตุลาคม 2569 (2026-10-22)
+// ชื่อไฟล์: DiffSingerBasePhonemizer.cs
+// ลำดับเวอร์ชัน: 1.0
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by oxygen-dioxide, OpenUtau Authors ]
+// ตำแหน่งที่จัดวาง: OpenUtau.Core/DiffSinger/DiffSingerBasePhonemizer.cs
+// รายละเอียดการแก้ไขงาน: ปรับปรุงการตรวจสอบ Root Path ของ Singer (รองรับทั้งกรณี dsdur/ และ Root) พร้อม Fallback ป้องกัน Crash เมื่อไม่พบ Config
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,21 +47,29 @@ namespace OpenUtau.Core.DiffSinger
             if (_singerLoaded && singer == this.singer) return;
             try {
                 _singerLoaded = _executeSetSinger(singer);
-            } catch {
+            } catch (Exception e) {
+                Log.Warning(e, $"DiffSinger failed to set singer {singer?.Name}");
                 _singerLoaded = false;
-                throw;
             }
         }
 
         private bool _executeSetSinger(USinger singer) {
             this.singer = singer;
             if (singer == null) {
-                throw new Exception("Singer is null.");
+                return false;
             }
-            if(singer.Location == null){
-                throw new Exception("Singer location is null.");
+            if (string.IsNullOrEmpty(singer.Location)) {
+                Log.Warning("Singer location is null or empty.");
+                return false;
             }
-            rootPath = Path.Combine(singer.Location, "dsdur");
+            if (File.Exists(Path.Join(singer.Location, "dsdur", "dsconfig.yaml"))) {
+                rootPath = Path.Combine(singer.Location, "dsdur");
+            } else if (File.Exists(Path.Join(singer.Location, "dsconfig.yaml"))) {
+                rootPath = singer.Location;
+            } else {
+                Log.Warning($"dsconfig.yaml not found for {singer.Name} in {singer.Location}");
+                return false;
+            }
             //Load Config
             var configPath = Path.Join(rootPath, "dsconfig.yaml");
             try {
@@ -61,7 +77,7 @@ namespace OpenUtau.Core.DiffSinger
                 dsConfig = Yaml.DefaultDeserializer.Deserialize<DsConfig>(configTxt);
             } catch(Exception e) {
                 Log.Error(e, $"failed to load dsconfig from {configPath}");
-                throw new Exception($"Failed to load {configPath}", e);
+                return false;
             }
             //Load language id if needed
             if (dsConfig.use_lang_id) {

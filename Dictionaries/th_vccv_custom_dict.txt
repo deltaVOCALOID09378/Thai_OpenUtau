@@ -5,12 +5,12 @@
 บวร=bawQn
 ศร=sQn
 โสน=sano
-เบื้อง=b3aN
+เบื้อง=b6ng
 คือ=kh1
 เรือ=r6
 บ่=bQ
 ก็=kQ
-เอื้อ=q6
+เอื้อ=6
 ตึก=t1k
 ปู่=pu
 ครุธ=khrut
@@ -23,7 +23,7 @@
 ฤกดิ์=r3k
 ศักดิ์=sak
 พรรค=phak
-สวรรค์=sawam
+สวรรค์=sawan
 ธรรม=tham
 เปลี่ยน=prian
 จันทรา=janthra

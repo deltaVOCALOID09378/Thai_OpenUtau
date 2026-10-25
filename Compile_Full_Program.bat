@@ -14,6 +14,7 @@ setlocal enabledelayedexpansion
 title DELTA SYNTH - Thai OpenUtau Full Program Compiler v3.3.0
 color 0B
 chcp 65001 >nul
+set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
 
 echo ======================================================================
 echo       DELTA SYNTH - Thai OpenUtau Full Program Compiler v3.1.0

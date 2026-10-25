@@ -1,3 +1,11 @@
+// ============================================================================
+// วัน/เดือน/ปี: 22 ตุลาคม 2569 (2026-10-22)
+// ชื่อไฟล์: PackageManager.cs
+// ลำดับเวอร์ชัน: 1.0
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// ตำแหน่งที่จัดวาง: OpenUtau.Core/PackageManager.cs
+// รายละเอียดการแก้ไขงาน: ป้องกัน FileNotFoundException เมื่อไดเรกทอรีย่อยไม่มีไฟล์ oudep.yaml
+// ============================================================================
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
@@ -108,6 +116,9 @@ namespace OpenUtau.Core {
                     OudepMetadata? metadata = null;
                     try {
                         var yamlPath = Path.Combine(dir, "oudep.yaml");
+                        if (!File.Exists(yamlPath)) {
+                            continue;
+                        }
                         using var reader = new StreamReader(yamlPath, Encoding.UTF8);
                         metadata = Core.Yaml.DefaultDeserializer.Deserialize<OudepMetadata>(reader) ?? new OudepMetadata();
                         if (string.IsNullOrEmpty(metadata.id)) {

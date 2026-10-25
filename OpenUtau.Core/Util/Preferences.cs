@@ -1,3 +1,11 @@
+// ============================================================================
+// วัน/เดือน/ปี: 22 ตุลาคม 2569 (2026-10-22)
+// ชื่อไฟล์: Preferences.cs
+// ลำดับเวอร์ชัน: 1.0
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// ตำแหน่งที่จัดวาง: OpenUtau.Core/Util/Preferences.cs
+// รายละเอียดการแก้ไขงาน: ปรับปรุงการบันทึก prefs.json ให้ใช้ FileStream ป้องกัน SafeFileHandle.Preallocate disk full / lock error
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -36,9 +44,16 @@ namespace OpenUtau.Core.Util {
         public static void Save() {
             EnsureOverlayScrollbars();
             try {
-                File.WriteAllText(PathManager.Inst.PrefsFilePath,
-                    JsonConvert.SerializeObject(Default, Formatting.Indented),
-                    Encoding.UTF8);
+                var path = PathManager.Inst.PrefsFilePath;
+                var dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
+                    Directory.CreateDirectory(dir);
+                }
+                var json = JsonConvert.SerializeObject(Default, Formatting.Indented);
+                using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                using (var writer = new StreamWriter(fs, Encoding.UTF8)) {
+                    writer.Write(json);
+                }
             } catch (Exception e) {
                 Log.Error(e, "Failed to save prefs.");
             }

@@ -11,6 +11,7 @@
 
 chcp 65001 >nul
 setlocal enabledelayedexpansion
+set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
 title DELTA SYNTH - OpenUtau Auto Compiler V1.3
 color 0B
 

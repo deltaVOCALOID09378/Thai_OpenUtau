@@ -1,5 +1,5 @@
-Version=35.1.4
+Version=35.1.6
 BaseVersion=35.1
-LastDate=2026-10-21
-BuildNumber=4
-ModifiedFilesCount=79
+LastDate=2026-10-25
+BuildNumber=6
+ModifiedFilesCount=0

@@ -1,3 +1,12 @@
+// ========================================================================
+// Date: 25/10/2569 (BE) / 25/10/2026 (CE)
+// File: CaptureManager.cs
+// Version: 2.4.0
+// Made And Checked By DELTA SYNTH [Patiphat Wongyai] & All Code Agentic AI Engine
+// [ Original by "OpenUtau Authors" ]
+// Location: OpenUtau/Capture/CaptureManager.cs
+// Description: Screen capture and video recording manager for Thai OpenUtau.
+// ========================================================================
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -138,7 +147,7 @@ namespace OpenUtau.App.Capture
 
                 using var rtb = new RenderTargetBitmap(new PixelSize(width, height), dpi);
                 rtb.Render(control);
-                rtb.Save(fullPath);
+                await Task.Run(() => rtb.Save(fullPath));
 
                 Log.Information($"Piano Roll picture captured: {fullPath}");
                 OnStatusChanged?.Invoke($"Saved picture: {filename}");

@@ -1,3 +1,12 @@
+<!-- ============================================================================ -->
+<!-- วัน/เดือน/ปี: 21 ตุลาคม 2569 (2026-10-21) -->
+<!-- ชื่อไฟล์: MixFxDialog.axaml -->
+<!-- ลำดับเวอร์ชัน: 1.0 -->
+<!-- เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ] -->
+<!-- ตำแหน่งที่จัดวาง: OpenUtau/Views/MixFxDialog.axaml -->
+<!-- รายละเอียดการแก้ไขงาน: ยกระดับ UI หน้าต่างปรับแต่งมิกซ์เสียง (EQ/Compressor/Reverb) สู่ Floating Dark Card -->
+<!--                       ควบคุมโทนสีแดง-ดำ (#CC2200, #1A1A1A) บังคับใช้ฟอนต์ Leelawadee UI และคง Control Names/Binding เดิมครบ 100% -->
+<!-- ============================================================================ -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,56 +16,76 @@
         x:Class="OpenUtau.App.Views.MixFxDialog"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource mixfx.caption}"
-        Width="640" Height="540"
+        Width="660" Height="560" MinWidth="660" MinHeight="560"
         WindowStartupLocation="CenterOwner"
-        CanResize="False">
+        CanResize="False"
+        Background="Transparent"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        ExtendClientAreaToDecorationsHint="True"
+        SystemDecorations="BorderOnly"
+        FontFamily="Leelawadee UI, Leelawadee, sans-serif">
+
   <Window.Styles>
     <Style Selector="TextBlock.lbl">
       <Setter Property="VerticalAlignment" Value="Center"/>
       <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
     </Style>
     <Style Selector="TextBlock.section">
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="FontSize" Value="13"/>
-      <Setter Property="Margin" Value="0,0,0,4"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="Margin" Value="0,0,0,6"/>
     </Style>
     <Style Selector="TextBlock.val">
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="FontSize" Value="11"/>
       <Setter Property="FontFamily" Value="monospace"/>
-      <Setter Property="Opacity" Value="0.8"/>
+      <Setter Property="Foreground" Value="#CC2200"/>
     </Style>
     <Style Selector="Slider">
       <Setter Property="Margin" Value="0,-2,0,-2"/>
+      <Setter Property="Foreground" Value="#CC2200"/>
     </Style>
     <Style Selector="Border.column">
-      <Setter Property="Padding" Value="10"/>
+      <Setter Property="Padding" Value="12"/>
       <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
-      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="BorderBrush" Value="#333333"/>
+      <Setter Property="Background" Value="#222222"/>
+      <Setter Property="CornerRadius" Value="8"/>
     </Style>
   </Window.Styles>
-  <Border Margin="{Binding $parent.WindowDecorationMargin}">
-    <DockPanel Margin="14" LastChildFill="True">
+
+  <!-- กรอบหน้าต่างหลักลอยตัว สไตล์ Modern Clean ของ DELTA SYNTH -->
+  <Border Background="#1A1A1A"
+          BorderBrush="#CC2200"
+          BorderThickness="1.5"
+          CornerRadius="14"
+          Padding="16"
+          BoxShadow="0 12 36 0 #A0000000">
+    <DockPanel LastChildFill="True">
 
       <!-- TOP: title + enable + recommended -->
-      <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,10">
-        <TextBlock Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold"
-                   Text="{Binding TrackName}"/>
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,12">
+        <TextBlock Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="14"
+                   Foreground="#F0F0F0" Text="{Binding TrackName}"/>
         <CheckBox Grid.Column="1" IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="0,0,4,0"/>
-        <TextBlock Grid.Column="2" Classes="lbl" Text="{DynamicResource mixfx.enabled}" Margin="0,0,12,0"/>
+        <TextBlock Grid.Column="2" Classes="lbl" Text="{DynamicResource mixfx.enabled}" Margin="0,0,14,0"/>
         <Button Grid.Column="3" Content="{DynamicResource mixfx.recommended}"
                 Command="{Binding ApplyRecommendedCommand}"
-                ToolTip.Tip="{DynamicResource mixfx.recommended.tip}"/>
+                ToolTip.Tip="{DynamicResource mixfx.recommended.tip}"
+                Background="#333333" Foreground="#F0F0F0" CornerRadius="6" BorderThickness="0" Height="28" Cursor="Hand"/>
       </Grid>
 
       <!-- LIBRARY row -->
-      <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,10">
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,12">
         <TextBlock Grid.Column="0" Classes="lbl" Margin="0,0,8,0"
                    Text="{DynamicResource mixfx.library}"/>
         <c:WorkspacePanelComboBox Grid.Column="1" Classes="workspacePanelCombo" HorizontalAlignment="Stretch"
                                   ItemsSource="{Binding UserPresets}" SelectedItem="{Binding SelectedUserPreset}"
-                                  PlaceholderText="{DynamicResource mixfx.library.placeholder}">
+                                  PlaceholderText="{DynamicResource mixfx.library.placeholder}"
+                                  Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" CornerRadius="6" Height="30">
           <c:WorkspacePanelComboBox.ItemTemplate>
             <DataTemplate>
               <TextBlock Text="{Binding Name}"/>
@@ -64,31 +93,36 @@
           </c:WorkspacePanelComboBox.ItemTemplate>
         </c:WorkspacePanelComboBox>
         <Button Grid.Column="2" Margin="6,0,0,0" Content="{DynamicResource mixfx.library.save}"
-                Command="{Binding SaveUserPresetCommand}"/>
+                Command="{Binding SaveUserPresetCommand}"
+                Background="#333333" Foreground="#F0F0F0" CornerRadius="6" BorderThickness="0" Height="30" Cursor="Hand"/>
         <Button Grid.Column="3" Margin="6,0,0,0" Content="{DynamicResource mixfx.library.delete}"
                 Command="{Binding DeleteUserPresetCommand}"
-                IsEnabled="{Binding CanDeleteSelectedPreset}"/>
+                IsEnabled="{Binding CanDeleteSelectedPreset}"
+                Background="#333333" Foreground="#F0F0F0" CornerRadius="6" BorderThickness="0" Height="30" Cursor="Hand"/>
       </Grid>
 
       <!-- BOTTOM: export checkbox + OK/Cancel -->
-      <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="0,10,0,0">
+      <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="0,12,0,0">
         <CheckBox Grid.Column="0" IsChecked="{Binding ApplyOnExportMixdown}" VerticalAlignment="Center" Margin="0,0,4,0"/>
         <TextBlock Grid.Column="1" Classes="lbl" Margin="0,0,12,0" Text="{DynamicResource mixfx.applyonexport}"/>
         <Button Grid.Column="3" Content="{DynamicResource button.cancel}"
-                MinWidth="70" Margin="0,0,8,0" Click="OnCancelClicked"/>
+                MinWidth="80" Height="32" Margin="0,0,8,0" Click="OnCancelClicked"
+                Background="#333333" Foreground="#F0F0F0" CornerRadius="6" BorderThickness="0" Cursor="Hand"/>
         <Button Grid.Column="4" Content="{DynamicResource button.ok}"
-                MinWidth="70" Click="OnOkClicked"/>
+                MinWidth="80" Height="32" Click="OnOkClicked"
+                Background="#CC2200" Foreground="#F0F0F0" FontWeight="Bold" CornerRadius="6" BorderThickness="0" Cursor="Hand"/>
       </Grid>
 
       <!-- BODY: 3 columns side by side -->
-      <Grid ColumnDefinitions="*,8,*,8,*" IsEnabled="{Binding Enabled}">
+      <Grid ColumnDefinitions="*,10,*,10,*" IsEnabled="{Binding Enabled}">
 
         <!-- EQ -->
         <Border Grid.Column="0" Classes="column">
           <StackPanel Spacing="3">
             <TextBlock Classes="section" Text="EQ"/>
-            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch" Margin="0,0,0,4"
-                                      ItemsSource="{Binding EqPresets}" SelectedItem="{Binding SelectedEq}"/>
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch" Margin="0,0,0,6"
+                                      ItemsSource="{Binding EqPresets}" SelectedItem="{Binding SelectedEq}"
+                                      Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" CornerRadius="6"/>
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Grid.Column="0" Classes="lbl" Text="Low (dB)"/>
               <TextBlock Grid.Column="1" Classes="val" Text="{Binding EqLowDb, StringFormat={}{0:+0.0;-0.0;0.0}}"/>
@@ -116,8 +150,9 @@
         <Border Grid.Column="2" Classes="column">
           <StackPanel Spacing="3">
             <TextBlock Classes="section" Text="Compressor"/>
-            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch" Margin="0,0,0,4"
-                                      ItemsSource="{Binding CompPresets}" SelectedItem="{Binding SelectedComp}"/>
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch" Margin="0,0,0,6"
+                                      ItemsSource="{Binding CompPresets}" SelectedItem="{Binding SelectedComp}"
+                                      Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" CornerRadius="6"/>
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Grid.Column="0" Classes="lbl" Text="Threshold"/>
               <TextBlock Grid.Column="1" Classes="val" Text="{Binding CompThresholdDb, StringFormat={}{0:F1} dB}"/>
@@ -140,8 +175,9 @@
         <Border Grid.Column="4" Classes="column">
           <StackPanel Spacing="3">
             <TextBlock Classes="section" Text="Reverb"/>
-            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch" Margin="0,0,0,4"
-                                      ItemsSource="{Binding ReverbPresets}" SelectedItem="{Binding SelectedReverb}"/>
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch" Margin="0,0,0,6"
+                                      ItemsSource="{Binding ReverbPresets}" SelectedItem="{Binding SelectedReverb}"
+                                      Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" CornerRadius="6"/>
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Grid.Column="0" Classes="lbl" Text="Size"/>
               <TextBlock Grid.Column="1" Classes="val" Text="{Binding ReverbSize, StringFormat={}{0:F2}}"/>
@@ -169,4 +205,3 @@
     </DockPanel>
   </Border>
 </Window>
-

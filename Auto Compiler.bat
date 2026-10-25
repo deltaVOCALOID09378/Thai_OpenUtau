@@ -11,6 +11,7 @@
 title DELTA SYNTH - OpenUtau Auto Compiler V1.1
 color 0B
 chcp 65001 >nul
+set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
 
 echo =======================================================
 echo      DELTA SYNTH - OpenUtau Project Auto Compiler
