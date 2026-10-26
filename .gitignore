@@ -135,6 +135,12 @@ __pycache__/
 *.gdoc
 *.ps1
 *.md
+!Docs/*.md
+!About_Project.md
+!README.md
+!SECURITY.md
+!AGENT.md
+!AGENTS.md
 *.zip
 *.rar
 *.7z

@@ -16,6 +16,88 @@
     <Style Selector="Button,ToggleButton">
       <Setter Property="Focusable" Value="False"/>
     </Style>
+    <Style Selector="Border.workspaceCard">
+      <Setter Property="Background" Value="{DynamicResource WorkspaceCardBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceElevatedSurfaceBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+    </Style>
+    <Style Selector="Border.workspaceDockTop">
+      <Setter Property="Padding" Value="8,4"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppTopBarValueDividerBrush}"/>
+    </Style>
+    <Style Selector="Border.appTopBarChrome">
+      <Setter Property="Background" Value="{DynamicResource AppTopBarTransportStripBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppTopBarValueDividerBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+    </Style>
+    <Style Selector="StackPanel.appTopBarTransportStrip">
+      <Setter Property="Background" Value="{DynamicResource AppTopBarTransportStripBrush}"/>
+    </Style>
+    <Style Selector="Border.appTopBarValueStrip">
+      <Setter Property="Background" Value="{DynamicResource AppTopBarValueStripBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppTopBarValueDividerBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="5"/>
+    </Style>
+    <Style Selector="Border.transportStripCell">
+      <Setter Property="Padding" Value="9,4"/>
+    </Style>
+    <Style Selector="Button.transportChip">
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="MinWidth" Value="28"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="Padding" Value="7,4"/>
+      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Background" Value="{DynamicResource WorkspaceElevatedSurfaceBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    </Style>
+    <Style Selector="Button.transportChip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppTopBarTransportHoverBrush}"/>
+    </Style>
+    <Style Selector="Button.welcomeActionButton">
+      <Setter Property="Height" Value="60"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceElevatedSurfaceBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource WorkspaceElevatedSurfaceBrush}"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Button.welcomeActionButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource BackgroundColorPointerOver}"/>
+    </Style>
+    <Style Selector="Path.welcomeActionIcon">
+      <Setter Property="Fill" Value="{DynamicResource AccentBrush1}"/>
+    </Style>
+    <Style Selector="TextBlock.welcomeActionTitle">
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="TextBlock.welcomeActionDescription">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="Border.welcomeCard, Border.welcomeHubShell">
+      <Setter Property="Padding" Value="14"/>
+    </Style>
+    <Style Selector="ListBox.welcomeFileList ListBoxItem">
+      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="Margin" Value="0,0,0,4"/>
+      <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+    <Style Selector="TextBlock.welcomeFileName">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <Style Selector="TextBlock.welcomeFilePath">
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
   </Window.Styles>
   <Grid Background="{DynamicResource WorkspaceCanvasBrush}">
     <Grid Name="MainGrid" Margin="{Binding $parent[1].WindowDecorationMargin}">
@@ -212,7 +294,7 @@
                 <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="4" Padding="12,8" Margin="0,0,0,4" BorderBrush="#CC2200" BorderThickness="1">
                   <Grid ColumnDefinitions="Auto,*,Auto">
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                      <Image Width="28" Height="28" Source="/Assets/Thai OpenUtau Logo.png" VerticalAlignment="Center"/>
+                      <Image Width="40" Height="40" Source="/Assets/Thai OpenUtau Logo.png" VerticalAlignment="Center"/>
                       <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Thai OpenUtau by DELTA SYNTH" FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="13" FontWeight="Bold" Foreground="#CC2200"/>
                         <TextBlock Text="Bilingual Synthesizer &amp; DSP Core • High Performance Edition" FontFamily="Leelawadee UI, Segoe UI, sans-serif" FontSize="10" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
