@@ -1,13 +1,14 @@
 <!-- ======================================================================== -->
 <!-- Date: 26/10/2569 (BE) / 26/10/2026 (CE)                               -->
 <!-- File: DELTA_SYNTH_ANGULAR_MIGRATION_BLUEPRINT.md                       -->
-<!-- Version: 1.0.0                                                         -->
+<!-- Version: 1.2.0                                                         -->
 <!-- Made And Checked By DELTA SYNTH & All Code Agentic AI Engine           -->
 <!-- [ Original by DELTA SYNTH ]                                            -->
 <!-- Location: Docs/DELTA_SYNTH_ANGULAR_MIGRATION_BLUEPRINT.md               -->
 <!-- Description: Master Architectural Blueprint for migrating legacy       -->
 <!--              AngularJS (1.x) systems to Modern Angular 18+             -->
-<!--              (Standalone Components, Signals, ngUpgrade, DELTA UI)    -->
+<!--              (Standalone Components, Signals, ngUpgrade, DELTA UI,    -->
+<!--              and Synchronized Multi-Country i18n Architecture)         -->
 <!-- ======================================================================== -->
 
 # พิมพ์เขียวสถาปัตยกรรมระดับองค์กร: การย้ายระบบ AngularJS สู่ Modern Angular (18+)
@@ -329,37 +330,159 @@ $delta-highlight:   #CC2200;
 
 ---
 
-## 8. ขั้นตอนการปฏิบัติงาน 6 เฟส (Stepwise Operational Roadmap)
+## 8. ระบบการแปลภาษาระดับโลกและการสลับภาษาแบบซิงโครไนซ์ทั่วทั้งเว็บไซต์ (Global i18n & Synchronized Multi-Language Architecture)
+
+* **TH:** มาตรฐานระดับองค์กรของ DELTA SYNTH กำหนดให้ระบบเว็บไซต์และ WebUI ทุกโปรเจกต์ต้องรองรับการแปลภาษาหลากหลายประเทศ (Multi-Country Localization) โดยมีข้อกำหนดว่า **เมื่อผู้ใช้ทำการสลับภาษา จะต้องส่งผลกระทบต่อเนื่องทันที (Instant Synchronized Propagation) ไปยังทุกคอมโพเนนต์ ทุกหน้าจอ ทุกแท็บ และทุกส่วนของเนื้อหา** โดยไม่มีการรีเฟรชหน้าเว็บ (Zero Page Reload) และไม่มีการหน่วงของการประมวลผล (0ms Latency)
+* **EN:** DELTA SYNTH enterprise standards dictate that web platforms and WebUIs must support multi-country localization. When switching languages, the update must synchronize instantly and reactively across all components, forms, sidebars, headers, dialogs, toasts, and multi-browser tabs without page reload or digest lag.
+
+```mermaid
+graph TD
+    User["ผู้ใช้งานเลือกสลับภาษา<br/>(LanguageSwitcher / User Action)"] --> Service["LanguageSignalService<br/>currentLocale.set('xx-XX')"]
+    
+    subgraph ReactiveReactivity ["Fine-Grained Signal Propagation (0ms)"]
+        Service --> Comp["ทุก Angular Components<br/>(Templates, Pipes, Directives)"]
+        Service --> DOM["DOM Attributes & Metadata<br/>(html lang, dir, document.title)"]
+        Service --> Storage["Persistence Layer<br/>(localStorage, Session, Cookies)"]
+        Service --> MultiTab["Cross-Tab Synchronization<br/>(BroadcastChannel API)"]
+        Service --> HybridBridge["ngUpgrade Bridge<br/>($translate.use & $rootScope)"]
+    end
+    
+    MultiTab --> OtherTabs["แท็บอื่นๆ ของเว็บไซต์ในเบราว์เซอร์<br/>(เปลี่ยนภาษาพร้อมกันทันที)"]
+    HybridBridge --> LegacyUI["คอมโพเนนต์ AngularJS 1.x เดิม<br/>(อัปเดตภาษาแบบไร้รอยต่อ)"]
+    Comp --> ActiveUI["หน้าเว็บทั้งหมดเปลี่ยนภาษาพร้อมกัน 100%"]
+```
+
+### 8.1 ขอบเขตการรองรับ 10 ภาษา/ประเทศ (10-Country Multi-Locale Scope & Domain Coverage)
+
+ระบบแปลภาษากลางได้รับการจัดเตรียมและแบ่งหมวดหมู่ครอบคลุมทุกมิติของโปรแกรม (Nav, Studio, Synthesis, Telemetry, Settings, Dialogs, Toasts, Validation):
+
+| ลำดับ | รหัส Locale | ประเทศ / ภาษา (Country / Native Language) | ทิศทางอักษร | รูปแบบวันที่ | สถานะ |
+| :---: | :---: | :--- | :---: | :---: | :---: |
+| 1 | `th-TH` | 🇹🇭 ภาษาไทย (Thailand) — *ภาษาหลักองค์กร DELTA SYNTH* | LTR | `dd/MM/yyyy` | มาตรฐานหลัก |
+| 2 | `en-US` | 🇺🇸 English (United States / Global Standard) | LTR | `MM/dd/yyyy` | มาตรฐานสากล |
+| 3 | `ja-JP` | 🇯🇵 日本語 (Japan / Vocaloid & UTAU Ecosystem) | LTR | `yyyy/MM/dd` | มาตรฐานชุมชน |
+| 4 | `zh-CN` | 🇨🇳 简体中文 (China) | LTR | `yyyy-MM-dd` | มาตรฐานสากล |
+| 5 | `zh-TW` | 繁體中文 (Taiwan / Hong Kong) | LTR | `yyyy/MM/dd` | มาตรฐานสากล |
+| 6 | `ko-KR` | 🇰🇷 한국어 (South Korea) | LTR | `yyyy. MM. dd.` | มาตรฐานสากล |
+| 7 | `de-DE` | 🇩🇪 Deutsch (Germany) | LTR | `dd.MM.yyyy` | มาตรฐานสากล |
+| 8 | `fr-FR` | 🇫🇷 Français (France) | LTR | `dd/MM/yyyy` | มาตรฐานสากล |
+| 9 | `es-ES` | 🇪🇸 Español (Spain / Latin America) | LTR | `dd/MM/yyyy` | มาตรฐานสากล |
+| 10 | `vi-VN` | 🇻🇳 Tiếng Việt (Vietnam) | LTR | `dd/MM/yyyy` | มาตรฐานสากล |
+
+### 8.2 เอนจิ้นสลับภาษาแบบซิงโครไนซ์ (LanguageSignalService)
+
+สถาปัตยกรรมใช้ Fine-Grained Signals ร่วมกับ `effect()` ในการควบคุมทุกมิติของ DOM และการจัดเก็บ:
+
+```typescript
+// Docs/Web_i18n_Architecture/src/services/language-signal.service.ts
+@Injectable({ providedIn: 'root' })
+export class LanguageSignalService {
+  readonly currentLocale = signal<SupportedLocale>(this.getInitialLocale());
+  readonly translations = computed<TranslationSchema>(() => TRANSLATION_CATALOGS[this.currentLocale()]);
+  readonly currentMetadata = computed<LocaleMetadata>(() => SUPPORTED_LOCALES.find(l => l.code === this.currentLocale())!);
+
+  constructor() {
+    effect(() => {
+      const locale = this.currentLocale();
+      const meta = this.currentMetadata();
+      const t = this.translations();
+
+      // ซิงค์คุณลักษณะ HTML ทันที
+      document.documentElement.lang = locale;
+      document.documentElement.dir = meta.direction;
+      document.title = `${t.app.title} — ${t.app.subtitle}`;
+      localStorage.setItem('delta_synth_locale', locale);
+    });
+
+    this.initMultiTabSync();
+  }
+
+  setLocale(locale: SupportedLocale, broadcast: boolean = true): void {
+    if (this.currentLocale() === locale) return;
+    this.currentLocale.set(locale);
+    if (broadcast && this.broadcastChannel) {
+      this.broadcastChannel.postMessage({ type: 'LOCALE_CHANGED', locale });
+    }
+  }
+}
+```
+
+### 8.3 การซิงโครไนซ์สองทิศทางข้ามระบบลูกผสม (Bi-directional ngUpgrade i18n Bridge)
+
+กรณีที่ระบบยังอยู่ในช่วงเปลี่ยนผ่าน (Hybrid Phase) ต้องติดตั้งสะพานเชื่อมสองทิศทางเพื่อป้องกันการหลุดซิงค์:
+
+```typescript
+// Docs/Web_i18n_Architecture/src/bridge/ngupgrade-i18n-bridge.ts
+export function setupNgUpgradeI18nBridge(injector: Injector, ng1RootScope: any, ng1Translate?: any): void {
+  const langService = injector.get(LanguageSignalService);
+  let isSyncing = false;
+
+  // Modern Angular -> Legacy AngularJS
+  effect(() => {
+    const locale = langService.currentLocale();
+    if (isSyncing) return;
+    isSyncing = true;
+    try {
+      if (ng1Translate?.use) ng1Translate.use(locale);
+      ng1RootScope?.$broadcast('delta:localeChanged', { locale });
+      ng1RootScope?.$applyAsync();
+    } finally { isSyncing = false; }
+  }, { injector });
+
+  // Legacy AngularJS -> Modern Angular
+  ng1RootScope?.$on('$translateChangeSuccess', (_event: any, data: { language: string }) => {
+    if (isSyncing) return;
+    isSyncing = true;
+    try {
+      langService.setLocale(data.language as SupportedLocale);
+    } finally { isSyncing = false; }
+  });
+}
+```
+
+### 8.4 คอมโพเนนต์สลับภาษาตามมาตรฐาน DELTA SYNTH (Language Switcher UI)
+
+คอมโพเนนต์สวิตช์ภาษา (`<delta-language-switcher>`) ออกแบบตามมาตรฐาน Corporate Identity ของ DELTA SYNTH:
+- **ฟอนต์:** `Leelawadee UI` คมชัด สบายตา
+- **โทนสี:** แดง `#CC2200`, ดำ `#1A1A1A`, ขาว `#F0F0F0`, โฮเวอร์ `#FF4422`
+- **การตอบสนอง:** มี Indicator แสดงภาษาปัจจุบัน พร้อมรายการชื่อภาษาท้องถิ่น (Native Name) และชื่อสากล (English Name)
+- **ตำแหน่งไฟล์พร้อมใช้:** [`Docs/Web_i18n_Architecture/src/components/language-switcher.component.ts`](file:///d:/Program%20Developing/Thai_OpenUtau/Docs/Web_i18n_Architecture/src/components/language-switcher.component.ts)
+
+---
+
+## 9. ขั้นตอนการปฏิบัติงาน 6 เฟส (Stepwise Operational Roadmap)
 
 ```mermaid
 graph TD
     F1["เฟส 1: การสำรวจและจัดทำแผนผัง<br/>(Dependency Audit & Inventory)"] --> F2["เฟส 2: วางโครงสร้างสถาปัตยกรรมคู่ขนาน<br/>(Hybrid Workspace & TypeScript Setup)"]
-    F2 --> F3["เฟส 3: ย้าย Service และ Data Layer<br/>(HTTP & Business Logic)"]
-    F3 --> F4["เฟส 4: ย้าย UI Components & Directives<br/>(Standalone & Signals)"]
+    F2 --> F3["เฟส 3: ย้าย Service, Data & i18n Core<br/>(HTTP, Signals & Language Engine)"]
+    F3 --> F4["เฟส 4: ย้าย UI Components & Directives<br/>(Standalone, Reactive Translation)"]
     F4 --> F5["เฟส 5: รวมระบบ Routing & สลาย ngUpgrade<br/>(Pure Angular Architecture)"]
     F5 --> F6["เฟส 6: ทดสอบความสมบูรณ์และส่งมอบ<br/>(E2E, Performance & Zero-Defect Audit)"]
 ```
 
 1. **เฟส 1 (Discovery & Audit):** ตรวจนับ Controllers, Directives, Filters และ Services ประเมินความเสี่ยงและจัดกลุ่มตาม Feature Boundaries
 2. **เฟส 2 (Workspace Preparation):** ติดตั้ง Angular CLI เวอร์ชันล่าสุด ตั้งค่า TypeScript Strict Mode และเชื่อมต่อ `UpgradeModule`
-3. **เฟส 3 (Service Migration):** แปลง `$http` และ `$q` เป็น `HttpClient` และ `RxJS` พร้อมทำการดาวน์เกรดให้ AngularJS เรียกใช้ได้
-4. **เฟส 4 (Component Migration):** ทยอยแปลง Directives และ Templates เป็น Standalone Components พร้อมใช้ Signals แทน `$scope.$watch`
+3. **เฟส 3 (Service & i18n Migration):** แปลง `$http` และ `$q` เป็น `HttpClient` และ `RxJS` พร้อมติดตั้ง `LanguageSignalService` และ Dictionary ครบ 10 ภาษา
+4. **เฟส 4 (Component Migration & Template Localization):** ทยอยแปลง Directives และ Templates เป็น Standalone Components พร้อมใช้ Signals และ `TranslatePipe` แทน `$scope.$watch`
 5. **เฟส 5 (De-hybridization):** ปลดระวาง AngularJS รันไทม์ และสคริปต์เก่าออกทั้งหมด เปลี่ยนระบบ Routing สู่ Angular Router แท้
 6. **เฟส 6 (Verification & Optimization):** ตรวจสอบ Core Web Vitals, วัด Bundle Size, ทดสอบ Unit Tests (100% Pass) และตรวจสอบ Zero Warnings
 
 ---
 
-## 9. ข้อบังคับและข้อห้าม (Strict Directives & Forbidden Practices)
+## 10. ข้อบังคับและข้อห้าม (Strict Directives & Forbidden Practices)
 
 * **ห้ามใช้ `$scope.$apply()` หรือ `$scope.$digest()` ซ้ำซ้อน:** ให้เปลี่ยนไปใช้ Signals หรือ OnPush Change Detection
 * **ห้ามปล่อยให้มี Any Type ตกค้าง:** Public API และ Data Contracts ต้องมี TypeScript Interfaces ชัดเจน
+* **ห้าม Hardcode ข้อความภาษาใดภาษาหนึ่งลงใน Template โดยตรง:** ข้อความทั้งหมดต้องผ่าน `TranslatePipe` (`'key' | translate`) หรือ `LanguageSignalService`
 * **ห้ามตัดตอนการทำงานขณะมีสถานะก้ำกึ่ง:** ทุกขั้นตอนของการย้ายระบบลูกผสม แอปพลิเคชันต้องสามารถรันและทดสอบผ่านได้ตลอดเวลา (Continuous Shippable State)
 * **รักษาความเข้ากันได้ของ API Endpoint:** Data Contracts ที่ส่งไปยัง Backend ต้องรักษาโครงสร้างเดิม เว้นแต่จะได้รับคำสั่งปรับปรุงเป็นลายลักษณ์อักษร
 
 ---
 
-## 10. เอกสารอ้างอิงและการเชื่อมโยง (References & Ecosystem Alignment)
+## 11. เอกสารอ้างอิงและการเชื่อมโยง (References & Ecosystem Alignment)
 - [Official Angular Update Guide](https://angular.dev/update-guide)
 - [ngUpgrade Comprehensive Documentation](https://angular.dev/tools/cli/upgrade)
+- [`Docs/Web_i18n_Architecture/`](file:///d:/Program%20Developing/Thai_OpenUtau/Docs/Web_i18n_Architecture) (ชุดโมดูลแปลภาษาและสวิตช์ภาษาฉบับสมบูรณ์)
 - [`Docs/About_Project.md`](file:///d:/Program%20Developing/Thai_OpenUtau/About_Project.md)
 - [`Docs/AGENT.md`](file:///d:/Program%20Developing/Thai_OpenUtau/Docs/AGENT.md)
