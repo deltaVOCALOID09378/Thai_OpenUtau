@@ -156,8 +156,19 @@ def optimize_oto_ini():
         messagebox.showwarning("Warning / คำเตือน", "No temporary file detected. Please run from OpenUtau.\nไม่พบไฟล์ชั่วคราว กรุณาเปิดจากโปรแกรม OpenUtau")
         return
         
+    def is_within_base(path_value, base_dir):
+        try:
+            return os.path.commonpath([path_value, base_dir]) == base_dir
+        except ValueError:
+            return False
+
     try:
-        tmp_path = sys.argv[1]
+        tmp_path = os.path.realpath(sys.argv[1])
+        if not os.path.isfile(tmp_path):
+            messagebox.showerror("Error / ข้อผิดพลาด", "Temporary file path is invalid.\nพาธไฟล์ชั่วคราวไม่ถูกต้อง")
+            return
+
+        trusted_root = os.path.dirname(tmp_path)
         voice_dir = ""
         lines, enc = detect_encoding_and_read(tmp_path)
         for line in lines:
@@ -165,17 +176,25 @@ def optimize_oto_ini():
                 voice_dir = line.strip().split('=', 1)[1]
                 break
                 
-        if not voice_dir or not os.path.exists(voice_dir):
+        if not voice_dir:
             messagebox.showerror("Error / ข้อผิดพลาด", "VoiceDir not found in TMP file.\nไม่พบที่อยู่โฟลเดอร์คลังเสียง (VoiceDir) ในไฟล์ตั้งค่า OpenUtau")
             return
+
+        voice_dir = os.path.realpath(voice_dir)
+        if not os.path.exists(voice_dir) or not is_within_base(voice_dir, trusted_root):
+            messagebox.showerror("Error / ข้อผิดพลาด", "VoiceDir is invalid or outside the trusted area.\nที่อยู่ VoiceDir ไม่ถูกต้อง หรืออยู่นอกขอบเขตที่อนุญาต")
+            return
             
-        oto_path = os.path.join(voice_dir, "oto.ini")
-        if not os.path.exists(oto_path):
+        oto_path = os.path.realpath(os.path.join(voice_dir, "oto.ini"))
+        if not is_within_base(oto_path, trusted_root) or not os.path.exists(oto_path):
             messagebox.showerror("Error / ข้อผิดพลาด", f"oto.ini not found in\nไม่พบไฟล์ oto.ini ใน {voice_dir}")
             return
             
         # Backup
-        backup_path = oto_path + ".backup"
+        backup_path = os.path.realpath(oto_path + ".backup")
+        if not is_within_base(backup_path, trusted_root):
+            messagebox.showerror("Error / ข้อผิดพลาด", "Backup path is outside the trusted area.\nพาธไฟล์สำรองอยู่นอกขอบเขตที่อนุญาต")
+            return
         shutil.copy2(oto_path, backup_path)
         
         # We simulate optimization (adjusting consonant sizes etc based on DELTA SYNTH rules)
