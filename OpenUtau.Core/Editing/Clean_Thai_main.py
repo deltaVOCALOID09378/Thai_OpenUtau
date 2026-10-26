@@ -5,6 +5,7 @@
 import sys
 import re
 import codecs
+import os
 
 def clean_lyric(lyric: str) -> str:
     """
@@ -32,7 +33,15 @@ def main() -> None:
     if len(sys.argv) < 2:
         return
 
-    filepath = sys.argv[1]
+    requested_path = sys.argv[1]
+    base_dir = os.path.realpath(os.getcwd())
+    filepath = os.path.realpath(requested_path)
+
+    # ป้องกัน path traversal / absolute path ที่อยู่นอกโฟลเดอร์ทำงาน
+    if os.path.commonpath([base_dir, filepath]) != base_dir:
+        return
+    if not os.path.isfile(filepath):
+        return
     
     # อ่านไฟล์ชั่วคราวที่ OpenUtau ส่งมาให้ (รองรับทั้ง UTF-8 และ Shift-JIS)
     try:
