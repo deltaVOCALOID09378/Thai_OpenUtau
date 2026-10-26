@@ -1,8 +1,8 @@
 @echo off
 rem ======================================================================
-rem Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+rem Date         : 26/10/2026 (B.E. 2569 / A.D. 2026)
 rem File Name    : Package_Program.bat
-rem Version      : 1.6
+rem Version      : 1.8
 rem Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
 rem Location     : Package_Program.bat
 rem Description  : Professional Standalone Packaging Pipeline for Thai OpenUtau with dictionary bundling.
@@ -11,7 +11,7 @@ rem                Supports Drag & Drop of any published directory.
 rem ======================================================================
 
 setlocal enabledelayedexpansion
-title DELTA SYNTH - Thai OpenUtau Packaging Pipeline v1.6
+title DELTA SYNTH - Thai OpenUtau Packaging Pipeline v1.8
 color 0B
 chcp 65001 >nul
 
@@ -72,8 +72,14 @@ if exist "%PROJECT_ROOT%\All Rendered File" (
     if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary" xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%PROJECT_ROOT%\All Rendered File\Dictionaries\" /s /e /y /q >nul 2>&1
 )
 
+rem Consolidate DirectML if available
+if exist "%PROJECT_ROOT%\All Rendered File\DirectML.dll" (
+    if not exist "%TARGET_DIR%\DirectML.dll" copy /y "%PROJECT_ROOT%\All Rendered File\DirectML.dll" "%TARGET_DIR%\" >nul 2>&1
+)
+
 rem Step 2: Prepare Export Directories
-set "EXPORT_DIR=%PROJECT_ROOT%\Published\Version no. 3.0.0"
+set "PKG_VER=3.3.0"
+set "EXPORT_DIR=%PROJECT_ROOT%\Published\Version no. %PKG_VER%"
 if not exist "%EXPORT_DIR%" mkdir "%EXPORT_DIR%" >nul 2>&1
 
 echo [2/3] Validating compression and installer toolchains...
@@ -97,20 +103,20 @@ echo.
 echo [3/3] Packaging distribution assets...
 if exist "%SEVENZIP%" (
     echo [*] Creating Standalone ZIP Archive with 7-Zip - Ultra Compression...
-    "%SEVENZIP%" a -tzip -mx=9 "%EXPORT_DIR%\Thai_OpenUtau_v3.0.0_Standalone.zip" "%TARGET_DIR%\*" >nul 2>&1
+    "%SEVENZIP%" a -tzip -mx=9 "%EXPORT_DIR%\Thai_OpenUtau_v%PKG_VER%_Standalone.zip" "%TARGET_DIR%\*" >nul 2>&1
     if !errorlevel! equ 0 (
-        copy /y "%EXPORT_DIR%\Thai_OpenUtau_v3.0.0_Standalone.zip" "%PROJECT_ROOT%\" >nul 2>&1
+        copy /y "%EXPORT_DIR%\Thai_OpenUtau_v%PKG_VER%_Standalone.zip" "%PROJECT_ROOT%\" >nul 2>&1
         echo [OK] Standalone ZIP created successfully:
-        echo      - %EXPORT_DIR%\Thai_OpenUtau_v3.0.0_Standalone.zip
-        echo      - %PROJECT_ROOT%\Thai_OpenUtau_v3.0.0_Standalone.zip
+        echo      - %EXPORT_DIR%\Thai_OpenUtau_v%PKG_VER%_Standalone.zip
+        echo      - %PROJECT_ROOT%\Thai_OpenUtau_v%PKG_VER%_Standalone.zip
         set /a PACKAGED_COUNT+=1
     ) else (
         echo [WARNING] Failed to create 7-Zip standalone archive.
     )
 ) else (
     echo [NOTICE] 7-Zip was not found. Creating fallback ZIP with PowerShell...
-    powershell -NoProfile -Command "Compress-Archive -Path '%TARGET_DIR%\*' -DestinationPath '%EXPORT_DIR%\Thai_OpenUtau_v3.0.0_Standalone.zip' -Force"
-    copy /y "%EXPORT_DIR%\Thai_OpenUtau_v3.0.0_Standalone.zip" "%PROJECT_ROOT%\" >nul 2>&1
+    powershell -NoProfile -Command "Compress-Archive -Path '%TARGET_DIR%\*' -DestinationPath '%EXPORT_DIR%\Thai_OpenUtau_v%PKG_VER%_Standalone.zip' -Force"
+    copy /y "%EXPORT_DIR%\Thai_OpenUtau_v%PKG_VER%_Standalone.zip" "%PROJECT_ROOT%\" >nul 2>&1
     echo [OK] Fallback ZIP created successfully.
     set /a PACKAGED_COUNT+=1
 )
@@ -125,10 +131,10 @@ if exist "%RAR_EXE%" (
         echo Setup=Start-The-Program.bat
         echo Silent=0
         echo Overwrite=1
-        echo Title=DELTA SYNTH - Thai OpenUtau v3.0.0 Installer
+        echo Title=DELTA SYNTH - Thai OpenUtau v%PKG_VER% Installer
         echo Text
         echo {
-        echo Welcome to Thai OpenUtau v3.0.0 Installer by DELTA SYNTH
+        echo Welcome to Thai OpenUtau v%PKG_VER% Installer by DELTA SYNTH
         echo Complete Thai Vocal Synthesis Suite ^(VCCV, VCV, CpV, Arpasing^)
         echo Powered by Native Worldline DSP, Moresampler, and AutoPitchwriter
         echo }
@@ -136,12 +142,12 @@ if exist "%RAR_EXE%" (
         echo Shortcut=P, "Start-The-Program.bat", "", "Thai OpenUtau by DELTA SYNTH", "Thai OpenUtau"
     ) > "%TEMP%\sfx_config.txt"
 
-    "%RAR_EXE%" a -r -ep1 -sfx -m5 -z"%TEMP%\sfx_config.txt" -y "%EXPORT_DIR%\Thai_OpenUtau_Installer_v3.0.0.exe" "%TARGET_DIR%\*" >nul 2>&1
+    "%RAR_EXE%" a -r -ep1 -sfx -m5 -z"%TEMP%\sfx_config.txt" -y "%EXPORT_DIR%\Thai_OpenUtau_Installer_v%PKG_VER%.exe" "%TARGET_DIR%\*" >nul 2>&1
     if !errorlevel! equ 0 (
-        copy /y "%EXPORT_DIR%\Thai_OpenUtau_Installer_v3.0.0.exe" "%PROJECT_ROOT%\" >nul 2>&1
+        copy /y "%EXPORT_DIR%\Thai_OpenUtau_Installer_v%PKG_VER%.exe" "%PROJECT_ROOT%\" >nul 2>&1
         echo [OK] Standalone Installer EXE created successfully:
-        echo      - %EXPORT_DIR%\Thai_OpenUtau_Installer_v3.0.0.exe
-        echo      - %PROJECT_ROOT%\Thai_OpenUtau_Installer_v3.0.0.exe
+        echo      - %EXPORT_DIR%\Thai_OpenUtau_Installer_v%PKG_VER%.exe
+        echo      - %PROJECT_ROOT%\Thai_OpenUtau_Installer_v%PKG_VER%.exe
         set /a PACKAGED_COUNT+=1
     ) else (
         echo [WARNING] Failed to create SFX installer.
@@ -158,10 +164,10 @@ echo  [SUCCESS] Packaging process completed (%PACKAGED_COUNT% package targets re
 echo ======================================================================
 echo.
 echo  Distribution Packages Available:
-echo   1. Standalone Installer : %EXPORT_DIR%\Thai_OpenUtau_Installer_v3.0.0.exe
-echo   2. Standalone ZIP Pack  : %EXPORT_DIR%\Thai_OpenUtau_v3.0.0_Standalone.zip
-echo   3. Root Mirrors         : %PROJECT_ROOT%\Thai_OpenUtau_Installer_v3.0.0.exe
-echo                             %PROJECT_ROOT%\Thai_OpenUtau_v3.0.0_Standalone.zip
+echo   1. Standalone Installer : %EXPORT_DIR%\Thai_OpenUtau_Installer_v%PKG_VER%.exe
+echo   2. Standalone ZIP Pack  : %EXPORT_DIR%\Thai_OpenUtau_v%PKG_VER%_Standalone.zip
+echo   3. Root Mirrors         : %PROJECT_ROOT%\Thai_OpenUtau_Installer_v%PKG_VER%.exe
+echo                             %PROJECT_ROOT%\Thai_OpenUtau_v%PKG_VER%_Standalone.zip
 echo ======================================================================
 echo.
 
