@@ -12,16 +12,17 @@ using OpenUtau.Core.Util;
 using Serilog;
 
 // ============================================================================
-// Made And Checked By DELTA SYNTH & Gemini AI
+// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
 // Original by Patiphat Wongyai (Delta)
-// Version: 1.2 | Date: 2026-07-28
-// Description: ปรับการหน่วงโหลดคลังเสียงให้ยกเลิกได้โดยไม่พักเธรดโดยไม่จำเป็น
+// Version: 1.4 | Date: 2026-10-27
+// Description: เพิ่มการจัดหมวดหมู่นักร้อง DELTA SYNTH และจัดเป็นหมวดแรกก่อนใคร
 // ============================================================================
 
 namespace OpenUtau.Core {
     public class SingerManager : SingletonBase<SingerManager> {
         public Dictionary<string, USinger> Singers { get; private set; } = new Dictionary<string, USinger>();
         public Dictionary<USingerType, List<USinger>> SingerGroups { get; private set; } = new Dictionary<USingerType, List<USinger>>();
+        public List<USinger> DeltaSynthSingers { get; private set; } = new List<USinger>();
 
         private readonly ConcurrentQueue<USinger> reloadQueue = new ConcurrentQueue<USinger>();
         private CancellationTokenSource reloadCancellation;
@@ -45,6 +46,10 @@ namespace OpenUtau.Core {
             SingerGroups = singers
                 .GroupBy(s => s.SingerType)
                 .ToDictionary(s => s.Key, s => s.LocalizedOrderBy(singer => singer.LocalizedName).ToList());
+            DeltaSynthSingers = singers
+                .Where(s => s.IsDeltaSynthSinger)
+                .LocalizedOrderBy(singer => singer.LocalizedName)
+                .ToList();
             stopWatch.Stop();
             Log.Information($"Search all singers: {stopWatch.Elapsed}");
         }

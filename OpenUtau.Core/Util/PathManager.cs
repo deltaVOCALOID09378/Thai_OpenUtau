@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -96,6 +96,22 @@ namespace OpenUtau.Core {
                 }
                 if (Directory.Exists(AdditionalSingersPath)) {
                     list.Add(AdditionalSingersPath);
+                }
+                if (Preferences.Default.SingerSearchPaths != null) {
+                    foreach (var searchPath in Preferences.Default.SingerSearchPaths) {
+                        if (!string.IsNullOrEmpty(searchPath) && Directory.Exists(searchPath)) {
+                            list.Add(searchPath);
+                        }
+                    }
+                }
+                // DELTA SYNTH Standard Central Voicebank Directory Auto-Detection
+                const string deltaSynthDefault = @"E:\All Voicebank in DELTA SYNTH";
+                if (Directory.Exists(deltaSynthDefault)) {
+                    list.Add(deltaSynthDefault);
+                }
+                const string deltaSynthOnnx = @"D:\All Onnx File";
+                if (Directory.Exists(deltaSynthOnnx)) {
+                    list.Add(deltaSynthOnnx);
                 }
                 return list.Distinct().ToList();
             }

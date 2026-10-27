@@ -1051,6 +1051,16 @@ General
   <system:String x:Key="tracks.duplicatesettings">Duplicate Track Settings</system:String>
   <system:String x:Key="tracks.standardizesettings">Standardize Track Settings</system:String>
   <system:String x:Key="tracks.rotateselectedtracksingers">Rotate singers across selected tracks</system:String>
+  <system:String x:Key="tracks.deltasynth">DELTA SYNTH</system:String>
+  <system:String x:Key="tracks.deltasynth.all">All DELTA SYNTH Singers (A-Z)</system:String>
+  <system:String x:Key="tracks.deltasynth.official_group">Official &amp; Flagship (For DELTA SYNTH)</system:String>
+  <system:String x:Key="tracks.deltasynth.diffsinger_group">DiffSinger AI Singers</system:String>
+  <system:String x:Key="tracks.deltasynth.thai_group">Thai Voicebanks (Thai VCCV/CVVC)</system:String>
+  <system:String x:Key="tracks.deltasynth.jpn_group">Japanese Voicebanks (JPN VCV)</system:String>
+  <system:String x:Key="tracks.deltasynth.eng_group">English Voicebanks (ENG Arpasing)</system:String>
+  <system:String x:Key="tracks.deltasynth.none">No DELTA SYNTH voicebanks installed</system:String>
+  <system:String x:Key="tracks.deltasynth.website">DELTA SYNTH Official Website</system:String>
+  <system:String x:Key="tracks.deltasynth.openfolder">Open DELTA SYNTH Voicebank Location</system:String>
   <system:String x:Key="tracks.favorite">Favorites</system:String>
   <system:String x:Key="tracks.singer.favorite.tooltip">Add singer to favorites</system:String>
   <system:String x:Key="tracks.singer.applytoalltracks.tooltip">Apply to all selected tracks</system:String>

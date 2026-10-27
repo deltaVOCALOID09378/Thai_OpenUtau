@@ -7,6 +7,13 @@ using System.Text;
 using OpenUtau.Classic;
 using OpenUtau.Core.Util;
 
+// ============================================================================
+// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.0 | Date: 2026-10-27
+// Description: รองรับการระบุศิลปินคลังเสียงสังเคราะห์ของ DELTA SYNTH อัตโนมัติ
+// ============================================================================
+
 namespace OpenUtau.Core.Ustx {
     public class UOto : INotifyPropertyChanged {
         public string Alias { get; private set; }
@@ -237,6 +244,47 @@ namespace OpenUtau.Core.Ustx {
         public virtual Encoding TextFileEncoding => Encoding.UTF8;
         public virtual IList<USubbank> Subbanks { get; }
         public virtual IList<UOto> Otos => emptyOtos;
+
+        public virtual bool IsDeltaSynthSinger {
+            get {
+                if (!string.IsNullOrEmpty(Author) &&
+                    (Author.Contains("DELTA SYNTH", StringComparison.OrdinalIgnoreCase) ||
+                     Author.Contains("deltaVOCALOID", StringComparison.OrdinalIgnoreCase) ||
+                     Author.Contains("Patiphat Wongyai", StringComparison.OrdinalIgnoreCase))) {
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(Web) &&
+                    (Web.Contains("deltasynth", StringComparison.OrdinalIgnoreCase) ||
+                     Web.Contains("patiphatwongyai", StringComparison.OrdinalIgnoreCase))) {
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(OtherInfo) &&
+                    (OtherInfo.Contains("DELTA SYNTH", StringComparison.OrdinalIgnoreCase) ||
+                     OtherInfo.Contains("deltasynth", StringComparison.OrdinalIgnoreCase))) {
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(Location) &&
+                    (Location.Contains("DELTA SYNTH", StringComparison.OrdinalIgnoreCase) ||
+                     Location.Contains("For DELTA SYNTH", StringComparison.OrdinalIgnoreCase))) {
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(BasePath) &&
+                    (BasePath.Contains("DELTA SYNTH", StringComparison.OrdinalIgnoreCase) ||
+                     BasePath.Contains("For DELTA SYNTH", StringComparison.OrdinalIgnoreCase))) {
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(Id) &&
+                    (Id.Contains("DELTA SYNTH", StringComparison.OrdinalIgnoreCase) ||
+                     Id.Contains("For DELTA SYNTH", StringComparison.OrdinalIgnoreCase))) {
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(Name) &&
+                    Name.Contains("DELTA SYNTH", StringComparison.OrdinalIgnoreCase)) {
+                    return true;
+                }
+                return false;
+            }
+        }
 
         public bool Found => found;
         public bool Loaded => found && loaded;

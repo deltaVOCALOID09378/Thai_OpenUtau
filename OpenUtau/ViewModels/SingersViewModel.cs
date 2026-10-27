@@ -19,9 +19,19 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 
+// ============================================================================
+// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
+// Original by Patiphat Wongyai (Delta)
+// Version: 1.2 | Date: 2026-10-27
+// Description: จัดลำดับศิลปิน DELTA SYNTH ไว้ลำดับแรกสุดในหน้าต่างจัดการคลังเสียง
+// ============================================================================
+
 namespace OpenUtau.App.ViewModels {
     public class SingersViewModel : ViewModelBase {
-        public IEnumerable<USinger> Singers => SingerManager.Inst.SingerGroups.Values.SelectMany(l => l);
+        public IEnumerable<USinger> Singers =>
+            SingerManager.Inst.DeltaSynthSingers
+                .Concat(SingerManager.Inst.SingerGroups.Values.SelectMany(l => l))
+                .Distinct();
         [Reactive] public USinger? Singer { get; set; }
         [Reactive] public Bitmap? Avatar { get; set; }
         [Reactive] public string? Info { get; set; }

@@ -390,9 +390,136 @@ namespace OpenUtau.App.ViewModels {
 
         static MenuItemViewModel MenuLineSeparator() => new PhonemizerMenuSeparatorViewModel();
 
+        private MenuItemViewModel CreateDeltaSynthMenuCategory(IReadOnlyList<USinger> deltaSingers) {
+            var deltaCategory = new MenuItemViewModel() {
+                Header = (ThemeManager.GetString("tracks.deltasynth") ?? "DELTA SYNTH") + " ...",
+            };
+
+            var subItems = new List<MenuItemViewModel>();
+
+            if (deltaSingers != null && deltaSingers.Count > 0) {
+                if (deltaSingers.Count > 15) {
+                    // 1. Official & Flagship (For DELTA SYNTH / Official)
+                    var officialSingers = deltaSingers
+                        .Where(s => (s.Location != null && s.Location.Contains("For DELTA SYNTH", StringComparison.OrdinalIgnoreCase))
+                                 || (s.Id != null && s.Id.Contains("For DELTA SYNTH", StringComparison.OrdinalIgnoreCase))
+                                 || (s.LocalizedName != null && (s.LocalizedName.Contains("Official", StringComparison.OrdinalIgnoreCase) || s.LocalizedName.Contains("EVO", StringComparison.OrdinalIgnoreCase))))
+                        .LocalizedOrderBy(s => s.LocalizedName)
+                        .ToList();
+                    if (officialSingers.Count > 0) {
+                        subItems.Add(new MenuItemViewModel() {
+                            Header = (ThemeManager.GetString("tracks.deltasynth.official_group") ?? "Official & Flagship (For DELTA SYNTH)") + " ...",
+                            Items = officialSingers.Select(CreateSingerMenuItem).ToArray(),
+                        });
+                    }
+
+                    // 2. DiffSinger AI
+                    var dsSingers = deltaSingers
+                        .Where(s => s.SingerType == USingerType.DiffSinger
+                                 || (s.Location != null && (s.Location.Contains("Diffsinger", StringComparison.OrdinalIgnoreCase) || s.Location.Contains("AI VB", StringComparison.OrdinalIgnoreCase)))
+                                 || (s.Id != null && s.Id.Contains("Diffsinger", StringComparison.OrdinalIgnoreCase)))
+                        .LocalizedOrderBy(s => s.LocalizedName)
+                        .ToList();
+                    if (dsSingers.Count > 0) {
+                        subItems.Add(new MenuItemViewModel() {
+                            Header = (ThemeManager.GetString("tracks.deltasynth.diffsinger_group") ?? "DiffSinger AI Singers") + " ...",
+                            Items = dsSingers.Select(CreateSingerMenuItem).ToArray(),
+                        });
+                    }
+
+                    // 3. Thai Voicebanks
+                    var thaiSingers = deltaSingers
+                        .Where(s => (s.Location != null && s.Location.Contains("Thai", StringComparison.OrdinalIgnoreCase))
+                                 || (s.Id != null && s.Id.Contains("Thai", StringComparison.OrdinalIgnoreCase))
+                                 || (s.LocalizedName != null && s.LocalizedName.Contains("Thai", StringComparison.OrdinalIgnoreCase)))
+                        .LocalizedOrderBy(s => s.LocalizedName)
+                        .ToList();
+                    if (thaiSingers.Count > 0) {
+                        subItems.Add(new MenuItemViewModel() {
+                            Header = (ThemeManager.GetString("tracks.deltasynth.thai_group") ?? "Thai Voicebanks (Thai VCCV/CVVC)") + " ...",
+                            Items = thaiSingers.Select(CreateSingerMenuItem).ToArray(),
+                        });
+                    }
+
+                    // 4. Japanese VCV
+                    var jpnSingers = deltaSingers
+                        .Where(s => (s.Location != null && (s.Location.Contains("Japanese", StringComparison.OrdinalIgnoreCase) || s.Location.Contains("JPN", StringComparison.OrdinalIgnoreCase)))
+                                 || (s.Id != null && (s.Id.Contains("Japanese", StringComparison.OrdinalIgnoreCase) || s.Id.Contains("JPN", StringComparison.OrdinalIgnoreCase)))
+                                 || (s.LocalizedName != null && (s.LocalizedName.Contains("JPN", StringComparison.OrdinalIgnoreCase) || s.LocalizedName.Contains("VCV", StringComparison.OrdinalIgnoreCase))))
+                        .LocalizedOrderBy(s => s.LocalizedName)
+                        .ToList();
+                    if (jpnSingers.Count > 0) {
+                        subItems.Add(new MenuItemViewModel() {
+                            Header = (ThemeManager.GetString("tracks.deltasynth.jpn_group") ?? "Japanese Voicebanks (JPN VCV)") + " ...",
+                            Items = jpnSingers.Select(CreateSingerMenuItem).ToArray(),
+                        });
+                    }
+
+                    // 5. English Arpasing
+                    var engSingers = deltaSingers
+                        .Where(s => (s.Location != null && (s.Location.Contains("English", StringComparison.OrdinalIgnoreCase) || s.Location.Contains("ENG", StringComparison.OrdinalIgnoreCase)))
+                                 || (s.Id != null && (s.Id.Contains("English", StringComparison.OrdinalIgnoreCase) || s.Id.Contains("ENG", StringComparison.OrdinalIgnoreCase)))
+                                 || (s.LocalizedName != null && (s.LocalizedName.Contains("ENG", StringComparison.OrdinalIgnoreCase) || s.LocalizedName.Contains("Arpasing", StringComparison.OrdinalIgnoreCase))))
+                        .LocalizedOrderBy(s => s.LocalizedName)
+                        .ToList();
+                    if (engSingers.Count > 0) {
+                        subItems.Add(new MenuItemViewModel() {
+                            Header = (ThemeManager.GetString("tracks.deltasynth.eng_group") ?? "English Voicebanks (ENG Arpasing)") + " ...",
+                            Items = engSingers.Select(CreateSingerMenuItem).ToArray(),
+                        });
+                    }
+
+                    // 6. Complete list of all DELTA SYNTH singers (A-Z)
+                    subItems.Add(new MenuItemViewModel() {
+                        Header = $"{ThemeManager.GetString("tracks.deltasynth.all") ?? "All DELTA SYNTH Singers (A-Z)"} ({deltaSingers.Count}) ...",
+                        Items = deltaSingers.Select(CreateSingerMenuItem).ToArray(),
+                    });
+                } else {
+                    subItems.AddRange(deltaSingers.Select(CreateSingerMenuItem));
+                }
+            } else {
+                subItems.Add(new MenuItemViewModel() {
+                    Header = ThemeManager.GetString("tracks.deltasynth.none") ?? "No DELTA SYNTH voicebanks installed",
+                    IsEnabled = false,
+                });
+            }
+
+            subItems.Add(SingerMenuSeparator());
+            subItems.Add(new MenuItemViewModel() {
+                Header = ThemeManager.GetString("tracks.deltasynth.website") ?? "DELTA SYNTH Official Website",
+                Command = ReactiveCommand.Create(() => {
+                    try {
+                        OS.OpenWeb("https://patiphatwongyai.wixsite.com/deltasynth");
+                    } catch (Exception e) {
+                        Log.Error(e, "Failed to open DELTA SYNTH website");
+                    }
+                })
+            });
+            subItems.Add(new MenuItemViewModel() {
+                Header = ThemeManager.GetString("tracks.deltasynth.openfolder") ?? "Open DELTA SYNTH Voicebank Location",
+                Command = ReactiveCommand.Create(() => {
+                    try {
+                        string target = Directory.Exists(@"E:\All Voicebank in DELTA SYNTH")
+                            ? @"E:\All Voicebank in DELTA SYNTH"
+                            : PathManager.Inst.SingersPath;
+                        OS.OpenFolder(target);
+                    } catch (Exception e) {
+                        Log.Error(e, "Failed to open DELTA SYNTH singers folder");
+                    }
+                })
+            });
+
+            deltaCategory.Items = subItems;
+            return deltaCategory;
+        }
+
         public void RefreshSingers() {
             var items = new List<MenuItemViewModel>();
             var groupItems = new List<MenuItemViewModel>();
+
+            // DELTA SYNTH หมวดแรกก่อนใคร (Placed as the first category before anyone else)
+            groupItems.Add(CreateDeltaSynthMenuCategory(SingerManager.Inst.DeltaSynthSingers));
+
             if (SingerManager.Inst.Singers.Count > 0) {
                 var recentItems = Preferences.Default.RecentSingers
                     .Select(id => SingerManager.Inst.Singers.Values.FirstOrDefault(singer => singer.Id == id))
@@ -425,6 +552,8 @@ namespace OpenUtau.App.ViewModels {
                     items.AddRange(groupItems);
                 }
             } else {
+                items.AddRange(groupItems);
+                items.Add(SingerMenuSeparator());
                 items.Add(new MenuItemViewModel() {
                     Header = ThemeManager.GetString("tracks.nosinger"),
                     IsEnabled = false

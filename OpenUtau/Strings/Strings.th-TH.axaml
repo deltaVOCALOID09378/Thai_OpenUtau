@@ -1093,6 +1093,16 @@
   <system:String x:Key="tracks.duplicatesettings">⚙️ คัดลอกการตั้งค่าแทร็กแบบเป๊ะๆ</system:String>
   <system:String x:Key="tracks.standardizesettings">⚖️ ปรับมาตรฐานการตั้งค่าแทร็ก (Standardize)</system:String>
   <system:String x:Key="tracks.rotateselectedtracksingers">🔄 สลับหมุนเวียนนักร้องในแทร็กที่เลือก</system:String>
+  <system:String x:Key="tracks.deltasynth">🔥 DELTA SYNTH</system:String>
+  <system:String x:Key="tracks.deltasynth.all">📑 ศิลปิน DELTA SYNTH ทั้งหมด (A-Z)</system:String>
+  <system:String x:Key="tracks.deltasynth.official_group">⭐ คลังเสียงทางการ &amp; ร่วมพัฒนา (For DELTA SYNTH)</system:String>
+  <system:String x:Key="tracks.deltasynth.diffsinger_group">🤖 ศิลปิน AI เสียงร้องสังเคราะห์ (DiffSinger AI)</system:String>
+  <system:String x:Key="tracks.deltasynth.thai_group">🇹🇭 คลังเสียงภาษาไทย (Thai VCCV / CVVC)</system:String>
+  <system:String x:Key="tracks.deltasynth.jpn_group">🇯🇵 คลังเสียงภาษาญี่ปุ่น (Japanese VCV)</system:String>
+  <system:String x:Key="tracks.deltasynth.eng_group">🌐 คลังเสียงภาษาอังกฤษ (English Arpasing)</system:String>
+  <system:String x:Key="tracks.deltasynth.none">⚠️ ยังไม่พบคลังเสียง DELTA SYNTH ในระบบ</system:String>
+  <system:String x:Key="tracks.deltasynth.website">🌐 แวะชมเว็บไซต์ทางการของ DELTA SYNTH</system:String>
+  <system:String x:Key="tracks.deltasynth.openfolder">📂 เปิดโฟลเดอร์คลังเสียง DELTA SYNTH</system:String>
   <system:String x:Key="tracks.favorite">⭐ รายการโปรด</system:String>
   <system:String x:Key="tracks.singer.favorite.tooltip">เพิ่มนักร้องคนนี้ในดวงใจ (รายการโปรด)</system:String>
   <system:String x:Key="tracks.singer.applytoalltracks.tooltip">✨ ประยุกต์นักร้องคนนี้ใช้กับทุกแทร็กที่กำลังเลือกไว้</system:String>
