@@ -7,7 +7,7 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
-    <RollForward>Minor</RollForward>
+    <RollForward>LatestMajor</RollForward>
     <OutputType>WinExe</OutputType>
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <Nullable>enable</Nullable>

@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:OpenUtau.App.Controls"
              xmlns:vm="using:OpenUtau.App.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="84"
-             x:Class="OpenUtau.App.Controls.TrackHeader" MinWidth="250" TrackNo="{Binding TrackNo}">
+             mc:Ignorable="d" d:DesignWidth="340" d:DesignHeight="84"
+             x:Class="OpenUtau.App.Controls.TrackHeader" MinWidth="320" UseLayoutRounding="True" TrackNo="{Binding TrackNo}">
   <Design.DataContext>
     <vm:TrackHeaderViewModel/>
   </Design.DataContext>
@@ -106,6 +106,90 @@
                      ContextMenu#PhonemizersMenu MenuItem.phonemizerMenuSeparator:pressed">
       <Setter Property="Background" Value="Transparent"/>
     </Style>
+        <!-- Track Header Chips (Mute, Solo, Fx, Settings) -->
+    <Style Selector=":is(Button).trackChip, :is(ToggleButton).trackChip">
+      <Setter Property="Width" Value="20"/>
+      <Setter Property="Height" Value="18"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Background" Value="#22FFFFFF"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource NeutralAccentBrushSemi}"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="ClipToBounds" Value="False"/>
+      <Setter Property="UseLayoutRounding" Value="True"/>
+    </Style>
+    <Style Selector=":is(Button).trackChip:pointerover, :is(ToggleButton).trackChip:pointerover">
+      <Setter Property="Background" Value="{DynamicResource NeutralAccentBrushPointerOver}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource NeutralAccentBrush}"/>
+    </Style>
+    <Style Selector=":is(Button).trackChip:pressed, :is(ToggleButton).trackChip:pressed">
+      <Setter Property="Background" Value="{DynamicResource NeutralAccentBrush}"/>
+    </Style>
+
+    <Style Selector=":is(Button).trackChip Path, :is(ToggleButton).trackChip Path">
+      <Setter Property="Fill" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+      <Setter Property="Width" Value="14"/>
+      <Setter Property="Height" Value="14"/>
+      <Setter Property="Stretch" Value="Uniform"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Mute Chip -->
+    <Style Selector="ToggleButton.trackMuteChip:checked">
+      <Setter Property="Background" Value="#CC2200"/>
+      <Setter Property="BorderBrush" Value="#FF4422"/>
+    </Style>
+    <Style Selector="ToggleButton.trackMuteChip:checked Path">
+      <Setter Property="Fill" Value="#FFFFFF"/>
+    </Style>
+    <Style Selector="ToggleButton.trackMuteChip:checked:pointerover">
+      <Setter Property="Background" Value="#FF4422"/>
+      <Setter Property="BorderBrush" Value="#FFAA99"/>
+    </Style>
+
+    <!-- Solo Chip -->
+    <Style Selector="ToggleButton.trackSoloChip:checked">
+      <Setter Property="Background" Value="#E5A000"/>
+      <Setter Property="BorderBrush" Value="#FFD54F"/>
+    </Style>
+    <Style Selector="ToggleButton.trackSoloChip:checked Path">
+      <Setter Property="Fill" Value="#1A1A1A"/>
+    </Style>
+    <Style Selector="ToggleButton.trackSoloChip:checked:pointerover">
+      <Setter Property="Background" Value="#FFB300"/>
+      <Setter Property="BorderBrush" Value="#FFE082"/>
+    </Style>
+
+    <!-- Fx Chip -->
+    <Style Selector="Button.trackFxChip">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    </Style>
+    <Style Selector="Button.trackFxChip TextBlock.fxLabel">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.trackFxChip.fxOn">
+      <Setter Property="Background" Value="#2E7D32"/>
+      <Setter Property="BorderBrush" Value="#66BB6A"/>
+    </Style>
+    <Style Selector="Button.trackFxChip.fxOn TextBlock.fxLabel">
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Settings Chip -->
+    <Style Selector="Button.trackSettingsChip Path">
+      <Setter Property="Fill" Value="{DynamicResource NeutralAccentBrush}"/>
+    </Style>
+    <Style Selector="Button.trackSettingsChip:pointerover Path">
+      <Setter Property="Fill" Value="{DynamicResource AccentBrush1}"/>
+    </Style>
+
     <Style Selector="TextBlock.trackHeaderFaderLabel.muted">
       <Setter Property="Foreground" Value="{DynamicResource MutedIconBrush}"/>
     </Style>
@@ -200,7 +284,7 @@
                   ToolTip.Tip="{Binding Phonemizer}" ContextMenu="{StaticResource PhonemizerMenuRes}"/>
           </StackPanel>
         </StackPanel>
-        <Grid Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="3,2*,2,28,5,*,2,26">
+        <Grid Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="3,2*,4,32,8,*,4,28">
           <Grid.Styles>
             <Style Selector="Slider, TextBlock, TextBox">
               <Setter Property="VerticalAlignment" Value="Center"/>
@@ -263,8 +347,8 @@
                 HorizontalAlignment="Right" VerticalAlignment="Top" IsVisible="False"
                 Click="TrackSettingsButtonClicked"
                 ToolTip.Tip="{DynamicResource tracks.tracksettings}">
-          <Path Classes="filled" Width="24" Height="24"
-                Data="m 12.001453,14.34 a 2.35,2.35 0 0 1 -2.34,-2.34 2.35,2.35 0 0 1 2.34,-2.34 2.35,2.35 0 0 1 2.35,2.34 2.35,2.35 0 0 1 -2.35,2.35 m 4.98,-1.7 a 5.2,5.2 0 0 0 0,-1.32 l 1.41,-1.1 c 0.13,-0.1 0.16,-0.27 0.08,-0.42 l -1.34,-2.32 a 0.33,0.33 0 0 0 -0.4,-0.15 l -1.67,0.67 a 4.86,4.86 0 0 0 -1.14,-0.65 l -0.25,-1.78 a 0.34,0.34 0 0 0 -0.33,-0.28 h -2.68 c -0.17,0 -0.3,0.12 -0.33,0.28 l -0.25,1.78 c -0.42,0.16 -0.79,0.4 -1.14,0.65 l -1.66,-0.67 a 0.33,0.33 0 0 0 -0.41,0.15 l -1.34,2.32 a 0.33,0.33 0 0 0 0.08,0.43 l 1.41,1.09 a 5.73,5.73 0 0 0 0,1.32 l -1.41,1.11 a 0.33,0.33 0 0 0 -0.08,0.43 l 1.34,2.32 c 0.08,0.15 0.26,0.2 0.4,0.15 l 1.67,-0.68 c 0.35,0.27 0.71,0.5 1.14,0.66 l 0.25,1.78 c 0.02,0.16 0.16,0.28 0.33,0.28 h 2.68 c 0.17,0 0.3,-0.12 0.33,-0.28 l 0.25,-1.78 c 0.42,-0.17 0.79,-0.4 1.14,-0.66 l 1.66,0.68 c 0.15,0.05 0.33,0 0.41,-0.15 l 1.34,-2.32 a 0.34,0.34 0 0 0 -0.08,-0.43 l -1.41,-1.1 z"/>
+          <Path Classes="filled" Width="14" Height="14"
+                Stretch="Uniform" Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
         </Button>
       </Grid>
       <Grid x:Name="ChipLayoutGrid" Grid.Column="3"
@@ -274,7 +358,7 @@
           <ToolTip.Tip>
             <TextBlock Text="{DynamicResource tracks.mute}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
           </ToolTip.Tip>
-          <Path Classes="filled" Width="24" Height="24"
+          <Path Classes="filled" Width="14" Height="14"
                 Data="M 15.31,17 A 0.51,0.56 0 0 1 14.81,16.44 V 9.2 A 0.07,0.08 0 0 0 14.66,9.17 L 12.39,14.5 a 0.29,0.32 0 0 1 -0.26,0.19 h -0.35 a 0.29,0.32 0 0 1 -0.26,-0.19 L 9.27,9.17 9.12,9.2 V 16.44 A 0.51,0.56 0 0 1 8.62,17 H 8.51 A 0.51,0.56 0 0 1 8,16.44 V 7.56 A 0.51,0.56 0 0 1 8.51,7 h 0.84 a 0.43,0.48 0 0 1 0.39,0.28 l 2.23,5.2 a 0.04,0.05 0 0 0 0.07,0 l 2.16,-5.2 a 0.43,0.48 0 0 1 0.41,-0.28 h 0.88 A 0.51,0.56 0 0 1 16,7.56 V 16.44 A 0.51,0.56 0 0 1 15.5,17 Z"/>
           <ToggleButton.ContextMenu>
             <ContextMenu>
@@ -290,7 +374,7 @@
           <ToolTip.Tip>
             <TextBlock Text="{DynamicResource tracks.solo}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
           </ToolTip.Tip>
-          <Path Classes="filled" Width="24" Height="24"
+          <Path Classes="filled" Width="14" Height="14"
                 Data="m 15.99,14.08 c 0,-0.7 -0.2,-1.23 -0.58,-1.62 C 15.03,12.07 14.44,11.79 13.68,11.6 13.29,11.51 12.84,11.43 12.28,11.33 11.74,11.24 11.31,11.18 11.01,11.12 10.46,11 10.06,10.82 9.84,10.6 9.61,10.36 9.51,10.04 9.51,9.64 c 0,-0.45 0.22,-0.82 0.67,-1.1 0.45,-0.28 1.04,-0.43 1.78,-0.43 0.67,0 1.33,0.1 1.97,0.31 0.64,0.2 1.58,0.49 1.99,0.81 H 16 V 7.71 C 15.53,7.51 14.58,7.33 13.97,7.2 13.37,7.07 12.69,7 11.96,7 10.84,7 9.91,7.26 9.17,7.78 8.44,8.28 8.07,8.95 8.07,9.76 c 0,0.71 0.21,1.27 0.65,1.72 0.45,0.44 1.13,0.75 2.06,0.93 0.45,0.09 0.88,0.16 1.29,0.21 0.41,0.06 0.79,0.13 1.13,0.22 0.47,0.11 0.79,0.28 1.03,0.47 0.23,0.21 0.34,0.52 0.34,0.95 0,0.5 -0.24,0.89 -0.71,1.19 -0.47,0.3 -1.14,0.43 -1.99,0.43 -0.61,0 -1.24,-0.11 -1.94,-0.33 C 9.23,15.32 8.62,15.02 8.09,14.61 H 8 v 1.61 C 8.61,16.48 9.22,16.68 9.82,16.81 10.41,16.93 11.08,17 11.83,17 c 0.7,0 1.29,-0.07 1.78,-0.23 0.5,-0.16 0.94,-0.38 1.3,-0.65 0.33,-0.26 0.6,-0.56 0.79,-0.93 C 15.89,14.82 15.99,14.45 15.99,14.07 Z"/>
           <ToggleButton.ContextMenu>
             <ContextMenu>
@@ -308,11 +392,11 @@
           </ToolTip.Tip>
           <TextBlock Classes="fxLabel" Text="fx" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Button>
-        <Button x:Name="SettingsChip" Grid.Row="3" Grid.Column="0" Classes="trackChip trackSettingsChip" Margin="1,1,3,1" Padding="0"
-                Click="TrackSettingsButtonClicked" IsVisible="False"
+        <Button x:Name="SettingsChip" Grid.Row="3" Grid.Column="0" Classes="trackChip trackSettingsChip" Margin="1" Padding="0"
+                Click="TrackSettingsButtonClicked"
                 ToolTip.Tip="{DynamicResource tracks.tracksettings}">
-          <Path Classes="filled" Width="24" Height="24"
-                Data="m 12.001453,14.34 a 2.35,2.35 0 0 1 -2.34,-2.34 2.35,2.35 0 0 1 2.34,-2.34 2.35,2.35 0 0 1 2.35,2.34 2.35,2.35 0 0 1 -2.35,2.35 m 4.98,-1.7 a 5.2,5.2 0 0 0 0,-1.32 l 1.41,-1.1 c 0.13,-0.1 0.16,-0.27 0.08,-0.42 l -1.34,-2.32 a 0.33,0.33 0 0 0 -0.4,-0.15 l -1.67,0.67 a 4.86,4.86 0 0 0 -1.14,-0.65 l -0.25,-1.78 a 0.34,0.34 0 0 0 -0.33,-0.28 h -2.68 c -0.17,0 -0.3,0.12 -0.33,0.28 l -0.25,1.78 c -0.42,0.16 -0.79,0.4 -1.14,0.65 l -1.66,-0.67 a 0.33,0.33 0 0 0 -0.41,0.15 l -1.34,2.32 a 0.33,0.33 0 0 0 0.08,0.43 l 1.41,1.09 a 5.73,5.73 0 0 0 0,1.32 l -1.41,1.11 a 0.33,0.33 0 0 0 -0.08,0.43 l 1.34,2.32 c 0.08,0.15 0.26,0.2 0.4,0.15 l 1.67,-0.68 c 0.35,0.27 0.71,0.5 1.14,0.66 l 0.25,1.78 c 0.02,0.16 0.16,0.28 0.33,0.28 h 2.68 c 0.17,0 0.3,-0.12 0.33,-0.28 l 0.25,-1.78 c 0.42,-0.17 0.79,-0.4 1.14,-0.66 l 1.66,0.68 c 0.15,0.05 0.33,0 0.41,-0.15 l 1.34,-2.32 a 0.34,0.34 0 0 0 -0.08,-0.43 l -1.41,-1.1 z"/>
+          <Path Classes="filled" Width="14" Height="14"
+                Stretch="Uniform" Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
         </Button>
       </Grid>
       <Grid.ContextMenu>

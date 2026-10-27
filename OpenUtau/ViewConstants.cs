@@ -12,8 +12,8 @@ namespace OpenUtau.App {
         public const double TrackHeightDefault = 84;
         public const double TrackHeightDelta = 21;
 
-        public const double TrackHeaderBaseWidth = 300;
-        public const double TrackHeaderChipStep = 26;
+        public const double TrackHeaderBaseWidth = 340;
+        public const double TrackHeaderChipStep = 20;
         public const double TrackSettingsInlineTop = 29;
         public const double TrackMetaInsetForSettings = 28;
 

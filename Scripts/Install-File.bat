@@ -32,7 +32,36 @@ echo.
 :: ------------------------------------------------------------------------
 :: STEP 1: Smart .NET Runtime & SDK Detection (8.0 - 12.0+)
 :: ------------------------------------------------------------------------
-echo [1/4] ตรวจสอบสภาพแวดล้อมระบบ (.NET Runtime / SDK Environment)...
+echo [1/4] Checking system environment (.NET Runtime / SDK Environment)...
+
+set "DOTNET_ROLL_FORWARD=LatestMajor"
+set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
+
+:: Check 0: Bundled Self-Contained 2-in-1 Runtime
+if exist "%ROOT_DIR%\Publish\coreclr.dll" (
+    echo [OK] Bundled 2-in-1 .NET Runtime detected in Publish folder.
+    echo [INFO] Self-contained package runs out-of-the-box with zero setup required.
+    goto :dotnet_ready
+)
+
+:: Check 1: Previous prerequisite marker (never prompt twice)
+if exist "%PREREQ_MARKER%" (
+    echo [OK] Previous prerequisite installation marker verified.
+    echo [INFO] Skipping redundant prompts and proceeding directly to build.
+    goto :dotnet_ready
+)
+
+:: Check 2: Try resolving dotnet in standard installation directories if not in PATH
+where dotnet >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    if exist "%ProgramFiles%\dotnet\dotnet.exe" (
+        set "PATH=%ProgramFiles%\dotnet;%PATH%"
+    ) else if exist "%ProgramFiles(x86)%\dotnet\dotnet.exe" (
+        set "PATH=%ProgramFiles(x86)%\dotnet;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Microsoft\dotnet\dotnet.exe" (
+        set "PATH=%LOCALAPPDATA%\Microsoft\dotnet;%PATH%"
+    )
+)
 
 set "DOTNET_FOUND=0"
 set "DOTNET_VER="
@@ -51,12 +80,50 @@ if %ERRORLEVEL% equ 0 (
 
 if %DOTNET_FOUND% equ 1 (
     if %DOTNET_MAJOR% geq 8 (
-        echo [OK] ตรวจพบ .NET SDK / Runtime เวอร์ชัน !DOTNET_VER! (Major: !DOTNET_MAJOR!)
-        echo [OK] เข้ากันได้กับระบบ (รองรับตั้งแต่เวอร์ชัน 8.0 ถึง 12.0+ ขึ้นไป)
-        echo [INFO] ข้ามขั้นตอนการสอบถามติดตั้ง .NET โดยอัตโนมัติ (ตรวจพบตัวโปรแกรมในเครื่องแล้ว)
+        echo [OK] Detected .NET SDK / Runtime version !DOTNET_VER! (Major: !DOTNET_MAJOR!)
+        echo [OK] Fully compatible with .NET 8.0, 9.0, 10.0, 11.0, 12.0+ (LatestMajor roll-forward enabled).
+        echo [INFO] Skipping .NET installation prompt (compatible runtime active).
         if not exist "%STATE_DIR%" mkdir "%STATE_DIR%" 2>nul
         echo installed_version=!DOTNET_VER! > "%PREREQ_MARKER%"
         goto :dotnet_ready
+    ) else (
+        echo [WARNING] Detected .NET version !DOTNET_VER!, which is below required version 8.0.
+    )
+) else (
+    echo [NOTICE] System-wide "dotnet" command not found in default paths.
+)
+
+:: Check 3: Check dotnet --list-runtimes for Microsoft.WindowsDesktop.App 8+
+dotnet --list-runtimes 2>nul | findstr /i "Microsoft.WindowsDesktop.App 8 Microsoft.WindowsDesktop.App 9 Microsoft.WindowsDesktop.App 10 Microsoft.NETCore.App 8 Microsoft.NETCore.App 9 Microsoft.NETCore.App 10" >nul 2>&1
+if %ERRORLEVEL% equ 0 (
+    echo [OK] Detected compatible Desktop or Core runtime (8.x - 10.x+).
+    if not exist "%STATE_DIR%" mkdir "%STATE_DIR%" 2>nul
+    echo runtime_found=true > "%PREREQ_MARKER%"
+    goto :dotnet_ready
+)
+
+:: Prompt ONLY on clean/first install when .NET >= 8 is truly missing
+echo.
+echo ========================================================================
+echo [IMPORTANT] .NET SDK or Runtime version 8.0 or higher (8.0 - 12.0+) is required.
+echo The .NET runtime installs at the OS level and persists across OpenUtau updates.
+echo Subsequent runs will automatically bypass this step once .NET is installed.
+echo ========================================================================
+echo [1] Open Official Microsoft .NET SDK Download Page
+echo [2] Automatically Download and Install via Winget (if available)
+echo [3] Skip Directly to Compilation Step
+echo.
+set /p "NET_CHOICE=Select an option (1-3) or press Enter to skip: "
+if "!NET_CHOICE!"=="1" (
+    start https://dotnet.microsoft.com/download/dotnet/8.0
+    echo Please complete the .NET installation, then press any key to continue...
+    pause >nul
+) else if "!NET_CHOICE!"=="2" (
+    echo Installing .NET SDK via Winget...
+    winget install Microsoft.DotNet.SDK.8 --accept-source-agreements --accept-package-agreements
+)
+
+:dotnet_ready
     ) else (
         echo [WARNING] ตรวจพบ .NET เวอร์ชัน !DOTNET_VER! ซึ่งต่ำกว่าเวอร์ชัน 8.0 ขั้นต่ำ
     )

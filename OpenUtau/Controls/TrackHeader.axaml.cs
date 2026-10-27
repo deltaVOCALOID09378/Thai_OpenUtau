@@ -117,57 +117,60 @@ namespace OpenUtau.App.Controls {
 
         internal void RefreshChipLayout() {
             if (ChipLayoutGrid is null || MuteChip is null || SoloChip is null || FxChip is null ||
-                SettingsChip is null || SettingsInlineChip is null || SingerPhonemizerPanel is null) {
+                SettingsChip is null) {
                 return;
             }
 
-            const int muteRow = 0;
-            const int soloRow = 1;
-            const int fxRow = 2;
-            const int settingsRow = 3;
-
-            bool settingsVisible = ViewModel?.IsTrackSettingsVisible == true;
-            double chipStep = ViewConstants.TrackHeaderChipStep;
-            double availableHeight = Math.Max(chipStep, TrackHeight - 2);
-            int maxRows = Math.Max(1, (int)(availableHeight / chipStep));
-            int requiredRows = settingsVisible ? 4 : 3;
-            bool settingsBesideSolo = settingsVisible && maxRows < requiredRows;
-
-            SettingsInlineChip.IsVisible = settingsBesideSolo;
-            SettingsChip.IsVisible = settingsVisible && !settingsBesideSolo;
-            SingerPhonemizerPanel.Margin = settingsBesideSolo
-                ? new Thickness(0, 0, ViewConstants.TrackMetaInsetForSettings, 0)
-                : new Thickness(0);
-            SettingsInlineChip.Margin = new Thickness(0, ViewConstants.TrackSettingsInlineTop, 0, 0);
-
-            Grid.SetRow(MuteChip, muteRow);
-            Grid.SetColumn(MuteChip, 0);
-            Grid.SetRow(SoloChip, soloRow);
-            Grid.SetColumn(SoloChip, 0);
-
-            if (!settingsBesideSolo && settingsVisible) {
-                Grid.SetRow(SettingsChip, settingsRow);
-                Grid.SetColumn(SettingsChip, 0);
+            if (SettingsInlineChip != null) {
+                SettingsInlineChip.IsVisible = false;
             }
+            if (SingerPhonemizerPanel != null) {
+                SingerPhonemizerPanel.Margin = new Thickness(0);
+            }
+
+            SettingsChip.IsVisible = true;
+
+            double chipStep = ViewConstants.TrackHeaderChipStep;
+            double availableHeight = Math.Max(chipStep, TrackHeight - 4);
+            int maxRows = Math.Max(1, (int)(availableHeight / chipStep));
 
             int overflowColumns = 0;
-            if (maxRows < 2) {
-                int col = 1;
+            if (maxRows >= 4) {
+                // 4 rows in 1 column (default TrackHeight 84 >= 80)
+                Grid.SetRow(MuteChip, 0);
+                Grid.SetColumn(MuteChip, 0);
+                Grid.SetRow(SoloChip, 1);
+                Grid.SetColumn(SoloChip, 0);
+                Grid.SetRow(FxChip, 2);
+                Grid.SetColumn(FxChip, 0);
+                Grid.SetRow(SettingsChip, 3);
+                Grid.SetColumn(SettingsChip, 0);
+                overflowColumns = 0;
+            } else if (maxRows >= 2) {
+                // 2 rows x 2 columns (height 40px - 79px)
+                Grid.SetRow(MuteChip, 0);
+                Grid.SetColumn(MuteChip, 0);
                 Grid.SetRow(SoloChip, 0);
-                Grid.SetColumn(SoloChip, col++);
-                Grid.SetRow(FxChip, 0);
-                Grid.SetColumn(FxChip, col);
-                overflowColumns = col;
-            } else if (maxRows < 3) {
-                Grid.SetRow(FxChip, soloRow);
-                Grid.SetColumn(FxChip, 1);
+                Grid.SetColumn(SoloChip, 1);
+                Grid.SetRow(FxChip, 1);
+                Grid.SetColumn(FxChip, 0);
+                Grid.SetRow(SettingsChip, 1);
+                Grid.SetColumn(SettingsChip, 1);
                 overflowColumns = 1;
             } else {
-                Grid.SetRow(FxChip, fxRow);
-                Grid.SetColumn(FxChip, 0);
+                // 1 row x 4 columns (height < 40px)
+                Grid.SetRow(MuteChip, 0);
+                Grid.SetColumn(MuteChip, 0);
+                Grid.SetRow(SoloChip, 0);
+                Grid.SetColumn(SoloChip, 1);
+                Grid.SetRow(FxChip, 0);
+                Grid.SetColumn(FxChip, 2);
+                Grid.SetRow(SettingsChip, 0);
+                Grid.SetColumn(SettingsChip, 3);
+                overflowColumns = 3;
             }
 
-            double extraWidth = overflowColumns * chipStep;
+            double extraWidth = overflowColumns * (chipStep + 4);
             Width = ViewConstants.TrackHeaderBaseWidth + extraWidth;
             canvas?.UpdateTrackHeaderWidths();
         }
@@ -290,7 +293,7 @@ namespace OpenUtau.App.Controls {
         }
 
         void TrackSettingsButtonClicked(object sender, RoutedEventArgs args) {
-            if (track?.Singer is not { Found: true, SingerType: USingerType.Classic }) {
+            if (track == null) {
                 return;
             }
             if (VisualRoot is Window window) {

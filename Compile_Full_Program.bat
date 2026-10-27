@@ -1,13 +1,14 @@
 @echo off
 rem ======================================================================
-rem Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+rem Date         : 27/10/2026 (B.E. 2569 / A.D. 2026)
 rem File Name    : Compile_Full_Program.bat
-rem Version      : 3.3.0 (Full Standalone Release Builder)
+rem Version      : 3.5.0 (Full Standalone Release Builder)
 rem Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
 rem File Location: Root Directory of the Project (E:\Program Developing\Thai_OpenUtau\)
 rem Description  : Professional full-stack compilation and publishing pipeline for Thai OpenUtau.
 rem                Builds OpenUtau in Release mode and produces a fully consolidated,
 rem                ready-to-run application in the "Publish" folder.
+rem                v3.5.0: env switches SKIP_BUMP=1 and NO_PROMPT=1 added for Release_Cycle.bat.
 rem ======================================================================
 
 setlocal enabledelayedexpansion
@@ -74,13 +75,15 @@ echo [OK] Toolchain confirmed ready.
 echo.
 
 rem Step 2.5: Automated Version Bumping (DELTA SYNTH Formula)
-if exist "%PROJECT_ROOT%\BumpVersion.ps1" (
+if /i not "%SKIP_BUMP%"=="1" if exist "%PROJECT_ROOT%\BumpVersion.ps1" (
     echo [*] Executing DELTA SYNTH automated version bumper...
     powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT_ROOT%\BumpVersion.ps1"
     echo.
 )
 
 rem Step 3: Full Application Compilation and Publishing
+set "DOTNET_ROLL_FORWARD=LatestMajor"
+set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
 set "OUTPUT_DIR=%PROJECT_ROOT%\Publish"
 echo [3/4] Compiling and publishing full program to Release mode...
 echo [*] Output Destination: %OUTPUT_DIR%
@@ -89,11 +92,11 @@ echo.
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%" >nul 2>&1
 
 rem Execute publish with runtime identifier for Windows x64
-dotnet publish "%TARGET_CSPROJ%" -c Release -r win-x64 --self-contained false -o "%OUTPUT_DIR%"
+dotnet publish "%TARGET_CSPROJ%" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:RollForward=LatestMajor -o "%OUTPUT_DIR%"
 
 if !errorlevel! neq 0 (
     echo [*] Retrying publish with default target platform...
-    dotnet publish "%TARGET_CSPROJ%" -c Release -o "%OUTPUT_DIR%"
+    dotnet publish "%TARGET_CSPROJ%" -c Release -r win-x64 --self-contained true -p:RollForward=LatestMajor -o "%OUTPUT_DIR%"
 )
 
 if !errorlevel! neq 0 (
@@ -202,7 +205,7 @@ echo  The program is ready to run with all native libraries and plugins.
 echo ======================================================================
 echo.
 
-set /p RUN_CHOICE="Do you want to launch Thai OpenUtau now? (Y/N): "
+if "%NO_PROMPT%"=="1" (exit /b 0) else set /p RUN_CHOICE="Do you want to launch Thai OpenUtau now? (Y/N): "
 if /i "%RUN_CHOICE%"=="Y" (
     echo Launching Thai OpenUtau...
     cd /d "%OUTPUT_DIR%"

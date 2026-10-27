@@ -36,6 +36,35 @@ echo.
 :: ------------------------------------------------------------------------
 echo [1/4] Checking system environment (.NET Runtime / SDK Environment)...
 
+set "DOTNET_ROLL_FORWARD=LatestMajor"
+set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
+
+:: Check 0: Bundled Self-Contained 2-in-1 Runtime
+if exist "%ROOT_DIR%\Publish\coreclr.dll" (
+    echo [OK] Bundled 2-in-1 .NET Runtime detected in Publish folder.
+    echo [INFO] Self-contained package runs out-of-the-box with zero setup required.
+    goto :dotnet_ready
+)
+
+:: Check 1: Previous prerequisite marker (never prompt twice)
+if exist "%PREREQ_MARKER%" (
+    echo [OK] Previous prerequisite installation marker verified.
+    echo [INFO] Skipping redundant prompts and proceeding directly to build.
+    goto :dotnet_ready
+)
+
+:: Check 2: Try resolving dotnet in standard installation directories if not in PATH
+where dotnet >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    if exist "%ProgramFiles%\dotnet\dotnet.exe" (
+        set "PATH=%ProgramFiles%\dotnet;%PATH%"
+    ) else if exist "%ProgramFiles(x86)%\dotnet\dotnet.exe" (
+        set "PATH=%ProgramFiles(x86)%\dotnet;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Microsoft\dotnet\dotnet.exe" (
+        set "PATH=%LOCALAPPDATA%\Microsoft\dotnet;%PATH%"
+    )
+)
+
 set "DOTNET_FOUND=0"
 set "DOTNET_VER="
 set "DOTNET_MAJOR=0"
@@ -54,21 +83,25 @@ if %ERRORLEVEL% equ 0 (
 if %DOTNET_FOUND% equ 1 (
     if %DOTNET_MAJOR% geq 8 (
         echo [OK] Detected .NET SDK / Runtime version !DOTNET_VER! (Major: !DOTNET_MAJOR!)
-        echo [OK] Compatible with the system (supports versions 8.0 through 12.0+ and above).
-        echo [INFO] Automatically skipping .NET installation prompt (runtime already installed).
+        echo [OK] Fully compatible with .NET 8.0, 9.0, 10.0, 11.0, 12.0+ (LatestMajor roll-forward enabled).
+        echo [INFO] Skipping .NET installation prompt (compatible runtime active).
         if not exist "%STATE_DIR%" mkdir "%STATE_DIR%" 2>nul
         echo installed_version=!DOTNET_VER! > "%PREREQ_MARKER%"
         goto :dotnet_ready
     ) else (
-        echo [WARNING] Detected .NET version !DOTNET_VER!, which is below the minimum required version 8.0.
+        echo [WARNING] Detected .NET version !DOTNET_VER!, which is below required version 8.0.
     )
 ) else (
-    echo [NOTICE] The "dotnet" command was not found on this system.
+    echo [NOTICE] System-wide "dotnet" command not found in default paths.
 )
 
-:: If marker was already created previously, verify if dotnet path is resolvable
-if exist "%PREREQ_MARKER%" (
-    echo [INFO] Previous prerequisite installation marker found. Skipping redundant alerts...
+:: Check 3: Check dotnet --list-runtimes for Microsoft.WindowsDesktop.App 8+
+dotnet --list-runtimes 2>nul | findstr /i "Microsoft.WindowsDesktop.App 8 Microsoft.WindowsDesktop.App 9 Microsoft.WindowsDesktop.App 10 Microsoft.NETCore.App 8 Microsoft.NETCore.App 9 Microsoft.NETCore.App 10" >nul 2>&1
+if %ERRORLEVEL% equ 0 (
+    echo [OK] Detected compatible Desktop or Core runtime (8.x - 10.x+).
+    if not exist "%STATE_DIR%" mkdir "%STATE_DIR%" 2>nul
+    echo runtime_found=true > "%PREREQ_MARKER%"
+    goto :dotnet_ready
 )
 
 :: Prompt ONLY on clean/first install when .NET >= 8 is truly missing
