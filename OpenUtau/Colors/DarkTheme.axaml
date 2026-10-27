@@ -3,70 +3,76 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <system:Boolean x:Key="IsDarkMode">true</system:Boolean>
   
-  <Color x:Key="BackgroundColor">#1A1A1A</Color>
-  <Color x:Key="BackgroundColorPointerOver">#2B2B2B</Color>
-  <Color x:Key="TransportToolbarOffHoverColor">#2A2A2A</Color>
-  <Color x:Key="BackgroundColorPressed">#000000</Color>
-  <Color x:Key="BackgroundColorDisabled">#1A1A1A</Color>
+  <!-- High-Contrast Obsidian Background Suite -->
+  <Color x:Key="BackgroundColor">#121212</Color>
+  <Color x:Key="BackgroundColorPointerOver">#222222</Color>
+  <Color x:Key="TransportToolbarOffHoverColor">#282828</Color>
+  <Color x:Key="BackgroundColorPressed">#080808</Color>
+  <Color x:Key="BackgroundColorDisabled">#121212</Color>
 
-  <Color x:Key="ForegroundColor">#F0F0F0</Color>
+  <!-- Crisp Brilliant White Typography -->
+  <Color x:Key="ForegroundColor">#FFFFFF</Color>
   <Color x:Key="ForegroundColorPointerOver">#FFFFFF</Color>
   <Color x:Key="ForegroundColorPressed">#FFFFFF</Color>
-  <Color x:Key="ForegroundColorDisabled">#A6A6A6</Color>
-  <Color x:Key="TextControlBorderColorDisabled">#4D4D4D</Color>
+  <Color x:Key="ForegroundColorDisabled">#888888</Color>
+  <Color x:Key="TextControlBorderColorDisabled">#3E3E3E</Color>
 
-  <Color x:Key="BorderColor">#E0E0E0</Color>
-  <Color x:Key="BorderColorPointerOver">#FCFCFC</Color>
+  <!-- Sharp Defined Borders -->
+  <Color x:Key="BorderColor">#383838</Color>
+  <Color x:Key="BorderColorPointerOver">#505050</Color>
 
-  <Color x:Key="SystemAccentColor">#CC2200</Color>
+  <!-- DELTA SYNTH Saturated Corporate Red Palette -->
+  <Color x:Key="SystemAccentColor">#D92200</Color>
   <!-- PointerOver -->
-  <Color x:Key="SystemAccentColorLight1">#FF4422</Color>
+  <Color x:Key="SystemAccentColorLight1">#FF3B14</Color>
   <!-- Pressed -->
-  <Color x:Key="SystemAccentColorDark1">#991100</Color>
+  <Color x:Key="SystemAccentColorDark1">#A01000</Color>
 
-  <Color x:Key="NeutralAccentColor">#F0F0F0</Color>
-  <Color x:Key="NeutralAccentColorPointerOver">#FF4422</Color>
-  <Color x:Key="AccentColor1">#CC2200</Color>
-  <Color x:Key="AccentColor1Note">#991100</Color>
-  <Color x:Key="AccentColor2">#0055CC</Color>
-  <Color x:Key="AccentColor3">#FF66B2</Color>
+  <Color x:Key="NeutralAccentColor">#FFFFFF</Color>
+  <Color x:Key="NeutralAccentColorPointerOver">#FF3B14</Color>
+  <Color x:Key="AccentColor1">#D92200</Color>
+  <Color x:Key="AccentColor1Note">#A01000</Color>
+  <Color x:Key="AccentColor2">#0066FF</Color>
+  <Color x:Key="AccentColor3">#FF3399</Color>
 
-  <Color x:Key="NoteBorderColor">#FF4422</Color>
-  <Color x:Key="NoteBorderColorPressed">#CC2200</Color>
+  <!-- Ultra-Crisp Sharp Notes -->
+  <Color x:Key="NoteBorderColor">#FF3B14</Color>
+  <Color x:Key="NoteBorderColorPressed">#D92200</Color>
 
-  <Color x:Key="TickLineColor">#060606</Color>
-  <Color x:Key="BarNumberColor">#E0E0E0</Color>
-  <Color x:Key="FinalPitchColor">#CAFFFFFF</Color>
-  <Color x:Key="TrackBackgroundAltColor">#1A1A1A</Color>
+  <!-- High-Contrast Grid & Timeline -->
+  <Color x:Key="TickLineColor">#1C1C1C</Color>
+  <Color x:Key="BarNumberColor">#FFFFFF</Color>
+  <Color x:Key="FinalPitchColor">#FFFFFFFF</Color>
+  <Color x:Key="TrackBackgroundAltColor">#161616</Color>
   
-  <Color x:Key="WarningColor">#433519</Color>
+  <Color x:Key="WarningColor">#5C4500</Color>
 
-  <Color x:Key="ToolbarCheckedHoverColor">#FF4422</Color>
+  <Color x:Key="ToolbarCheckedHoverColor">#FF3B14</Color>
   <Color x:Key="ToolTipForegroundColor">#FFFFFF</Color>
-  <Color x:Key="WorkspaceCanvasColor">#0A0A0A</Color>
-  <Color x:Key="WorkspaceCardColor">#1A1A1A</Color>
-  <Color x:Key="WorkspaceElevatedSurfaceColor">#2A2A2A</Color>
-  <Color x:Key="MutedIconColor">#808080</Color>
+  <Color x:Key="WorkspaceCanvasColor">#060606</Color>
+  <Color x:Key="WorkspaceCardColor">#141414</Color>
+  <Color x:Key="WorkspaceElevatedSurfaceColor">#202020</Color>
+  <Color x:Key="MutedIconColor">#9E9E9E</Color>
   <Color x:Key="PianoRollTopBarToolIconOffColor">#FFFFFF</Color>
-  <Color x:Key="PianoRollWaveformPeakColor">#3BFFFFFF</Color>
-  <Color x:Key="PianoRollToolbarStripColor">#111111</Color>
-  <Color x:Key="PianoRollToolbarButtonHoverColor">#FF4422</Color>
-  <Color x:Key="PianoRollTimelineStripColor">#0F0F0F</Color>
-  <Color x:Key="AppTopBarTransportStripColor">#151515</Color>
-  <Color x:Key="AppTopBarTransportHoverColor">#CC2200</Color>
-  <Color x:Key="AppTopBarValueStripColor">#111111</Color>
+  <Color x:Key="PianoRollWaveformPeakColor">#66FFFFFF</Color>
+  <Color x:Key="PianoRollToolbarStripColor">#0C0C0C</Color>
+  <Color x:Key="PianoRollToolbarButtonHoverColor">#FF3B14</Color>
+  <Color x:Key="PianoRollTimelineStripColor">#0A0A0A</Color>
+  <Color x:Key="AppTopBarTransportStripColor">#101010</Color>
+  <Color x:Key="AppTopBarTransportHoverColor">#D92200</Color>
+  <Color x:Key="AppTopBarValueStripColor">#0C0C0C</Color>
   <Color x:Key="AppTopBarValueDividerColor">#222222</Color>
 
-  <!--Keyboard Background-->
-  <Color x:Key="WhiteKeyColorLeft">#C0C0C0</Color>
-  <Color x:Key="WhiteKeyColorRight">#E0E0E0</Color>
-  <Color x:Key="WhiteKeyNameColor">#1A1A1A</Color>
+  <!-- High-Definition Keyboard Palette -->
+  <Color x:Key="WhiteKeyColorLeft">#D5D5D5</Color>
+  <Color x:Key="WhiteKeyColorRight">#F8F8F8</Color>
+  <Color x:Key="WhiteKeyNameColor">#0A0A0A</Color>
 
-  <Color x:Key="CenterKeyColorLeft">#A9A6CD</Color>
-  <Color x:Key="CenterKeyColorRight">#D3CFFF</Color>
-  <Color x:Key="CenterKeyNameColor">#CC2200</Color>
+  <Color x:Key="CenterKeyColorLeft">#A01000</Color>
+  <Color x:Key="CenterKeyColorRight">#D92200</Color>
+  <Color x:Key="CenterKeyNameColor">#FFFFFF</Color>
 
   <Color x:Key="BlackKeyColorLeft">Transparent</Color>
   <Color x:Key="BlackKeyColorRight">Transparent</Color>
-  <Color x:Key="BlackKeyNameColor">#F0F0F0</Color>
+  <Color x:Key="BlackKeyNameColor">#FFFFFF</Color>
 </ResourceDictionary>

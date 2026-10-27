@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using DynamicData;
@@ -10,8 +10,14 @@ namespace OpenUtau.App.ViewModels {
         public ObservableCollection<ColorMapping> ColorMappings { get; set; } = new ObservableCollection<ColorMapping>();
 
         public VoiceColorMappingViewModel(string[] oldColors, string[] newColors, string trackName) {
+            oldColors = (oldColors != null && oldColors.Length > 0) ? oldColors : new string[] { "" };
+            newColors = (newColors != null && newColors.Length > 0) ? newColors : new string[] { "" };
             var NewColors = new ObservableCollection<string>(newColors);
-            NewColors[0] = "(Default)";
+            if (NewColors.Count == 0) {
+                NewColors.Add("(Default)");
+            } else {
+                NewColors[0] = "(Default)";
+            }
             TrackName = trackName;
 
             for (int i = 0; i < oldColors.Length; i++) {
@@ -34,7 +40,7 @@ namespace OpenUtau.App.ViewModels {
         public int SelectedIndex { get; set; }
         public ObservableCollection<string> NewColors { get; set; }
 
-        public ColorMapping(string name,int oldIndex, int selectedIndex, ObservableCollection<string> newColors) {
+        public ColorMapping(string name, int oldIndex, int selectedIndex, ObservableCollection<string> newColors) {
             Name = name;
             OldIndex = oldIndex;
             SelectedIndex = selectedIndex;

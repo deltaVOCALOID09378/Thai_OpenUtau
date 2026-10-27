@@ -2103,6 +2103,9 @@ namespace OpenUtau.App.Views {
             }
         }
         void SetVoiceColorRemapping(UTrack track, IEnumerable<UVoicePart> parts, VoiceColorMappingViewModel vm) {
+            if (vm == null || vm.ColorMappings == null || !vm.ColorMappings.Any()) {
+                return;
+            }
             foreach (var part in parts) {
                 foreach (var phoneme in part.phonemes) {
                     var tuple = phoneme.GetExpression(DocManager.Inst.Project, track, Ustx.CLR);

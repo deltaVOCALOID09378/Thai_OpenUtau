@@ -231,7 +231,15 @@ namespace OpenUtau.Core.DiffSinger {
                     vocoder = new DsVocoder(Path.Join(Location, "dsvocoder"));
                     return vocoder;
                 }
-                vocoder = new DsVocoder(Path.Combine(PathManager.Inst.DependencyPath, dsConfig.vocoder));
+                string vocoderPath = Path.Combine(PathManager.Inst.DependencyPath, dsConfig.vocoder);
+                if (!File.Exists(Path.Combine(vocoderPath, "vocoder.yaml"))) {
+                    const string defaultPkg = "pc-nsf-hifigan";
+                    string installedPath = PackageManager.Inst.GetInstalledPath(defaultPkg) ?? "";
+                    if (!string.IsNullOrEmpty(installedPath) && File.Exists(Path.Combine(installedPath, "vocoder.yaml"))) {
+                        vocoderPath = installedPath;
+                    }
+                }
+                vocoder = new DsVocoder(vocoderPath);
             }
             return vocoder;
         }

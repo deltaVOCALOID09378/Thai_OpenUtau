@@ -12,9 +12,9 @@
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <Version>35.1.7</Version>
-    <AssemblyVersion>35.1.7.0</AssemblyVersion>
-    <FileVersion>35.1.7.0</FileVersion>
+    <Version>36.0.10</Version>
+    <AssemblyVersion>36.0.10.0</AssemblyVersion>
+    <FileVersion>36.0.10.0</FileVersion>
     <ApplicationIcon>Assets\Thai OpenUtau Logo.ico</ApplicationIcon>
     <PublishReadyToRun>true</PublishReadyToRun>
     <DebugType>embedded</DebugType>
@@ -24,8 +24,8 @@
     <CFBundleName>Thai OpenUtau</CFBundleName>
     <CFBundleDisplayName>Thai OpenUtau</CFBundleDisplayName>
     <CFBundleIdentifier>com.deltasynth.thaiopenutau</CFBundleIdentifier>
-    <CFBundleVersion>35.1</CFBundleVersion>
-    <CFBundleShortVersionString>35.1</CFBundleShortVersionString>
+    <CFBundleVersion>36.0</CFBundleVersion>
+    <CFBundleShortVersionString>36.0</CFBundleShortVersionString>
     <CFBundlePackageType>APPL</CFBundlePackageType>
     <CFBundleSignature>????</CFBundleSignature>
     <CFBundleExecutable>OpenUtau</CFBundleExecutable>
