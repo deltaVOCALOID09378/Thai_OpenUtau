@@ -284,7 +284,10 @@ namespace OpenUtau.App.Controls {
                 }
             }
 
-            var textLayout = TextLayoutCache.Get(Text, Brushes.White, 12);
+            // หากแถบพาร์ทเป็นสีขาวหรือสีสว่าง ให้ใช้ตัวอักษรสีดำเสมอ ในทุกกรณี
+            bool isLightPart = (0.299 * bodyRgb.R + 0.587 * bodyRgb.G + 0.114 * bodyRgb.B) > 150 || (bodyRgb.R > 200 && bodyRgb.G > 200 && bodyRgb.B > 200);
+            IBrush partTextBrush = isLightPart ? Brushes.Black : Brushes.White;
+            var textLayout = TextLayoutCache.Get(Text, partTextBrush, 12);
             double labelX = outerRect.X + Math.Max(6, visibleLeft + 6);
             double labelY = outerRect.Y + (Math.Min(18, outerRect.Height) - textLayout.Height) * 0.5;
             using (var clip = context.PushClip(new Rect(visibleLeft, 0, Math.Max(0, visibleRight - visibleLeft), outerRect.Height))) {
@@ -306,10 +309,11 @@ namespace OpenUtau.App.Controls {
                     maxTone += additional;
                 }
                 using var pushedState = context.PushTransform(Matrix.CreateScale(1, trackHeight / (maxTone - minTone)));
+                var activeMiniNotePen = isLightPart ? new Pen(Brushes.Black, 3.0) : notePen;
                 foreach (var note in voicePart.notes) {
                     var start = new Point((int)(note.position * tickWidth), maxTone - note.tone);
                     var end = new Point((int)(note.End * tickWidth), maxTone - note.tone);
-                    context.DrawLine(notePen, start, end);
+                    context.DrawLine(activeMiniNotePen, start, end);
                 }
             } else if (part is UWavePart wavePart) {
                 // Waveform

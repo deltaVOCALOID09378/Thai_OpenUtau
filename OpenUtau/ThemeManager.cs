@@ -1,3 +1,13 @@
+// ============================================================================
+// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : ThemeManager.cs
+// Version      : 1.4
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/ThemeManager.cs
+// Description  : Global Theme & Color Manager with Expanded Custom Track Colors
+//                and highly optimized C# 12 Collection initialization.
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -78,7 +88,6 @@ namespace OpenUtau.App {
         public static IBrush TrackHeaderBorderBrush = Brushes.Gray;
         public static IBrush MutedIconBrush = Brushes.Gray;
 
-        /// <summary>Theme values for CenterKey/BlackKey colors, restored when UseTrackColor is off.</summary>
         private static Color? s_defaultCenterKeyColorLeft;
         private static string lastPianorollTrackColor = "Blue";
         private static Color? s_defaultCenterKeyColorRight;
@@ -87,26 +96,36 @@ namespace OpenUtau.App {
         private static Color? s_defaultBlackKeyColorRight;
         private static IPen? s_defaultFinalPitchPen;
 
-        static readonly TrackColor[] BuiltInTrackColors = {
-                new TrackColor("Flamingo", "#E8437A", "#C2185B", "#F078A5", "#FCE4EC", "#70E8437A", "#AD1457", "#E8437A", "#F48FB1", "#1AE8437A"),
-                new TrackColor("Cherry", "#E5252B", "#B71C1C", "#EF5350", "#FFEBEE", "#70E5252B", "#B71C1C", "#E5252B", "#E57373", "#1AE5252B"),
-                new TrackColor("Peach", "#FF5722", "#D84315", "#FF8A65", "#FBE9E7", "#70FF5722", "#BF360C", "#FF7043", "#FFAB91", "#1AFF5722"),
-                new TrackColor("Banana", "#FFB300", "#FF8F00", "#FFCA28", "#FFF8E1", "#70FFB300", "#FF6F00", "#FFC107", "#FFE082", "#1AFFB300"),
-                new TrackColor("Olive", "#C0CA33", "#9E9D24", "#D4E157", "#F9FBE7", "#70C0CA33", "#827717", "#CDDC39", "#E6EE9C", "#1AC0CA33"),
-                new TrackColor("Mint", "#00C853", "#009624", "#69F0AE", "#E8F5E9", "#7000C853", "#007E33", "#00E676", "#B9F6CA", "#1A00C853"),
-                new TrackColor("Sky", "#00B0FF", "#0091EA", "#80D8FF", "#E1F5FE", "#7000B0FF", "#00838F", "#00E5FF", "#B388FF", "#1A00B0FF"),
-                new TrackColor("Blue", "#3D5AFE", "#2979FF", "#8C9EFF", "#E8EAF6", "#703D5AFE", "#1A237E", "#3D5AFE", "#C5CAE9", "#1A3D5AFE"),
-                new TrackColor("Purple", "#AA00FF", "#7200EA", "#E040FB", "#F3E5F5", "#70AA00FF", "#6A1B9A", "#D500F9", "#EA80FC", "#1AAA00FF"),
-                new TrackColor("Barbie", "#FF1493", "#C51162", "#FF69B4", "#FCE4EC", "#70FF1493", "#880E4F", "#FF4081", "#F8BBD0", "#1AFF1493"),
-                new TrackColor("Wine", "#880E4F", "#560027", "#BC477B", "#F8BBD0", "#70880E4F", "#4A148C", "#AD1457", "#E1BEE7", "#1A880E4F"),
-                new TrackColor("Orange", "#FF6D00", "#E65100", "#FF9E40", "#FFF3E0", "#70FF6D00", "#BF360C", "#FF7D1A", "#FFCC80", "#1AFF6D00"),
-                new TrackColor("Gold", "#FFA000", "#FF6F00", "#FFD54F", "#FFFDE7", "#70FFA000", "#E65100", "#FFB300", "#FFE082", "#1AFFA000"),
-                new TrackColor("BRAT", "#AEEA00", "#64DD17", "#CCFF90", "#F1F8E9", "#70AEEA00", "#558B2F", "#B2FF59", "#DCEDC8", "#1AAEEA00"),
-                new TrackColor("Forest", "#1B5E20", "#0D3810", "#4CAF50", "#E8F5E9", "#701B5E20", "#004D40", "#2E7D32", "#A5D6A7", "#1A1B5E20"),
-                new TrackColor("Teal", "#00BFA5", "#00897B", "#64FFDA", "#E0F2F1", "#7000BFA5", "#004D40", "#1DE9B6", "#A7FFEB", "#1A00BFA5"),
-                new TrackColor("Violet", "#6200EA", "#3700B3", "#B388FF", "#EDE7F6", "#706200EA", "#4A148C", "#7C4DFF", "#D1C4E9", "#1A6200EA"),
-                new TrackColor("Moon", "#424242", "#212121", "#9E9E9E", "#EEEEEE", "#70424242", "#303030", "#616161", "#E0E0E0", "#45454540"),
-            };
+        // [DELTA SYNTH] Optimized Array initialization and vastly expanded color palettes
+        static readonly TrackColor[] BuiltInTrackColors = [
+            new TrackColor("Flamingo", "#E8437A", "#C2185B", "#F078A5", "#FCE4EC", "#70E8437A", "#AD1457", "#E8437A", "#F48FB1", "#1AE8437A"),
+            new TrackColor("Cherry", "#E5252B", "#B71C1C", "#EF5350", "#FFEBEE", "#70E5252B", "#B71C1C", "#E5252B", "#E57373", "#1AE5252B"),
+            new TrackColor("Crimson", "#D50000", "#B71C1C", "#FF1744", "#FFEBEE", "#70D50000", "#880E4F", "#D50000", "#FF5252", "#1AD50000"),
+            new TrackColor("Peach", "#FF5722", "#D84315", "#FF8A65", "#FBE9E7", "#70FF5722", "#BF360C", "#FF7043", "#FFAB91", "#1AFF5722"),
+            new TrackColor("Banana", "#FFB300", "#FF8F00", "#FFCA28", "#FFF8E1", "#70FFB300", "#FF6F00", "#FFC107", "#FFE082", "#1AFFB300"),
+            new TrackColor("Olive", "#C0CA33", "#9E9D24", "#D4E157", "#F9FBE7", "#70C0CA33", "#827717", "#CDDC39", "#E6EE9C", "#1AC0CA33"),
+            new TrackColor("Mint", "#00C853", "#009624", "#69F0AE", "#E8F5E9", "#7000C853", "#007E33", "#00E676", "#B9F6CA", "#1A00C853"),
+            new TrackColor("Emerald", "#00E676", "#00C853", "#69F0AE", "#E8F5E9", "#7000E676", "#007E33", "#00C853", "#B9F6CA", "#1A00E676"),
+            new TrackColor("Sky", "#00B0FF", "#0091EA", "#80D8FF", "#E1F5FE", "#7000B0FF", "#00838F", "#00E5FF", "#B388FF", "#1A00B0FF"),
+            new TrackColor("Blue", "#3D5AFE", "#2979FF", "#8C9EFF", "#E8EAF6", "#703D5AFE", "#1A237E", "#3D5AFE", "#C5CAE9", "#1A3D5AFE"),
+            new TrackColor("Sapphire", "#2962FF", "#0D47A1", "#448AFF", "#E3F2FD", "#702962FF", "#1565C0", "#2962FF", "#82B1FF", "#1A2962FF"),
+            new TrackColor("Purple", "#AA00FF", "#7200EA", "#E040FB", "#F3E5F5", "#70AA00FF", "#6A1B9A", "#D500F9", "#EA80FC", "#1AAA00FF"),
+            new TrackColor("Amethyst", "#9C27B0", "#6A1B9A", "#BA68C8", "#F3E5F5", "#709C27B0", "#4A148C", "#9C27B0", "#CE93D8", "#1A9C27B0"),
+            new TrackColor("Barbie", "#FF1493", "#C51162", "#FF69B4", "#FCE4EC", "#70FF1493", "#880E4F", "#FF4081", "#F8BBD0", "#1AFF1493"),
+            new TrackColor("Magenta", "#F50057", "#C51162", "#FF4081", "#FCE4EC", "#70F50057", "#880E4F", "#F50057", "#FF80AB", "#1AF50057"),
+            new TrackColor("Wine", "#880E4F", "#560027", "#BC477B", "#F8BBD0", "#70880E4F", "#4A148C", "#AD1457", "#E1BEE7", "#1A880E4F"),
+            new TrackColor("Orange", "#FF6D00", "#E65100", "#FF9E40", "#FFF3E0", "#70FF6D00", "#BF360C", "#FF7D1A", "#FFCC80", "#1AFF6D00"),
+            new TrackColor("Sunset", "#FF3D00", "#DD2C00", "#FF6E40", "#FBE9E7", "#70FF3D00", "#BF360C", "#FF3D00", "#FF9E80", "#1AFF3D00"),
+            new TrackColor("Gold", "#FFA000", "#FF6F00", "#FFD54F", "#FFFDE7", "#70FFA000", "#E65100", "#FFB300", "#FFE082", "#1AFFA000"),
+            new TrackColor("Caramel", "#F57F17", "#F57F17", "#FBC02D", "#FFFDE7", "#70F57F17", "#F57F17", "#F9A825", "#FFF59D", "#1AF57F17"),
+            new TrackColor("BRAT", "#AEEA00", "#64DD17", "#CCFF90", "#F1F8E9", "#70AEEA00", "#558B2F", "#B2FF59", "#DCEDC8", "#1AAEEA00"),
+            new TrackColor("Forest", "#1B5E20", "#0D3810", "#4CAF50", "#E8F5E9", "#701B5E20", "#004D40", "#2E7D32", "#A5D6A7", "#1A1B5E20"),
+            new TrackColor("Teal", "#00BFA5", "#00897B", "#64FFDA", "#E0F2F1", "#7000BFA5", "#004D40", "#1DE9B6", "#A7FFEB", "#1A00BFA5"),
+            new TrackColor("Violet", "#6200EA", "#3700B3", "#B388FF", "#EDE7F6", "#706200EA", "#4A148C", "#7C4DFF", "#D1C4E9", "#1A6200EA"),
+            new TrackColor("Sakura", "#FF80AB", "#F50057", "#FF4081", "#FCE4EC", "#70FF80AB", "#C51162", "#FF4081", "#F48FB1", "#1AFF80AB"),
+            new TrackColor("Slate", "#607D8B", "#455A64", "#90A4AE", "#ECEFF1", "#70607D8B", "#37474F", "#78909C", "#B0BEC5", "#1A607D8B"),
+            new TrackColor("Moon", "#424242", "#212121", "#9E9E9E", "#EEEEEE", "#70424242", "#303030", "#616161", "#E0E0E0", "#45454540")
+        ];
 
         public static List<TrackColor> TrackColors = new List<TrackColor>();
 
@@ -128,7 +147,7 @@ namespace OpenUtau.App {
             return [
                 ..BuiltInThemeLoader.BaseThemeNames,
                 ..BuiltInThemeLoader.BuiltInCustomThemeNames,
-                ..Colors.CustomTheme.Themes.Select(v => v.Key),
+                ..Colors.CustomTheme.Themes.Keys
             ];
         }
 
@@ -258,13 +277,13 @@ namespace OpenUtau.App {
                 TrackColor tcolor = GetTrackColor(color);
                 
                 resDict["SelectedTrackAccentBrush"] = tcolor.AccentColor;
-                var accentSemi = new SolidColorBrush(tcolor.AccentColor.Color);
-                accentSemi.Opacity = 0.5;
+                var accentSemi = new SolidColorBrush(tcolor.AccentColor.Color) { Opacity = 0.5 };
                 resDict["SelectedTrackAccentBrushSemi"] = accentSemi;
                 resDict["SelectedTrackAccentLightBrush"] = tcolor.AccentColorLight;
                 resDict["SelectedTrackAccentLightBrushSemi"] = tcolor.AccentColorLightSemi;
                 resDict["SelectedTrackAccentDarkBrush"] = tcolor.AccentColorDark;
                 resDict["SelectedTrackCenterKeyBrush"] = tcolor.AccentColorCenterKey;
+                
                 if (Preferences.Default.UseTrackColor) {
                     if (IsDarkMode) {
                         resDict["CenterKeyNameColor"] = tcolor.AccentColorDark.Color;       // piano2; label darkening applied in SetKeyboardBrush
@@ -302,6 +321,7 @@ namespace OpenUtau.App {
                 SetKeyboardBrush();
             } catch { }
         }
+        
         private static void SetKeyboardBrush() {
             if (Application.Current == null) {
                 return;
@@ -311,8 +331,6 @@ namespace OpenUtau.App {
             var themeVariant = ThemeVariant.Default;
 
             if (Preferences.Default.UseTrackColor) {
-                // Staff (piano roll keyboard): use theme colors for white/black keys and labels;
-                // only C key rows use track color: fill = CenterKeyBrush, text = CenterKeyNameBrush (track accent).
                 if (resDict.TryGetResource("WhiteKeyBrush", themeVariant, out outVar)) {
                     WhiteKeyBrush = (IBrush)outVar!;
                 }
@@ -326,7 +344,6 @@ namespace OpenUtau.App {
                 if (resDict.TryGetResource("BlackKeyNameBrush", themeVariant, out outVar)) {
                     BlackKeyNameBrush = (IBrush)outVar!;
                 }
-                // Use gradient CenterKeyBrush (respects CenterKeyColorLeft/Right set in ChangePianorollColor)
                 if (resDict.TryGetResource("CenterKeyBrush", themeVariant, out outVar)) {
                     CenterKeyBrush = (IBrush)outVar!;
                 }
@@ -376,9 +393,7 @@ namespace OpenUtau.App {
             }
         }
 
-        /// <summary>Dark-theme C key label: 50% accent blended with dark gray.</summary>
-        private static Color DarkThemeAccentLabelColor(Color accent) =>
-            BlendColorsWeighted(accent, Color.Parse("#2F2F2F"), 0.5);
+        private static Color DarkThemeAccentLabelColor(Color accent) => BlendColorsWeighted(accent, Color.Parse("#2F2F2F"), 0.5);
 
         private static IBrush ResolveCenterKeyNameBrush(IResourceDictionary resDict, ThemeVariant themeVariant) {
             if (resDict.TryGetResource("CenterKeyNameColor", themeVariant, out object? outVar) && outVar is Color c) {
@@ -393,7 +408,6 @@ namespace OpenUtau.App {
             return Brushes.Black;
         }
 
-        /// <summary>Blends two colors; <paramref name="weightA"/> is the fraction of <paramref name="a"/> (0–1).</summary>
         private static Color BlendColorsWeighted(Color a, Color b, double weightA) {
             weightA = System.Math.Clamp(weightA, 0, 1);
             double weightB = 1 - weightA;
@@ -404,7 +418,6 @@ namespace OpenUtau.App {
                 (byte)(a.B * weightA + b.B * weightB));
         }
 
-        /// <summary>Darkens a brush by blending its colors toward black; factor is the original color weight (e.g. 0.8 = 20% darker).</summary>
         private static IBrush DarkenBrush(IBrush brush, double factor) {
             if (brush is SolidColorBrush solid) {
                 return new SolidColorBrush(DarkenColor(solid.Color, factor)) { Opacity = solid.Opacity };
@@ -426,7 +439,6 @@ namespace OpenUtau.App {
 
         private static Color DarkenColor(Color c, double factor) => BlendColorsWeighted(c, Color.Parse("#000000"), factor);
 
-        /// <summary>Blends two colors 50/50 by component.</summary>
         private static Color BlendColors(Color a, Color b) {
             return Color.FromArgb(
                 (byte)((a.A + b.A) / 2),

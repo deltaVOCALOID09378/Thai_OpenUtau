@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
@@ -18,13 +18,18 @@ namespace OpenUtau.Classic {
             }
         }
         public static IEnumerable<USinger> FindAllSingers() {
-            List<USinger> singers = new List<USinger>();
-            foreach (var path in PathManager.Inst.SingersPaths) {
-                var loader = new VoicebankLoader(path);
-                singers.AddRange(loader.SearchAll()
-                    .Select(AdjustSingerType));
-            }
-            return singers;
+            return PathManager.Inst.SingersPaths
+                .AsParallel()
+                .AsOrdered()
+                .SelectMany(path => {
+                    var loader = new VoicebankLoader(path);
+                    return loader.SearchAll()
+                        .AsParallel()
+                        .AsOrdered()
+                        .Select(AdjustSingerType)
+                        .ToList();
+                })
+                .ToList();
         }
     }
 }

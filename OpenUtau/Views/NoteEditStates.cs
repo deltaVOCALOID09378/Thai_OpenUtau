@@ -1,3 +1,13 @@
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : NoteEditStates.cs
+// Version      : 3.4.0
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
+// File Location: OpenUtau/Views/NoteEditStates.cs
+// Description  : Piano Roll pointer interaction states with micrometer unsnapped selection,
+//                sweeping eraser, 2px deadband, unrestricted rightward note drag,
+//                continuous edge-panning auto-scroll, and Alt+Drag note duplication.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -78,6 +88,25 @@ namespace OpenUtau.App.Views {
             }
         }
         public virtual void Update(IPointer pointer, Point point) { }
+        protected void AutoScrollOnEdge(Point point) {
+            if (Math.Abs(point.X - startPoint.X) + Math.Abs(point.Y - startPoint.Y) < 2.0) {
+                return;
+            }
+            var notesVm = vm.NotesViewModel;
+            if (control.Bounds.Width <= 0 || notesVm.TickWidth <= 0) {
+                return;
+            }
+            const double edgeMargin = 36.0;
+            if (point.X > control.Bounds.Width - edgeMargin) {
+                double panPixels = Math.Min(24.0, (point.X - (control.Bounds.Width - edgeMargin)) * 0.35 + 4.0);
+                double panTicks = panPixels / notesVm.TickWidth;
+                notesVm.TickOffset = Math.Max(0, notesVm.TickOffset + panTicks);
+            } else if (point.X < edgeMargin && notesVm.TickOffset > 0) {
+                double panPixels = Math.Min(24.0, (edgeMargin - point.X) * 0.35 + 4.0);
+                double panTicks = panPixels / notesVm.TickWidth;
+                notesVm.TickOffset = Math.Max(0, notesVm.TickOffset - panTicks);
+            }
+        }
         public static void Swap<T>(ref T a, ref T b) {
             T temp = a;
             a = b;
@@ -116,8 +145,15 @@ namespace OpenUtau.App.Views {
             selectionBox.IsVisible = false;
             var notesVm = vm.NotesViewModel;
             notesVm.CommitTempSelectNotes();
+            if (!PlaybackManager.Inst.PlayingMaster && notesVm.Part != null && !notesVm.Selection.IsEmpty) {
+                var firstNote = notesVm.Selection.OrderBy(n => n.position).FirstOrDefault();
+                if (firstNote != null) {
+                    vm.PlaybackViewModel?.MovePlayPos(notesVm.Part.position + firstNote.position);
+                }
+            }
         }
         public override void Update(IPointer pointer, Point point) {
+            AutoScrollOnEdge(point);
             var notesVm = vm.NotesViewModel;
             int tick = notesVm.PointToTick(point);
             int tone = notesVm.PointToTone(point);
@@ -144,17 +180,21 @@ namespace OpenUtau.App.Views {
     }
 
     class NoteMoveEditState : NoteEditState {
-        public readonly UNote note;
+        public UNote note;
         private double xOffset;
+        private readonly bool copyNotes;
+        private bool hasCopied;
         protected override bool ShowValueTip => false;
-        protected override string? commandNameKey => "command.note.move";
+        protected override string? commandNameKey => copyNotes ? "command.note.duplicate" : "command.note.move";
 
         public NoteMoveEditState(
             Control control,
             PianoRollViewModel vm,
             IValueTip valueTip,
-            UNote note) : base(control, vm, valueTip) {
+            UNote note,
+            bool copyNotes = false) : base(control, vm, valueTip) {
             this.note = note;
+            this.copyNotes = copyNotes;
             var notesVm = vm.NotesViewModel;
             if (!notesVm.Selection.Contains(note)) {
                 notesVm.SelectNote(note);
@@ -167,14 +207,41 @@ namespace OpenUtau.App.Views {
         }
         public override void Update(IPointer pointer, Point point) {
             var delta = point - startPoint;
-            if (Math.Abs(delta.X) + Math.Abs(delta.Y) < 4) {
+            if (Math.Abs(delta.X) + Math.Abs(delta.Y) < 2) {
                 return;
             }
+            AutoScrollOnEdge(point);
             var project = DocManager.Inst.Project;
             var notesVm = vm.NotesViewModel;
             var part = notesVm.Part;
             if (part == null) {
                 return;
+            }
+
+            if (copyNotes && !hasCopied) {
+                hasCopied = true;
+                var sourceNotes = notesVm.Selection.Count > 0
+                    ? notesVm.Selection.ToList()
+                    : new List<UNote> { note };
+                var clonedNotes = new List<UNote>();
+                UNote? newActiveNote = null;
+                foreach (var src in sourceNotes) {
+                    var clone = src.Clone();
+                    clonedNotes.Add(clone);
+                    if (src == note) {
+                        newActiveNote = clone;
+                    }
+                }
+                DocManager.Inst.ExecuteCmd(new AddNoteCommand(part, clonedNotes));
+                notesVm.DeselectNotes();
+                foreach (var clone in clonedNotes) {
+                    notesVm.SelectNote(clone, false);
+                }
+                if (newActiveNote != null) {
+                    note = newActiveNote;
+                } else if (clonedNotes.Count > 0) {
+                    note = clonedNotes[0];
+                }
             }
 
             int deltaTone = notesVm.PointToTone(point) - note.tone;
@@ -197,15 +264,13 @@ namespace OpenUtau.App.Views {
             }
             int deltaTick = newPos - note.position;
             int minDeltaTick;
-            int maxDeltaTick;
             if (selectedNotes.Count > 0) {
                 minDeltaTick = -selectedNotes.Select(n => n.position).Min();
-                maxDeltaTick = part.Duration - selectedNotes.Select(n => n.End).Max();
             } else {
                 minDeltaTick = -note.position;
-                maxDeltaTick = part.Duration - note.End;
             }
-            deltaTick = Math.Clamp(deltaTick, minDeltaTick, maxDeltaTick);
+            // DELTA SYNTH: Unrestricted rightward note drag (MoveNoteCommand auto-expands Part.Duration)
+            deltaTick = Math.Max(deltaTick, minDeltaTick);
 
             if (deltaTone == 0 && deltaTick == 0) {
                 return;
@@ -257,6 +322,7 @@ namespace OpenUtau.App.Views {
             if (note == null) {
                 return;
             }
+            AutoScrollOnEdge(point);
             var project = DocManager.Inst.Project;
             var notesVm = vm.NotesViewModel;
             var part = notesVm.Part;
@@ -341,6 +407,7 @@ namespace OpenUtau.App.Views {
             this.fromStart = fromStart;
         }
         public override void Update(IPointer pointer, Point point) {
+            AutoScrollOnEdge(point);
             var project = DocManager.Inst.Project;
             var notesVm = vm.NotesViewModel;
             var part = notesVm.Part;

@@ -1,10 +1,12 @@
-/*
-AutoPitchContextualEngine.cs
-OpenUtau.Core/Editing/AutoPitchContextualEngine.cs
-Made And Checked By DELTA SYNTH & Gemini AI
-Original by Patiphat Wongyai (Delta) & Gemini AI
-Revision 1.2
-*/
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : AutoPitchContextualEngine.cs
+// Version      : 1.3
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH & Gemini AI ]
+// File Location: OpenUtau.Core/AutoPitch/AutoPitchContextualEngine.cs
+// Description  : Contextual 6-shape AutoPitch engine with customizable shape filter
+//                and portamento timing parameters for Canon AutoPitchwriter integration.
+// ============================================================================
 
 using System;
 using System.Collections.Generic;
@@ -45,6 +47,17 @@ namespace OpenUtau.Core.AutoPitch
         /// </summary>
         public static void ApplyContextualAutoPitch(UPart part, List<UNote> notes, UProject? project = null)
         {
+            ApplyContextualAutoPitch(part, notes, project, null, null, null);
+        }
+
+        public static void ApplyContextualAutoPitch(
+            UPart part,
+            List<UNote> notes,
+            UProject? project,
+            ISet<PitchShapeType>? allowedShapes,
+            float? customPortamentoStartMs = null,
+            float? customPortamentoLengthMs = null)
+        {
             if (notes == null || notes.Count == 0) return;
 
             var timeAxis = project?.timeAxis ?? DocManager.Inst.Project?.timeAxis;
@@ -58,11 +71,11 @@ namespace OpenUtau.Core.AutoPitch
                 // 1. วิเคราะห์บริบทของโน้ตตัวนี้
                 var context = AnalyzeContext(current, prev, next, part, timeAxis);
 
-                // 2. เลือกทรงคอร์ฟตามน้ำหนักบริบท (Weighted Selection)
-                var chosenShape = SelectShapeByContext(context);
+                // 2. เลือกทรงคอร์ฟตามน้ำหนักบริบท (Weighted Selection พร้อมตัวกรองทรงที่เปิดใช้งาน)
+                var chosenShape = SelectShapeByContext(context, allowedShapes);
 
                 // 3. สร้างจุด Pitch Points (PBS, PBW, PBY) ให้กับโน้ต
-                GeneratePitchCurve(current, chosenShape, context);
+                GeneratePitchCurve(current, chosenShape, context, customPortamentoStartMs, customPortamentoLengthMs);
             }
         }
 
@@ -97,7 +110,7 @@ namespace OpenUtau.Core.AutoPitch
         /// <summary>
         /// เลือกลักษณะคอร์ฟ Pitch ตามความน่าจะเป็นที่เข้ากับบริบทเพลง
         /// </summary>
-        private static PitchShapeType SelectShapeByContext(NoteContext ctx)
+        private static PitchShapeType SelectShapeByContext(NoteContext ctx, ISet<PitchShapeType>? allowedShapes = null)
         {
             var weights = new Dictionary<PitchShapeType, int>
             {
@@ -137,6 +150,21 @@ namespace OpenUtau.Core.AutoPitch
                 weights[PitchShapeType.PitchDent] += 20;
             }
 
+            if (allowedShapes != null && allowedShapes.Count > 0)
+            {
+                foreach (var key in weights.Keys.ToList())
+                {
+                    if (!allowedShapes.Contains(key))
+                    {
+                        weights.Remove(key);
+                    }
+                }
+                if (weights.Count == 0)
+                {
+                    return allowedShapes.First();
+                }
+            }
+
             int totalWeight = weights.Values.Sum();
             int roll = Rng.Next(totalWeight);
             int cumulative = 0;
@@ -160,12 +188,21 @@ namespace OpenUtau.Core.AutoPitch
         /// - PitchPoint.Y มีหน่วยเป็น 0.1 semitones (1.0 = 10 cents, 10.0 = 1 semitone)
         /// - snapFirst = true จะ snap จุดแรกเข้าหาโน้ตก่อนหน้าโดยอัตโนมัติหากโน้ตติดกัน
         /// </summary>
-        private static void GeneratePitchCurve(UNote note, PitchShapeType shape, NoteContext ctx)
+        private static void GeneratePitchCurve(
+            UNote note,
+            PitchShapeType shape,
+            NoteContext ctx,
+            float? customPortamentoStartMs = null,
+            float? customPortamentoLengthMs = null)
         {
             note.pitch.data.Clear();
             note.pitch.snapFirst = true;
 
             float durMs = (float)ctx.DurationMs;
+            float baseStart = customPortamentoStartMs ?? -35f;
+            float baseEnd = customPortamentoStartMs.HasValue && customPortamentoLengthMs.HasValue
+                ? customPortamentoStartMs.Value + Math.Max(10f, customPortamentoLengthMs.Value)
+                : 25f;
 
             switch (shape)
             {
@@ -215,8 +252,8 @@ namespace OpenUtau.Core.AutoPitch
 
                 case PitchShapeType.WShape:
                     // 4. W-Shape: ดับเบิ้ลดิพ 2 ลอน ละมุนนุ่มนวลท้ายโน้ต (±10-12 cents)
-                    note.pitch.AddPoint(new PitchPoint(-35, 0, PitchPointShape.io));
-                    note.pitch.AddPoint(new PitchPoint(25, 0, PitchPointShape.io));
+                    note.pitch.AddPoint(new PitchPoint(baseStart, 0, PitchPointShape.io));
+                    note.pitch.AddPoint(new PitchPoint(baseEnd, 0, PitchPointShape.io));
 
                     if (durMs >= 300)
                     {
@@ -231,8 +268,8 @@ namespace OpenUtau.Core.AutoPitch
 
                 case PitchShapeType.UPitchDrop:
                     // 5. U-Pitch Drop: ท้ายโน้ตโค้งดิ่งลงอย่างนุ่มนวลแล้วตัดเสียง (-25 cents)
-                    note.pitch.AddPoint(new PitchPoint(-35, 0, PitchPointShape.io));
-                    note.pitch.AddPoint(new PitchPoint(25, 0, PitchPointShape.io));
+                    note.pitch.AddPoint(new PitchPoint(baseStart, 0, PitchPointShape.io));
+                    note.pitch.AddPoint(new PitchPoint(baseEnd, 0, PitchPointShape.io));
 
                     if (durMs >= 200)
                     {
@@ -245,8 +282,8 @@ namespace OpenUtau.Core.AutoPitch
 
                 case PitchShapeType.PitchDent:
                     // 6. Pitch Dent: รอยบุ๋มกระแทกเน้นสำเนียงช่วงกลางโน้ตอย่างละมุน (-15 cents)
-                    note.pitch.AddPoint(new PitchPoint(-35, 0, PitchPointShape.io));
-                    note.pitch.AddPoint(new PitchPoint(25, 0, PitchPointShape.io));
+                    note.pitch.AddPoint(new PitchPoint(baseStart, 0, PitchPointShape.io));
+                    note.pitch.AddPoint(new PitchPoint(baseEnd, 0, PitchPointShape.io));
 
                     if (durMs >= 250)
                     {

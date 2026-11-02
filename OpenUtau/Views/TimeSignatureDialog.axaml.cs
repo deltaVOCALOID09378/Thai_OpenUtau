@@ -1,7 +1,16 @@
-﻿using System;
+// ============================================================================
+// Date         : 02/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : TimeSignatureDialog.axaml.cs
+// Version      : 1.1
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/Views/TimeSignatureDialog.axaml.cs
+// Description  : Time signature edit dialog controller with OK and Cancel event dispatchers.
+// ============================================================================
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using ReactiveUI.Fody.Helpers;
 
@@ -25,9 +34,25 @@ namespace OpenUtau.App.Views {
             DataContext = this;
         }
 
-        private void OnOkButtonClick(object sender, RoutedEventArgs args) {
+        private void OnOkButtonClick(object? sender, RoutedEventArgs args) {
             OnOk?.Invoke(BeatPerBar, BeatUnit);
             Close();
+        }
+
+        private void OnCancelButtonClick(object? sender, RoutedEventArgs args) {
+            Close();
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e) {
+            if (e.Key == Key.Escape) {
+                e.Handled = true;
+                Close();
+            } else if (e.Key == Key.Enter) {
+                e.Handled = true;
+                OnOkButtonClick(this, e);
+            } else {
+                base.OnKeyDown(e);
+            }
         }
     }
 }

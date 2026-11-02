@@ -1,7 +1,7 @@
 // ============================================================================
-// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 28/10/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : MainWindow.axaml.cs
-// Version      : 1.4
+// Version      : 1.6
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau/Views/MainWindow.axaml.cs
 // Description  : Main application workspace controller with graceful shutdown lifecycle,
@@ -71,6 +71,7 @@ namespace OpenUtau.App.Views {
         private readonly DispatcherTimer timer;
         private readonly DispatcherTimer autosaveTimer;
         private bool forceClose;
+        private bool isShuttingDown;
 
         private bool shouldOpenPartsContextMenu;
 
@@ -1211,13 +1212,17 @@ namespace OpenUtau.App.Views {
                         partEditState = new PartResizeEditState(control, viewModel, partControl.part);
                         Cursor = ViewConstants.cursorSizeWE;
                     } else {
-                        partEditState = new PartMoveEditState(control, viewModel, partControl.part);
+                        partEditState = new PartMoveEditState(control, viewModel, partControl.part, args.KeyModifiers == KeyModifiers.Alt);
                         Cursor = ViewConstants.cursorSizeAll;
                     }
                     }
                 }
             } else if (point.Properties.IsRightButtonPressed) {
-                if (hitControl is PartControl partControl) {
+                if (args.KeyModifiers == (cmdKey | KeyModifiers.Shift)) {
+                    viewModel.TracksViewModel.DeselectParts();
+                    partEditState = new PartEraseEditState(control, viewModel, MouseButton.Right);
+                    Cursor = ViewConstants.cursorNo;
+                } else if (hitControl is PartControl partControl) {
                     if (!viewModel.TracksViewModel.SelectedParts.Contains(partControl.part)) {
                         viewModel.TracksViewModel.DeselectParts();
                         viewModel.TracksViewModel.SelectPart(partControl.part);
@@ -2126,7 +2131,14 @@ namespace OpenUtau.App.Views {
         }
 
         public void WindowClosing(object? sender, WindowClosingEventArgs e) {
+            if (isShuttingDown) {
+                e.Cancel = false;
+                return;
+            }
             if (forceClose || DocManager.Inst.ChangesSaved) {
+                isShuttingDown = true;
+                e.Cancel = false;
+
                 // Halt audio playback immediately to release audio devices and buffers
                 try {
                     PlaybackManager.Inst.StopPlayback();
@@ -2143,19 +2155,26 @@ namespace OpenUtau.App.Views {
                     DocManager.Inst.RemoveSubscriber(this);
                 } catch { }
 
-                // Close detached piano roll window if open
+                // Close detached piano roll window if open (must use ForceClose so it does not cancel)
                 if (pianoRollWindow != null) {
-                    try {
-                        pianoRollWindow.Close();
-                    } catch { }
+                    var prWin = pianoRollWindow;
                     pianoRollWindow = null;
+                    try {
+                        prWin.ForceClose();
+                    } catch { }
                 }
 
-                // Close any remaining secondary windows
+                // Close any remaining secondary windows safely
                 if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
                     foreach (var win in desktop.Windows.ToList()) {
                         if (win != this) {
-                            try { win.Close(); } catch { }
+                            try {
+                                if (win is PianoRollDetachedWindow detachedWin) {
+                                    detachedWin.ForceClose();
+                                } else {
+                                    win.Close();
+                                }
+                            } catch { }
                         }
                     }
                 }
@@ -2170,33 +2189,28 @@ namespace OpenUtau.App.Views {
 
                 if (Preferences.Default.ClearCacheOnQuit) {
                     Log.Information("Clearing cache (background)...");
-                    var cachePath = PathManager.Inst.CachePath;
-                    if (OS.IsWindows()) {
+                    Task.Run(() => {
                         try {
-                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c rmdir /s /q \"{cachePath}\" & mkdir \"{cachePath}\"") { CreateNoWindow = true, UseShellExecute = false });
+                            PathManager.Inst.ClearCache();
                         } catch { }
-                    } else {
-                        Task.Run(() => {
-                            try {
-                                PathManager.Inst.ClearCache();
-                            } catch {}
-                        });
-                    }
+                    });
                 }
 
-                // Gracefully trigger lifetime shutdown
-                if (Application.Current?.ApplicationLifetime is IControlledApplicationLifetime controlledLifetime) {
-                    controlledLifetime.Shutdown(0);
-                }
                 return;
             }
             e.Cancel = true;
             AskIfSaveAndContinue().ContinueWith(t => {
-                if (!t.Result) {
+                if (!t.IsCompletedSuccessfully || !t.Result) {
                     return;
                 }
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => {
-                    pianoRollWindow?.Close();
+                    if (pianoRollWindow != null) {
+                        var prWin = pianoRollWindow;
+                        pianoRollWindow = null;
+                        try {
+                            prWin.ForceClose();
+                        } catch { }
+                    }
                     forceClose = true;
                     Close();
                 });
@@ -2314,6 +2328,9 @@ namespace OpenUtau.App.Views {
         }
 
         public void OnNext(UCommand cmd, bool isUndo) {
+            if (cmd is SingersRefreshedNotification) {
+                TrackHeaderViewModel.ClearAvatarCache();
+            }
             if (cmd is ErrorMessageNotification notif) {
                 switch (notif.e) {
                     case Core.Render.NoResamplerException:

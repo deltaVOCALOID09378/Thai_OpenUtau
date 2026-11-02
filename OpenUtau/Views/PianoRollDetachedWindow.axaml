@@ -16,10 +16,12 @@
         xmlns:c="clr-namespace:OpenUtau.App.Controls"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
         x:Class="OpenUtau.App.Views.PianoRollDetachedWindow"
+        x:DataType="vm:PianoRollViewModel"
+        x:CompileBindings="False"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{Binding NotesViewModel.WindowTitle}"
-        MinWidth="300" MinHeight="200"
-        Width="{Binding Width}" Height="{Binding Height}"
+        MinWidth="400" MinHeight="300"
+        Width="1200" Height="650"
         Focusable="True" GotFocus="WindowGotFocus"
         TransparencyLevelHint="None"
         Background="Transparent"
@@ -27,15 +29,17 @@
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaToDecorationsHint="True"
         SystemDecorations="BorderOnly"
-        FontFamily="Leelawadee UI, Leelawadee, sans-serif"
         Closing="WindowClosing" Deactivated="WindowDeactivated">
 
-  <!-- กรอบหน้าต่างหลักลอยตัว สไตล์ Modern Clean ของ DELTA SYNTH -->
-  <Border Background="#1A1A1A"
-          BorderBrush="#CC2200"
-          BorderThickness="1.5"
-          CornerRadius="10"
+  <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+          BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+          BorderThickness="1"
+          CornerRadius="8"
           ClipToBounds="True">
-    <ContentControl Name="PianoRollContainer"/>
+    
+    <!-- พื้นที่แสดงผล PianoRoll ด้านใน -->
+    <ContentControl Name="PianoRollContainer"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"/>
   </Border>
 </Window>

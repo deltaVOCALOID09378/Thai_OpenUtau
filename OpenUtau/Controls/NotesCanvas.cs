@@ -19,6 +19,16 @@ using ReactiveUI;
 
 namespace OpenUtau.App.Controls {
     class NotesCanvas : Control {
+
+        public static bool IsLightColorBrush(IBrush? brush) {
+            if (brush is SolidColorBrush scb) {
+                var c = scb.Color;
+                double luminance = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
+                return luminance > 150 || (c.R > 200 && c.G > 200 && c.B > 200);
+            }
+            return false;
+        }
+
         /// <summary>Recognized 2–4 letter codes in phonemizer tags (e.g. "EN VCCV") or as standalone tokens.</summary>
         static readonly HashSet<string> KnownLangCodes = new(StringComparer.OrdinalIgnoreCase) {
             "EN", "JA", "ZH", "KO", "ES", "IT", "FR", "DE", "PT", "RU", "UA", "UK",
@@ -234,6 +244,10 @@ namespace OpenUtau.App.Controls {
                 .Subscribe(_ => RefreshGhostNotes());
             MessageBus.Current.Listen<ThemeChangedEvent>()
                 .Subscribe(_ => InvalidateVisual());
+            MessageBus.Current.Listen<PianorollRefreshEvent>()
+                .Subscribe(_ => InvalidateVisual());
+            MessageBus.Current.Listen<TracksRefreshEvent>()
+                .Subscribe(_ => InvalidateVisual());
             this.WhenAnyValue(x => x.Part)
                 .Subscribe(_ => RefreshGhostNotes());
         }
@@ -389,22 +403,34 @@ namespace OpenUtau.App.Controls {
                     hasError = true;
                 }
             }
+            // ดึงสีของแทร็กเพลงในจุดเดียวกับที่เลือกนักร้อง (Track Color Integration)
+            TrackColor? trackColor = null;
+            if (Part != null && Part.trackNo >= 0 && viewModel.Project != null && Part.trackNo < viewModel.Project.tracks.Count) {
+                var track = viewModel.Project.tracks[Part.trackNo];
+                if (!string.IsNullOrEmpty(track.TrackColor)) {
+                    trackColor = ThemeManager.GetTrackColor(track.TrackColor);
+                }
+            }
+
+            IBrush fillBrush;
             bool showBorder = Preferences.Default.ShowNoteBorder;
             if (triggerItems.Contains(note.lyric)) {
-                var brush1 = selectedNotes.Contains(note)
-                    ? ThemeManager.NoteBrushPressed
-                    : ThemeManager.NoteEmptyBrush;
-                IPen? pen = showBorder ? ThemeManager.NoteBorderPen : null;
-                context.DrawRectangle(brush1, pen, new Rect(leftTop, rightBottom), cornerRadius, cornerRadius);
+                fillBrush = selectedNotes.Contains(note)
+                    ? (trackColor?.NoteColorPressed ?? ThemeManager.NoteBrushPressed)
+                    : (trackColor?.NoteColorEmpty ?? ThemeManager.NoteEmptyBrush);
+                IPen? pen = showBorder ? (trackColor != null ? new Pen(trackColor.NoteBorderColor, 1) : ThemeManager.NoteBorderPen) : null;
+                context.DrawRectangle(fillBrush, pen, new Rect(leftTop, rightBottom), cornerRadius, cornerRadius);
             } else {
-                var brush = hasError
+                fillBrush = hasError
                     ? (selectedNotes.Contains(note) ? ThemeManager.NoteBrushPressed : ThemeManager.NoteEmptyBrush)
-                    : (selectedNotes.Contains(note) ? ThemeManager.NoteBrushPressed : ThemeManager.NoteBrush);
+                    : (selectedNotes.Contains(note)
+                        ? (trackColor?.NoteColorPressed ?? ThemeManager.NoteBrushPressed)
+                        : (trackColor?.NoteColor ?? ThemeManager.NoteBrush));
                 IPen? borderPen = !showBorder ? null
                     : selectedNotes.Contains(note)
-                    ? ThemeManager.NoteBorderPenPressed
-                    : ThemeManager.NoteBorderPen;
-                context.DrawRectangle(brush, borderPen, new Rect(leftTop, rightBottom), cornerRadius, cornerRadius);
+                    ? (trackColor != null ? new Pen(trackColor.NoteBorderColorPressed, 1) : ThemeManager.NoteBorderPenPressed)
+                    : (trackColor != null ? new Pen(trackColor.NoteBorderColor, 1) : ThemeManager.NoteBorderPen);
+                context.DrawRectangle(fillBrush, borderPen, new Rect(leftTop, rightBottom), cornerRadius, cornerRadius);
             }
             if (TrackHeight < 10 || note.lyric.Length == 0) {
                 return;
@@ -426,7 +452,10 @@ namespace OpenUtau.App.Controls {
                 if (isTransition) {
                     var badgeBrush = hasError
                         ? ThemeManager.NeutralAccentBrushSemi
-                        : (selectedNotes.Contains(note) ? ThemeManager.NoteBrushPressed : ThemeManager.NoteBrush);
+                        : (selectedNotes.Contains(note)
+                            ? (trackColor?.NoteColorPressed ?? ThemeManager.NoteBrushPressed)
+                            : (trackColor?.NoteColor ?? ThemeManager.NoteBrush));
+                    IBrush badgeForeground = IsLightColorBrush(badgeBrush) ? Brushes.Black : Brushes.White;
 
                     if (isCurrentDefault) {
                         double boxWidth = 16; 
@@ -443,7 +472,7 @@ namespace OpenUtau.App.Controls {
                             boxRect.Y + boxHeight / 2
                         );
                         context.DrawRectangle(badgeBrush, null, boxRect, cornerRadius, cornerRadius);
-                        context.DrawEllipse(Brushes.White, null, center, dotRadius, dotRadius);
+                        context.DrawEllipse(badgeForeground, null, center, dotRadius, dotRadius);
                         
                     } else {
                         var factory = PhonemizerFactory.Get(currentPh) ?? PhonemizerFactory.GetAll().FirstOrDefault(f => f.name == currentPh || (currentPh.Length > 0 && f.name.EndsWith(currentPh)));
@@ -469,17 +498,19 @@ namespace OpenUtau.App.Controls {
             }
             string displayLyric = note.lyric;
             int txtsize = 14;
-            var textLayout = TextLayoutCache.Get(displayLyric, Brushes.White, txtsize);
+            // หากสีแถบโน้ตเป็นสีขาวหรือสีสว่าง ให้ใช้ตัวอักษรสีดำเสมอ ในทุกกรณี
+            IBrush lyricBrush = IsLightColorBrush(fillBrush) ? Brushes.Black : Brushes.White;
+            var textLayout = TextLayoutCache.Get(displayLyric, lyricBrush, txtsize);
             if (txtsize > size.Height) {
                 return;
             }
             if (textLayout.Height + 5 < size.Height) {
                 txtsize = (int)(12 * (size.Height / textLayout.Height));
-                textLayout = TextLayoutCache.Get(displayLyric, Brushes.White, txtsize);
+                textLayout = TextLayoutCache.Get(displayLyric, lyricBrush, txtsize);
             }
             if (textLayout.Width + 5 > size.Width) {
                 displayLyric = displayLyric[0] + "..";
-                textLayout = TextLayoutCache.Get(displayLyric, Brushes.White, txtsize);
+                textLayout = TextLayoutCache.Get(displayLyric, lyricBrush, txtsize);
                 if (textLayout.Width + 5 > size.Width) {
                     return;
                 }

@@ -3,14 +3,47 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ac="using:OpenUtau.App.Controls"
-        mc:Ignorable="d"
+        mc:Ignorable="d" d:DesignWidth="360"
         x:Class="OpenUtau.App.Views.TypeInDialog"
         Icon="/Assets/Thai OpenUtau Logo.ico"
-        Title="TypeInDialog" Height="120" Width="320" WindowStartupLocation="CenterOwner">
-  <StackPanel VerticalAlignment="Center" Margin="{Binding $parent.WindowDecorationMargin}">
-    <TextBlock Margin="20" Name="Prompt" IsVisible="False" TextWrapping="Wrap" MaxWidth="560"/>
-    <ac:WorkspacePanelTextBox Name="TextBox" Classes="workspacePanelTextBox" Margin="4"/>
-    <Button Name="OkButton" Content="OK" Margin="4" HorizontalAlignment="Stretch"/>
-  </StackPanel>
-</Window>
+        Title="TypeInDialog"
+        Width="360" MinWidth="320" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False" ShowInTaskbar="False">
 
+  <Window.Styles>
+    <Style Selector="Button.footer">
+      <Setter Property="MinWidth" Value="88"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+  </Window.Styles>
+
+  <Border Margin="{Binding $parent[Window].WindowDecorationMargin}">
+    <StackPanel Margin="12" Spacing="10">
+
+      <!-- ข้อความอธิบาย (code-behind เป็นตัวสั่งแสดง) -->
+      <TextBlock Name="Prompt"
+                 IsVisible="False"
+                 TextWrapping="Wrap"
+                 LineHeight="20"/>
+
+      <!-- ช่องกรอก -->
+      <ac:WorkspacePanelTextBox Name="TextBox"
+                                Classes="workspacePanelTextBox"
+                                HorizontalAlignment="Stretch"
+                                AcceptsReturn="False"/>
+
+      <!-- ปุ่ม -->
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                  Spacing="8" Margin="0,2,0,0">
+        <Button Name="OkButton" Classes="footer accent"
+                Content="{DynamicResource button.ok}"
+                IsDefault="True"/>
+        <Button Name="CancelButton" Classes="footer"
+                Content="{DynamicResource button.cancel}"
+                IsCancel="True"/>
+      </StackPanel>
+
+    </StackPanel>
+  </Border>
+</Window>

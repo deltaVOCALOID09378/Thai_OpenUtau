@@ -111,5 +111,53 @@ namespace OpenUtau.Core {
             part.curves.Add(curve);
             return project;
         }
+
+        [Fact]
+        public void ProgressHandlesZeroTotalAndNullSchedulerWithoutThrowing() {
+            var progress = new Progress(0);
+            var ex = Record.Exception(() => {
+                progress.Complete(0, "test");
+                progress.Clear();
+            });
+            Assert.Null(ex);
+        }
+
+        [Fact]
+        public void RenderEngineHandlesPreCancelledTokenAndRapidReplacementSafely() {
+            var project = CreateProjectWithCurve(out _, out _);
+            project.tracks.Add(new UTrack(project) { TrackNo = 0 });
+            var engine1 = new RenderEngine(project);
+            var engine2 = new RenderEngine(project);
+            System.Threading.CancellationTokenSource cts = new System.Threading.CancellationTokenSource();
+            cts.Dispose();
+
+            var ex = Record.Exception(() => {
+                var mix1 = engine1.RenderMixdown(null, ref cts, wait: true);
+                Assert.NotNull(mix1);
+                Assert.NotNull(engine1.ActiveCancellation);
+                Assert.Same(cts, engine1.ActiveCancellation);
+                Assert.False(engine1.ActiveCancellation!.IsCancellationRequested);
+
+                var tracks = engine2.RenderTracks(null, ref cts);
+                Assert.NotNull(tracks);
+                Assert.NotNull(engine2.ActiveCancellation);
+                Assert.Same(cts, engine2.ActiveCancellation);
+                // Replacing cts in engine2 must have cancelled engine1's ActiveCancellation
+                Assert.True(engine1.ActiveCancellation.IsCancellationRequested);
+                Assert.False(engine2.ActiveCancellation!.IsCancellationRequested);
+            });
+            Assert.Null(ex);
+        }
+
+        [Fact]
+        public void WaveSourceSetSamplesHandlesNullSafely() {
+            var source = new OpenUtau.Core.SignalChain.WaveSource(0, 100, 0, 1);
+            source.SetSamples(new float[] { 0.5f, -0.5f });
+            Assert.True(source.HasSamples);
+
+            var ex = Record.Exception(() => source.SetSamples(null!));
+            Assert.Null(ex);
+            Assert.False(source.HasSamples);
+        }
     }
 }

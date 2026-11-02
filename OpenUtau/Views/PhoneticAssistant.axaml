@@ -2,20 +2,49 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:OpenUtau.App.ViewModels"
         xmlns:c="using:OpenUtau.App.Controls"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="136"
+        mc:Ignorable="d" d:DesignWidth="400"
         x:Class="OpenUtau.App.Views.PhoneticAssistant"
+        x:DataType="vm:PhoneticAssistantViewModel"
+        x:CompileBindings="True"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource phoneticassistant.caption}"
-        WindowStartupLocation="CenterScreen"
-        Width="400" Height="136" CanResize="False">
-  <Grid Margin="{Binding $parent.WindowDecorationMargin}">
-    <StackPanel Margin="10">
-      <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch" Margin="0,0,0,4" ItemsSource="{Binding G2ps}" SelectedItem="{Binding G2p}"/>
-      <c:WorkspacePanelTextBox Classes="workspacePanelTextBox" HorizontalAlignment="Stretch" AcceptsReturn="False" AcceptsTab="False" Text="{Binding Grapheme}" Margin="0,0,0,4"/>
-      <c:WorkspacePanelTextBox Name="PhonemesText" Classes="workspacePanelTextBox" HorizontalAlignment="Stretch" TextWrapping="Wrap" Height="40" MinHeight="40" IsReadOnly="True" Text="{Binding Phonemes}" Margin="0,0,0,4"/>
-      <Button HorizontalAlignment="Stretch" Content="{DynamicResource phoneticassistant.copy}" Click="OnCopy"/>
-    </StackPanel>
-  </Grid>
-</Window>
+        WindowStartupLocation="CenterOwner"
+        Width="400" MinWidth="340" SizeToContent="Height"
+        CanResize="False" ShowInTaskbar="False">
 
+  <Border Margin="{Binding $parent[Window].WindowDecorationMargin}">
+    <StackPanel Margin="12" Spacing="8">
+      
+      <!-- คอมโบสำหรับเลือก G2P Engine -->
+      <c:WorkspacePanelComboBox Classes="workspacePanelCombo"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding G2ps}"
+                                SelectedItem="{Binding G2p}"/>
+
+      <!-- ช่องกรอกข้อความต้นฉบับ (Grapheme) -->
+      <c:WorkspacePanelTextBox Classes="workspacePanelTextBox"
+                               HorizontalAlignment="Stretch"
+                               AcceptsReturn="False" AcceptsTab="False"
+                               Text="{Binding Grapheme}"/>
+
+      <!-- ช่องแสดงผลลัพธ์เสียง (Phonemes) ปรับให้รองรับข้อความยาว -->
+      <TextBox Name="PhonemesText"
+               Classes="workspacePanelTextBox"
+               HorizontalAlignment="Stretch"
+               TextWrapping="Wrap"
+               MinHeight="40" MaxHeight="80"
+               ScrollViewer.VerticalScrollBarVisibility="Auto"
+               IsReadOnly="True"
+               Text="{Binding Phonemes}"/>
+
+      <!-- ปุ่มคัดลอกผลลัพธ์ -->
+      <Button HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              Content="{DynamicResource phoneticassistant.copy}"
+              Click="OnCopy"/>
+
+    </StackPanel>
+  </Border>
+</Window>

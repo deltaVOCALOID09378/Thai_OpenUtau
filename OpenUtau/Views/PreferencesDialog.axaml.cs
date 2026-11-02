@@ -151,5 +151,30 @@ namespace OpenUtau.App.Views {
 
             ((PreferencesViewModel)DataContext!).SetWinePath(winePath);
         }
+        async void SelectScreenshotPath(object sender, RoutedEventArgs e) {
+            var path = await FilePicker.OpenFolder(this, "prefs.capture.screenshotpath", viewModel?.CaptureScreenshotPath);
+            if (!string.IsNullOrEmpty(path)) {
+                viewModel?.SetScreenshotPath(path);
+            }
+        }
+
+        void ResetScreenshotPath(object sender, RoutedEventArgs e) {
+            viewModel?.ResetScreenshotPath();
+        }
+
+        async void SelectVideoRenderPath(object sender, RoutedEventArgs e) {
+            var path = await FilePicker.OpenFolder(this, "prefs.capture.videopath", viewModel?.CaptureVideoRenderPath);
+            if (!string.IsNullOrEmpty(path)) {
+                viewModel?.SetVideoRenderPath(path);
+            }
+        }
+
+        void ResetVideoRenderPath(object sender, RoutedEventArgs e) {
+            viewModel?.ResetVideoRenderPath();
+        }
+
+        void OnSaveCaptureSettingsClick(object sender, RoutedEventArgs e) {
+            viewModel?.SaveCaptureSettings();
+        }
     }
 }

@@ -1,10 +1,12 @@
-/*
-AutoPitchRandomizerBatchEdit.cs
-OpenUtau.Core/Editing/AutoPitchRandomizerBatchEdit.cs
-Made And Checked By DELTA SYNTH & Gemini AI
-Original by DELTA
-Revision 1.2
-*/
+// ==========================================
+// วัน/เดือน/ปี: 29/10/2026
+// ชื่อไฟล์: AutoPitchRandomizerBatchEdit.cs
+// ลำดับเวอร์ชัน: 1.4
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
+// [ Original by DELTA ]
+// ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Editing/AutoPitchRandomizerBatchEdit.cs
+// รายละเอียดการแก้ไข: ปรับปรุงประสิทธิภาพการรีเซ็ต Pitch ด้วยคำสั่งที่ปลอดภัยขึ้น (ResetPitchPointsCommand) และเพิ่มความรัดกุมในการตรวจสอบข้อมูล
+// ==========================================
 
 using System;
 using System.Collections.Generic;
@@ -49,18 +51,27 @@ namespace OpenUtau.Core.Editing {
             docManager.StartUndoGroup("command.batch.note", true);
             try {
                 foreach (var note in notes) {
-                    for (int i = note.pitch.data.Count - 1; i >= 0; i--) {
-                        docManager.ExecuteCmd(new DeletePitchPointCommand(part, note, i));
-                    }
+                    // Guard validation เพื่อความปลอดภัยขั้นสูงสุด
+                    if (note == null || note.pitch == null) continue;
+
+                    // ใช้คำสั่งรีเซ็ตที่เสถียรที่สุดใน OpenUtau
+                    docManager.ExecuteCmd(new ResetPitchPointsCommand(part, note));
 
                     double durationMs = project.timeAxis.MsBetweenTickPos(
                         part.position + note.position,
                         part.position + note.End);
                     int currentPattern = ResolvePattern(pattern, random);
                     var points = GeneratePatternPoints(currentPattern, durationMs, intensity, random);
+                    
+                    int index = 0;
                     for (int i = 0; i < points.Count; i++) {
-                        docManager.ExecuteCmd(new AddPitchPointCommand(part, note, points[i], i));
+                        docManager.ExecuteCmd(new AddPitchPointCommand(part, note, points[i], index));
+                        index++;
                     }
+
+                    // ลบจุดพิตช์ดั้งเดิม 2 จุดที่มาพร้อมกับการ Reset เพื่อให้ได้ทรงกราฟที่วาดใหม่อย่างสมบูรณ์
+                    docManager.ExecuteCmd(new DeletePitchPointCommand(part, note, index));
+                    docManager.ExecuteCmd(new DeletePitchPointCommand(part, note, index));
                 }
                 docManager.ExecuteCmd(new ShowPitchNotification());
             } finally {

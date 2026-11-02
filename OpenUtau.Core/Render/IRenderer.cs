@@ -1,4 +1,13 @@
-﻿using System;
+// ============================================================================
+// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 2. ชื่อไฟล์โค้ด: IRenderer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.1
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Render/IRenderer.cs
+// 5. หน้าที่: อินเทอร์เฟซหลักสำหรับระบบเรนเดอร์เสียงและคลาส Exception ของ Resampler/Wavtool
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Authors
+// ============================================================================
+
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,60 +17,31 @@ using OpenUtau.Core.Ustx;
 namespace OpenUtau.Core.Render {
     public class NoResamplerException : Exception { }
     public class NoWavtoolException : Exception { }
+    public class ResamplerFailedException : Exception {
+        public ResamplerFailedException() { }
+        public ResamplerFailedException(string message) : base(message) { }
+        public ResamplerFailedException(string message, Exception innerException) : base(message, innerException) { }
+    }
 
     /// <summary>
     /// Render result of a phrase.
     /// </summary>
     public class RenderResult {
         public float[] samples;
-
-        /// <summary>
-        /// The length of leading samples.
-        /// </summary>
         public double leadingMs;
-
-        /// <summary>
-        /// Start position of non-leading samples.
-        /// </summary>
         public double positionMs;
-
-        /// <summary>
-        /// Length estimated before actual render.
-        /// </summary>
         public double estimatedLengthMs;
     }
 
     public class RenderPitchResult {
-        /// <summary>
-        /// Ticks relative to the start of the phrase.
-        /// </summary>
         public float[] ticks;
-
-        /// <summary>
-        /// Semitone values in MIDI scale.
-        /// </summary>
         public float[] tones;
-
-        /// <summary>
-        /// Per-frame mask indicating retaken frames. Null means full retake.
-        /// </summary>
         public bool[]? retakeMask;
     }
 
     public class RenderRealCurveResult {
-        /// <summary>
-        /// Abbreviation of the expression.
-        /// </summary>
         public string abbr;
-
-        /// <summary>
-        /// Ticks relative to the start of the phrase.
-        /// </summary>
         public float[] ticks;
-
-        /// <summary>
-        /// Values normalized between 0 and 1.
-        /// </summary>
         public float[] values;
     }
 
@@ -85,13 +65,21 @@ namespace OpenUtau.Core.Render {
     public interface IRenderer {
         USingerType SingerType { get; }
         bool SupportsRenderPitch { get; }
-        bool SupportsRealCurve { get { return false; } }
+
+        // [DELTA SYNTH] Optimized using expression body
+        bool SupportsRealCurve => false;
+
         bool SupportsExpression(UExpressionDescriptor descriptor);
         RenderResult Layout(RenderPhrase phrase);
         Task<RenderResult> Render(RenderPhrase phrase, Progress progress, int trackNo, CancellationTokenSource cancellation, bool isPreRender = false, RenderPhraseEvents? renderEvents = null);
         RenderPitchResult LoadRenderedPitch(RenderPhrase phrase);
-        RenderPitchResult LoadRenderedPitch(RenderPhrase phrase, HashSet<int> selectedNotePositions) { return LoadRenderedPitch(phrase); }
-        List<RenderRealCurveResult> LoadRenderedRealCurves(RenderPhrase phrase) { return new List<RenderRealCurveResult>(0);}
+
+        // [DELTA SYNTH] Optimized using expression body
+        RenderPitchResult LoadRenderedPitch(RenderPhrase phrase, HashSet<int> selectedNotePositions) => LoadRenderedPitch(phrase);
+
+        // [DELTA SYNTH] Optimized using expression body
+        List<RenderRealCurveResult> LoadRenderedRealCurves(RenderPhrase phrase) => new List<RenderRealCurveResult>(0);
+
         void ScheduleRealCurveRefresh(UProject project, UVoicePart part, UCommand command) { }
         UExpressionDescriptor[] GetSuggestedExpressions(USinger singer, URenderSettings renderSettings);
     }

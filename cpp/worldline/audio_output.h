@@ -1,3 +1,12 @@
+/*
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: audio_output.h
+ * เวอร์ชั่น: 1.1
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & Staff
+ * Original by: OpenUtau Contributors
+ * รายละเอียดการแก้ไข: จัดระเบียบ C-ABI (Application Binary Interface) ให้รัดกุมและปลอดภัย
+ */
+
 #ifndef WORLDLINE_AUDIO_OUTPUT_H
 #define WORLDLINE_AUDIO_OUTPUT_H
 
@@ -6,9 +15,11 @@
 #include "miniaudio.h"
 
 #if defined(_MSC_VER)
-#define DLL_API __declspec(dllexport)
-#elif defined(__GNUC__)
-#define DLL_API __attribute__((visibility("default")))
+  #define DLL_API __declspec(dllexport)
+#elif defined(__GNUC__) || defined(__clang__)
+  #define DLL_API __attribute__((visibility("default")))
+#else
+  #define DLL_API
 #endif
 
 #if defined(__cplusplus)

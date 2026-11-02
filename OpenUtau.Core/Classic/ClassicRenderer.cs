@@ -1,8 +1,11 @@
-/*
- * Made And Checked By DELTA SYNTH & Gemini AI
- * Original by Patiphat Wongyai
- * Version: 2.0 (Resilient ClassicRenderer with Automatic Silence Fallback)
- */
+// ============================================================================
+// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 2. ชื่อไฟล์โค้ด: ClassicRenderer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 3.1
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/ClassicRenderer.cs
+// 5. หน้าที่: เรนเดอร์เสียงแบบ Classic UTAU พร้อมระบบ Atomic Cache Locking และ Silence Fallback
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Contributors
+// ============================================================================
 
 using System;
 using System.Collections.Generic;
@@ -24,6 +27,8 @@ namespace OpenUtau.Classic {
             Ustx.DYN,
             Ustx.PITD,
             Ustx.CLR,
+            Ustx.CLRY,
+            Ustx.XSY,
             Ustx.ENG,
             Ustx.VEL,
             Ustx.VOL,
@@ -33,12 +38,17 @@ namespace OpenUtau.Classic {
             Ustx.MODP,
             Ustx.ALT,
             Ustx.DIR,
-            Ustx.SHFT
+            Ustx.SHFT,
+            Ustx.GENC,
+            Ustx.TENC,
+            Ustx.BREC,
+            Ustx.VOIC
         };
 
         public USingerType SingerType => USingerType.Classic;
 
         public bool SupportsRenderPitch => false;
+
         public bool SupportsExpression(UExpressionDescriptor descriptor) {
             return descriptor.isFlag
                 || !string.IsNullOrEmpty(descriptor.flag)
@@ -68,7 +78,7 @@ namespace OpenUtau.Classic {
             }
             var task = Task.Run(() => {
                 Parallel.ForEach(source: resamplerItems, parallelOptions: new ParallelOptions() {
-                    MaxDegreeOfParallelism = Preferences.Default.NumRenderThreads
+                    MaxDegreeOfParallelism = Math.Max(1, Preferences.Default.NumRenderThreads)
                 }, body: item => {
                     if (!cancellation.IsCancellationRequested) {
                         lock (Renderers.GetCacheLock(item.outputFile)) {
@@ -83,16 +93,11 @@ namespace OpenUtau.Classic {
                                     } catch (Exception ex) {
                                         Log.Error(ex, $"{item.resampler} threw an exception while resampling \"{item.phone.phoneme}\"");
                                     }
-
-                                    // If resampler produced missing or 0-byte/corrupt file, generate a valid silence WAV fallback
                                     if (!File.Exists(item.outputFile) || new FileInfo(item.outputFile).Length < 44) {
                                         DocManager.Inst.Project.timeAxis.TickPosToBarBeat(item.phrase.position + item.phone.position, out int bar, out int beat, out int tick);
                                         Log.Warning($"{item.resampler} produced missing or invalid audio for \"{item.phone.phoneme}\" at {bar}:{beat}.{string.Format("{0:000}", tick)}. Generating silence fallback WAV.");
                                         try {
-                                            var format = new WaveFormat(44100, 16, 1);
-                                            using (var writer = new WaveFileWriter(item.outputFile, format)) {
-                                                writer.Write(new byte[8820], 0, 8820);
-                                            }
+                                            Wave.WriteMono16Wav(item.outputFile, new float[4410]);
                                         } catch (Exception ex) {
                                             Log.Error(ex, $"Failed to write silence fallback WAV to {item.outputFile}");
                                         }
@@ -107,7 +112,7 @@ namespace OpenUtau.Classic {
                     progress.Complete(1, $"Track {trackNo + 1}: {item.resampler} \"{item.phone.phoneme}\"");
                 });
                 var result = Layout(phrase);
-                var wavtool = new SharpWavtool(true);
+                var wavtool = new SharpWavtool(phrase.wavtool == SharpWavtool.nameConvergence);
                 result.samples = wavtool.Concatenate(resamplerItems, string.Empty, cancellation);
                 if (result.samples != null) {
                     Renderers.ApplyDynamics(phrase, result);
@@ -165,7 +170,7 @@ namespace OpenUtau.Classic {
         public UExpressionDescriptor[] GetSuggestedExpressions(USinger singer, URenderSettings renderSettings) {
             var manifest = renderSettings.Resampler.Manifest;
             if (manifest == null) {
-                return new UExpressionDescriptor[] { };
+                return Array.Empty<UExpressionDescriptor>();
             }
             return manifest.expressions.Values.ToArray();
         }

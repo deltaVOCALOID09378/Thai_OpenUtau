@@ -24,7 +24,7 @@ namespace OpenUtau.Classic {
         public override string OtherInfo => voicebank.OtherInfo;
         public override IList<string> Errors => errors;
         public override string Avatar => voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image);
-        public override byte[] AvatarData => avatarData;
+        public override byte[] AvatarData => LoadAvatarDataLazy();
         public override string Portrait => voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait);
         public override float PortraitOpacity => voicebank.PortraitOpacity;
         public override int PortraitHeight => voicebank.PortraitHeight;
@@ -37,6 +37,7 @@ namespace OpenUtau.Classic {
         Voicebank voicebank;
         List<string> errors = new List<string>();
         byte[] avatarData;
+        private bool avatarLoaded;
         List<UOtoSet> otoSets = new List<UOtoSet>();
         List<USubbank> subbanks = new List<USubbank>();
         List<UOto> otos = new List<UOto>();
@@ -49,6 +50,25 @@ namespace OpenUtau.Classic {
         public ClassicSinger(Voicebank voicebank) {
             this.voicebank = voicebank;
             found = true;
+        }
+
+        private byte[] LoadAvatarDataLazy() {
+            if (avatarLoaded) {
+                return avatarData;
+            }
+            avatarLoaded = true;
+            if (Avatar != null && File.Exists(Avatar)) {
+                try {
+                    avatarData = File.ReadAllBytes(Avatar);
+                } catch (Exception e) {
+                    avatarData = null;
+                    Log.Error(e, "Failed to load avatar data.");
+                }
+            } else {
+                avatarData = null;
+                Log.Debug("Avatar can't be found for {Name}", Name);
+            }
+            return avatarData;
         }
 
         public override void EnsureLoaded() {
@@ -76,22 +96,8 @@ namespace OpenUtau.Classic {
         }
 
         void Load() {
-            if (Avatar != null && File.Exists(Avatar)) {
-                try {
-                    using (var stream = new FileStream(Avatar, FileMode.Open, FileAccess.Read)) {
-                        using (var memoryStream = new MemoryStream()) {
-                            stream.CopyTo(memoryStream);
-                            avatarData = memoryStream.ToArray();
-                        }
-                    }
-                } catch (Exception e) {
-                    avatarData = null;
-                    Log.Error(e, "Failed to load avatar data.");
-                }
-            } else {
-                avatarData = null;
-                Log.Error("Avatar can't be found");
-            }
+            avatarLoaded = false;
+            avatarData = null;
 
             var newSubbanks = new List<USubbank>();
             newSubbanks.AddRange(voicebank.Subbanks

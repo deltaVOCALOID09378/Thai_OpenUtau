@@ -2,8 +2,8 @@
 :: ========================================================================
 :: File Name : Copy_Thai_OpenUtau.bat
 :: Version   : 2.0.0
-:: Target    : E:\Program Developing\Thai_OpenUtau
-:: Function  : Copy files from Google Drive to E:\Program Developing\Thai_OpenUtau,
+:: Target    : D:\Program Developing\Thai_OpenUtau
+:: Function  : Copy files from Google Drive to D:\Program Developing\Thai_OpenUtau,
 ::             maintain directory structure, overwrite existing files immediately,
 ::             and keep the local development environment 100% up-to-date.
 :: Credit    : DELTA SYNTH AI Engine
@@ -16,11 +16,11 @@ chcp 65001 >nul
 
 echo ======================================================================
 echo       DELTA SYNTH - Thai OpenUtau Local Synchronizer v2.0.0
-echo       Target: E:\Program Developing\Thai_OpenUtau
+echo       Target: D:\Program Developing\Thai_OpenUtau
 echo ======================================================================
 echo.
 
-set "DEST_DIR=E:\Program Developing\Thai_OpenUtau"
+set "DEST_DIR=D:\Program Developing\Thai_OpenUtau"
 
 rem Auto-detect Source Directory (Google Drive)
 set "SOURCE_DIR=%~dp0"

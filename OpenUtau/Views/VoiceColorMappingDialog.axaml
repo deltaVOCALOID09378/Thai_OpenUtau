@@ -2,36 +2,109 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" MinWidth="200" MinHeight="200" Width="350" Height="350"
+        mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="420"
         x:Class="OpenUtau.App.Views.VoiceColorMappingDialog"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource dialogs.voicecolorremapping}"
-        WindowStartupLocation="CenterOwner">
-  <Grid RowDefinitions="40,1*,30" Margin="10">
-    <StackPanel Grid.Row="0" >
-      <TextBlock Text="{DynamicResource dialogs.voicecolorremapping.caption}" />
-      <TextBlock Text="{Binding TrackName}" />
-    </StackPanel>
+        MinWidth="320" MinHeight="260" Width="420" Height="420"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
 
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" >
-      <ItemsControl ItemsSource="{Binding ColorMappings}" VerticalAlignment="Stretch" >
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Grid ColumnDefinitions="1*,1*">
-              <TextBlock Text="{Binding Name}"
-                         Grid.Column="0" HorizontalAlignment="Right" Margin="0,5,10,5"/>
-              <ComboBox ItemsSource="{Binding NewColors}" SelectedIndex="{Binding SelectedIndex}"
-                        Grid.Column="1" HorizontalAlignment="Left" Margin="10,5,0,5" MinWidth="100" />
-            </Grid>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </ScrollViewer>
+  <Window.Styles>
+    <!-- กรอบรายการ -->
+    <Style Selector="Border.section">
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+    </Style>
 
-    <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" Spacing="10">
-      <Button Content="{DynamicResource button.ok}" Click="Ok_OnClick" Width="100" />
-      <Button Content="{DynamicResource button.cancel}" Click="Cancel_OnClick" Width="100"/>
-    </StackPanel>
-  </Grid>
+    <!-- ชื่อสีเสียงเดิม -->
+    <Style Selector="TextBlock.colorName">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+      <Setter Property="MaxWidth" Value="160"/>
+    </Style>
+
+    <!-- ลูกศรคั่น -->
+    <Style Selector="TextBlock.arrow">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="12,0"/>
+      <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+
+    <Style Selector="Button.footer">
+      <Setter Property="MinWidth" Value="96"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+  </Window.Styles>
+
+  <Border Margin="{Binding $parent[Window].WindowDecorationMargin}">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+
+      <!-- ===== หัวข้อ ===== -->
+      <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,10">
+        <TextBlock Text="{DynamicResource dialogs.voicecolorremapping.caption}"
+                   TextWrapping="Wrap" Opacity="0.75"/>
+        <TextBlock Text="{Binding TrackName}"
+                   FontSize="15" FontWeight="SemiBold"
+                   TextTrimming="CharacterEllipsis"
+                   ToolTip.Tip="{Binding TrackName}"/>
+      </StackPanel>
+
+      <!-- ===== รายการจับคู่สี ===== -->
+      <Border Grid.Row="1" Classes="section">
+        <Panel>
+          <ScrollViewer VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding ColorMappings}"
+                          Grid.IsSharedSizeScope="True"
+                          Margin="10,6">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,3">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" SharedSizeGroup="ColorName"/>
+                      <ColumnDefinition Width="Auto"/>
+                      <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Classes="colorName"
+                               Text="{Binding Name}"
+                               ToolTip.Tip="{Binding Name}"/>
+                    <TextBlock Grid.Column="1" Classes="arrow" Text="→"/>
+                    <ComboBox Grid.Column="2"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="—"
+                              ItemsSource="{Binding NewColors}"
+                              SelectedIndex="{Binding SelectedIndex}"/>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+
+          <!-- แสดงเมื่อไม่มีรายการ -->
+          <TextBlock Text="{DynamicResource dialogs.voicecolorremapping.empty}"
+                     IsVisible="{Binding !ColorMappings.Count}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                     TextWrapping="Wrap" TextAlignment="Center"
+                     Margin="16" Opacity="0.6"/>
+        </Panel>
+      </Border>
+
+      <!-- ===== ปุ่ม ===== -->
+      <StackPanel Grid.Row="2" Orientation="Horizontal"
+                  HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+        <Button Classes="footer accent"
+                Content="{DynamicResource button.ok}"
+                IsDefault="True"
+                Click="Ok_OnClick"/>
+        <Button Classes="footer"
+                Content="{DynamicResource button.cancel}"
+                IsCancel="True"
+                Click="Cancel_OnClick"/>
+      </StackPanel>
+
+    </Grid>
+  </Border>
 </Window>
-

@@ -9,41 +9,56 @@
 // Description  : Dialog logic for Canon AutoPitchwriter tool. 
 //                Parses options and triggers automatic pitch automation generation.
 // ============================================================================
-
 using System;
+using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
 namespace OpenUtau.App.Views {
     public partial class AutoPitchwriterDialog : Window {
         public Action<AutoPitchwriterOptions>? onFinish;
+        private bool finished;
 
         public AutoPitchwriterDialog() {
             InitializeComponent();
         }
 
-        private void OnDefaultClick(object sender, RoutedEventArgs e) {
+        private void OnDefaultClick(object? sender, RoutedEventArgs e) {
             chkThunderbolt.IsChecked = true;
-            chkPitchDropRise.IsChecked = false;
-            chkSlope.IsChecked = false;
+            chkPitchDropRise.IsChecked = true;
+            chkSlope.IsChecked = true;
+            chkWarpShape.IsChecked = true;
+            chkUPitchDrop.IsChecked = true;
+            chkPitchDent.IsChecked = true;
+            
             txtPortamentoStart.Text = "-25";
             txtPortamentoLength.Text = "50";
         }
 
-        private void OnRunClick(object sender, RoutedEventArgs e) {
-            double.TryParse(txtPortamentoStart.Text, out double start);
-            double.TryParse(txtPortamentoLength.Text, out double length);
+        private void OnRunClick(object? sender, RoutedEventArgs e) {
+            if (finished) return;
+            finished = true;
+
+            double.TryParse(txtPortamentoStart.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double start);
+            double.TryParse(txtPortamentoLength.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double length);
+            length = Math.Max(0, length);
 
             var options = new AutoPitchwriterOptions {
                 Thunderbolt = chkThunderbolt.IsChecked ?? false,
                 PitchDropRise = chkPitchDropRise.IsChecked ?? false,
                 Slope = chkSlope.IsChecked ?? false,
+                WarpShape = chkWarpShape.IsChecked ?? false,
+                UPitchDrop = chkUPitchDrop.IsChecked ?? false,
+                PitchDent = chkPitchDent.IsChecked ?? false,
                 PortamentoStart = start,
                 PortamentoLength = length
             };
 
-            onFinish?.Invoke(options);
-            Close();
+            try {
+                onFinish?.Invoke(options);
+            } finally {
+                Close();
+            }
         }
     }
 
@@ -51,6 +66,9 @@ namespace OpenUtau.App.Views {
         public bool Thunderbolt { get; set; }
         public bool PitchDropRise { get; set; }
         public bool Slope { get; set; }
+        public bool WarpShape { get; set; }
+        public bool UPitchDrop { get; set; }
+        public bool PitchDent { get; set; }
         public double PortamentoStart { get; set; }
         public double PortamentoLength { get; set; }
     }

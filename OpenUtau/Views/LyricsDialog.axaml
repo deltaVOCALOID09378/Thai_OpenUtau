@@ -1,3 +1,11 @@
+<!--
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: LyricsDialog.axaml
+ * เวอร์ชั่น: 1.2
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/LyricsDialog.axaml
+ * รายละเอียดการแก้ไข: ปรับโครงสร้าง UI ให้รองรับฟอนต์ Leelawadee UI และประทับโทนสีมาตรฐานขององค์กร (Dark Theme & Red Accent)
+-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,14 +15,34 @@
         x:Class="OpenUtau.App.Views.LyricsDialog" WindowStartupLocation="CenterOwner"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource lyrics.caption}"
-        Opened="OnOpened">
+        Opened="OnOpened"
+        FontFamily="Leelawadee UI, sans-serif"
+        Background="#1A1A1A" Foreground="#F0F0F0">
   <Window.Styles>
     <StyleInclude Source="/Styles/PianoRollStyles.axaml"/>
+    <!-- DELTA SYNTH UI Standardization -->
+    <Style Selector="TextBlock">
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="#CC2200"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#FF4422"/>
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#991100"/>
+    </Style>
   </Window.Styles>
+  
   <Grid Margin="10,10,10,4" RowDefinitions="*,6,Auto,4,Auto">
     <c:WorkspacePanelTextBox Name="DIALOG_Box" Classes="workspacePanelTextBox workspacePanelTextBoxMultiline" Grid.Row="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
              AcceptsReturn="True" AcceptsTab="False" TextWrapping="Wrap"
-             Text="{Binding Text}" Focusable="True"/>
+             Text="{Binding Text}" Focusable="True"
+             Background="#1A1A1A" Foreground="#F0F0F0" FontFamily="Leelawadee UI"/>
+             
     <TextBlock Grid.Row="2" Margin="0,2" HorizontalAlignment="Right">
       <TextBlock.Text>
         <MultiBinding StringFormat="{}{0}/{1}">
@@ -23,6 +51,7 @@
         </MultiBinding>
       </TextBlock.Text>
     </TextBlock>
+    
     <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
       <TextBlock Text="{StaticResource lyrics.separators}" Margin="0,2"/>
       <Border CornerRadius="6"
@@ -46,6 +75,7 @@
         <TextBlock Text="字" Margin="0" Padding="4,2"/>
       </Border>
     </StackPanel>
+    
     <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10">
       <TextBlock Text="{StaticResource lyrics.livepreview}" Margin="0,8"/>
       <ToggleSwitch Margin="0" IsChecked="{Binding LivePreview}">
@@ -64,6 +94,7 @@
         </ToggleSwitch.Styles>
       </ToggleSwitch>
     </StackPanel>
+    
     <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
       <Button Content="{DynamicResource button.reset}" Margin="0" Command="{Binding Reset}"/>
       <Button Content="{DynamicResource button.cancel}" Margin="0" Click="OnCancel"/>
@@ -71,4 +102,3 @@
     </StackPanel>
   </Grid>
 </Window>
-

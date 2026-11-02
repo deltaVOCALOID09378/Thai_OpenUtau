@@ -1,23 +1,14 @@
-<!-- ============================================================================ -->
-<!-- วัน/เดือน/ปี: 21 ตุลาคม 2569 (2026-10-21) -->
-<!-- ชื่อไฟล์: AutoPitchRandomizerDialog.axaml -->
-<!-- ลำดับเวอร์ชัน: 1.0 -->
-<!-- เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ] -->
-<!-- ตำแหน่งที่จัดวาง: OpenUtau/Views/AutoPitchRandomizerDialog.axaml -->
-<!-- รายละเอียดการแก้ไขงาน: ปรับปรุง UI หน้าต่าง AutoPitch Randomizer ให้เป็น Floating Dark Card ตามมาตรฐานองค์กร DELTA SYNTH -->
-<!--                       ควบคุมโทนสีแดง-ดำ (#CC2200, #1A1A1A) รองรับฟอนต์ Leelawadee UI และคง Control Names เดิมครบถ้วน -->
-<!-- ============================================================================ -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="380" d:DesignHeight="290"
+        mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="480"
         x:Class="OpenUtau.App.Views.AutoPitchRandomizerDialog"
-        Title="AutoPitch Randomizer"
+        Title="DELTA SYNTH - Multi-Accent Engine &amp; Global Lyric Replacer"
         Icon="/Assets/Thai OpenUtau Logo.ico"
-        Width="380" Height="290" MinWidth="380" MinHeight="290"
         WindowStartupLocation="CenterOwner"
-        CanResize="False"
+        Width="560" Height="480" MinWidth="520" MinHeight="440"
+        CanResize="True"
         Background="Transparent"
         ExtendClientAreaChromeHints="NoChrome"
         ExtendClientAreaTitleBarHeightHint="-1"
@@ -25,102 +16,76 @@
         SystemDecorations="BorderOnly"
         FontFamily="Leelawadee UI, Leelawadee, sans-serif">
 
-  <!-- กรอบหน้าต่างหลักลอยตัว สไตล์ Modern Clean ของ DELTA SYNTH -->
-  <Border Background="#1A1A1A"
-          BorderBrush="#CC2200"
-          BorderThickness="1.5"
-          CornerRadius="14"
-          Padding="22,18,22,18"
-          BoxShadow="0 12 36 0 #A0000000">
-    <Grid RowDefinitions="Auto, Auto, Auto, Auto, *">
+  <Border Background="#1A1A1A" 
+          BorderBrush="#CC2200" 
+          BorderThickness="1.5" 
+          CornerRadius="12" 
+          Padding="20"
+          BoxShadow="0 15_40_0 #B0000000">
+    <Grid RowDefinitions="Auto, Auto, Auto, *, Auto">
 
-      <!-- หัวข้อไตเติลและคำอธิบายสองภาษา -->
+      <!-- ส่วนหัว -->
       <StackPanel Grid.Row="0" Margin="0,0,0,12" Spacing="3">
-        <TextBlock Text="AutoPitch Randomizer / สุ่มรูปแบบพิตช์และลูกคอ"
-                   FontWeight="Bold"
-                   FontSize="14"
-                   Foreground="#F0F0F0"/>
-        <TextBlock Text="เลือกรูปแบบคลื่นพิตช์ (Pattern) และปรับระดับความแรงในการสุ่ม"
-                   FontSize="11"
-                   Foreground="#8A8A8A"/>
+        <TextBlock Text="Advanced Accent &amp; Track-Wide Lyric Replacer" 
+                   FontWeight="Bold" FontSize="16" Foreground="#F0F0F0"/>
+        <TextBlock Text="กำหนดรูปแบบสำเนียงภาษาและเครื่องมือจัดการเนื้อเพลงแบบยกแทร็กอัตโนมัติ" 
+                   FontSize="11" Foreground="#A0A0A0"/>
       </StackPanel>
 
-      <!-- เมนูเลือกรูปแบบพิตช์ (Pattern Selection) -->
-      <StackPanel Grid.Row="1" Margin="0,0,0,10" Spacing="6">
-        <TextBlock Text="Select Pitch/Vibrato Pattern / รูปแบบคลื่น:"
-                   FontSize="12"
-                   Foreground="#CCCCCC"
-                   FontWeight="SemiBold"/>
-        <ComboBox Name="PatternComboBox"
-                  SelectedIndex="0"
-                  HorizontalAlignment="Stretch"
-                  Height="32"
-                  Background="#2A2A2A"
-                  Foreground="#F0F0F0"
-                  BorderBrush="#444444"
-                  BorderThickness="1"
-                  CornerRadius="6">
-          <ComboBoxItem Content="1. Wave / คลื่นลูกเอื้อน"/>
-          <ComboBoxItem Content="2. Drunk Walk / เดินสุ่มธรรมชาติ"/>
-          <ComboBoxItem Content="3. Drop / ลดระดับเสียง"/>
-          <ComboBoxItem Content="4. Rise / ยกระดับเสียง"/>
-          <ComboBoxItem Content="5. Triangle / สามเหลี่ยมสมมาตร"/>
-          <ComboBoxItem Content="6. Jitter / สั่นสุ่มความถี่สูง"/>
-        </ComboBox>
-      </StackPanel>
+      <!-- ส่วนเลือกรูปแบบสำเนียง (Accent Pattern) -->
+      <Border Grid.Row="1" Background="#222222" CornerRadius="8" Padding="12" Margin="0,0,0,10" BorderBrush="#333333" BorderThickness="1">
+        <StackPanel Spacing="6">
+          <TextBlock Text="Accent Pattern &amp; Language Model / รูปแบบสำเนียงภาษา" FontSize="12" FontWeight="SemiBold" Foreground="#D0D0D0"/>
+          <ComboBox Name="PatternComboBox" HorizontalAlignment="Stretch" Height="30">
+            <ComboBoxItem Content="1. General Native Sync (ค่ามาตรฐานตามภาษา)" Tag="Default" IsSelected="True"/>
+            <ComboBoxItem Content="2. Japanese VCV / Romaji Accent Flow (สำเนียงญี่ปุ่นต่อเนื่อง)" Tag="Japanese"/>
+            <ComboBoxItem Content="3. Thai Syllable Tonal Adjustment (ปรับทอดเสียงวรรณยุกต์ไทย)" Tag="Thai"/>
+            <ComboBoxItem Content="4. English Diphthong Staccato (เน้นสระควบและพยัญชนะท้ายอังกฤษ)" Tag="English"/>
+          </ComboBox>
+        </StackPanel>
+      </Border>
 
-      <!-- แถบกำหนดระดับความแรง (Intensity Slider) -->
-      <StackPanel Grid.Row="2" Margin="0,0,0,14" Spacing="4">
-        <Grid ColumnDefinitions="*,Auto">
-          <TextBlock Grid.Column="0"
-                     Text="Intensity / ระดับความแรง:"
-                     FontSize="12"
-                     Foreground="#CCCCCC"
-                     VerticalAlignment="Center"/>
-          <TextBlock Grid.Column="1"
-                     Text="{Binding #IntensitySlider.Value, StringFormat={}{0:0}%}"
-                     FontSize="12"
-                     FontWeight="SemiBold"
-                     Foreground="#CC2200"
-                     VerticalAlignment="Center"/>
+      <!-- ส่วนปรับความเข้มข้น (Intensity) -->
+      <Border Grid.Row="2" Background="#222222" CornerRadius="8" Padding="12" Margin="0,0,0,10" BorderBrush="#333333" BorderThickness="1">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" Spacing="4">
+            <TextBlock Text="Accent Intensity / ระดับความเข้มข้นสำเนียง" FontSize="12" FontWeight="SemiBold" Foreground="#D0D0D0"/>
+            <Slider Name="IntensitySlider" Minimum="0" Maximum="100" Value="50" TickFrequency="5" IsSnapToTickEnabled="True"/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Name="TxtIntensityVal" Text="50%" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="12,0,0,0" Foreground="#CC2200" FontWeight="Bold" FontSize="13"/>
         </Grid>
-        <Slider Name="IntensitySlider"
-                Minimum="0"
-                Maximum="100"
-                Value="50"
-                TickFrequency="10"
-                IsSnapToTickEnabled="True"
-                Foreground="#CC2200"
-                Margin="0,2,0,0"/>
-      </StackPanel>
+      </Border>
 
-      <!-- ปุ่มคำสั่งด้านล่าง (Cancel & Apply Action Buttons) -->
-      <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="10"
-                  Margin="0,4,0,0">
-        <Button Content="Cancel / ยกเลิก"
-                Name="CancelBtn"
-                Width="110" Height="32"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="#333333"
-                Foreground="#F0F0F0"
-                CornerRadius="6"
-                BorderThickness="0"
-                Cursor="Hand"/>
-        <Button Content="Apply / ตกลง"
-                Name="ApplyBtn"
-                Width="110" Height="32"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="#CC2200"
-                Foreground="#F0F0F0"
-                FontWeight="Bold"
-                CornerRadius="6"
-                BorderThickness="0"
-                Cursor="Hand"/>
+      <!-- [NEW] กล่องข้อความสำหรับ แทนที่เนื้อเพลงยกแทร็ก (Multi-Track Lyric Replacement) -->
+      <Border Grid.Row="3" Background="#252525" CornerRadius="8" Padding="12" Margin="0,0,0,14" BorderBrush="#CC2200" BorderThickness="0.8">
+        <Grid RowDefinitions="Auto, Auto, *">
+          <TextBlock Grid.Row="0" Text="Global Multi-Lyric Replacement (เปลี่ยนเนื้อเพลงยกแทร็กทันที)" FontSize="12" FontWeight="Bold" Foreground="#FF4422" Margin="0,0,0,6"/>
+          
+          <Grid Grid.Row="1" ColumnDefinitions="*, *, Auto" Margin="0,0,0,6">
+            <TextBox Grid.Column="0" Name="TxtSearchLyric" Watermark="คำค้นหาเดิม (เช่น A)" Height="26" Margin="0,0,4,0" Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" FontSize="11"/>
+            <TextBox Grid.Column="1" Name="TxtReplaceLyric" Watermark="คำใหม่ที่ต้องการ (เช่น B)" Height="26" Margin="0,0,6,0" Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" FontSize="11"/>
+            <Button Grid.Column="2" Name="BtnApplyReplace" Content="Replace All / แทนที่ทั้งหมด" Height="26" Padding="8,0" Background="#442222" Foreground="#FFAAAA" FontSize="11" CornerRadius="4" BorderThickness="0" Cursor="Hand"/>
+          </Grid>
+
+          <!-- ช่องกรอกเนื้อเพลงแบบยาวต่อเนื่องยกแทร็ก (Batch Lyric Flow) -->
+          <TextBox Grid.Row="2" Name="TxtBatchLyrics" 
+                   Watermark="พิมพ์หรือวางเนื้อเพลงใหม่ทั้งหมดที่นี่ เว้นวรรคหรือขึ้นบรรทัดใหม่เพื่อแทนที่เรียงตามลำดับโน้ตทั้งแทร็ก..." 
+                   AcceptsReturn="True" TextWrapping="Wrap"
+                   Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" FontSize="11"
+                   ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+        </Grid>
+      </Border>
+
+      <!-- ปุ่มควบคุมด้านล่าง (Action Buttons) -->
+      <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+        <Button Name="CancelBtn" Content="Cancel / ยกเลิก" 
+                Width="110" Height="32" 
+                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+                Background="#333333" Foreground="#F0F0F0" CornerRadius="6" BorderThickness="0" Cursor="Hand"/>
+        <Button Name="ApplyBtn" Content="Apply / ยืนยันการทำงาน" 
+                Width="140" Height="32" 
+                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+                Background="#CC2200" Foreground="#F0F0F0" FontWeight="Bold" CornerRadius="6" BorderThickness="0" Cursor="Hand"/>
       </StackPanel>
 
     </Grid>

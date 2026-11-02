@@ -1,47 +1,38 @@
 ﻿using System;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 
 namespace OpenUtau.App.Views {
     public partial class TypeInDialog : Window {
         public Action<string>? onFinish;
+        bool finished;   // กันการกด OK หรือ Enter ซ้ำ
 
         public TypeInDialog() {
             InitializeComponent();
-            OkButton.Click += OkButtonClick;
-            TextBox.AttachedToVisualTree += (s, e) => { TextBox.SelectAll(); TextBox.Focus(); };
+            OkButton.Click += OnOkClick;
+            CancelButton.Click += (_, _) => Close();
         }
+
+        public void SetText(string text) => TextBox.Text = text;
 
         public void SetPrompt(string prompt) {
-            Prompt.IsVisible = true;
             Prompt.Text = prompt;
+            Prompt.IsVisible = !string.IsNullOrWhiteSpace(prompt);
         }
 
-        public void SetText(string text) {
-            TextBox.Text = text;
+        protected override void OnOpened(EventArgs e) {
+            base.OnOpened(e);
+            TextBox.Focus();
+            TextBox.SelectAll();   // เปิดมาพิมพ์ทับได้ทันที
         }
 
-        private void OkButtonClick(object? sender, RoutedEventArgs e) {
-            Finish();
-        }
-
-        private void Finish() {
-            if (onFinish != null) {
-                onFinish.Invoke(TextBox.Text ?? string.Empty);
-            }
-            Close();
-        }
-
-        protected override void OnKeyDown(KeyEventArgs e) {
-            if (e.Key == Key.Escape) {
-                e.Handled = true;
+        void OnOkClick(object? sender, RoutedEventArgs e) {
+            if (finished) return;
+            finished = true;
+            try {
+                onFinish?.Invoke(TextBox.Text ?? string.Empty);
+            } finally {
                 Close();
-            } else if (e.Key == Key.Enter) {
-                e.Handled = true;
-                Finish();
-            } else {
-                base.OnKeyDown(e);
             }
         }
     }

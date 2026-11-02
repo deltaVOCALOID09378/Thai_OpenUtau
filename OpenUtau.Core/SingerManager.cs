@@ -1,4 +1,12 @@
-﻿using System;
+// ============================================================================
+// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : SingerManager.cs
+// Version      : 1.6
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai (Delta) ]
+// File Location: OpenUtau.Core/SingerManager.cs
+// Description  : Singer lifecycle & memory manager. Optimized caching and Threading.
+// ============================================================================
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,45 +19,28 @@ using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using Serilog;
 
-// ============================================================================
-// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
-// Original by Patiphat Wongyai (Delta)
-// Version: 1.4 | Date: 2026-10-27
-// Description: เพิ่มการจัดหมวดหมู่นักร้อง DELTA SYNTH และจัดเป็นหมวดแรกก่อนใคร
-// ============================================================================
-
 namespace OpenUtau.Core {
     public class SingerManager : SingletonBase<SingerManager> {
-        public Dictionary<string, USinger> Singers { get; private set; } = new Dictionary<string, USinger>();
-        public Dictionary<USingerType, List<USinger>> SingerGroups { get; private set; } = new Dictionary<USingerType, List<USinger>>();
-        public List<USinger> DeltaSynthSingers { get; private set; } = new List<USinger>();
+        public Dictionary<string, USinger> Singers { get; private set; } = new();
+        public Dictionary<USingerType, List<USinger>> SingerGroups { get; private set; } = new();
+        public List<USinger> DeltaSynthSingers { get; private set; } = new();
 
-        private readonly ConcurrentQueue<USinger> reloadQueue = new ConcurrentQueue<USinger>();
+        private readonly ConcurrentQueue<USinger> reloadQueue = new();
         private CancellationTokenSource reloadCancellation;
+        private HashSet<USinger> singersUsed = new();
 
-        private HashSet<USinger> singersUsed = new HashSet<USinger>();
-
-        public void Initialize() {
-            SearchAllSingers();
-        }
+        public void Initialize() => SearchAllSingers();
 
         public void SearchAllSingers() {
             Log.Information("Searching singers.");
             Directory.CreateDirectory(PathManager.Inst.SingersPath);
             var stopWatch = Stopwatch.StartNew();
-            var singers = ClassicSingerLoader.FindAllSingers()
-                .Concat(Vogen.VogenSingerLoader.FindAllSingers())
-                .Distinct();
-            Singers = singers
-                .ToLookup(s => s.Id)
-                .ToDictionary(g => g.Key, g => g.First());
-            SingerGroups = singers
-                .GroupBy(s => s.SingerType)
-                .ToDictionary(s => s.Key, s => s.LocalizedOrderBy(singer => singer.LocalizedName).ToList());
-            DeltaSynthSingers = singers
-                .Where(s => s.IsDeltaSynthSinger)
-                .LocalizedOrderBy(singer => singer.LocalizedName)
-                .ToList();
+            
+            var singers = ClassicSingerLoader.FindAllSingers().Concat(Vogen.VogenSingerLoader.FindAllSingers()).Distinct().ToList();
+            Singers = singers.ToDictionary(s => s.Id, s => s);
+            SingerGroups = singers.GroupBy(s => s.SingerType).ToDictionary(g => g.Key, g => g.LocalizedOrderBy(singer => singer.LocalizedName).ToList());
+            DeltaSynthSingers = singers.Where(s => s.IsDeltaSynthSinger).LocalizedOrderBy(singer => singer.LocalizedName).ToList();
+            
             stopWatch.Stop();
             Log.Information($"Search all singers: {stopWatch.Elapsed}");
         }
@@ -57,10 +48,7 @@ namespace OpenUtau.Core {
         public USinger GetSinger(string name) {
             Log.Information($"Attach singer to track: {name}");
             name = name.Replace("%VOICE%", "");
-            if (Singers.ContainsKey(name)) {
-                return Singers[name];
-            }
-            return null;
+            return Singers.TryGetValue(name, out var singer) ? singer : null;
         }
 
         public void ScheduleReload(USinger singer) {
@@ -71,17 +59,14 @@ namespace OpenUtau.Core {
         private void ScheduleReload() {
             var newCancellation = new CancellationTokenSource();
             var oldCancellation = Interlocked.Exchange(ref reloadCancellation, newCancellation);
-            if (oldCancellation != null) {
-                oldCancellation.Cancel();
-            }
+            oldCancellation?.Cancel();
 
             _ = Task.Run(async () => {
                 try {
                     await Task.Delay(200, newCancellation.Token).ConfigureAwait(false);
                     await Refresh().ConfigureAwait(false);
-                } catch (OperationCanceledException) when (newCancellation.IsCancellationRequested) {
-                    // การร้องขอครั้งใหม่เข้ามาแทนที่งานเดิม จึงยกเลิกงานหน่วงเดิมตามปกติ
-                } finally {
+                } catch (OperationCanceledException) { }
+                finally {
                     Interlocked.CompareExchange(ref reloadCancellation, null, newCancellation);
                     newCancellation.Dispose();
                 }
@@ -103,14 +88,9 @@ namespace OpenUtau.Core {
                         singer.Reload();
                         break;
                     } catch (Exception e) {
-                        if (retries == 0) {
-                            Log.Error(e, $"Failed to reload {singer.Id}");
-                        } else {
+                        if (retries == 0) Log.Error(e, $"Failed to reload {singer.Id}");
+                        else {
                             Log.Error(e, $"Retrying reload {singer.Id}");
-                            // Non-blocking delay: Thread.Sleep here would tie up a
-                            // threadpool thread for up to 1s per failed singer,
-                            // which can starve other queued work (rendering, UI
-                            // dispatch, etc.) under load.
                             await Task.Delay(200).ConfigureAwait(false);
                         }
                     }
@@ -127,23 +107,11 @@ namespace OpenUtau.Core {
             Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, DocManager.Inst.MainScheduler);
         }
 
-        //Check which singers are in use and free memory for those that are not
         public void ReleaseSingersNotInUse(UProject project) {
-            //Check which singers are in use
-            var singersInUse = new HashSet<USinger>();
-            foreach (var track in project.tracks) {
-                var singer = track.Singer;
-                if (singer != null && singer.Found && !singersInUse.Contains(singer)) {
-                    singersInUse.Add(singer);
-                }
+            var singersInUse = new HashSet<USinger>(project.tracks.Select(t => t.Singer).Where(s => s != null && s.Found));
+            foreach (var singer in singersUsed.Where(s => !singersInUse.Contains(s))) {
+                singer.FreeMemory();
             }
-            //Release singers that are no longer in use
-            foreach (var singer in singersUsed) {
-                if (!singersInUse.Contains(singer)) {
-                    singer.FreeMemory();
-                }
-            }
-            //Update singers used
             singersUsed = singersInUse;
         }
     }

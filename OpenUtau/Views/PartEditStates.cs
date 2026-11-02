@@ -1,3 +1,12 @@
+// ============================================================================
+// Date         : 02/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : PartEditStates.cs
+// Version      : 3.2.1
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/Views/PartEditStates.cs
+// Description  : Arrangement view part interaction states with micrometer selection,
+//                2px deadband, Alt+Drag part duplication, and guarded sweeping part eraser.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,13 +97,16 @@ namespace OpenUtau.App.Views {
     }
 
     class PartMoveEditState : PartEditState {
-        public readonly UPart part;
+        public UPart part;
         public readonly bool isVoice;
         private double xOffset;
-        protected override string? commandNameKey => "command.part.move";
+        private readonly bool copyParts;
+        private bool hasCopied;
+        protected override string? commandNameKey => copyParts ? "command.part.duplicate" : "command.part.move";
 
-        public PartMoveEditState(Control control, MainWindowViewModel vm, UPart part) : base(control, vm) {
+        public PartMoveEditState(Control control, MainWindowViewModel vm, UPart part, bool copyParts = false) : base(control, vm) {
             this.part = part;
+            this.copyParts = copyParts;
             isVoice = part is UVoicePart;
             var tracksVm = vm.TracksViewModel;
             if (!tracksVm.SelectedParts.Contains(part)) {
@@ -109,11 +121,37 @@ namespace OpenUtau.App.Views {
         }
         public override void Update(IPointer pointer, Point point) {
             var delta = point - startPoint;
-            if (Math.Abs(delta.X) + Math.Abs(delta.Y) < 4) {
+            if (Math.Abs(delta.X) + Math.Abs(delta.Y) < 2) {
                 return;
             }
             var project = DocManager.Inst.Project;
             var tracksVm = vm.TracksViewModel;
+
+            if (copyParts && !hasCopied) {
+                hasCopied = true;
+                var sourceParts = tracksVm.SelectedParts.Count > 0
+                    ? tracksVm.SelectedParts.ToList()
+                    : new List<UPart> { part };
+                var clonedParts = new List<UPart>();
+                UPart? newActivePart = null;
+                foreach (var src in sourceParts) {
+                    var clone = src.Clone();
+                    DocManager.Inst.ExecuteCmd(new AddPartCommand(project, clone));
+                    clonedParts.Add(clone);
+                    if (src == part) {
+                        newActivePart = clone;
+                    }
+                }
+                tracksVm.DeselectParts();
+                foreach (var clone in clonedParts) {
+                    tracksVm.SelectPart(clone);
+                }
+                if (newActivePart != null) {
+                    part = newActivePart;
+                } else if (clonedParts.Count > 0) {
+                    part = clonedParts[0];
+                }
+            }
 
             int deltaTrack = tracksVm.PointToTrackNo(point) - part.trackNo;
             int minDeltaTrack;
@@ -257,15 +295,22 @@ namespace OpenUtau.App.Views {
     }
 
     class PartEraseEditState : PartEditState {
-        public override MouseButton MouseButton => MouseButton.Right;
+        public override MouseButton MouseButton { get; }
         protected override string? commandNameKey => "command.part.delete";
 
-        public PartEraseEditState(Control control, MainWindowViewModel vm) : base(control, vm) { }
+        public PartEraseEditState(
+            Control control,
+            MainWindowViewModel vm,
+            MouseButton mouseButton = MouseButton.Right) : base(control, vm) {
+            MouseButton = mouseButton;
+        }
+
         public override void Update(IPointer pointer, Point point) {
-            var project = DocManager.Inst.Project;
-            var control = base.control.InputHitTest(point);
-            if (control is PartControl partControl) {
-                DocManager.Inst.ExecuteCmd(new RemovePartCommand(project, partControl.part));
+            var hitControl = control.InputHitTest(point);
+            if (hitControl is PartControl partControl && partControl.part != null) {
+                if (DocManager.Inst.Project.parts.Contains(partControl.part)) {
+                    DocManager.Inst.ExecuteCmd(new RemovePartCommand(DocManager.Inst.Project, partControl.part));
+                }
             }
         }
     }

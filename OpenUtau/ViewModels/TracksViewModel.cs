@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : TracksViewModel.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
+// File Location: OpenUtau/ViewModels/TracksViewModel.cs
+// Description  : Arrangement Tracks ViewModel with initialized SnapUnit, accurate PointToPlayPosTick mouse positioning, and non-jumping manual playhead click handling.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -191,6 +199,7 @@ namespace OpenUtau.App.ViewModels {
 
             TickWidth = ViewConstants.TickWidthDefault;
             TrackHeight = ViewConstants.TrackHeightDefault;
+            UpdateSnapDiv();
             Notify();
 
             MessageBus.Current.Listen<PianoRollOpenPartChangedEvent>()
@@ -271,31 +280,54 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public int PointToTick(Point point) {
+            if (TickWidth <= 0) {
+                return (int)Math.Max(0, TickOffset);
+            }
             return (int)(point.X / TickWidth + TickOffset);
         }
 
-        public void TickToLineTick(int tick, out int left, out int right) {
-            if(tick < 0 || SnapUnit <= 0){
-                left = right = 0;
-                return;
+        /// <summary>
+        /// Converts a mouse click position in the Track Timeline/PartsCanvas to a playhead tick.
+        /// Snaps to the fine SnapDiv grid unless forceUnsnapped is true, and never jumps to 0 on uninitialized SnapUnit.
+        /// </summary>
+        public int PointToPlayPosTick(Point point, bool forceUnsnapped = false) {
+            int rawTick = Math.Max(0, PointToTick(point));
+            if (forceUnsnapped) {
+                return rawTick;
             }
-            double minLineTick = ViewConstants.MinTicklineWidth / TickWidth;
-            var timeSig = Project.timeAxis.TimeSignatureAtTick(tick);
-            Project.timeAxis.TickPosToBarBeat(tick, out int bar, out int beat, out int remainingTicks);
+            if (SnapDiv <= 0 || SnapUnit <= 0) {
+                UpdateSnapDiv();
+            }
+            int safeSnapDiv = SnapDiv > 0 ? SnapDiv : 16;
+            int fineSnapUnit = Math.Max(15, Project.resolution * 4 / safeSnapDiv);
+            Project.timeAxis.TickPosToBarBeat(rawTick, out int bar, out int _, out int _);
+            int barTick = Project.timeAxis.BarBeatToTickPos(bar, 0);
+            return Math.Max(0, barTick + ((rawTick - barTick) / fineSnapUnit) * fineSnapUnit);
+        }
+
+        public void TickToLineTick(int tick, out int left, out int right) {
+            int safeTick = Math.Max(0, tick);
+            if (SnapUnit <= 0 || SnapDiv <= 0) {
+                UpdateSnapDiv();
+            }
+            int effectiveSnapUnit = SnapUnit > 0 ? SnapUnit : Math.Max(15, Project.resolution * 4 / Math.Max(1, SnapDiv));
+            double minLineTick = TickWidth > 0 ? ViewConstants.MinTicklineWidth / TickWidth : 0;
+            var timeSig = Project.timeAxis.TimeSignatureAtTick(safeTick);
+            Project.timeAxis.TickPosToBarBeat(safeTick, out int bar, out int beat, out int remainingTicks);
             int barTick = Project.timeAxis.BarBeatToTickPos(bar, 0);
             int nextBarTick = Project.timeAxis.BarBeatToTickPos(bar + 1, 0);
-            int ticksPerBeat = Project.resolution * 4 * timeSig.beatPerBar / timeSig.beatUnit;
-            int ticksPerLine = SnapUnit;
-            if (ticksPerBeat < SnapUnit) {
+            int ticksPerBeat = Math.Max(15, Project.resolution * 4 * timeSig.beatPerBar / Math.Max(1, timeSig.beatUnit));
+            int ticksPerLine = effectiveSnapUnit;
+            if (ticksPerBeat < effectiveSnapUnit) {
                 ticksPerLine = ticksPerBeat;
-            } else if (ticksPerBeat % SnapUnit != 0) {
+            } else if (ticksPerBeat % effectiveSnapUnit != 0) {
                 if (ticksPerBeat > minLineTick) {
                     ticksPerLine = ticksPerBeat;
                 } else {
-                    ticksPerLine = nextBarTick - barTick;
+                    ticksPerLine = Math.Max(15, nextBarTick - barTick);
                 }
             }
-            left = barTick + (tick - barTick) / ticksPerLine * ticksPerLine;
+            left = Math.Max(0, barTick + (safeTick - barTick) / ticksPerLine * ticksPerLine);
             right = left + ticksPerLine;
         }
 
@@ -583,7 +615,10 @@ namespace OpenUtau.App.ViewModels {
                     MessageBus.Current.SendMessage(new TrackSelectionEvent(SelectedTracks.ToArray()));
                 } else if (cmd is SetPlayPosTickNotification setPlayPosTick) {
                     SetPlayPos(setPlayPosTick.playPosTick, setPlayPosTick.waitingRendering);
-                    if (!setPlayPosTick.pause || Preferences.Default.LockStartTime == 1) {
+                    bool isPlaying = PlaybackManager.Inst.PlayingMaster || PlaybackManager.Inst.StartingToPlay;
+                    if (!setPlayPosTick.pause && isPlaying) {
+                        MaybeAutoScroll();
+                    } else if (setPlayPosTick.pause && Preferences.Default.LockStartTime == 1 && Bounds.Width > 0 && (PlayPosX < 0 || PlayPosX > Bounds.Width)) {
                         MaybeAutoScroll();
                     }
                 } else if (cmd is SetRangeSelectionNotification) {

@@ -54,17 +54,17 @@ namespace OpenUtau.App.ViewModels {
             try {
                 var release = await SelectRelease();
                 if (release == null) {
-                    Log.Error("No updatable release found.");
+                    Log.Information("No updatable release found.");
                     return null;
                 }
                 Log.Information($"Checking update at: {release.html_url}");
                 var appcast = SelectAppcast(release);
                 if (appcast == null) {
-                    Log.Error("No updatable appcast found.");
+                    Log.Information("No updatable appcast found.");
                     return null;
                 }
                 Log.Information($"Checking appcast: {appcast.browser_download_url}");
-                return new ZipUpdater(appcast.browser_download_url, new Ed25519Checker(SecurityMode.Unsafe)) {
+                return new ZipUpdater(appcast.browser_download_url, new Ed25519Checker(SecurityMode.Strict)) {
                     UIFactory = null,
                     CheckServerFileName = false,
                     RelaunchAfterUpdate = true,
@@ -74,7 +74,7 @@ namespace OpenUtau.App.ViewModels {
                     },
                 };
             } catch (Exception e) {
-                Log.Error(e, "Failed to select appcast to update.");
+                Log.Information("Update check skipped or offline ({Message}).", e.Message);
                 return null;
             }
         }

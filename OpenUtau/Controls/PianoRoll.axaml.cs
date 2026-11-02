@@ -1,3 +1,14 @@
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : PianoRoll.axaml.cs
+// Version      : 3.4.0
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
+// File Location: OpenUtau/Controls/PianoRoll.axaml.cs
+// Description  : Piano Roll controller with Vocal Tuning macro menu & toolbar integration,
+//                Thai 5-Tone AutoPitch, CleanAllSuffixes, full 6-shape Canon AutoPitchwriter,
+//                Multi-Accent & Global Multi-Lyric Randomizer, and Alt+Drag note duplication.
+// ============================================================================
+using OpenUtau.App.Capture;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -95,6 +106,9 @@ namespace OpenUtau.App.Controls {
             ValueTip.IsVisible = false;
             SetPenToolIcon();
             penTool.AddHandler(PointerPressedEvent, OnToolButtonPointerPressed, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+            ScreenCaptureService.Inst.OnRecordingStateChanged = isRec => {
+                UpdateCaptureVideoState(isRec);
+            };
 
             ViewModel.WhenAnyValue(x => x.ShowAppearancePanel, x => x.ShowDiffSingerPanel)
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -585,6 +599,12 @@ namespace OpenUtau.App.Controls {
                 if (NotesVm == null || NotesVm.Part == null) {
                     return;
                 }
+                var targetNotes = NotesVm.Selection.Count > 0
+                    ? NotesVm.Selection.ToList()
+                    : NotesVm.Part.notes.ToList();
+                if (targetNotes.Count == 0) {
+                    return;
+                }
                 try {
                     if (edit.IsAsync) {
                         var mainWindow =
@@ -595,7 +615,7 @@ namespace OpenUtau.App.Controls {
                             ThemeManager.GetString("pianoroll.menu.batch.running"),
                             (messageBox, cancellationToken) => {
                                 edit.RunAsync(NotesVm.Project, NotesVm.Part,
-                                    NotesVm.Selection.ToList(), DocManager.Inst,
+                                    targetNotes, DocManager.Inst,
                                     (current, total) => {
                                         messageBox.SetText($"{name}: {current} / {total}");
                                     }, cancellationToken);
@@ -613,7 +633,7 @@ namespace OpenUtau.App.Controls {
                             }
                         );
                     } else {
-                        edit.Run(NotesVm.Project, NotesVm.Part, NotesVm.Selection.ToList(),
+                        edit.Run(NotesVm.Project, NotesVm.Part, targetNotes,
                             DocManager.Inst);
                     }
                 } catch (Exception e) {
@@ -622,6 +642,68 @@ namespace OpenUtau.App.Controls {
                 }
 
             });
+
+            var vocalTuningEditsList = new List<BatchEdit>() {
+                new VocalTuningMacro(),
+                new OpenUtau.Core.AutoPitch.ContextualAutoPitchBatchEdit(),
+                new ThaiAutoPitchByToneBatchEdit(),
+                new AutoPitchRandomizerBatchEdit(),
+                new AutoPitchVibrato(),
+                new DrawVocalMoodCurve(),
+                new AlignConsonants(),
+                new AddVocalRuns(),
+                new AutoMixBatchEdit(),
+                new RemoveBreathNote(),
+            };
+
+            ViewModel.VocalTuningEdits.Clear();
+            ViewModel.VocalTuningEdits.AddRange(vocalTuningEditsList.Select(edit => {
+                Avalonia.Input.KeyGesture? menuGesture = null;
+                var savedSc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == edit.Name);
+                if (savedSc != null &&
+                    Enum.TryParse<Avalonia.Input.Key>(savedSc.KeyName, out var parsedKey) &&
+                    Enum.TryParse<Avalonia.Input.KeyModifiers>(savedSc.ModifiersName, out var parsedMods) &&
+                    parsedKey != Avalonia.Input.Key.None) {
+                    menuGesture = new Avalonia.Input.KeyGesture(parsedKey, parsedMods);
+                }
+
+                return new MenuItemViewModel() {
+                    Header = ThemeManager.GetString(edit.Name),
+                    InputGesture = menuGesture,
+                    Command = noteBatchEditCommand,
+                    CommandParameter = edit,
+                };
+            }));
+
+            ViewModel.VocalTuningEdits.Add(new MenuItemViewModel() { Header = "-", Height = 1 });
+            ViewModel.VocalTuningEdits.Add(new MenuItemViewModel() {
+                Header = ThemeManager.GetString("pianoroll.menu.notes.openautopitchwriter"),
+                Command = ReactiveCommand.Create(OpenAutoPitchwriterDialog)
+            });
+            ViewModel.VocalTuningEdits.Add(new MenuItemViewModel() {
+                Header = ThemeManager.GetString("pianoroll.menu.notes.openautopitchrandomizer"),
+                Command = ReactiveCommand.Create(OpenAutoPitchRandomizerDialog)
+            });
+
+            ViewModel.NoteBatchEdits.Clear();
+            ViewModel.NoteBatchEdits.AddRange(vocalTuningEditsList.Select(edit => {
+                Avalonia.Input.KeyGesture? menuGesture = null;
+                var savedSc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == edit.Name);
+                if (savedSc != null &&
+                    Enum.TryParse<Avalonia.Input.Key>(savedSc.KeyName, out var parsedKey) &&
+                    Enum.TryParse<Avalonia.Input.KeyModifiers>(savedSc.ModifiersName, out var parsedMods) &&
+                    parsedKey != Avalonia.Input.Key.None) {
+                    menuGesture = new Avalonia.Input.KeyGesture(parsedKey, parsedMods);
+                }
+
+                return new MenuItemViewModel() {
+                    Header = ThemeManager.GetString(edit.Name),
+                    InputGesture = menuGesture,
+                    Command = noteBatchEditCommand,
+                    CommandParameter = edit,
+                };
+            }));
+
             ViewModel.NoteBatchEdits.AddRange(new List<BatchEdit>() {
                 new LoadRenderedPitch(),
                 new RefreshRealCurves(),
@@ -663,10 +745,15 @@ namespace OpenUtau.App.Controls {
                 new HanziToPinyin(),
                 new RemoveToneSuffix(),
                 new RemoveLetterSuffix(),
+                new CleanAllSuffixes(),
                 new MoveSuffixToVoiceColor(),
                 new RemovePhoneticHint(),
                 new DashToPlus(),
                 new DashToPlusTilda(),
+                new PlusToDash(),
+                new PlusToPlusTilda(),
+                new PlusTildaToPlus(),
+                new PlusTildaTodash(),
                 new InsertSlur(),
             }.Select(edit => {
                 Avalonia.Input.KeyGesture? menuGesture = null;
@@ -786,7 +873,9 @@ namespace OpenUtau.App.Controls {
             AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
             
             this.WhenAnyValue(x => x.ViewModel!.PlaybackViewModel!.PlayPosTick)
+                .Skip(1)
                 .Subscribe(tick => {
+                    if (!PlaybackManager.Inst.PlayingMaster) return;
                     var notesVm = ViewModel?.NotesViewModel;
                     
                     if (notesVm?.Part == null) return;
@@ -1240,8 +1329,13 @@ namespace OpenUtau.App.Controls {
             var point = args.GetCurrentPoint(control);
             if (point.Properties.IsLeftButtonPressed) {
                 args.Pointer.Capture(control);
-                ViewModel.NotesViewModel.PointToLineTick(point.Position, out int left, out int right);
-                int tick = left + ViewModel.NotesViewModel.Part?.position ?? 0;
+                bool unsnapped = args.KeyModifiers.HasFlag(KeyModifiers.Shift);
+                int localTick = ViewModel.NotesViewModel.PointToPlayPosTick(point.Position, unsnapped);
+                int tick = localTick + (ViewModel.NotesViewModel.Part?.position ?? 0);
+                if (DocManager.Inst.rangeEndTick > DocManager.Inst.rangeStartTick &&
+                    (tick < DocManager.Inst.rangeStartTick || tick >= DocManager.Inst.rangeEndTick)) {
+                    DocManager.Inst.ExecuteCmd(new SetRangeSelectionNotification(0, 0));
+                }
                 ViewModel.PlaybackViewModel?.MovePlayPos(tick);
             } else if (point.Properties.IsRightButtonPressed) {
                 args.Pointer.Capture(control);
@@ -1257,8 +1351,9 @@ namespace OpenUtau.App.Controls {
             var control = (Control)sender;
             var point = args.GetCurrentPoint(control);
             if (point.Properties.IsLeftButtonPressed) {
-                ViewModel.NotesViewModel.PointToLineTick(point.Position, out int left, out int right);
-                int tick = left + ViewModel.NotesViewModel.Part?.position ?? 0;
+                bool unsnapped = args.KeyModifiers.HasFlag(KeyModifiers.Shift);
+                int localTick = ViewModel.NotesViewModel.PointToPlayPosTick(point.Position, unsnapped);
+                int tick = localTick + (ViewModel.NotesViewModel.Part?.position ?? 0);
                 ViewModel.PlaybackViewModel?.MovePlayPos(tick);
             } else if (point.Properties.IsRightButtonPressed && isSelectingRange) {
                 double dx = Math.Abs(point.Position.X - rangeSelectStartPoint.X);
@@ -1295,6 +1390,9 @@ namespace OpenUtau.App.Controls {
             int left = Math.Min(startLeft, endLeft);
             int right = Math.Max(startRight, endRight);
             DocManager.Inst.ExecuteCmd(new SetRangeSelectionNotification(left + partPos, right + partPos));
+            if (!PlaybackManager.Inst.PlayingMaster) {
+                ViewModel.PlaybackViewModel?.MovePlayPos(left + partPos);
+            }
         }
 
         public void NotesCanvasPointerPressed(object sender, PointerPressedEventArgs args) {
@@ -1334,6 +1432,18 @@ namespace OpenUtau.App.Controls {
         }
 
         private void NotesCanvasLeftPointerPressed(Control control, PointerPoint point, PointerPressedEventArgs args) {
+            if (!PlaybackManager.Inst.PlayingMaster && ViewModel.NotesViewModel.Part != null) {
+                var hitForPlayhead = ViewModel.NotesViewModel.HitTest.HitTestNote(point.Position);
+                int localClickTick = hitForPlayhead.hitBody && hitForPlayhead.note != null
+                    ? hitForPlayhead.note.position
+                    : ViewModel.NotesViewModel.PointToPlayPosTick(point.Position);
+                int absClickTick = ViewModel.NotesViewModel.Part.position + Math.Max(0, localClickTick);
+                if (DocManager.Inst.rangeEndTick > DocManager.Inst.rangeStartTick &&
+                    (absClickTick < DocManager.Inst.rangeStartTick || absClickTick >= DocManager.Inst.rangeEndTick)) {
+                    DocManager.Inst.ExecuteCmd(new SetRangeSelectionNotification(0, 0));
+                }
+                ViewModel.PlaybackViewModel?.MovePlayPos(absClickTick);
+            }
             if (ViewModel.EditTool.IsPitchTool) {
                 ViewModel.NotesViewModel.DeselectNotes();
                 if (args.KeyModifiers != cmdKey) {
@@ -1415,7 +1525,7 @@ namespace OpenUtau.App.Controls {
                     editState = new NoteSplitEditState(
                             control, ViewModel, this, noteHitInfo.note);
                 } else {
-                    editState = new NoteMoveEditState(control, ViewModel, this, noteHitInfo.note);
+                    editState = new NoteMoveEditState(control, ViewModel, this, noteHitInfo.note, args.KeyModifiers == KeyModifiers.Alt);
                     Cursor = ViewConstants.cursorSizeAll;
                 }
                 return;
@@ -1538,6 +1648,10 @@ namespace OpenUtau.App.Controls {
                             InputGesture = KeyTranslator.GetGesture("PasteParameters"),
                         });
                         ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                            Header = ThemeManager.GetString("pianoroll.menu.vocaltuning"),
+                            Items = ViewModel.VocalTuningEdits.ToArray(),
+                        });
+                        ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
                             Header = ThemeManager.GetString("pianoroll.menu.notes"),
                             Items = ViewModel.NoteBatchEdits.ToArray(),
                         });
@@ -1572,6 +1686,39 @@ namespace OpenUtau.App.Controls {
                         shouldOpenNotesContextMenu = true;
                         return;
                     }
+                } else if (ViewModel.NotesViewModel.Part != null) {
+                    ViewModel.NotesContextMenuItems.Clear();
+                    ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                        Header = ThemeManager.GetString("menu.edit.selectall"),
+                        Command = ReactiveCommand.Create(() => ViewModel.NotesViewModel.SelectAllNotes()),
+                        InputGesture = KeyTranslator.GetGesture("SelectAll"),
+                    });
+                    ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                        Header = ThemeManager.GetString("pianoroll.menu.vocaltuning"),
+                        Items = ViewModel.VocalTuningEdits.ToArray(),
+                    });
+                    ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                        Header = ThemeManager.GetString("pianoroll.menu.notes"),
+                        Items = ViewModel.NoteBatchEdits.ToArray(),
+                    });
+                    ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                        Header = ThemeManager.GetString("pianoroll.menu.lyrics"),
+                        Items = ViewModel.LyricBatchEdits.ToArray(),
+                    });
+                    ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                        Header = ThemeManager.GetString("pianoroll.menu.reset"),
+                        Items = ViewModel.ResetBatchEdits.ToArray(),
+                    });
+                    ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                        Header = ThemeManager.GetString("pianoroll.menu.part.legacypluginexp"),
+                        Items = ViewModel.LegacyPlugins.ToArray(),
+                    });
+                    ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                        Header = ThemeManager.GetString("pianoroll.menu.external"),
+                        Items = ViewModel.ExternalBatchEdits.ToArray(),
+                    });
+                    shouldOpenNotesContextMenu = true;
+                    return;
                 } else {
                     ViewModel.NotesViewModel.DeselectNotes();
                 }
@@ -2018,6 +2165,113 @@ namespace OpenUtau.App.Controls {
             }
         }
 
+        public void OnVocalTuningMenuButton(object? sender, RoutedEventArgs args) {
+            if (sender is Button button && button.ContextMenu != null) {
+                button.ContextMenu.PlacementTarget = button;
+                button.ContextMenu.Open();
+            }
+        }
+
+        public void OpenAutoPitchwriterDialog() {
+            var NotesVm = ViewModel?.NotesViewModel;
+            if (NotesVm == null || NotesVm.Part == null || NotesVm.Part.notes.Count == 0) {
+                return;
+            }
+            var dialog = new AutoPitchwriterDialog();
+            dialog.onFinish = options => {
+                var notes = NotesVm.Selection.Count > 0 ? NotesVm.Selection.ToList() : NotesVm.Part.notes.ToList();
+                if (notes.Count == 0) return;
+                var allowedShapes = new HashSet<OpenUtau.Core.AutoPitch.PitchShapeType>();
+                if (options.Thunderbolt) allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.Thunderbolt);
+                if (options.PitchDropRise) allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.PitchDropRise);
+                if (options.Slope) allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.Slope);
+                if (options.WarpShape) allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.WShape);
+                if (options.UPitchDrop) allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.UPitchDrop);
+                if (options.PitchDent) allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.PitchDent);
+                if (allowedShapes.Count == 0) {
+                    allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.Slope);
+                }
+
+                DocManager.Inst.StartUndoGroup("command.batch.autopitchwriter", true);
+                try {
+                    OpenUtau.Core.AutoPitch.AutoPitchContextualEngine.ApplyContextualAutoPitch(
+                        NotesVm.Part,
+                        notes,
+                        NotesVm.Project,
+                        allowedShapes,
+                        (float)options.PortamentoStart,
+                        (float)options.PortamentoLength);
+                    foreach (var note in notes) {
+                        DocManager.Inst.ExecuteCmd(new SetPitchPointsCommand(NotesVm.Part, note, note.pitch));
+                    }
+                    DocManager.Inst.ExecuteCmd(new ShowPitchNotification());
+                } finally {
+                    DocManager.Inst.EndUndoGroup();
+                }
+            };
+            if (RootWindow != null) {
+                dialog.ShowDialog(RootWindow);
+            }
+        }
+
+        public void OpenAutoPitchRandomizerDialog() {
+            var NotesVm = ViewModel?.NotesViewModel;
+            if (NotesVm == null || NotesVm.Part == null || NotesVm.Part.notes.Count == 0) {
+                return;
+            }
+            var dialog = new AutoPitchRandomizerDialog();
+            dialog.Closed += (s, e) => {
+                if (dialog.IsApplied) {
+                    var notes = NotesVm.Selection.Count > 0 ? NotesVm.Selection.ToList() : NotesVm.Part.notes.ToList();
+                    if (dialog.IsGlobalReplaceTriggered && !string.IsNullOrEmpty(dialog.SearchTarget)) {
+                        DocManager.Inst.StartUndoGroup("command.batch.lyric", true);
+                        try {
+                            foreach (var vPart in NotesVm.Project.parts.OfType<UVoicePart>()) {
+                                var matchedNotes = vPart.notes
+                                    .Where(n => !string.IsNullOrEmpty(n.lyric) && n.lyric.Contains(dialog.SearchTarget, StringComparison.Ordinal))
+                                    .ToArray();
+                                if (matchedNotes.Length > 0) {
+                                    var updatedLyrics = matchedNotes
+                                        .Select(n => n.lyric.Replace(dialog.SearchTarget, dialog.ReplaceTarget, StringComparison.Ordinal))
+                                        .ToArray();
+                                    DocManager.Inst.ExecuteCmd(new ChangeNoteLyricCommand(vPart, matchedNotes, updatedLyrics));
+                                }
+                            }
+                        } finally {
+                            DocManager.Inst.EndUndoGroup();
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(dialog.BatchSequenceLyrics) && notes.Count > 0) {
+                        var tokens = dialog.BatchSequenceLyrics
+                            .Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (tokens.Length > 0) {
+                            int count = Math.Min(notes.Count, tokens.Length);
+                            var targetSlice = notes.Take(count).ToArray();
+                            var lyricSlice = tokens.Take(count).ToArray();
+                            DocManager.Inst.StartUndoGroup("command.batch.lyric", true);
+                            try {
+                                DocManager.Inst.ExecuteCmd(new ChangeNoteLyricCommand(NotesVm.Part, targetSlice, lyricSlice));
+                            } finally {
+                                DocManager.Inst.EndUndoGroup();
+                            }
+                        }
+                    }
+
+                    if (string.Equals(dialog.SelectedAccentLanguage, "Thai", StringComparison.OrdinalIgnoreCase)) {
+                        var thaiEdit = new ThaiAutoPitchByToneBatchEdit();
+                        thaiEdit.Run(NotesVm.Project, NotesVm.Part, notes, DocManager.Inst);
+                    } else {
+                        var edit = new AutoPitchRandomizerBatchEdit(dialog.SelectedPattern, dialog.Intensity);
+                        edit.Run(NotesVm.Project, NotesVm.Part, notes, DocManager.Inst);
+                    }
+                }
+            };
+            if (RootWindow != null) {
+                dialog.ShowDialog(RootWindow);
+            }
+        }
+
         public void OnKeyMenuButton(object sender, RoutedEventArgs args) {
             if (sender is not Control control || ViewModel?.NotesViewModel == null) {
                 return;
@@ -2367,7 +2621,8 @@ namespace OpenUtau.App.Controls {
             }
             // External and batch note edits
             if (!string.IsNullOrEmpty(action)) {
-                var allDynamicMenus = ViewModel.NoteBatchEdits
+                var allDynamicMenus = ViewModel.VocalTuningEdits
+                    .Concat(ViewModel.NoteBatchEdits)
                     .Concat(ViewModel.LyricBatchEdits)
                     .Concat(ViewModel.ResetBatchEdits)
                     .Concat(ViewModel.ExternalBatchEdits);
@@ -2409,5 +2664,44 @@ namespace OpenUtau.App.Controls {
                 }
             }
         }
+
+        #region Screen Capture & Video Recording Handlers
+        private async void OnCapturePhotoClick(object? sender, RoutedEventArgs e) {
+            try {
+                await ScreenCaptureService.Inst.CapturePictureAsync(this);
+            } catch (Exception ex) {
+                Serilog.Log.Error(ex, "Failed to capture piano roll photo");
+            }
+        }
+
+        private async void OnCaptureVideoClick(object? sender, RoutedEventArgs e) {
+            try {
+                if (ScreenCaptureService.Inst.IsRecording) {
+                    await ScreenCaptureService.Inst.StopRecordingAsync();
+                    UpdateCaptureVideoState(false);
+                } else {
+                    bool started = ScreenCaptureService.Inst.StartRecording(this);
+                    UpdateCaptureVideoState(started);
+                }
+            } catch (Exception ex) {
+                Serilog.Log.Error(ex, "Failed to toggle piano roll video recording");
+            }
+        }
+
+        private void UpdateCaptureVideoState(bool isRecording) {
+            Dispatcher.UIThread.Post(() => {
+                var dot = this.FindControl<Avalonia.Controls.Shapes.Ellipse>("CaptureRecordingDot");
+                if (dot != null) {
+                    dot.IsVisible = isRecording;
+                }
+                var btn = this.FindControl<Button>("CaptureVideoButton");
+                if (btn != null) {
+                    ToolTip.SetTip(btn, isRecording 
+                        ? (ThemeManager.GetString("capture.video.recording") ?? "กำลังบันทึกวิดีโอ... (คลิกเพื่อหยุด)")
+                        : (ThemeManager.GetString("capture.video.tooltip") ?? "บันทึกวิดีโอหน้าจอ Piano Roll"));
+                }
+            });
+        }
+        #endregion
     }
 }

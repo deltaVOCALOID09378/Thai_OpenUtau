@@ -207,7 +207,7 @@ namespace OpenUtau.App.ViewModels {
             InstallOrUpdateCommand = ReactiveCommand.CreateFromTask<SingerHubRowViewModel>(InstallOrUpdateAsync);
             UninstallCommand = ReactiveCommand.CreateFromTask<SingerHubRowViewModel>(UninstallAsync);
             this.WhenAnyValue(x => x.SearchText, x => x.SelectedTabIndex).Subscribe(_ => ApplyFilter());
-            _ = RefreshAsync();
+            Dispatcher.UIThread.Post(() => _ = RefreshAsync(), DispatcherPriority.Background);
         }
 
         void ApplyFilter() {
@@ -306,7 +306,7 @@ namespace OpenUtau.App.ViewModels {
             try {
                 return await client.FetchRegistryAsync(registryUrl);
             } catch (Exception e) {
-                Serilog.Log.Warning(e, "Failed to fetch Singer Hub registry from {Url}", registryUrl ?? SingerHubClient.DefaultRegistryUrl);
+                Serilog.Log.Information("Singer Hub registry unavailable from {Url} ({Message})", registryUrl ?? SingerHubClient.DefaultRegistryUrl, e.Message);
                 return new List<SingerHubEntry>();
             }
         }

@@ -26,7 +26,7 @@ namespace OpenUtau.Core.DiffSinger {
         public override string OtherInfo => voicebank.OtherInfo;
         public override IList<string> Errors => errors;
         public override string Avatar => voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image);
-        public override byte[] AvatarData => avatarData;
+        public override byte[] AvatarData => LoadAvatarDataLazy();
         public override string Portrait => voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait);
         public override float PortraitOpacity => voicebank.PortraitOpacity;
         public override int PortraitHeight => voicebank.PortraitHeight;
@@ -40,6 +40,7 @@ namespace OpenUtau.Core.DiffSinger {
         List<string> errors = new List<string>();
         Dictionary<string, string[]> table = new Dictionary<string, string[]>();
         public byte[] avatarData;
+        private bool avatarLoaded;
         List<USubbank> subbanks = new List<USubbank>();
         List<UOto> otos = new List<UOto>();
         Dictionary<string, UOto> otoMap = new Dictionary<string, UOto>();
@@ -57,25 +58,27 @@ namespace OpenUtau.Core.DiffSinger {
         public bool HasPitchPredictor => File.Exists(Path.Join(Location, "dspitch", "dsconfig.yaml"));
         public bool HasVariancePredictor => File.Exists(Path.Join(Location,"dsvariance", "dsconfig.yaml"));
 
-        public DiffSingerSinger(Voicebank voicebank) {
-            this.voicebank = voicebank;
-            //Load Avatar
+        private byte[] LoadAvatarDataLazy() {
+            if (avatarLoaded) {
+                return avatarData;
+            }
+            avatarLoaded = true;
             if (Avatar != null && File.Exists(Avatar)) {
                 try {
-                    using (var stream = new FileStream(Avatar, FileMode.Open, FileAccess.Read)) {
-                        using (var memoryStream = new MemoryStream()) {
-                            stream.CopyTo(memoryStream);
-                            avatarData = memoryStream.ToArray();
-                        }
-                    }
+                    avatarData = File.ReadAllBytes(Avatar);
                 } catch (Exception e) {
                     avatarData = null;
                     Log.Error(e, "Failed to load avatar data.");
                 }
             } else {
                 avatarData = null;
-                Log.Information("Avatar not found");
+                Log.Debug("Avatar not found for {Name}", Name);
             }
+            return avatarData;
+        }
+
+        public DiffSingerSinger(Voicebank voicebank) {
+            this.voicebank = voicebank;
 
             subbanks.Clear();
             subbanks.AddRange(voicebank.Subbanks
@@ -90,12 +93,12 @@ namespace OpenUtau.Core.DiffSinger {
                         File.ReadAllText(configPath, Encoding.UTF8));
                     dsConfigLoaded = true;
                 } catch (Exception e) {
-                    Log.Error(e, $"Failed to load dsconfig.yaml for {Name} from {configPath}");
+                    Log.Warning(e, $"Failed to load dsconfig.yaml for {Name} from {configPath}");
                     errors.Add($"Failed to load dsconfig.yaml: {e.Message}");
                     dsConfig = new DsConfig();
                 }
             } else {
-                Log.Error($"dsconfig.yaml not found for {Name} at {configPath}");
+                Log.Warning($"dsconfig.yaml not found for {Name} at {configPath}");
                 errors.Add($"dsconfig.yaml not found at {configPath}");
                 dsConfig = new DsConfig();
             }
@@ -197,7 +200,7 @@ namespace OpenUtau.Core.DiffSinger {
                         unvoicedPhonemes.Count, relativePath);
                 }
             } else if (unvoicedPhonemes.Count == 0 && !File.Exists(path)) {
-                Log.Information("Unvoiced phoneme list not found at {Path}", path);
+                Log.Debug("Unvoiced phoneme list not found at {Path}", path);
             }
         }
 

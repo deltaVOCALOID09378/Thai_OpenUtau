@@ -1,4 +1,14 @@
+// ============================================================================
+// Date         : 02/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : TrackHeaderViewModel.cs
+// Version      : 3.2.1
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/ViewModels/TrackHeaderViewModel.cs
+// Description  : Track header ViewModel with static ConcurrentDictionary avatar memory cache
+//                and dynamic high-contrast TrackNoForeground luminance calculation.
+// ============================================================================
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,6 +33,13 @@ using Serilog;
 
 namespace OpenUtau.App.ViewModels {
     public class TrackHeaderViewModel : ViewModelBase, IActivatableViewModel {
+        private static readonly ConcurrentDictionary<string, Bitmap?> _avatarCache = new ConcurrentDictionary<string, Bitmap?>();
+        private static Bitmap? _emptyAvatar;
+
+        public static void ClearAvatarCache() {
+            _avatarCache.Clear();
+        }
+
         public int TrackNo => track.TrackNo + 1;
         public USinger Singer => track.Singer;
         public Phonemizer Phonemizer => track.Phonemizer;
@@ -35,6 +52,7 @@ namespace OpenUtau.App.ViewModels {
         public ReactiveCommand<PhonemizerFactory, Unit> AllSetPhonemizerCommand { get; }
         [Reactive] public string TrackName { get; set; } = string.Empty;
         [Reactive] public SolidColorBrush TrackAccentColor { get; set; } = ThemeManager.GetTrackColor("Blue").AccentColor;
+        [Reactive] public IBrush TrackNoForeground { get; set; } = Brushes.White;
         [Reactive] public TrackColor TrackColor { get; set; } = ThemeManager.GetTrackColor("Blue");
         [Reactive] public double Volume { get; set; }
         [Reactive] public double Pan { get; set; }
@@ -628,6 +646,7 @@ namespace OpenUtau.App.ViewModels {
                 Header = ThemeManager.GetString("singers.refresh"),
                 Command = ReactiveCommand.Create(() => {
                     DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(MainWindow), true, "singer"));
+                    ClearAvatarCache();
                     SingerManager.Inst.SearchAllSingers();
                     DocManager.Inst.ExecuteCmd(new SingersRefreshedNotification());
                     DocManager.Inst.ExecuteCmd(new LoadingNotification(typeof(MainWindow), false, "singer"));
@@ -714,13 +733,23 @@ namespace OpenUtau.App.ViewModels {
         public void RefreshAvatar() {
             var singer = track?.Singer;
             if (singer == null || singer.AvatarData == null) {
-                Avatar = new RenderTargetBitmap(new PixelSize(1, 1));
+                _emptyAvatar ??= new RenderTargetBitmap(new PixelSize(1, 1));
+                Avatar = _emptyAvatar;
+                return;
+            }
+            string cacheKey = $"{singer.Id ?? singer.Name}_{singer.AvatarData.Length}";
+            if (_avatarCache.TryGetValue(cacheKey, out var cachedBitmap)) {
+                Avatar = cachedBitmap;
                 return;
             }
             try {
                 using var stream = new MemoryStream(singer.AvatarData);
-                Avatar = new Bitmap(stream).CreateScaledBitmap(new PixelSize(100, 100));
+                using var fullBitmap = new Bitmap(stream);
+                var scaled = fullBitmap.CreateScaledBitmap(new PixelSize(100, 100));
+                _avatarCache[cacheKey] = scaled;
+                Avatar = scaled;
             } catch (Exception e) {
+                _avatarCache[cacheKey] = null;
                 Avatar = null;
                 Log.Error(e, "Failed to decode avatar.");
             }
@@ -728,6 +757,12 @@ namespace OpenUtau.App.ViewModels {
 
         void UpdateTrackSettingsVisibility() {
             IsTrackSettingsVisible = track.Singer is { Found: true, SingerType: USingerType.Classic };
+        }
+
+        void UpdateTrackNoForeground() {
+            var color = TrackAccentColor?.Color ?? Avalonia.Media.Colors.White;
+            double luminance = 0.299 * color.R + 0.587 * color.G + 0.114 * color.B;
+            TrackNoForeground = luminance > 160 ? Brushes.Black : Brushes.White;
         }
 
         public void ManuallyRaise() {
@@ -746,6 +781,7 @@ namespace OpenUtau.App.ViewModels {
             this.RaisePropertyChanged(nameof(TrackNo));
             this.RaisePropertyChanged(nameof(TrackName));
             this.RaisePropertyChanged(nameof(TrackAccentColor));
+            UpdateTrackNoForeground();
             this.RaisePropertyChanged(nameof(TrackColor));
             this.RaisePropertyChanged(nameof(Phonemizer));
             this.RaisePropertyChanged(nameof(PhonemizerTag));

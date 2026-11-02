@@ -291,14 +291,131 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public string ShortcutSearchText { get; set; } = string.Empty;
         public ReactiveCommand<ShortcutItemViewModel, Unit> ListenForShortcutCommand { get; }
 
-        // DELTA SYNTH: Missing Capture/Record feature bindings
-        public string CaptureExportLocation {
-            get => Core.Util.Preferences.Default.CaptureExportLocation;
-            set {
-                Core.Util.Preferences.Default.CaptureExportLocation = value;
-                Core.Util.Preferences.Save();
-                this.RaisePropertyChanged(nameof(CaptureExportLocation));
+        // DELTA SYNTH: Multi-Resolution & Split-Path Capture Settings
+        public List<string> CaptureResolutions { get; } = new List<string> {
+            "240", "480", "720", "1080", "2k", "2160", "4k"
+        };
+
+        private string selectedCaptureResolution = string.Empty;
+        public string SelectedCaptureResolution {
+            get {
+                if (string.IsNullOrEmpty(selectedCaptureResolution)) {
+                    selectedCaptureResolution = Preferences.Default.CaptureResolutionPreset;
+                    if (string.IsNullOrEmpty(selectedCaptureResolution)) {
+                        selectedCaptureResolution = Preferences.Default.CaptureResolution switch {
+                            240 => "240",
+                            480 => "480",
+                            720 => "720",
+                            1080 => "1080",
+                            1440 => "2k",
+                            2160 => "2160",
+                            4096 => "4k",
+                            _ => "1080"
+                        };
+                    }
+                }
+                return selectedCaptureResolution;
             }
+            set {
+                this.RaiseAndSetIfChanged(ref selectedCaptureResolution, value);
+                Preferences.Default.CaptureResolutionPreset = value;
+                if (value == "240") Preferences.Default.CaptureResolution = 240;
+                else if (value == "480") Preferences.Default.CaptureResolution = 480;
+                else if (value == "720") Preferences.Default.CaptureResolution = 720;
+                else if (value == "1080") Preferences.Default.CaptureResolution = 1080;
+                else if (value == "2k") Preferences.Default.CaptureResolution = 1440;
+                else if (value == "2160") Preferences.Default.CaptureResolution = 2160;
+                else if (value == "4k") Preferences.Default.CaptureResolution = 2160;
+            }
+        }
+
+        private string captureScreenshotPath = string.Empty;
+        public string CaptureScreenshotPath {
+            get {
+                if (string.IsNullOrEmpty(captureScreenshotPath)) {
+                    captureScreenshotPath = string.IsNullOrWhiteSpace(Preferences.Default.CaptureScreenshotExportLocation)
+                        ? Preferences.ResolveDefaultScreenshotLocation()
+                        : Preferences.Default.CaptureScreenshotExportLocation;
+                }
+                return captureScreenshotPath;
+            }
+            set {
+                this.RaiseAndSetIfChanged(ref captureScreenshotPath, value);
+                Preferences.Default.CaptureScreenshotExportLocation = value;
+            }
+        }
+
+        private string captureVideoRenderPath = string.Empty;
+        public string CaptureVideoRenderPath {
+            get {
+                if (string.IsNullOrEmpty(captureVideoRenderPath)) {
+                    captureVideoRenderPath = string.IsNullOrWhiteSpace(Preferences.Default.CaptureVideoExportLocation)
+                        ? Preferences.ResolveDefaultVideoRenderLocation()
+                        : Preferences.Default.CaptureVideoExportLocation;
+                }
+                return captureVideoRenderPath;
+            }
+            set {
+                this.RaiseAndSetIfChanged(ref captureVideoRenderPath, value);
+                Preferences.Default.CaptureVideoExportLocation = value;
+            }
+        }
+
+        public List<string> CaptureVideoFormats { get; } = new List<string> { "mp4", "avi", "mkv" };
+        private string selectedCaptureVideoFormat = string.Empty;
+        public string SelectedCaptureVideoFormat {
+            get {
+                if (string.IsNullOrEmpty(selectedCaptureVideoFormat)) {
+                    selectedCaptureVideoFormat = Preferences.Default.CaptureVideoFormat ?? "mp4";
+                }
+                return selectedCaptureVideoFormat;
+            }
+            set {
+                this.RaiseAndSetIfChanged(ref selectedCaptureVideoFormat, value);
+                Preferences.Default.CaptureVideoFormat = value;
+            }
+        }
+
+        public ReactiveCommand<Unit, Unit> SaveCaptureSettingsCommand { get; }
+
+        public void SetScreenshotPath(string path) {
+            CaptureScreenshotPath = path;
+        }
+
+        public void ResetScreenshotPath() {
+            Preferences.Default.CaptureScreenshotExportLocation = string.Empty;
+            CaptureScreenshotPath = Preferences.ResolveDefaultScreenshotLocation();
+            Preferences.Save();
+        }
+
+        public void SetVideoRenderPath(string path) {
+            CaptureVideoRenderPath = path;
+        }
+
+        public void ResetVideoRenderPath() {
+            Preferences.Default.CaptureVideoExportLocation = string.Empty;
+            CaptureVideoRenderPath = Preferences.ResolveDefaultVideoRenderLocation();
+            Preferences.Save();
+        }
+
+        public void SaveCaptureSettings() {
+            try {
+                Preferences.Default.CaptureScreenshotExportLocation = CaptureScreenshotPath;
+                Preferences.Default.CaptureVideoExportLocation = CaptureVideoRenderPath;
+                Preferences.Default.CaptureResolutionPreset = SelectedCaptureResolution;
+                Preferences.Default.CaptureVideoFormat = SelectedCaptureVideoFormat;
+                Preferences.Save();
+                DocManager.Inst.ExecuteCmd(new UserMessageNotification("💾 บันทึกการตั้งค่าแคปหน้าจอและเรนเดอร์เรียบร้อยแล้ว"));
+            } catch (Exception ex) {
+                Log.Error(ex, "Failed to save capture preferences.");
+                DocManager.Inst.ExecuteCmd(new UserMessageNotification("เกิดข้อผิดพลาดในการบันทึกการตั้งค่า"));
+            }
+        }
+
+        // Backward compatibility properties
+        public string CaptureExportLocation {
+            get => CaptureVideoRenderPath;
+            set => SetVideoRenderPath(value);
         }
         public string CaptureFilenameFormat {
             get => Core.Util.Preferences.Default.CaptureFilenameFormat;
@@ -317,10 +434,9 @@ namespace OpenUtau.App.ViewModels {
             }
         }
         public int CaptureResolutionIndex {
-            get => Core.Util.Preferences.Default.CaptureResolution == 1080 ? 0 : (Core.Util.Preferences.Default.CaptureResolution == 720 ? 1 : 2);
+            get => SelectedCaptureResolution == "1080" ? 0 : (SelectedCaptureResolution == "720" ? 1 : 2);
             set {
-                Core.Util.Preferences.Default.CaptureResolution = value == 0 ? 1080 : (value == 1 ? 720 : 480);
-                Core.Util.Preferences.Save();
+                SelectedCaptureResolution = value == 0 ? "1080" : (value == 1 ? "720" : "480");
                 this.RaisePropertyChanged(nameof(CaptureResolutionIndex));
             }
         }
@@ -334,6 +450,7 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public PreferencesViewModel() {
+            SaveCaptureSettingsCommand = ReactiveCommand.Create(SaveCaptureSettings);
             bool isAudioInitializing = true;
             ListenForShortcutCommand = ReactiveCommand.Create<ShortcutItemViewModel>(ListenForShortcut);
 

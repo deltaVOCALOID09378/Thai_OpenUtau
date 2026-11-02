@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : TickBackground.cs
+// Version      : 1.1
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
+// File Location: OpenUtau/Controls/TickBackground.cs
+// Description  : Timeline and grid tick renderer with zero-width bounds guard to prevent SnapTicks truncation to left edge.
+// ============================================================================
 using System;
 using System.Collections.ObjectModel;
 using Avalonia;
@@ -150,13 +158,13 @@ namespace OpenUtau.App.Controls {
         }
 
         public override void Render(DrawingContext context) {
-            if (TickWidth <= 0) {
+            if (TickWidth <= 0 || Bounds.Width <= 0 || SnapDiv <= 0) {
                 return;
             }
             bool showBar = ShowBar;
             double subLineY = showBar ? 24 : 0;
             var project = Core.DocManager.Inst.Project;
-            int snapUnit = project.resolution * 4 / SnapDiv;
+            int snapUnit = Math.Max(1, project.resolution * 4 / Math.Max(1, SnapDiv));
             while (snapUnit * TickWidth < ViewConstants.MinTicklineWidth) {
                 snapUnit *= 2; // Avoid drawing too dense.
             }

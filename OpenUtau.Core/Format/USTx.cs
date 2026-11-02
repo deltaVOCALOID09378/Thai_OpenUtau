@@ -1,3 +1,12 @@
+// ============================================================================
+// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 2. ชื่อไฟล์โค้ด: USTx.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.1
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Format/USTx.cs
+// 5. หน้าที่: จัดการโครงสร้างไฟล์โปรเจกต์ USTX และกำหนดค่าคงที่ Expression มาตรฐาน (เพิ่ม CLRY และ XSY)
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Authors
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,11 +19,13 @@ using Serilog;
 
 namespace OpenUtau.Core.Format {
     public class Ustx {
-        public static readonly Version kUstxVersion = new Version(0, 9);
+        public static readonly Version kUstxVersion = new Version(0, 10);
 
         public const string DYN = "dyn";
         public const string PITD = "pitd";
         public const string CLR = "clr";
+        public const string CLRY = "clry";
+        public const string XSY = "xsy";
         public const string ENG = "eng";
         public const string VEL = "vel";
         public const string VOL = "vol";
@@ -42,6 +53,8 @@ namespace OpenUtau.Core.Format {
             project.RegisterExpression(new UExpressionDescriptor("dynamics (curve)", DYN, -240, 120, 0) { type = UExpressionType.Curve });
             project.RegisterExpression(new UExpressionDescriptor("pitch deviation (curve)", PITD, -8192, 8192, 0) { type = UExpressionType.Curve });
             project.RegisterExpression(new UExpressionDescriptor("voice color", CLR, false, new string[0]));
+            project.RegisterExpression(new UExpressionDescriptor("voice color (secondary)", CLRY, false, new string[0]));
+            project.RegisterExpression(new UExpressionDescriptor("cross-synthesis", XSY, 0, 100, 0) { type = UExpressionType.Curve });
             project.RegisterExpression(new UExpressionDescriptor("resampler engine", ENG, false, new string[] { "", WorldlineResampler.name }));
             project.RegisterExpression(new UExpressionDescriptor("velocity", VEL, 0, 200, 100));
             project.RegisterExpression(new UExpressionDescriptor("volume", VOL, 0, 200, 100));
@@ -80,6 +93,7 @@ namespace OpenUtau.Core.Format {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
         }
+
         private static bool ValidateExpression(UProject project, string flag, string abbr) {
             if (project.expressions.Any(e => e.Value.flag == flag && e.Value.abbr != abbr)) {
                 var oldExp = project.expressions.First(e => e.Value.flag == flag && e.Value.abbr != abbr);

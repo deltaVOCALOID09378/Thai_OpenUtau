@@ -1,3 +1,12 @@
+/*
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: phrase_synth.h
+ * เวอร์ชั่น: 1.1
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & Staff
+ * Original by: OpenUtau Contributors
+ * รายละเอียดการแก้ไข: ตีกรอบ Type Safety ด้วย [[nodiscard]] และจัดระเบียบโครงสร้าง
+ */
+
 #ifndef WORLDLINE_PHRASE_SYNTH_H_
 #define WORLDLINE_PHRASE_SYNTH_H_
 
@@ -14,13 +23,19 @@ typedef void(/*__stdcall*/ *LogCallback)(const char* log);
 
 class PhraseSynth {
  public:
+  PhraseSynth() = default;
+  ~PhraseSynth() = default;
+
   void AddRequest(const SynthRequest& request, double pos_ms, double skip_ms,
                   double length_ms, double fade_in_ms, double fade_out_ms,
                   LogCallback logCallback);
+                  
   void SetCurves(double* const f0, double* gender, double* tension,
                  double* breathiness, double* voicing, int length,
                  LogCallback logCallback);
-  std::vector<double> Synth(LogCallback logCallback);
+                 
+  // แจ้ง Compiler ว่าห้ามละเลยค่าที่คืนกลับมาเพื่อป้องกัน Memory Waste
+  [[nodiscard]] std::vector<double> Synth(LogCallback logCallback);
 
  private:
   struct ModelTiming {

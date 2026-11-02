@@ -1,1 +1,9 @@
-﻿<Project><PropertyGroup><RollForward>LatestMajor</RollForward></PropertyGroup><ItemGroup><RuntimeHostConfigurationOption Include="System.Runtime.TieredCompilation" Value="true" /></ItemGroup></Project>
+<Project>
+  <PropertyGroup>
+    <RollForward>LatestMajor</RollForward>
+    <EnableSourceControlManagerQueries Condition="'$(CI)' != 'true'">false</EnableSourceControlManagerQueries>
+  </PropertyGroup>
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Runtime.TieredCompilation" Value="true" />
+  </ItemGroup>
+</Project>

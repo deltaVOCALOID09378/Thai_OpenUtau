@@ -157,10 +157,14 @@ namespace OpenUtau.App.Controls {
                     && KeySignatureHelper.IsInScale(tone, musicalKey);
                 var pianoRollBase = Background ?? ThemeManager.BackgroundBrush;
                 IBrush brush;
-                if (isCenterKey) {
+                if (IsKeyboard) {
+                    // แป้นพิมพ์เปียโนฝั่งซ้ายจะต้องมีสีขาวสลับกับปุ่มสีดำอยู่เสมอ ไม่มีทางเปลี่ยนสีใดๆ เป็นอันขาด
+                    bool isBlackKey = MusicMath.IsBlackKey(tone);
+                    brush = isBlackKey
+                        ? (ThemeManager.BlackKeyBrush ?? new SolidColorBrush(Color.FromRgb(30, 30, 30)))
+                        : Brushes.White;
+                } else if (isCenterKey) {
                     brush = ThemeManager.CenterKeyBrush;
-                } else if (IsKeyboard) {
-                    brush = isAltTrack ? ThemeManager.BlackKeyBrush : ThemeManager.WhiteKeyBrush;
                 } else if (!IsPianoRoll) {
                     brush = isAltTrack
                         ? Foreground ?? ThemeManager.TrackBackgroundAltBrush
@@ -185,11 +189,13 @@ namespace OpenUtau.App.Controls {
                     }
                 }
                 if (IsKeyboard && TrackHeight >= 12) {
-                    brush = isCenterKey ? ThemeManager.CenterKeyNameBrush
-                        : isAltTrack ? ThemeManager.BlackKeyNameBrush
-                            : ThemeManager.WhiteKeyNameBrush;
+                    bool isBlackKey = MusicMath.IsBlackKey(tone);
+                    // หากเป็นปุ่มสีขาวต้องใช้ตัวอักษรสีดำเสมอ หากเป็นปุ่มสีดำใช้ตัวอักษรสีขาว
+                    IBrush keyTextBrush = isBlackKey
+                        ? (ThemeManager.BlackKeyNameBrush ?? Brushes.White)
+                        : Brushes.Black;
                     string toneName = MusicMath.GetToneName(tone);
-                    var toneTextLayout = TextLayoutCache.Get(toneName, brush, 12);
+                    var toneTextLayout = TextLayoutCache.Get(toneName, keyTextBrush, 12);
                     var toneTextPosition = new Point(Bounds.Width - 4 - (int)toneTextLayout.Width, (int)(top + (TrackHeight - toneTextLayout.Height) / 2));
                     using (var state = context.PushTransform(Matrix.CreateTranslation(toneTextPosition))) {
                         toneTextLayout.Draw(context, new Point());
@@ -197,15 +203,33 @@ namespace OpenUtau.App.Controls {
                     //scale degree display
                     int degree = mod(tone - Key, 12);
                     string degreeName = degreeNames[degree];
-                    var degreeTextLayout = TextLayoutCache.Get(degreeName, brush, 12);
+                    var degreeTextLayout = TextLayoutCache.Get(degreeName, keyTextBrush, 12);
                     var degreeTextPosition = new Point(4, (int)(top + (TrackHeight - degreeTextLayout.Height) / 2));
                     using (var state = context.PushTransform(Matrix.CreateTranslation(degreeTextPosition))) {
                         degreeTextLayout.Draw(context, new Point());
+                    }
+                    // เส้นคั่นระหว่างปุ่มเปียโนสีขาว (White key separator line)
+                    if (!isBlackKey) {
+                        context.DrawLine(
+                            new Pen(new SolidColorBrush(Color.FromArgb(140, 200, 200, 200)), 1),
+                            new Point(0, (int)(top + TrackHeight - 1)),
+                            new Point(Bounds.Width, (int)(top + TrackHeight - 1))
+                        );
                     }
                 }
                 track++;
                 top += TrackHeight;
             }
+
+            if (IsKeyboard) {
+                // เส้นแบ่งขอบขวาของแป้นพิมพ์เปียโน
+                context.DrawLine(
+                    new Pen(new SolidColorBrush(Color.FromArgb(200, 50, 50, 50)), 1),
+                    new Point(Bounds.Width - 1, 0),
+                    new Point(Bounds.Width - 1, Bounds.Height)
+                );
+            }
+
         }
 
         IBrush GetPianoRollWhiteKeyTintedBrush(IBrush backgroundBrush) {

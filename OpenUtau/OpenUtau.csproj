@@ -1,3 +1,13 @@
+<!-- 
+============================================================================
+Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+File Name    : OpenUtau.App.csproj
+Version      : 1.2
+Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+Description  : Main Application Project Configuration. Optimized properties grouping 
+               and enforced DELTA SYNTH standards.
+============================================================================
+-->
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="StartupSettings.props" Condition="Exists('StartupSettings.props')" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
@@ -12,46 +22,26 @@
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <Version>36.0.10</Version>
-    <AssemblyVersion>36.0.10.0</AssemblyVersion>
-    <FileVersion>36.0.10.0</FileVersion>
+    <Version>114.4.18</Version>
+    <AssemblyVersion>114.4.18.0</AssemblyVersion>
+    <FileVersion>114.4.18.0</FileVersion>
     <ApplicationIcon>Assets\Thai OpenUtau Logo.ico</ApplicationIcon>
     <PublishReadyToRun>true</PublishReadyToRun>
     <DebugType>embedded</DebugType>
     <StartupObject />
-  </PropertyGroup>
-  <PropertyGroup>
+    <!-- Mac OS Settings -->
     <CFBundleName>Thai OpenUtau</CFBundleName>
     <CFBundleDisplayName>Thai OpenUtau</CFBundleDisplayName>
     <CFBundleIdentifier>com.deltasynth.thaiopenutau</CFBundleIdentifier>
-    <CFBundleVersion>36.0</CFBundleVersion>
-    <CFBundleShortVersionString>36.0</CFBundleShortVersionString>
+    <CFBundleVersion>114.4</CFBundleVersion>
+    <CFBundleShortVersionString>114.4</CFBundleShortVersionString>
     <CFBundlePackageType>APPL</CFBundlePackageType>
-    <CFBundleSignature>????</CFBundleSignature>
+    <CFBundleSignature>DLTA</CFBundleSignature>
     <CFBundleExecutable>OpenUtau</CFBundleExecutable>
     <CFBundleIconFile>Thai OpenUtau.icns</CFBundleIconFile>
     <NSPrincipalClass>NSApplication</NSPrincipalClass>
     <NSHighResolutionCapable>true</NSHighResolutionCapable>
-    <CFBundleDocumentTypes>
-      <array>
-        <dict>
-          <key>CFBundleTypeName</key>
-          <string>OpenUtau Sequence File</string>
-          <key>CFBundleTypeExtensions</key>
-          <array>
-            <string>ustx</string>
-          </array>
-          <key>CFBundleTypeIconFile</key>
-          <string>Thai OpenUtau.icns</string>
-          <key>CFBundleTypeRole</key>
-          <string>Editor</string>
-          <key>LSItemContentTypes</key>
-          <array>
-            <string>com.deltasynth.thaiopenutau.ustx</string>
-          </array>
-        </dict>
-      </array>
-    </CFBundleDocumentTypes>
+    <DefineConstants Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(DefineConstants);MACOS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
@@ -101,6 +91,10 @@
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
     <None Include="..\runtimes\linux-arm64\native\**" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes\linux-arm64\native\" />
   </ItemGroup>
+  <!-- สำเนาไฟล์พจนานุกรมไปยัง Output Directory อัตโนมัติ (Copy Dictionaries to Output Directory) -->
+  <ItemGroup>
+    <None Include="..\Dictionaries\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Dictionaries\" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Update="Controls\NotePropertyExpression.axaml.cs">
       <DependentUpon>NotePropertyExpression.axaml</DependentUpon>
@@ -138,7 +132,4 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <PropertyGroup>
-    <DefineConstants Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(DefineConstants);MACOS</DefineConstants>
-  </PropertyGroup>
 </Project>

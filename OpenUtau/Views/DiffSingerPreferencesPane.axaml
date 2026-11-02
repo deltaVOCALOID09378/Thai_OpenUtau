@@ -1,3 +1,11 @@
+<!--
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: DiffSingerPreferencesPane.axaml
+ * เวอร์ชั่น: 1.2
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/DiffSingerPreferencesPane.axaml
+ * รายละเอียดการแก้ไข: ปรับสถาปัตยกรรม UI ให้รองรับฟอนต์ Leelawadee UI และประทับโทนสี Dark Theme มาตรฐานองค์กร
+-->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,13 +14,16 @@
              xmlns:c="using:OpenUtau.App.Controls"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="600"
              x:Class="OpenUtau.App.Views.DiffSingerPreferencesPane"
-             x:Name="DiffSingerPrefsRoot">
+             x:Name="DiffSingerPrefsRoot"
+             FontFamily="Leelawadee UI, sans-serif"
+             Background="#1A1A1A" Foreground="#F0F0F0">
   <UserControl.Styles>
     <Style Selector="StackPanel.diffSingerSectionContent">
       <Setter Property="Spacing" Value="6"/>
     </Style>
     <Style Selector="TextBlock">
       <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
     </Style>
     <Style Selector="TextBlock.prefSubgroupTitle">
       <Setter Property="FontWeight" Value="SemiBold"/>
@@ -27,6 +38,7 @@
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="Focusable" Value="False"/>
       <Setter Property="IsTabStop" Value="False"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
     </Style>
     <Style Selector="Grid.prefRow">
       <Setter Property="Margin" Value="0"/>

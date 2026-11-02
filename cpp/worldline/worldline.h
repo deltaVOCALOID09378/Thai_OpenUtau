@@ -1,3 +1,12 @@
+/*
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: worldline.h
+ * เวอร์ชั่น: 1.1
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & Staff
+ * Original by: OpenUtau Contributors
+ * รายละเอียดการแก้ไข: จัดระเบียบ DLL_API Macro และเชื่อม Interface สู่ภายนอก
+ */
+
 #ifndef WORLDLINE_WORLDLINE_H_
 #define WORLDLINE_WORLDLINE_H_
 
@@ -8,9 +17,11 @@
 #include "worldline/synth_request.h"
 
 #if defined(_MSC_VER)
-#define DLL_API __declspec(dllexport)
-#elif defined(__GNUC__)
-#define DLL_API __attribute__((visibility("default")))
+  #define DLL_API __declspec(dllexport)
+#elif defined(__GNUC__) || defined(__clang__)
+  #define DLL_API __attribute__((visibility("default")))
+#else
+  #define DLL_API
 #endif
 
 using worldline::PhraseSynth;
@@ -26,10 +37,11 @@ DLL_API int DecodeMgc(int f0_length, double* mgc, int mgc_size, int fft_size,
 DLL_API int DecodeBap(int f0_length, double* bap, int fft_size, int fs,
                       double** aperiodicity);
 
+// Parameters info:
 // gender: [0, 1] default 0.5
 // tension: [0, 1] default 0.5
 // breathiness: [0, 1] default 0.5
-// voicing: [0, 1] default 1
+// voicing: [0, 1] default 1.0
 DLL_API int WorldSynthesis(double* const f0, int f0_length,
                            double* const mgc_or_sp, bool is_mgc, int mgc_size,
                            double* const bap_or_ap, bool is_bap, int fft_size,
@@ -39,7 +51,7 @@ DLL_API int WorldSynthesis(double* const f0, int f0_length,
 
 DLL_API int Resample(const SynthRequest* request, float** y);
 
-DLL_API PhraseSynth* PhraseSynthNew();
+[[nodiscard]] DLL_API PhraseSynth* PhraseSynthNew();
 
 DLL_API void PhraseSynthDelete(PhraseSynth* phrase_synth);
 

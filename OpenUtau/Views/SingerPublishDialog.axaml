@@ -1,3 +1,10 @@
+<!--
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: SingerPublishDialog.axaml
+ * เวอร์ชั่น: 1.1
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/SingerPublishDialog.axaml
+-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,18 +15,39 @@
         Icon="/Assets/Thai OpenUtau Logo.ico"
         WindowStartupLocation="CenterScreen"
         MinWidth="500" MinHeight="500" Width="500" Height="500"
-        Title="{DynamicResource singers.publish}">
+        Title="{DynamicResource singers.publish}"
+        FontFamily="Leelawadee UI, sans-serif"
+        Background="#1A1A1A" Foreground="#F0F0F0">
+  <Window.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="#CC2200"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#FF4422"/>
+    </Style>
+  </Window.Styles>
   <Grid Margin="{Binding $parent.WindowDecorationMargin}">
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
       <StackPanel Margin="5">
-        <TextBlock Text="{DynamicResource singers.publish.description}"/>
+        <TextBlock Text="{DynamicResource singers.publish.description}" Margin="0,0,0,12"/>
         <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="25" VerticalAlignment="Center" Margin="4">
           <CheckBox IsChecked="{Binding UseIgnore}" VerticalAlignment="Center" Content="Use file type ignoring"/>
-          <TextBlock Text="{DynamicResource singers.publish.useignore}" Grid.Column="1" VerticalAlignment="Center"/>
+          <TextBlock Text="{DynamicResource singers.publish.useignore}" Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0"/>
         </Grid>
-        <TextBlock Text="{DynamicResource singers.publish.ignoretypes}"/>
+        <TextBlock Text="{DynamicResource singers.publish.ignoretypes}" Margin="0,8,0,4"/>
         <TextBox Text="{Binding IgnoreTypes}" Height="300" VerticalAlignment="Center" IsEnabled="{Binding UseIgnore}" AcceptsReturn="True"/>
-        <Button Content="{DynamicResource singers.publish.publish}" Click="PublishClicked" VerticalAlignment="Center" Margin="0,10,0,0"/>
+        <Button Content="{DynamicResource singers.publish.publish}" Click="PublishClicked" VerticalAlignment="Center" Margin="0,12,0,0" Padding="12,6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
       </StackPanel>
     </ScrollViewer>
   </Grid>

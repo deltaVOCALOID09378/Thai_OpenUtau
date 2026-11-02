@@ -1,13 +1,17 @@
-/*
- * Made And Checked By DELTA SYNTH & Gemini AI
- * Original by OpenUtau Contributors
- * Version: 2.0 (Resilient Multi-Format Audio Decoder with Universal Fallbacks)
- */
+// ============================================================================
+// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 2. ชื่อไฟล์โค้ด: Wave.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 3.1
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Format/Wave.cs
+// 5. หน้าที่: ตัวถอดรหัสและเขียนไฟล์เสียงหลายรูปแบบ (WAV, MP3, OGG, Opus, FLAC, AIFF) แบบปลอดการล็อกไฟล์
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Contributors
+// ============================================================================
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using NAudio.Flac;
 using NAudio.Vorbis;
 using NAudio.Wave;
@@ -19,16 +23,47 @@ namespace OpenUtau.Core.Format {
     public static class Wave {
         public static Func<string, WaveStream> OverrideMp3Reader;
 
+        private static WaveStream CreateSilenceStream() {
+            return new RawSourceWaveStream(new MemoryStream(new byte[8820]), new WaveFormat(44100, 16, 1));
+        }
+
+        private static FileStream OpenSharedFileStream(string filepath) {
+            const int maxAttempts = 8;
+            for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    return new FileStream(
+                        filepath,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.ReadWrite | FileShare.Delete,
+                        bufferSize: 4096,
+                        useAsync: false);
+                } catch (IOException) when (attempt < maxAttempts) {
+                    Thread.Sleep(20 * attempt);
+                } catch (UnauthorizedAccessException) when (attempt < maxAttempts) {
+                    Thread.Sleep(20 * attempt);
+                }
+            }
+            return new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        }
+
         public static WaveStream OpenFile(string filepath) {
             if (string.IsNullOrEmpty(filepath) || !File.Exists(filepath)) {
                 Serilog.Log.Warning($"Audio file does not exist: {filepath}. Returning silence fallback.");
-                return new RawSourceWaveStream(new MemoryStream(new byte[8820]), new WaveFormat(44100, 16, 1));
+                return CreateSilenceStream();
             }
 
-            var fileInfo = new FileInfo(filepath);
-            if (fileInfo.Length < 12) {
-                Serilog.Log.Warning($"Audio file '{filepath}' is empty or too small ({fileInfo.Length} bytes). Returning silence fallback.");
-                return new RawSourceWaveStream(new MemoryStream(new byte[8820]), new WaveFormat(44100, 16, 1));
+            long fileLength = 0;
+            try {
+                var fileInfo = new FileInfo(filepath);
+                fileLength = fileInfo.Length;
+                if (fileLength < 12) {
+                    Serilog.Log.Warning($"Audio file '{filepath}' is empty or too small ({fileLength} bytes). Returning silence fallback.");
+                    return CreateSilenceStream();
+                }
+            } catch (Exception ex) {
+                Serilog.Log.Warning(ex, $"Failed to stat audio file '{filepath}'. Returning silence fallback.");
+                return CreateSilenceStream();
             }
 
             var ext = (Path.GetExtension(filepath) ?? "").ToLowerInvariant();
@@ -37,9 +72,9 @@ namespace OpenUtau.Core.Format {
             string tag = "";
 
             try {
-                using (var stream = File.Open(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
-                    if (stream.CanSeek) {
-                        bytesRead = stream.Read(buffer, 0, Math.Min(buffer.Length, (int)stream.Length));
+                using (var stream = OpenSharedFileStream(filepath)) {
+                    if (stream.CanSeek && stream.Length >= 4) {
+                        bytesRead = stream.Read(buffer, 0, (int)Math.Min(buffer.Length, stream.Length));
                         if (bytesRead >= 4) {
                             tag = System.Text.Encoding.UTF8.GetString(buffer.AsSpan(0, 4));
                         }
@@ -49,10 +84,18 @@ namespace OpenUtau.Core.Format {
                 Serilog.Log.Warning(ex, $"Failed to read file header for {filepath}. Attempting universal fallbacks.");
             }
 
-            // 1. WAV / RIFF Container
+            // 1. WAV / RIFF Container — buffer into MemoryStream (<= 64MB) so zero OS file locks remain on Cache/res-*.wav
             if (tag == "RIFF" || ext == ".wav" || ext == ".wave") {
                 try {
-                    return new WaveFileReader(filepath);
+                    using (var fs = OpenSharedFileStream(filepath)) {
+                        if (fs.Length <= 64 * 1024 * 1024) {
+                            var ms = new MemoryStream((int)fs.Length);
+                            fs.CopyTo(ms);
+                            ms.Position = 0;
+                            return new WaveFileReader(ms);
+                        }
+                    }
+                    return new WaveFileReader(OpenSharedFileStream(filepath));
                 } catch (Exception ex) {
                     Serilog.Log.Debug(ex, $"Standard WaveFileReader failed for {filepath}. Attempting fallback decoders.");
                 }
@@ -68,7 +111,12 @@ namespace OpenUtau.Core.Format {
                     }
                 }
                 try {
-                    return new Mp3FileReaderBase(filepath, wf => new Mp3FrameDecompressor(wf));
+                    using (var fs = OpenSharedFileStream(filepath)) {
+                        var ms = new MemoryStream();
+                        fs.CopyTo(ms);
+                        ms.Position = 0;
+                        return new Mp3FileReaderBase(ms, wf => new Mp3FrameDecompressor(wf));
+                    }
                 } catch (Exception ex) {
                     Serilog.Log.Debug(ex, $"Mp3FileReaderBase failed for {filepath}. Attempting fallback decoders.");
                 }
@@ -79,14 +127,16 @@ namespace OpenUtau.Core.Format {
                 string text = bytesRead > 0 ? System.Text.Encoding.ASCII.GetString(buffer, 0, bytesRead) : "";
                 if (text.Contains("vorbis") || ext == ".ogg") {
                     try {
-                        return new VorbisWaveReader(filepath);
+                        return new VorbisWaveReader(OpenSharedFileStream(filepath), true);
                     } catch (Exception ex) {
                         Serilog.Log.Debug(ex, $"VorbisWaveReader failed for {filepath}.");
                     }
                 }
                 if (text.Contains("OpusHead") || ext == ".opus") {
                     try {
-                        return new OpusOggWaveReader(filepath);
+                        using (var fs = OpenSharedFileStream(filepath)) {
+                            return new OpusOggWaveReader(fs, leaveOpen: false);
+                        }
                     } catch (Exception ex) {
                         Serilog.Log.Debug(ex, $"OpusOggWaveReader failed for {filepath}.");
                     }
@@ -96,7 +146,7 @@ namespace OpenUtau.Core.Format {
             // 4. FLAC
             if (tag == "fLaC" || ext == ".flac") {
                 try {
-                    return new FlacReader(filepath);
+                    return new FlacReader(OpenSharedFileStream(filepath));
                 } catch (Exception ex) {
                     Serilog.Log.Debug(ex, $"FlacReader failed for {filepath}.");
                 }
@@ -105,31 +155,13 @@ namespace OpenUtau.Core.Format {
             // 5. AIFF / AIF
             if (ext == ".aiff" || ext == ".aif" || ext == ".aifc" || tag == "FORM") {
                 try {
-                    return new AiffFileReader(filepath);
+                    return new AiffFileReader(OpenSharedFileStream(filepath));
                 } catch (Exception ex) {
                     Serilog.Log.Debug(ex, $"AiffFileReader failed for {filepath}.");
                 }
             }
 
-            // 6. M4A / AAC / MP4 Container
-            string ftyp = bytesRead >= 8 ? System.Text.Encoding.ASCII.GetString(buffer.AsSpan(4, 4)) : "";
-            if (ftyp == "ftyp" || ext == ".m4a" || ext == ".mp4" || ext == ".aac") {
-#if WINDOWS
-                try {
-                    return new MediaFoundationReader(filepath);
-                } catch (Exception ex) {
-                    Serilog.Log.Debug(ex, $"MediaFoundationReader failed for {filepath}.");
-                }
-#else
-                try {
-                    return new AACWaveReader(filepath);
-                } catch (Exception ex) {
-                    Serilog.Log.Debug(ex, $"AACWaveReader failed for {filepath}.");
-                }
-#endif
-            }
-
-            // 7. Universal Fallback: MediaFoundation (Windows) & AudioFileReader (Cross-platform)
+            // 6. Universal Fallback
 #if WINDOWS
             try {
                 return new MediaFoundationReader(filepath);
@@ -143,9 +175,8 @@ namespace OpenUtau.Core.Format {
                 Serilog.Log.Debug(ex, $"Universal AudioFileReader fallback failed for {filepath}.");
             }
 
-            // 8. Graceful Silence Fallback: Prevents entire render engine crash on corrupted or partial audio
             Serilog.Log.Warning($"Unable to decode audio format for file '{filepath}'. Returning silence fallback to prevent render crash.");
-            return new RawSourceWaveStream(new MemoryStream(new byte[8820]), new WaveFormat(44100, 16, 1));
+            return CreateSilenceStream();
         }
 
         public static float[] GetStereoSamples(WaveStream waveStream) {
@@ -159,23 +190,40 @@ namespace OpenUtau.Core.Format {
             return GetSamples(provider);
         }
 
-        /// <summary>Writes a 44.1 kHz mono float buffer as a 16-bit WAV — the renderer cache file format.</summary>
+        /// <summary>Writes a 44.1 kHz mono float buffer as a 16-bit WAV atomically via staging file.</summary>
         public static void WriteMono16Wav(string path, float[] samples) {
-            using var writer = new WaveFileWriter(path, new WaveFormat(44100, 16, 1));
+            samples ??= Array.Empty<float>();
             var pcm = new byte[samples.Length * 2];
             for (int i = 0; i < samples.Length; ++i) {
                 float v = samples[i];
-                if (v > 1f) {
-                    v = 1f;
-                }
-                if (v < -1f) {
-                    v = -1f;
-                }
+                if (v > 1f) v = 1f;
+                if (v < -1f) v = -1f;
                 var s = (short)(v * short.MaxValue);
                 pcm[i * 2] = (byte)(s & 0xFF);
                 pcm[i * 2 + 1] = (byte)((s >> 8) & 0xFF);
             }
-            writer.Write(pcm, 0, pcm.Length);
+
+            string dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir)) {
+                Directory.CreateDirectory(dir);
+            }
+            string stagingPath = $"{path}.{Environment.CurrentManagedThreadId}.{Guid.NewGuid():N}.tmp";
+            try {
+                using (var fs = new FileStream(stagingPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                using (var writer = new WaveFileWriter(fs, new WaveFormat(44100, 16, 1))) {
+                    writer.Write(pcm, 0, pcm.Length);
+                    writer.Flush();
+                }
+                File.Move(stagingPath, path, overwrite: true);
+            } catch {
+                try {
+                    if (File.Exists(stagingPath)) File.Delete(stagingPath);
+                } catch { }
+                using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+                using var writer = new WaveFileWriter(fs, new WaveFormat(44100, 16, 1));
+                writer.Write(pcm, 0, pcm.Length);
+                writer.Flush();
+            }
         }
 
         public static float[] GetSamples(ISampleProvider sampleProvider) {
@@ -229,7 +277,7 @@ namespace OpenUtau.Core.Format {
                         rmin = Math.Min(rmin, buffer[i + 1]);
                     }
                     if (i > bufferPos) {
-                        lmax = -lmax; lmin = -lmin; rmax = -rmax; rmin = -rmin; // negate peaks to flipped waveform
+                        lmax = -lmax; lmin = -lmin; rmax = -rmax; rmin = -rmin;
                         peaks[peaksPos * channels] = lmax == 0 ? lmin : lmin == 0 ? lmax : (lmin + lmax) / 2;
                         peaks[peaksPos * channels + 1] = rmax == 0 ? rmin : rmin == 0 ? rmax : (rmin + rmax) / 2;
                         peaksPos++;
@@ -247,6 +295,7 @@ namespace OpenUtau.Core.Format {
         }
 
         public static void CorrectSampleScale(float[] samples) {
+            if (samples == null || samples.Length == 0) return;
             float max = samples.Max();
             float scale = 1;
             if (max > Math.Pow(2, 23)) {

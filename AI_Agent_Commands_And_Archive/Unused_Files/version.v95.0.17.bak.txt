@@ -1,0 +1,5 @@
+Version=114.4.18
+BaseVersion=114.4
+LastDate=2026-10-31
+BuildNumber=18
+ModifiedFilesCount=194

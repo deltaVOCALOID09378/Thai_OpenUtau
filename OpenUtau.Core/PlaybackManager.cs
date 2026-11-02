@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 28/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : PlaybackManager.cs
+// Version      : 1.6
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/PlaybackManager.cs
+// Description  : Playback lifecycle management with thread-safe ActiveCancellation tracking and cancellation resilience during rendering and export.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -442,20 +450,19 @@ namespace OpenUtau.Core {
 
         private void Render(UProject project, int tick, int endTick, int trackNo) {
             Task.Run(() => {
+                CancellationTokenSource? myCancellation = null;
                 try {
                     RenderEngine engine = new RenderEngine(project, startTick: tick, endTick: endTick, trackNo: trackNo);
                     var result = engine.RenderMixdown(DocManager.Inst.MainScheduler, ref renderCancellation, wait: false);
-                    // Capture the token for THIS render right after it was (re)created above.
-                    // If Stop()/a newer Play() ran while we were rendering, this token will
-                    // already be cancelled and we must not touch playback state anymore.
-                    var myToken = renderCancellation?.Token ?? CancellationToken.None;
-                    if (myToken.IsCancellationRequested) {
+                    // Capture the exact CTS instance created by this RenderEngine call.
+                    myCancellation = engine.ActiveCancellation;
+                    if (myCancellation == null || myCancellation.IsCancellationRequested || !ReferenceEquals(renderCancellation, myCancellation)) {
                         return;
                     }
                     var playbackAdapter = new MasterAdapter(new PlaybackMix(result.Item1, metronomeEngine));
                     playbackAdapter.SetPosition((int)(project.timeAxis.TickPosToMsPos(tick) * 44100 / 1000) * 2);
                     faders = result.Item2;
-                    if (myToken.IsCancellationRequested) {
+                    if (myCancellation.IsCancellationRequested || !ReferenceEquals(renderCancellation, myCancellation)) {
                         return;
                     }
                     PlayingMaster = true;
@@ -463,6 +470,15 @@ namespace OpenUtau.Core {
                     StartPlayback(project.timeAxis.TickPosToMsPos(tick), playbackAdapter);
                     DocManager.Inst.ExecuteCmd(new WaveformReadyNotification());
                 } catch (Exception e) {
+                    bool isCancelled = (myCancellation != null && myCancellation.IsCancellationRequested)
+                        || (myCancellation != null && !ReferenceEquals(renderCancellation, myCancellation))
+                        || (renderCancellation != null && renderCancellation.IsCancellationRequested)
+                        || e is OperationCanceledException
+                        || e is ObjectDisposedException
+                        || (e is AggregateException ae && ae.Flatten().InnerExceptions.All(x => x is OperationCanceledException || x is TaskCanceledException || x is ObjectDisposedException));
+                    if (isCancelled) {
+                        return;
+                    }
                     Log.Error(e, "Failed to render.");
                     StopPlayback();
                     var customEx = new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>", e);
@@ -523,9 +539,15 @@ namespace OpenUtau.Core {
         // Exporting mixdown
         public async Task RenderMixdown(UProject project, string exportPath) {
             await Task.Run(() => {
+                CancellationTokenSource? myCancellation = null;
                 try {
                     RenderEngine engine = new RenderEngine(project);
                     var projectMix = engine.RenderMixdown(DocManager.Inst.MainScheduler, ref renderCancellation, wait: true).Item1;
+                    myCancellation = engine.ActiveCancellation;
+                    if (myCancellation == null || myCancellation.IsCancellationRequested || !ReferenceEquals(renderCancellation, myCancellation)) {
+                        DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                        return;
+                    }
                     DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"Exporting to {exportPath}."));
 
                     CheckFileWritable(exportPath);
@@ -535,7 +557,19 @@ namespace OpenUtau.Core {
                     var customEx = new MessageCustomizableException($"Failed to export {exportPath}.", $"<translate:errors.failed.export>: {exportPath}", ioe);
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
                     DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"Failed to export {exportPath}."));
+                } catch (OperationCanceledException) {
+                    DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                } catch (ObjectDisposedException) {
+                    DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                } catch (AggregateException ae) when (ae.Flatten().InnerExceptions.All(x => x is OperationCanceledException || x is TaskCanceledException || x is ObjectDisposedException)) {
+                    DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
                 } catch (Exception e) {
+                    if (myCancellation?.IsCancellationRequested == true
+                        || (myCancellation != null && !ReferenceEquals(renderCancellation, myCancellation))
+                        || renderCancellation?.IsCancellationRequested == true) {
+                        DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                        return;
+                    }
                     var customEx = new MessageCustomizableException("Failed to render.", $"<translate:errors.failed.render>: {exportPath}", e);
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
                     DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"Failed to render."));
@@ -547,10 +581,20 @@ namespace OpenUtau.Core {
         public async Task RenderToFiles(UProject project, string exportPath) {
             await Task.Run(() => {
                 string file = "";
+                CancellationTokenSource? myCancellation = null;
                 try {
                     RenderEngine engine = new RenderEngine(project);
                     var trackMixes = engine.RenderTracks(DocManager.Inst.MainScheduler, ref renderCancellation);
+                    myCancellation = engine.ActiveCancellation;
+                    if (myCancellation == null || myCancellation.IsCancellationRequested || !ReferenceEquals(renderCancellation, myCancellation)) {
+                        DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                        return;
+                    }
                     for (int i = 0; i < trackMixes.Count; ++i) {
+                        if (myCancellation.IsCancellationRequested || !ReferenceEquals(renderCancellation, myCancellation)) {
+                            DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                            return;
+                        }
                         if (trackMixes[i] == null || i >= project.tracks.Count || project.tracks[i].Muted) {
                             continue;
                         }
@@ -565,7 +609,19 @@ namespace OpenUtau.Core {
                     var customEx = new MessageCustomizableException($"Failed to export {file}.", $"<translate:errors.failed.export>: {file}", ioe);
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
                     DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"Failed to export {file}."));
+                } catch (OperationCanceledException) {
+                    DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                } catch (ObjectDisposedException) {
+                    DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                } catch (AggregateException ae) when (ae.Flatten().InnerExceptions.All(x => x is OperationCanceledException || x is TaskCanceledException || x is ObjectDisposedException)) {
+                    DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
                 } catch (Exception e) {
+                    if (myCancellation?.IsCancellationRequested == true
+                        || (myCancellation != null && !ReferenceEquals(renderCancellation, myCancellation))
+                        || renderCancellation?.IsCancellationRequested == true) {
+                        DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+                        return;
+                    }
                     var customEx = new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>", e);
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
                     DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"Failed to render."));

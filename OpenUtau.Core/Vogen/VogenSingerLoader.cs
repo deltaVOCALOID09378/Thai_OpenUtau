@@ -72,7 +72,7 @@ namespace OpenUtau.Core.Vogen {
             byte[] model;
             byte[] avatar = null;
             using (var archive = ArchiveFactory.OpenArchive(filePath, new ReaderOptions())) {
-                var metaEntry = archive.Entries.First(e => e.Key == "meta.json");
+                var metaEntry = archive.Entries.FirstOrDefault(e => e.Key == "meta.json");
                 if (metaEntry == null) {
                     throw new ArgumentException("missing meta.json");
                 }
@@ -80,6 +80,9 @@ namespace OpenUtau.Core.Vogen {
                     using var reader = new StreamReader(stream, Encoding.UTF8);
                     JsonSerializer serializer = new JsonSerializer();
                     meta = (VogenMeta)serializer.Deserialize(reader, typeof(VogenMeta));
+                }
+                if (meta == null) {
+                    throw new ArgumentException("invalid meta.json");
                 }
                 model = Zip.ExtractBytes(archive, "model.onnx");
                 if (model == null) {

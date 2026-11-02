@@ -257,7 +257,7 @@
               Background="{Binding TrackAccentColor}" CornerRadius="6,0,0,6"
               ClipToBounds="True" UseLayoutRounding="True"
               PointerPressed="TrackNoBadgePointerPressed">
-        <TextBlock Text="{Binding TrackNo}" Foreground="White" FontWeight="SemiBold" FontSize="11"
+        <TextBlock Text="{Binding TrackNo}" Foreground="{Binding TrackNoForeground}" FontWeight="SemiBold" FontSize="11"
                    Width="16" TextAlignment="Center" HorizontalAlignment="Left"
                    VerticalAlignment="Top" Margin="0,4,0,0"/>
       </Border>

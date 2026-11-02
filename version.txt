@@ -1,5 +1,5 @@
-Version=36.0.10
-BaseVersion=36
-LastDate=2026-10-27
-BuildNumber=10
-ModifiedFilesCount=9
+Version=3.9.0
+BaseVersion=3
+LastDate=2026-10-31
+BuildNumber=9
+ModifiedFilesCount=154

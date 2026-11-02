@@ -30,6 +30,45 @@ namespace OpenUtau.Core.Util {
             public string KeyName { get; set; } 
             public string ModifiersName { get; set; }
         }
+        public static string ResolveDefaultScreenshotLocation() {
+            try {
+                string loc = Default?.CaptureScreenshotExportLocation;
+                if (!string.IsNullOrWhiteSpace(loc) && Directory.Exists(loc)) {
+                    return loc;
+                }
+                string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string defaultPath = Path.Combine(userProfile, "Pictures", "ThaiOpenUtau Screenshots");
+                if (!Directory.Exists(defaultPath)) {
+                    defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ThaiOpenUtau Screenshots");
+                }
+                Directory.CreateDirectory(defaultPath);
+                return defaultPath;
+            } catch {
+                return Path.Combine(PathManager.Inst.DataPath, "Screenshots");
+            }
+        }
+
+        public static string ResolveDefaultVideoRenderLocation() {
+            try {
+                string loc = Default?.CaptureVideoExportLocation;
+                if (!string.IsNullOrWhiteSpace(loc) && Directory.Exists(loc)) {
+                    return loc;
+                }
+                if (!string.IsNullOrWhiteSpace(Default?.CaptureExportLocation) && Directory.Exists(Default.CaptureExportLocation)) {
+                    return Default.CaptureExportLocation;
+                }
+                string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string defaultPath = Path.Combine(userProfile, "Videos", "ThaiOpenUtau RenderVideo");
+                if (!Directory.Exists(defaultPath)) {
+                    defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "ThaiOpenUtau RenderVideo");
+                }
+                Directory.CreateDirectory(defaultPath);
+                return defaultPath;
+            } catch {
+                return Path.Combine(PathManager.Inst.DataPath, "RenderVideo");
+            }
+        }
+
         public static string ResolveDefaultTrackColor() {
             var name = Default?.DefaultTrackColor;
             return string.IsNullOrWhiteSpace(name) ? "Blue" : name;
@@ -545,11 +584,14 @@ errors.txt
             public bool DetachPianoRoll = false;
             public string GeminiSparkApiKey = string.Empty;
 
-            // Screen & Audio Capture
-            public string CaptureExportLocation = string.Empty;
-            public string CaptureFilenameFormat = "name-dd-mm-yy-hh:mm";
+            // Screen & Audio Capture / Video Rendering (DELTA SYNTH Multi-Res & Split Path)
+            public string CaptureScreenshotExportLocation = string.Empty;
+            public string CaptureVideoExportLocation = string.Empty;
+            public string CaptureExportLocation = string.Empty; // for backward compatibility
+            public string CaptureFilenameFormat = "ThaiOpenUtau-name-dd-MM-yyyy-HH-mm-ss";
             public string CaptureVideoFormat = "mp4";
             public int CaptureResolution = 1080;
+            public string CaptureResolutionPreset = "1080";
             public int CaptureCountdown = 0;
 
             // ----- Mix FX (post-processing) -----

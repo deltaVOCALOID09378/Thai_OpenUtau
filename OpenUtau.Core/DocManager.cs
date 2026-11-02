@@ -1,8 +1,12 @@
-// DocManager.cs
-// OpenUtau.Core/DocManager.cs
-// Made And Checked By DELTA SYNTH & Gemini AI
-// Original by OpenUtau Authors
-// Revision: 1.1
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : DocManager.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/DocManager.cs
+// Description  : Central document, command, plugin, and undo/redo manager with built-in
+//                Native Accent BatchEdit discovery and GeminiSpark integration.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -80,41 +84,73 @@ namespace OpenUtau.Core {
             }
         }
 
+        private static readonly HashSet<string> KnownNativeOrCoreDlls = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+            "OpenUtau.Plugin.Builtin.dll",
+            "OpenUtau.Core.dll",
+            "OpenUtau.dll",
+            "worldline.dll",
+            "libworldline.dll",
+            "DirectML.dll",
+            "SDL3.dll",
+            "onnxruntime.dll",
+            "onnxruntime_providers_shared.dll",
+            "onnxruntime_providers_cuda.dll",
+            "onnxruntime_providers_dml.dll",
+            "onnxruntime_providers_tensorrt.dll",
+            "Melanchall_DryWetMidi_Native32.dll",
+            "Melanchall_DryWetMidi_Native64.dll",
+            "libSkiaSharp.dll",
+            "libHarfBuzzSharp.dll",
+            "av_libglesv2.dll",
+            "d3dcompiler_47.dll"
+        };
+
         public void SearchAllPlugins() {
             const string kBuiltin = "OpenUtau.Plugin.Builtin.dll";
             var stopWatch = Stopwatch.StartNew();
             var files = new List<string>();
             try {
-                files.Add(Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), kBuiltin));
+                string builtinPath = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? AppContext.BaseDirectory, kBuiltin);
+                if (File.Exists(builtinPath)) {
+                    files.Add(builtinPath);
+                }
                 Directory.CreateDirectory(PathManager.Inst.PluginsPath);
                 string oldBuiltin = Path.Combine(PathManager.Inst.PluginsPath, kBuiltin);
                 if (File.Exists(oldBuiltin)) {
-                    File.Delete(oldBuiltin);
+                    try { File.Delete(oldBuiltin); } catch { }
                 }
                 files.AddRange(Directory.EnumerateFiles(
                     PathManager.Inst.PluginsPath,
                     "*.dll",
-                    new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 2 }));
+                    new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 2 })
+                    .Where(f => !KnownNativeOrCoreDlls.Contains(Path.GetFileName(f))));
             } catch (Exception e) {
                 Log.Error(e, "Failed to search plugins.");
             }
 
-            var managedCandidates = new List<(string file, AssemblyName assemblyName, string identity)>();
-            foreach (var file in files) {
-                try {
-                    if (!LibraryLoader.IsManagedAssembly(file)) {
-                        Log.Information("Skipping unmanaged plugin candidate {File}.", file);
-                        continue;
+            var managedCandidates = files
+                .AsParallel()
+                .AsOrdered()
+                .Select(file => {
+                    try {
+                        if (!LibraryLoader.IsManagedAssembly(file)) {
+                            Log.Information("Skipping unmanaged plugin candidate {File}.", file);
+                            return default;
+                        }
+                        var assemblyName = AssemblyName.GetAssemblyName(file);
+                        return (
+                            valid: true,
+                            file,
+                            assemblyName,
+                            identity: assemblyName.FullName ?? assemblyName.Name ?? file);
+                    } catch (Exception e) {
+                        Log.Warning(e, "Failed to inspect plugin assembly {File}.", file);
+                        return default;
                     }
-                    var assemblyName = AssemblyName.GetAssemblyName(file);
-                    managedCandidates.Add((
-                        file,
-                        assemblyName,
-                        assemblyName.FullName ?? assemblyName.Name ?? file));
-                } catch (Exception e) {
-                    Log.Warning(e, "Failed to inspect plugin assembly {File}.", file);
-                }
-            }
+                })
+                .Where(x => x.valid)
+                .Select(x => (x.file, x.assemblyName, x.identity))
+                .ToList();
 
             var assembliesToLoad = new List<(string file, AssemblyName assemblyName)>();
             var allLoadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -197,11 +233,11 @@ namespace OpenUtau.Core {
                         continue;
                     }
                 }
-                if (Path.GetFileName(file) != kBuiltin
-                    && typeof(BatchEdit).IsAssignableFrom(type)
+                if (typeof(BatchEdit).IsAssignableFrom(type)
                     && !type.IsInterface
                     && !type.IsAbstract
-                    && type.GetConstructor(Type.EmptyTypes) != null) {
+                    && type.GetConstructor(Type.EmptyTypes) != null
+                    && !ExternalBatchEditTypes.Contains(type)) {
                     ExternalBatchEditTypes.Add(type);
                 }
             }
@@ -358,15 +394,17 @@ namespace OpenUtau.Core {
         }
 
         public void ExecuteCmd(UCommand cmd) {
-            if (mainThread != Thread.CurrentThread) {
+            if (mainThread != null && mainThread != Thread.CurrentThread) {
                 if (!(cmd is ProgressBarNotification)
                     && !(cmd is WaveformReadyNotification)
                     && !(cmd is PhraseRenderedNotification)
                     && !(cmd is PartRenderedNotification)) {
                     Log.Warning($"{cmd} not on main thread");
                 }
-                PostOnUIThread(() => ExecuteCmd(cmd));
-                return;
+                if (PostOnUIThread != null) {
+                    PostOnUIThread(() => ExecuteCmd(cmd));
+                    return;
+                }
             }
             if (cmd is UNotification) {
                 if (cmd is SaveProjectNotification saveProjectNotif) {
@@ -412,7 +450,16 @@ namespace OpenUtau.Core {
                 }
                 Publish(cmd);
                 if (!cmd.Silent) {
-                    Log.Information($"Publish notification {cmd}");
+                    if (cmd is PartRenderedNotification
+                        || cmd is WaveformReadyNotification
+                        || cmd is PhraseRenderedNotification
+                        || cmd is ProgressBarNotification
+                        || cmd is SetPlayPosTickNotification
+                        || cmd is RealCurvesUpdatedNotification) {
+                        Log.Debug($"Publish notification {cmd}");
+                    } else {
+                        Log.Information($"Publish notification {cmd}");
+                    }
                 }
                 return;
             }

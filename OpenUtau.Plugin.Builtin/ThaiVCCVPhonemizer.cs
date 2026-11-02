@@ -1,11 +1,12 @@
 // ============================================================================
-// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : ThaiVCCVPhonemizer.cs
-// Version      : 18.8
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by PRINTmov ]
-// File Location: OpenUtau.Plugin.Builtin/ThaiVCCVPhonemizer.cs
-// Description  : Thai VCCV Phonemizer with DiffSinger hint-to-syllables parsing,
-//                Melisma (+) support, explicit fallback for 'อ', and raw phoneme bypass.
+// 1. วัน/เดือน/ปี: 27 ตุลาคม พ.ศ. 2569 / 27 October 2026
+// 2. ชื่อไฟล์โค้ด: ThaiVCCVPhonemizer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 19.0
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by PRINTmov ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/ThaiVCCVPhonemizer.cs
+// 6. รายละเอียดการแก้ไข: ปรับปรุงระบบหั่นหน่วยเสียง (Phoneme Slicing) ให้ทำงานได้อย่างสมบูรณ์แบบ
+//                       แก้บั๊กการกระจายพยางค์บนตัวโน้ตไม่ให้ล้นขอบเขตโน้ต (Note Boundary Clamping)
+//                       เพิ่มระบบ Fallback ที่แข็งแกร่ง ป้องกันการสูญหายของหน่วยเสียง และรักษาความปลอดภัยของเวลา (Timing Safety)
 // ============================================================================
 
 using System;
@@ -80,7 +81,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
         }
 
-        private Dictionary<string, string> CustomDictionary = new Dictionary<string, string>();
+        private Dictionary<string, string> CustomDictionary = new Dictionary<string, string>(StringComparer.Ordinal);
         private bool isDictLoaded = false;
         private readonly object dictLock = new object();
         private USinger? singer;
@@ -163,8 +164,12 @@ namespace OpenUtau.Plugin.Builtin {
                 if (isDictLoaded) return;
                 
                 try {
-                    // โหลดพจนานุกรมภาษาไทยส่วนกลาง (Load unified Thai dictionary cache)
-                    ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => ConvertDiffsingerToSyllables(phonemes));
+                    ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => {
+                        if (phonemes.Contains(" ")) {
+                            return ConvertDiffsingerToSyllables(phonemes);
+                        }
+                        return phonemes;
+                    });
 
                     if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
                         string[] singerDicts = { "dsdict-th.txt", "th_vccv_custom_dict.txt", "th_custom_dict.txt" };
@@ -176,7 +181,9 @@ namespace OpenUtau.Plugin.Builtin {
                                     if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
                                     var parts = line.Split(new[] { '=', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                                     if (parts.Length >= 2) {
-                                        CustomDictionary[parts[0].Trim()] = ConvertDiffsingerToSyllables(parts[1].Trim());
+                                        string key = parts[0].Trim().Normalize(NormalizationForm.FormC);
+                                        string val = parts[1].Trim().Normalize(NormalizationForm.FormC);
+                                        CustomDictionary[key] = val.Contains(" ") ? ConvertDiffsingerToSyllables(val) : val;
                                     }
                                 }
                             }
@@ -192,6 +199,7 @@ namespace OpenUtau.Plugin.Builtin {
             if (singer == null) return false;
             var attr = note.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
             foreach (string test in input) {
+                if (string.IsNullOrEmpty(test)) continue;
                 if (singer.TryGetMappedOto(test, note.tone + attr.toneShift, attr.voiceColor, out var otoCandidacy)) {
                     oto = otoCandidacy;
                     return true;
@@ -201,7 +209,7 @@ namespace OpenUtau.Plugin.Builtin {
         }
 
         private string GetLyricOrHint(Note note) {
-            return string.IsNullOrEmpty(note.phoneticHint) ? note.lyric.Normalize() : note.phoneticHint.Normalize();
+            return string.IsNullOrEmpty(note.phoneticHint) ? note.lyric.Normalize(NormalizationForm.FormC) : note.phoneticHint.Normalize(NormalizationForm.FormC);
         }
 
         // [DELTA SYNTH] Preprocessor for exceptional reduced vowels and specific rules
@@ -230,6 +238,7 @@ namespace OpenUtau.Plugin.Builtin {
 
         public string[] WordToPhonemes(string input) {
             if (string.IsNullOrEmpty(input)) return Array.Empty<string>();
+            input = input.Normalize(NormalizationForm.FormC);
             
             if (CustomDictionary.ContainsKey(input)) {
                 return CustomDictionary[input].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -350,13 +359,15 @@ namespace OpenUtau.Plugin.Builtin {
                 if (prevNeighbour != null && prevTh.Vowel != null) {
                     string v = prevTh.Vowel;
                     if (checkOtoUntilHit(new[] { v + " -", v + "-", v }, firstNote, out var tempOto)) tests.Add(tempOto.Alias);
+                    else tests.Add(v);
                 }
 
-                if (tests.Count == 0 && checkOtoUntilHit(new[] { "-" }, firstNote, out var fallbackOto)) tests.Add(fallbackOto.Alias);
-                
-                if (tests.Count > 0) {
-                    phonemes.Add(new Phoneme { phoneme = tests[0], position = 0 });
+                if (tests.Count == 0) {
+                    if (checkOtoUntilHit(new[] { "-" }, firstNote, out var fallbackOto)) tests.Add(fallbackOto.Alias);
+                    else tests.Add("-");
                 }
+                
+                phonemes.Add(new Phoneme { phoneme = tests[0], position = 0 });
                 return new Result { phonemes = phonemes.ToArray() };
             }
 
@@ -373,66 +384,66 @@ namespace OpenUtau.Plugin.Builtin {
             var prevSyllables = WordToPhonemes(prevTempNote);
             var prevThLast = ParseInput(prevSyllables.Length > 0 ? prevSyllables.Last() : "");
 
-            int currentNoteIndex = 0;
-            int currentTickPosition = 0;
-            int lastNoteIndex = -1;
-
             for (int sIdx = 0; sIdx < syllables.Length; sIdx++) {
                 string syllable = syllables[sIdx];
                 var noteTh = ParseInput(syllable);
 
-                Note currentNote = notes[currentNoteIndex];
-                int noteStartPos = currentNote.position - firstNote.position;
-                int noteEndPos = noteStartPos + currentNote.duration;
+                // คำนวณช่วงเวลาของพยางค์บนตัวโน้ตอย่างเที่ยงตรง ป้องกันการล้นขอบเขตโน้ต (Safe Sub-Interval Division)
+                int targetNoteIdx;
+                int sylStartPos;
+                int sylEndPos;
+                Note currentNote;
 
-                if (sIdx > 0 && currentNoteIndex < notes.Length - 1) {
-                    currentNoteIndex++;
-                    currentNote = notes[currentNoteIndex];
-                    noteStartPos = currentNote.position - firstNote.position;
-                    noteEndPos = noteStartPos + currentNote.duration;
+                if (syllables.Length <= notes.Length) {
+                    targetNoteIdx = sIdx;
+                    currentNote = notes[targetNoteIdx];
+                    sylStartPos = currentNote.position - firstNote.position;
+                    sylEndPos = sylStartPos + currentNote.duration;
+                } else {
+                    if (sIdx < notes.Length - 1) {
+                        targetNoteIdx = sIdx;
+                        currentNote = notes[targetNoteIdx];
+                        sylStartPos = currentNote.position - firstNote.position;
+                        sylEndPos = sylStartPos + currentNote.duration;
+                    } else {
+                        targetNoteIdx = notes.Length - 1;
+                        currentNote = notes[targetNoteIdx];
+                        int sharedCount = syllables.Length - (notes.Length - 1);
+                        int subIdx = sIdx - (notes.Length - 1);
+                        int baseStart = currentNote.position - firstNote.position;
+                        int dur = currentNote.duration / sharedCount;
+                        sylStartPos = baseStart + subIdx * dur;
+                        sylEndPos = (subIdx == sharedCount - 1) ? (baseStart + currentNote.duration) : (sylStartPos + dur);
+                    }
                 }
-                
-                int noteDuration = currentNote.duration;
-                int remainingSyllablesOnNote = 1;
-                for (int nextSIdx = sIdx + 1; nextSIdx < syllables.Length; nextSIdx++) {
-                    if (nextSIdx > 0 && currentNoteIndex < notes.Length - 1) break; 
-                    remainingSyllablesOnNote++;
-                }
-                
-                int sylDuration = noteDuration / remainingSyllablesOnNote;
-                if (sIdx > 0 && currentNoteIndex == lastNoteIndex) {
-                    noteStartPos = currentTickPosition;
-                    noteEndPos = noteStartPos + sylDuration;
-                    noteDuration = sylDuration;
-                } else if (remainingSyllablesOnNote > 1) {
-                    noteEndPos = noteStartPos + sylDuration;
-                    noteDuration = sylDuration;
-                }
-                lastNoteIndex = currentNoteIndex;
+                int noteDuration = Math.Max(10, sylEndPos - sylStartPos);
 
                 Note? nextSylNeighbour = null;
                 if (sIdx == syllables.Length - 1) {
                     nextSylNeighbour = nextNeighbour;
-                } else if (currentNoteIndex < notes.Length - 1) {
-                    nextSylNeighbour = notes[currentNoteIndex + 1];
+                } else if (targetNoteIdx < notes.Length - 1) {
+                    nextSylNeighbour = notes[targetNoteIdx + 1];
                 }
 
                 List<string> tests = new List<string>();
 
                 if (noteTh.Consonant != null) {
                     if (noteTh.Dipthong == null && noteTh.Vowel != null) {
-                        // [DELTA SYNTH] Fallback for "อ" (-) to plain vowel if "- V" is missing
                         var cvFallbacks = new List<string> { noteTh.Consonant + noteTh.Vowel, noteTh.Consonant + " " + noteTh.Vowel };
                         if (noteTh.Consonant == "-") cvFallbacks.Add(noteTh.Vowel);
                         
                         if (checkOtoUntilHit(cvFallbacks.ToArray(), currentNote, out var tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteTh.Consonant == "-" ? noteTh.Vowel : noteTh.Consonant + noteTh.Vowel);
                     } else if (noteTh.Dipthong != null && noteTh.Vowel != null) {
                         if (checkOtoUntilHit(new[] { noteTh.Consonant + noteTh.Dipthong + noteTh.Vowel }, currentNote, out var tempOto)) {
                             tests.Add(tempOto.Alias);
                         } else {
                             if (checkOtoUntilHit(new[] { noteTh.Consonant + " " + noteTh.Dipthong, noteTh.Consonant + noteTh.Dipthong }, currentNote, out tempOto)) tests.Add(tempOto.Alias);
                             else if (checkOtoUntilHit(new[] { noteTh.Consonant }, currentNote, out tempOto)) tests.Add(tempOto.Alias);
+                            else tests.Add(noteTh.Consonant);
+
                             if (checkOtoUntilHit(new[] { noteTh.Dipthong + noteTh.Vowel }, currentNote, out tempOto)) tests.Add(tempOto.Alias);
+                            else tests.Add(noteTh.Dipthong + noteTh.Vowel);
                         }
                     }
                 }
@@ -441,16 +452,20 @@ namespace OpenUtau.Plugin.Builtin {
                     if (sIdx == 0 && prevThLast.EndingConsonant != null) {
                         if (checkOtoUntilHit(new[] { prevThLast.EndingConsonant + " " + noteTh.Vowel, prevThLast.EndingConsonant + noteTh.Vowel }, currentNote, out var tempOto)) tests.Add(tempOto.Alias);
                         else if (checkOtoUntilHit(new[] { noteTh.Vowel }, currentNote, out tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteTh.Vowel);
                     } else if (sIdx == 0 && prevThLast.Vowel != null) {
                         if (checkOtoUntilHit(new[] { noteTh.Vowel }, currentNote, out var tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteTh.Vowel);
                     } else {
                         if (checkOtoUntilHit(new[] { noteTh.Vowel }, currentNote, out var tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteTh.Vowel);
                     }
                 }
 
                 if (noteTh.EndingConsonant != null && noteTh.Vowel != null) {
                     if (checkOtoUntilHit(new[] { noteTh.Vowel + " " + noteTh.EndingConsonant, noteTh.Vowel + noteTh.EndingConsonant }, currentNote, out var tempOto)) tests.Add(tempOto.Alias);
                     else if (checkOtoUntilHit(new[] { noteTh.EndingConsonant }, currentNote, out tempOto)) tests.Add(tempOto.Alias);
+                    else tests.Add(noteTh.Vowel + noteTh.EndingConsonant);
                 } else if (nextSylNeighbour != null && noteTh.Vowel != null && noteTh.EndingConsonant == null) {
                     var nextSylStrs = WordToPhonemes(GetLyricOrHint(nextSylNeighbour.Value));
                     var nextTh = ParseInput(nextSylStrs.Length > 0 ? nextSylStrs[0] : "");
@@ -460,25 +475,29 @@ namespace OpenUtau.Plugin.Builtin {
                 }
 
                 if (sIdx == 0 && prevNeighbour == null && tests.Count >= 1) {
-                    if (checkOtoUntilHit(new[] { "- " + tests[0], "-" + tests[0], "-" + tests[0].Replace(" ", "") }, currentNote, out var tempOto)) tests[0] = tempOto.Alias;
+                    string firstPh = tests[0];
+                    if (checkOtoUntilHit(new[] { "- " + firstPh, "-" + firstPh, "-" + firstPh.Replace(" ", "") }, currentNote, out var tempOto)) tests[0] = tempOto.Alias;
                     else if (noteTh.Consonant == null && noteTh.Vowel != null) {
                         if (checkOtoUntilHit(new[] { "- " + noteTh.Vowel, "-" + noteTh.Vowel }, currentNote, out tempOto)) tests[0] = tempOto.Alias;
                     }
                 }
 
                 if (forceClose && sIdx == syllables.Length - 1 && tests.Count >= 1) {
-                    if (noteTh.EndingConsonant == null) {
+                    if (noteTh.EndingConsonant == null && noteTh.Vowel != null) {
                         if (checkOtoUntilHit(new[] { noteTh.Vowel + " -", noteTh.Vowel + "-" }, currentNote, out var tempOto)) tests.Add(tempOto.Alias);
                     }
                 }
 
-                // Raw Phoneme Injection
-                if (tests.Count <= 0 && checkOtoUntilHit(new[] { syllable }, currentNote, out var fallbackOto)) tests.Add(syllable);
+                // Raw Phoneme Injection & Guaranteed Non-Empty
+                if (tests.Count == 0) {
+                    if (checkOtoUntilHit(new[] { syllable }, currentNote, out var fallbackOto)) tests.Add(fallbackOto.Alias);
+                    else tests.Add(string.IsNullOrEmpty(syllable) ? "a" : syllable);
+                }
 
                 var testsArray = tests.ToArray();
-                if (checkOtoUntilHit(testsArray, currentNote, out var oto)) {
-
-                    if (sIdx == 0 && currentLyric != "-" && !currentLyric.StartsWith("+") && prevNeighbour == null && checkOtoUntilHit(new[] { "breath" }, currentNote, out var breathOto)) {
+                if (testsArray.Length > 0) {
+                    // แทรกเสียงหายใจอย่างประณีตก่อนเสียงแรกของประโยค
+                    if (sIdx == 0 && currentLyric != "-" && !currentLyric.StartsWith("+") && prevNeighbour == null && checkOtoUntilHit(new[] { "breath", "Breath" }, currentNote, out var breathOto)) {
                         int space = prev != null ? currentNote.position - (prev.Value.position + prev.Value.duration) : currentNote.position;
                         int breathPosition = space > 0 ? -Math.Min(space, 240) : -120;
                         if (breathPosition > -120) breathPosition = -120;
@@ -487,7 +506,7 @@ namespace OpenUtau.Plugin.Builtin {
 
                     for (int i = 0; i < testsArray.Length; i++) {
                         int position = 0;
-                        int vcPosition = noteDuration - 120;
+                        int vcPosition = Math.Max(0, noteDuration - 120);
 
                         if (nextSylNeighbour != null && testsArray[i].Contains(" ")) {
                             var nextSylStrs = WordToPhonemes(GetLyricOrHint(nextSylNeighbour.Value));
@@ -497,8 +516,8 @@ namespace OpenUtau.Plugin.Builtin {
                             if (nextTh.Dipthong != null) nextCheck = nextTh.Consonant + nextTh.Dipthong + nextTh.Vowel;
 
                             var nextAttr = nextSylNeighbour.Value.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
-                            if (singer != null && singer.TryGetMappedOto(nextCheck, nextSylNeighbour.Value.tone + nextAttr.toneShift, nextAttr.voiceColor, out var nextOto) && oto.Overlap > 0) {
-                                vcPosition = noteDuration - MsToTick(nextOto.Overlap) - MsToTick(nextOto.Preutter);
+                            if (singer != null && singer.TryGetMappedOto(nextCheck, nextSylNeighbour.Value.tone + nextAttr.toneShift, nextAttr.voiceColor, out var nextOto) && nextOto.Overlap > 0) {
+                                vcPosition = Math.Max(0, noteDuration - MsToTick(nextOto.Overlap) - MsToTick(nextOto.Preutter));
                             }
                         }
 
@@ -525,42 +544,26 @@ namespace OpenUtau.Plugin.Builtin {
                             } else if (noteDuration < consLength * 1.5) {
                                 consLength = (int)(noteDuration / 1.5);
                             }
-                            position = noteDuration - consLength;
+                            position = Math.Max(0, noteDuration - consLength);
                         }
 
-                        int absolutePosition = noteStartPos + position;
+                        int absolutePosition = sylStartPos + position;
                         int lastPos = phonemes.Count > 0 ? phonemes.Last().position : -120;
                         int minGap = 10;
                         
-                        // Strict Overlap Prevention
+                        // Strict Overlap Prevention and Boundary Safety
                         if (absolutePosition <= lastPos) {
                             absolutePosition = lastPos + minGap;
                         }
-                        if (absolutePosition >= noteEndPos) {
-                            absolutePosition = Math.Max(lastPos + minGap, noteEndPos - minGap);
+                        if (absolutePosition >= sylEndPos) {
+                            absolutePosition = Math.Max(lastPos + minGap, sylEndPos - minGap);
                         }
 
                         phonemes.Add(new Phoneme { phoneme = testsArray[i], position = absolutePosition });
-                        currentTickPosition = absolutePosition;
                     }
                 }
             }
 
-            int gap = prevNeighbour == null ? 9999 : firstNote.position - (prevNeighbour.Value.position + prevNeighbour.Value.duration);
-            if (gap >= 120) {
-                bool hasOpening = phonemes.Count > 0 && (phonemes[0].phoneme.StartsWith("- ") || phonemes[0].phoneme.StartsWith("-"));
-                if (!hasOpening && singer != null) {
-                    var attr = firstNote.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
-                    if (singer.TryGetMappedOto("Breath", firstNote.tone + attr.toneShift, attr.voiceColor, out var breathOto)) {
-                        int insertPos = -60;
-                        if (phonemes.Count > 0 && insertPos >= phonemes[0].position) {
-                            insertPos = phonemes[0].position - 10;
-                        }
-                        phonemes.Insert(0, new Phoneme { phoneme = breathOto.Alias, position = insertPos });
-                    }
-                }
-            }
-            
             return new Result { phonemes = phonemes.ToArray() };
         }
 

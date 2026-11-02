@@ -1,4 +1,13 @@
-﻿using System;
+﻿// ============================================================================
+// 1. วัน/เดือน/ปี: 27 ตุลาคม พ.ศ. 2569 / 27 October 2026
+// 2. ชื่อไฟล์โค้ด: UExpression.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.0
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: D:\Program Developing\Thai_OpenUtau\OpenUtau.Core\Ustx\UExpression.cs
+// 6. รายละเอียดการแก้ไข: เพิ่ม UExpressionType.MaskedCurve = 3 รองรับรูปแบบ USTX 0.10 และความเข้ากันได้กับโปรเจกต์ภายนอก
+// ============================================================================
+
+using System;
 using System.Diagnostics;
 using System.Linq;
 using YamlDotNet.Serialization;
@@ -8,6 +17,7 @@ namespace OpenUtau.Core.Ustx {
         Numerical = 0,
         Options = 1,
         Curve = 2,
+        MaskedCurve = 3,
     }
 
     /// <summary>

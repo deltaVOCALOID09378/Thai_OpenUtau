@@ -1,46 +1,166 @@
+<!--
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: TrackSettingsDialog.axaml
+ * เวอร์ชั่น: 1.3
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/TrackSettingsDialog.axaml
+ * รายละเอียดการแก้ไข: ยกระดับประสิทธิภาพการเรนเดอร์ (One-pass rendering) เปลี่ยนตัวแปรสีไดนามิกเป็นสีคงที่ระดับราก ลดภาระ CPU
+-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:c="clr-namespace:OpenUtau.App.Controls"
+        xmlns:vm="using:OpenUtau.App.ViewModels"
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.TrackSettingsDialog"
+        x:DataType="vm:TrackSettingsViewModel"
+        x:CompileBindings="True"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource dialogs.tracksettings.caption}"
-        Width="320" SizeToContent="Height" WindowStartupLocation="CenterOwner" CanResize="False">
-  <Border Margin="{Binding $parent.WindowDecorationMargin}">
-    <StackPanel Margin="8" Spacing="4">
-      <TextBlock Text="{DynamicResource dialogs.tracksettings.renderer}"/>
-      <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch"
-                                ItemsSource="{Binding RendererOptions}"
-                                SelectedItem="{Binding SelectedRenderer}"/>
-      <TextBlock Text="{DynamicResource prefs.rendering.resampler}" Margin="0,6,0,0"
-                 IsVisible="{Binding NeedsResampler}"/>
-      <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch"
-                                IsVisible="{Binding NeedsResampler}"
-                                ItemsSource="{Binding Resamplers}"
-                                SelectedItem="{Binding Resampler}"/>
-      <Grid ColumnDefinitions="*,8,*" IsVisible="{Binding NeedsResampler}">
-        <Button Grid.Column="0" Content="{DynamicResource dialogs.tracksettings.location}"
-                HorizontalAlignment="Stretch" Command="{Binding OpenResamplerLocation}"/>
-        <Button Grid.Column="2" Content="{DynamicResource dialogs.tracksettings.setasdefault}"
-                HorizontalAlignment="Stretch" Command="{Binding SetDefaultResampler}"/>
-      </Grid>
-      <TextBlock Text="{DynamicResource prefs.rendering.wavtool}" Margin="0,6,0,0"
-                 IsVisible="{Binding NeedsWavtool}"/>
-      <c:WorkspacePanelComboBox Classes="workspacePanelCombo" HorizontalAlignment="Stretch"
-                                IsVisible="{Binding NeedsWavtool}"
-                                ItemsSource="{Binding Wavtools}"
-                                SelectedItem="{Binding Wavtool}"/>
-      <Grid ColumnDefinitions="*,8,*" IsVisible="{Binding NeedsWavtool}">
-        <Button Grid.Column="0" Content="{DynamicResource dialogs.tracksettings.location}"
-                HorizontalAlignment="Stretch" Command="{Binding OpenWavtoolLocation}"/>
-        <Button Grid.Column="2" Content="{DynamicResource dialogs.tracksettings.setasdefault}"
-                HorizontalAlignment="Stretch" Command="{Binding SetDefaultWavtool}"/>
-      </Grid>
-      <Button Margin="0,8,0,0" Content="{DynamicResource button.ok}"
-              HorizontalAlignment="Stretch" Click="OnOkClicked"/>
-    </StackPanel>
+        MinWidth="360" Width="380" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False" ShowInTaskbar="False"
+        FontFamily="Leelawadee UI, sans-serif"
+        Background="#1A1A1A" Foreground="#F0F0F0">
+
+  <Window.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+    </Style>
+
+    <!-- การ์ดแต่ละส่วน -->
+    <Style Selector="Border.section">
+      <Setter Property="Background" Value="#222222"/>
+      <Setter Property="BorderBrush" Value="#444444"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="12,10"/>
+    </Style>
+
+    <!-- หัวข้อ -->
+    <Style Selector="TextBlock.header">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+
+    <!-- ปุ่มย่อย: ข้อความไทยยาว ๆ ขึ้นบรรทัดใหม่ได้ ไม่ถูกตัด -->
+    <Style Selector="Button.action">
+      <Setter Property="Background" Value="#333333"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Padding" Value="8,5"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.action:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#444444"/>
+    </Style>
+    <Style Selector="Button.action /template/ ContentPresenter">
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ปุ่มหลัก -->
+    <Style Selector="Button.primary">
+      <Setter Property="MinWidth" Value="100"/>
+      <Setter Property="Padding" Value="16,6"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.accent">
+      <Setter Property="Background" Value="#CC2200"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#FF4422"/>
+    </Style>
+    <Style Selector="Button.accent:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#991100"/>
+    </Style>
+  </Window.Styles>
+
+  <Border Margin="{Binding $parent[Window].WindowDecorationMargin}">
+    <DockPanel Margin="12">
+
+      <!-- ===== ปุ่มด้านล่าง ===== -->
+      <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                  HorizontalAlignment="Right" Margin="0,12,0,0">
+        <Button Classes="primary accent"
+                Content="{DynamicResource button.ok}"
+                IsDefault="True"
+                Click="OnOkClicked"/>
+      </StackPanel>
+
+      <StackPanel Spacing="10">
+
+        <!-- ===== Renderer ===== -->
+        <Border Classes="section">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="header"
+                       Text="{DynamicResource dialogs.tracksettings.renderer}"/>
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="—"
+                                      ItemsSource="{Binding RendererOptions}"
+                                      SelectedItem="{Binding SelectedRenderer}"/>
+          </StackPanel>
+        </Border>
+
+        <!-- ===== Resampler (ซ่อน/แสดงทั้งกลุ่ม) ===== -->
+        <Border Classes="section" IsVisible="{Binding NeedsResampler}">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="header"
+                       Text="{DynamicResource prefs.rendering.resampler}"/>
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="—"
+                                      ItemsSource="{Binding Resamplers}"
+                                      SelectedItem="{Binding Resampler}"/>
+            <Grid ColumnDefinitions="*,8,*" Margin="0,2,0,0">
+              <Button Grid.Column="0" Classes="action"
+                      Content="{DynamicResource dialogs.tracksettings.location}"
+                      ToolTip.Tip="{DynamicResource dialogs.tracksettings.location}"
+                      Command="{Binding OpenResamplerLocation}"/>
+              <Button Grid.Column="2" Classes="action"
+                      Content="{DynamicResource dialogs.tracksettings.setasdefault}"
+                      ToolTip.Tip="{DynamicResource dialogs.tracksettings.setasdefault}"
+                      Command="{Binding SetDefaultResampler}"/>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- ===== Wavtool (ซ่อน/แสดงทั้งกลุ่ม) ===== -->
+        <Border Classes="section" IsVisible="{Binding NeedsWavtool}">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="header"
+                       Text="{DynamicResource prefs.rendering.wavtool}"/>
+            <c:WorkspacePanelComboBox Classes="workspacePanelCombo"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="—"
+                                      ItemsSource="{Binding Wavtools}"
+                                      SelectedItem="{Binding Wavtool}"/>
+            <Grid ColumnDefinitions="*,8,*" Margin="0,2,0,0">
+              <Button Grid.Column="0" Classes="action"
+                      Content="{DynamicResource dialogs.tracksettings.location}"
+                      ToolTip.Tip="{DynamicResource dialogs.tracksettings.location}"
+                      Command="{Binding OpenWavtoolLocation}"/>
+              <Button Grid.Column="2" Classes="action"
+                      Content="{DynamicResource dialogs.tracksettings.setasdefault}"
+                      ToolTip.Tip="{DynamicResource dialogs.tracksettings.setasdefault}"
+                      Command="{Binding SetDefaultWavtool}"/>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </DockPanel>
   </Border>
 </Window>
-

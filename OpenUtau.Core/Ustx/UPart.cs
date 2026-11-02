@@ -1,3 +1,12 @@
+﻿// ============================================================================
+// 1. วัน/เดือน/ปี: 27 ตุลาคม พ.ศ. 2569 / 27 October 2026
+// 2. ชื่อไฟล์โค้ด: UPart.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.0
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: D:\Program Developing\Thai_OpenUtau\OpenUtau.Core\Ustx\UPart.cs
+// 6. รายละเอียดการแก้ไข: เพิ่มการตรวจสอบ UExpressionType.MaskedCurve ป้องกันการนำไปใช้เป็น phoneme expression
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -216,7 +225,7 @@ namespace OpenUtau.Core.Ustx {
                                 if (resp.phonemes[i][j].expressions != null && resp.phonemes[i][j].expressions.Any()) {
                                     resp.phonemes[i][j].expressions.ForEach(exp => {
                                         if (track.TryGetExpDescriptor(project, exp.abbr, out var descriptor)) {
-                                            if (descriptor.type != UExpressionType.Curve && descriptor.min <= exp.value && exp.value <= descriptor.max) {
+                                            if (descriptor.type != UExpressionType.Curve && descriptor.type != UExpressionType.MaskedCurve && descriptor.min <= exp.value && exp.value <= descriptor.max) {
                                                 note.phonemizerExpressions.Add(new UExpression(descriptor) {
                                                     index = phoneme.index,
                                                     value = exp.value

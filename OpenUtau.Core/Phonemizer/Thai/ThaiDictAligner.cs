@@ -1,10 +1,13 @@
 /*
- * File: ThaiDictAligner.cs
- * Version: 1.0.0
- * Location: OpenUtau.Core/Phonemizers/Thai/
- * Description: Thai dictionary alignment, syllable validation, and lookup engine with zero-defect safe queries.
- * Credit: Made And Checked By DELTA SYNTH & All Agentic AI
- * Original by DELTA SYNTH
+ * ============================================================================
+ * Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+ * File Name    : ThaiDictAligner.cs
+ * Version      : 1.2.0
+ * Location     : OpenUtau.Core/Phonemizers/Thai/
+ * Description  : Thai dictionary alignment, syllable validation, and lookup engine.
+ *                Optimized with Lazy Loading (File.ReadLines) to reduce RAM usage.
+ * Credit       : Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+ * ============================================================================
  */
 
 #nullable enable
@@ -29,9 +32,10 @@ namespace OpenUtau.Core.Phonemizers.Thai
             }
 
             _dictTable.Clear();
-            string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
 
-            foreach (string rawLine in lines)
+            // [DELTA SYNTH] Optimized: Using File.ReadLines (Lazy Evaluation) 
+            // instead of File.ReadAllLines to prevent massive RAM allocation for huge dictionaries.
+            foreach (string rawLine in File.ReadLines(filePath, Encoding.UTF8))
             {
                 string line = rawLine.Trim();
                 if (string.IsNullOrEmpty(line) || line.StartsWith("#", StringComparison.Ordinal))

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,16 +20,30 @@ namespace OpenUtau.Classic {
 
         private static Action<ReplaceNoteEventArgs> ReplaceNoteMethod(DocManager docManager) {
             return new Action<ReplaceNoteEventArgs>((args) => {
-                docManager.StartUndoGroup("command.batch.plugin");
-                docManager.ExecuteCmd(new RemoveNoteCommand(args.Part, args.ToRemove));
-                docManager.ExecuteCmd(new AddNoteCommand(args.Part, args.ToAdd));
-                docManager.EndUndoGroup();
+                void Apply() {
+                    docManager.StartUndoGroup("command.batch.plugin");
+                    docManager.ExecuteCmd(new RemoveNoteCommand(args.Part, args.ToRemove));
+                    docManager.ExecuteCmd(new AddNoteCommand(args.Part, args.ToAdd));
+                    docManager.EndUndoGroup();
+                }
+                if (docManager.PostOnUIThread != null) {
+                    docManager.PostOnUIThread(Apply);
+                } else {
+                    Apply();
+                }
             });
         }
 
         private static Action<PluginErrorEventArgs> ShowErrorMessageMethod(DocManager docManager) {
             return new Action<PluginErrorEventArgs>((args) => {
-                docManager.ExecuteCmd(new ErrorMessageNotification(args.Message, args.Exception));
+                void ShowError() {
+                    docManager.ExecuteCmd(new ErrorMessageNotification(args.Message, args.Exception));
+                }
+                if (docManager.PostOnUIThread != null) {
+                    docManager.PostOnUIThread(ShowError);
+                } else {
+                    ShowError();
+                }
             });
         }
 

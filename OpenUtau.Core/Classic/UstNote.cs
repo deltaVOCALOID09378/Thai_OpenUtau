@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -317,6 +317,9 @@ namespace OpenUtau.Classic {
                 } else {
                     while (w.Count > y.Count) {
                         y.Add(0);
+                    }
+                    while (y.Count > w.Count) {
+                        w.Add(0);
                     }
                     for (var i = points.Count - 1; i > 0; i--) {
                         points.Remove(points[i]);

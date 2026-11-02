@@ -1,12 +1,12 @@
 // ============================================================================
-// วัน/เดือน/ปี: 22 ตุลาคม 2569 (2026-10-22)
+// วัน/เดือน/ปี: 28 ตุลาคม 2569 (2026-10-28)
 // ชื่อไฟล์: PackageManager.cs
-// ลำดับเวอร์ชัน: 1.0
+// ลำดับเวอร์ชัน: 1.2
 // เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // ตำแหน่งที่จัดวาง: OpenUtau.Core/PackageManager.cs
-// รายละเอียดการแก้ไขงาน: ป้องกัน FileNotFoundException เมื่อไดเรกทอรีย่อยไม่มีไฟล์ oudep.yaml
+// รายละเอียดการแก้ไขงาน: ป้องกัน Zip-Slip Sibling-Prefix Bypass ในการแตกไฟล์แพ็กเกจ .oudep
 // ============================================================================
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -220,12 +220,13 @@ namespace OpenUtau.Core {
 
         private static readonly IComparer<string> VersionComparer = new VersionStringComparer();
 
-        private static bool IsValidPackageName(string id) {
+        public static bool IsValidPackageName(string id) {
+            if (string.IsNullOrEmpty(id)) return false;
             if (id.Contains("..") || Path.IsPathRooted(id)) return false;
             return !Path.GetInvalidFileNameChars().Any(c => id.Contains(c));
         }
 
-        private static bool IsValidRelativePath(string path) {
+        public static bool IsValidRelativePath(string path) {
             if (string.IsNullOrEmpty(path)) return false;
             if (path.Contains("..") || Path.IsPathRooted(path)) return false;
             return !Path.GetInvalidPathChars().Any(c => path.Contains(c));
@@ -348,12 +349,16 @@ namespace OpenUtau.Core {
                 } catch (Exception e) {
                     Log.Error(e, $"Failed to remove old dependency folder {basePath}");
                 }
+                var canonicalBase = Path.GetFullPath(basePath);
+                if (!canonicalBase.EndsWith(Path.DirectorySeparatorChar)) {
+                    canonicalBase += Path.DirectorySeparatorChar;
+                }
                 foreach (var entry in archive.Entries) {
                     if (string.IsNullOrEmpty(entry.Key) || !IsValidRelativePath(entry.Key)) {
                         continue;
                     }
                     var filePath = Path.GetFullPath(Path.Combine(basePath, entry.Key));
-                    if (!filePath.StartsWith(Path.GetFullPath(basePath), StringComparison.OrdinalIgnoreCase)) {
+                    if (!filePath.StartsWith(canonicalBase, StringComparison.OrdinalIgnoreCase)) {
                         continue;
                     }
                     var dir = Path.GetDirectoryName(filePath);

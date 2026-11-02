@@ -4,7 +4,7 @@ rem Date         : 27/10/2026 (B.E. 2569 / A.D. 2026)
 rem File Name    : Compile_Full_Program.bat
 rem Version      : 3.5.0 (Full Standalone Release Builder)
 rem Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
-rem File Location: Root Directory of the Project (E:\Program Developing\Thai_OpenUtau\)
+rem File Location: Root Directory of the Project (D:\Program Developing\Thai_OpenUtau\)
 rem Description  : Professional full-stack compilation and publishing pipeline for Thai OpenUtau.
 rem                Builds OpenUtau in Release mode and produces a fully consolidated,
 rem                ready-to-run application in the "Publish" folder.
@@ -20,7 +20,7 @@ set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
 echo ======================================================================
 echo       DELTA SYNTH - Thai OpenUtau Full Program Compiler v3.1.0
 echo       Compiles the entire solution into a ready-to-run package
-echo       Target Workspace: E:\Program Developing\Thai_OpenUtau\
+echo       Target Workspace: D:\Program Developing\Thai_OpenUtau\
 echo ======================================================================
 echo.
 
@@ -45,7 +45,7 @@ if exist "OpenUtau\OpenUtau.csproj" (
 ) else (
     color 0C
     echo [ERROR] Could not locate OpenUtau project or solution files.
-    echo Please ensure this script is run from: E:\Program Developing\Thai_OpenUtau\
+    echo Please ensure this script is run from: D:\Program Developing\Thai_OpenUtau\
     echo Current Directory: %CD%
     echo.
     pause
@@ -130,6 +130,10 @@ if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\bin\Release\net8.0\OpenUtau.Plu
 )
 
 rem Consolidate Worldline and SDL3 Native Libraries
+if exist "%OUTPUT_DIR%\runtimes\win-x64\native\*.dll" (
+    copy /y "%OUTPUT_DIR%\runtimes\win-x64\native\*.dll" "%OUTPUT_DIR%\" >nul 2>&1
+    echo [*] Native runtime DLLs [win-x64] consolidated to root.
+)
 if exist "%PROJECT_ROOT%\worldline.dll" (
     copy /y "%PROJECT_ROOT%\worldline.dll" "%OUTPUT_DIR%\" >nul 2>&1
     echo [*] worldline.dll consolidated.
@@ -172,10 +176,11 @@ if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary" (
 rem Consolidate to All Rendered File if present
 set "ALL_RENDERED=%PROJECT_ROOT%\All Rendered File"
 if exist "%ALL_RENDERED%" (
+    xcopy "%OUTPUT_DIR%\*" "%ALL_RENDERED%\" /s /e /y /q >nul 2>&1
     if not exist "%ALL_RENDERED%\Dictionaries" mkdir "%ALL_RENDERED%\Dictionaries" >nul 2>&1
     if exist "%PROJECT_ROOT%\Dictionaries" xcopy "%PROJECT_ROOT%\Dictionaries\*" "%ALL_RENDERED%\Dictionaries\" /s /e /y /q >nul 2>&1
     if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary" xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%ALL_RENDERED%\Dictionaries\" /s /e /y /q >nul 2>&1
-    echo [*] Dictionaries deployed to All Rendered File.
+    echo [*] Binaries and Dictionaries deployed to All Rendered File.
 )
 
 rem Deploy Quick Launcher in Publish Folder
@@ -205,7 +210,8 @@ echo  The program is ready to run with all native libraries and plugins.
 echo ======================================================================
 echo.
 
-if "%NO_PROMPT%"=="1" (exit /b 0) else set /p RUN_CHOICE="Do you want to launch Thai OpenUtau now? (Y/N): "
+if "%NO_PROMPT%"=="1" exit /b 0
+set /p RUN_CHOICE="Do you want to launch Thai OpenUtau now? [Y/N]: "
 if /i "%RUN_CHOICE%"=="Y" (
     echo Launching Thai OpenUtau...
     cd /d "%OUTPUT_DIR%"

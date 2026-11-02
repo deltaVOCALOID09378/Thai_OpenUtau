@@ -1,3 +1,12 @@
+// ============================================================================
+// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : RealCurveUpdater.cs
+// Version      : 1.0
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/Render/RealCurveUpdater.cs
+// Description  : High-performance real curve state management preventing excessive memory allocation.
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,8 +30,7 @@ namespace OpenUtau.Core.Render {
             this.ys = ys;
         }
 
-        public bool IsValid => !string.IsNullOrEmpty(abbr) &&
-            endTick >= startTick && xs.Length == ys.Length && xs.Length > 0;
+        public bool IsValid => !string.IsNullOrEmpty(abbr) && endTick >= startTick && xs.Length == ys.Length && xs.Length > 0;
     }
 
     public static class RealCurveUpdater {
@@ -46,6 +54,8 @@ namespace OpenUtau.Core.Render {
             ulong phraseHash,
             IEnumerable<RenderRealCurveResult> results) {
             var updates = new List<RealCurveUpdate>();
+            
+            // [DELTA SYNTH] Memory optimization for rapid curve evaluations
             foreach (var result in results) {
                 if (string.IsNullOrEmpty(result.abbr) || result.ticks == null || result.values == null) {
                     continue;
@@ -54,20 +64,26 @@ namespace OpenUtau.Core.Render {
                 if (count == 0) {
                     continue;
                 }
-                var ticks = result.ticks
-                    .Take(count)
-                    .Select(tick => phrasePosition - partPosition + (int)tick)
-                    .ToArray();
-                var values = result.values
-                    .Take(count)
-                    .Select(value => (int)(value * 1000.0))
-                    .ToArray();
-                int startTick = ticks.Min();
-                int endTick = ticks.Max();
+                
+                int[] ticks = new int[count];
+                int[] values = new int[count];
+                int startTick = int.MaxValue;
+                int endTick = int.MinValue;
+                
+                for (int i = 0; i < count; i++) {
+                    int tickVal = phrasePosition - partPosition + (int)result.ticks[i];
+                    ticks[i] = tickVal;
+                    values[i] = (int)(result.values[i] * 1000.0);
+                    
+                    if (tickVal < startTick) startTick = tickVal;
+                    if (tickVal > endTick) endTick = tickVal;
+                }
+                
                 var xs = new List<int>(count + 1) { ticks[0] };
                 var ys = new List<int>(count + 1) { -1 };
                 xs.AddRange(ticks);
                 ys.AddRange(values);
+                
                 updates.Add(new RealCurveUpdate(
                     result.abbr,
                     phraseHash,
@@ -103,7 +119,7 @@ namespace OpenUtau.Core.Render {
         }
 
         private static bool ApplyUpdate(UProject project, UVoicePart part, RealCurveUpdate update) {
-            var curve = part.curves.FirstOrDefault(curve => curve.abbr == update.abbr);
+            var curve = part.curves.FirstOrDefault(c => c.abbr == update.abbr);
             if (curve == null) {
                 var track = project.tracks[part.trackNo];
                 if (!track.TryGetExpDescriptor(project, update.abbr, out var descriptor)) {

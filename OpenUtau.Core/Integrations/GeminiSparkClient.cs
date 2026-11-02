@@ -1,14 +1,16 @@
 // ========================================================================
-// Date: 05/10/2569 (BE) / 05/10/2026 (CE)
+// Date: 30/10/2569 (BE) / 30/10/2026 (CE)
 // File: GeminiSparkClient.cs
-// Version: 1.0.0
+// Version: 1.3.0
 // Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
 // Original by OpenUtau Contributors
 // Location: OpenUtau.Core/Integrations/GeminiSparkClient.cs
-// Description: Basic framework for connecting OpenUtau data with Gemini Spark.
+// Description: Typed framework for connecting OpenUtau data with Gemini Spark.
+// Modification: Fixed multiline string literal missing '@' prefix.
 // ========================================================================
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,70 +18,86 @@ using Newtonsoft.Json;
 using Serilog;
 
 namespace OpenUtau.Core.Integrations {
+    public class GeminiPart {
+        [JsonProperty("text")]
+        public string? Text { get; set; }
+    }
+
+    public class GeminiContent {
+        [JsonProperty("parts")]
+        public List<GeminiPart>? Parts { get; set; }
+    }
+
+    public class GeminiCandidate {
+        [JsonProperty("content")]
+        public GeminiContent? Content { get; set; }
+    }
+
+    public class GeminiResponse {
+        [JsonProperty("candidates")]
+        public List<GeminiCandidate>? Candidates { get; set; }
+    }
+
     /// <summary>
     /// คลาสสำหรับเชื่อมต่อข้อมูลกับ Gemini Spark
-    /// ใช้เป็น Framework เริ่มต้นสำหรับการส่งคำขอและรับข้อมูลกลับมาวิเคราะห์
+    /// ใช้ Static Singleton HttpClient และ Typed Models เพื่อความเสถียรสูงสุด
     /// </summary>
     public class GeminiSparkClient {
         private static readonly string API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-        private readonly HttpClient _httpClient;
+        private static readonly HttpClient SharedHttpClient = new HttpClient {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
         private string _apiKey;
 
         public GeminiSparkClient(string apiKey) {
-            _httpClient = new HttpClient();
             _apiKey = apiKey;
         }
 
-        /// <summary>
-        /// ตั้งค่า API Key ใหม่
-        /// </summary>
         public void SetApiKey(string apiKey) {
             _apiKey = apiKey;
         }
 
-        /// <summary>
-        /// ฟังก์ชันทดสอบการเชื่อมต่อและส่งข้อความไปยัง Gemini Spark
-        /// </summary>
-        /// <param name="prompt">ข้อความคำสั่งที่ต้องการส่ง</param>
-        /// <returns>ข้อความตอบกลับจาก Gemini Spark</returns>
-        public async Task<string> GenerateContentAsync(string prompt) {
+        public async Task<string> AnalyzeProjectDataAsync(string promptText, string projectContextJson) {
             if (string.IsNullOrWhiteSpace(_apiKey)) {
-                Log.Error("GeminiSparkClient: API Key is not set.");
-                throw new InvalidOperationException("กรุณากำหนด API Key ก่อนเรียกใช้งาน Gemini Spark");
+                Log.Warning("GeminiSparkClient: API Key is missing.");
+                return "Error: Missing API Key.";
             }
 
             try {
-                var requestBody = new {
+                var requestUrl = $"{API_ENDPOINT}?key={_apiKey}";
+                var payload = new {
                     contents = new[] {
                         new {
                             parts = new[] {
-                                new { text = prompt }
+                                new { text = $@"{promptText}
+
+Context Data:
+{projectContextJson}" }
                             }
                         }
                     }
                 };
 
-                string jsonBody = JsonConvert.SerializeObject(requestBody);
-                var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+                string jsonPayload = JsonConvert.SerializeObject(payload);
+                using var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-                string requestUrl = $"{API_ENDPOINT}?key={_apiKey}";
-                HttpResponseMessage response = await _httpClient.PostAsync(requestUrl, content);
-
+                HttpResponseMessage response = await SharedHttpClient.PostAsync(requestUrl, content).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
 
-                string responseJson = await response.Content.ReadAsStringAsync();
-                dynamic responseData = JsonConvert.DeserializeObject(responseJson);
+                string responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var parsedResponse = JsonConvert.DeserializeObject<GeminiResponse>(responseString);
 
-                if (responseData?.candidates != null && responseData.candidates.Count > 0) {
-                    string replyText = responseData.candidates[0].content.parts[0].text;
-                    return replyText;
-                }
+                string? resultText = parsedResponse?.Candidates != null &&
+                                     parsedResponse.Candidates.Count > 0 &&
+                                     parsedResponse.Candidates[0].Content?.Parts != null &&
+                                     parsedResponse.Candidates[0].Content!.Parts!.Count > 0
+                    ? parsedResponse.Candidates[0].Content!.Parts![0].Text
+                    : null;
 
-                return string.Empty;
-            }
-            catch (Exception ex) {
-                Log.Error(ex, "GeminiSparkClient: Failed to generate content from Gemini Spark.");
-                throw new Exception($"เกิดข้อผิดพลาดในการเชื่อมต่อ Gemini Spark: {ex.Message}", ex);
+                return resultText ?? "No response text generated.";
+            } catch (Exception ex) {
+                Log.Error(ex, "GeminiSparkClient: Failed to communicate with Gemini Spark API.");
+                return $"Error communicating with Gemini Spark: {ex.Message}";
             }
         }
     }

@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : PlaybackViewModel.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
+// File Location: OpenUtau/ViewModels/PlaybackViewModel.cs
+// Description  : Playback ViewModel with live seek-on-click support so clicking the timeline or canvas positions and plays from the mouse region seamlessly.
+// ============================================================================
 using System;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
@@ -89,8 +97,14 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public void MovePlayPos(int tick) {
-            if (DocManager.Inst.playPosTick != tick) {
-                DocManager.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick), pause: true));
+            int targetTick = Math.Max(0, tick);
+            bool wasPlaying = PlaybackManager.Inst.PlayingMaster || PlaybackManager.Inst.StartingToPlay;
+            if (DocManager.Inst.playPosTick != targetTick || wasPlaying) {
+                DocManager.Inst.ExecuteCmd(new SeekPlayPosTickNotification(targetTick, pause: !wasPlaying));
+                if (wasPlaying) {
+                    PlaybackManager.Inst.PlayOrPause(tick: targetTick);
+                    NotifyPlaybackActiveChanged();
+                }
             }
         }
 

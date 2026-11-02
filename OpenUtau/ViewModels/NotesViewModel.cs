@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : NotesViewModel.cs
+// Version      : 1.3
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
+// File Location: OpenUtau/ViewModels/NotesViewModel.cs
+// Description  : Piano Roll ViewModel with deterministic TimeAxis-based TickToLineTick, accurate mouse-click playhead positioning, and non-jumping viewport control.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -156,6 +164,7 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public string PartDisplayName { get; set; } = string.Empty;
         [Reactive] public SolidColorBrush TrackAccentColor { get; set; } = ThemeManager.GetTrackColor("Blue").AccentColor;
         [Reactive] public SolidColorBrush TrackNoteColor { get; set; } = ThemeManager.GetTrackColor("Blue").NoteColor;
+        [Reactive] public IBrush PartDisplayNameForeground { get; set; } = Brushes.White;
         public double ViewportTicks => viewportTicks.Value;
         public double ViewportTracks => viewportTracks.Value;
         public double SmallChangeX => smallChangeX.Value;
@@ -620,26 +629,55 @@ namespace OpenUtau.App.ViewModels {
         /// <param name="point">Mouse position</param>
         /// <returns>Tick position related to the beginning of the part</returns>
         public int PointToTick(Point point) {
+            if (TickWidth <= 0) {
+                return (int)Math.Max(0, TickOffset);
+            }
             return (int)(point.X / TickWidth + TickOffset);
         }
 
+        /// <summary>
+        /// Converts a mouse click position in the Piano Roll into a part-local playhead tick.
+        /// Respects IsSnapOn using the fine SnapDiv grid and never jumps or clamps to the left viewport edge.
+        /// </summary>
+        public int PointToPlayPosTick(Point point, bool forceUnsnapped = false) {
+            int rawTick = Math.Max(0, PointToTick(point));
+            if (!IsSnapOn || forceUnsnapped) {
+                return rawTick;
+            }
+            int safeSnapDiv = SnapDiv > 0 ? SnapDiv : 16;
+            int snapUnit = Math.Max(15, Project.resolution * 4 / safeSnapDiv);
+            int absTick = rawTick + TickOrigin;
+            Project.timeAxis.TickPosToBarBeat(absTick, out int bar, out int _, out int _);
+            int barTick = Project.timeAxis.BarBeatToTickPos(bar, 0);
+            int snappedAbs = barTick + ((absTick - barTick) / snapUnit) * snapUnit;
+            return Math.Max(0, snappedAbs - TickOrigin);
+        }
+
         public void TickToLineTick(int tick, out int left, out int right) {
-            if (SnapTicks.Count == 0) {
-                left = 0;
-                right = Project.resolution;
-                return;
+            int safeTick = Math.Max(0, tick);
+            int safeSnapDiv = SnapDiv > 0 ? SnapDiv : 16;
+            int snapUnit = Math.Max(15, Project.resolution * 4 / safeSnapDiv);
+            if (TickWidth > 0) {
+                while (snapUnit * TickWidth < ViewConstants.MinTicklineWidth) {
+                    snapUnit *= 2;
+                }
             }
-            int index = SnapTicks.BinarySearch(tick + TickOrigin);
-            if (index < 0) {
-                index = ~index - 1;
+            int absTick = safeTick + TickOrigin;
+            var timeSig = Project.timeAxis.TimeSignatureAtTick(absTick);
+            Project.timeAxis.TickPosToBarBeat(absTick, out int bar, out int _, out int _);
+            int barTick = Project.timeAxis.BarBeatToTickPos(bar, 0);
+            int nextBarTick = Project.timeAxis.BarBeatToTickPos(bar + 1, 0);
+            int ticksPerBeat = Math.Max(15, Project.resolution * 4 * timeSig.beatPerBar / Math.Max(1, timeSig.beatUnit));
+            int ticksPerLine = snapUnit;
+            if (ticksPerBeat < snapUnit) {
+                ticksPerLine = ticksPerBeat;
+            } else if (ticksPerBeat % snapUnit != 0) {
+                double minLineTick = TickWidth > 0 ? ViewConstants.MinTicklineWidth / TickWidth : 0;
+                ticksPerLine = ticksPerBeat > minLineTick ? ticksPerBeat : Math.Max(15, nextBarTick - barTick);
             }
-            if (0 >= SnapTicks.Count - 2) {
-                left = right = tick;
-                return;
-            }
-            index = Math.Clamp(index, 0, SnapTicks.Count - 2);
-            left = SnapTicks[index] - TickOrigin;
-            right = SnapTicks[index + 1] - TickOrigin;
+            int absLeft = barTick + ((absTick - barTick) / ticksPerLine) * ticksPerLine;
+            left = Math.Max(0, absLeft - TickOrigin);
+            right = left + ticksPerLine;
         }
 
         public void PointToLineTick(Point point, out int left, out int right) {
@@ -697,6 +735,7 @@ namespace OpenUtau.App.ViewModels {
             UpdateKey();
             RebuildPitchFollowPath();
             pitchFollowUserOverride = false;
+            SetPlayPos(DocManager.Inst.playPosTick, false);
         }
 
         //If PortraitHeight is 0, keep the source image at full resolution.
@@ -852,6 +891,9 @@ namespace OpenUtau.App.ViewModels {
             var trackColor = ThemeManager.GetTrackColor(project.tracks[part.trackNo].TrackColor);
             TrackAccentColor = trackColor.AccentColor;
             TrackNoteColor = new SolidColorBrush(trackColor.NoteColor.Color) { Opacity = 0.5 };
+            var nc = trackColor.NoteColor.Color;
+            bool isLight = (0.299 * nc.R + 0.587 * nc.G + 0.114 * nc.B) > 150 || (nc.R > 200 && nc.G > 200 && nc.B > 200);
+            PartDisplayNameForeground = isLight ? Brushes.Black : Brushes.White;
         }
 
         private void UnloadPart() {
@@ -1423,7 +1465,10 @@ namespace OpenUtau.App.ViewModels {
                     PrimaryKeyNotSupported = !IsExpSupported(PrimaryKey);
                 } else if (cmd is SetPlayPosTickNotification setPlayPosTick) {
                     SetPlayPos(setPlayPosTick.playPosTick, setPlayPosTick.waitingRendering);
-                    if (!setPlayPosTick.pause || Preferences.Default.LockStartTime == 1) {
+                    bool isPlaying = PlaybackManager.Inst.PlayingMaster || PlaybackManager.Inst.StartingToPlay;
+                    if (!setPlayPosTick.pause && isPlaying) {
+                        MaybeAutoScroll(PlayPosX);
+                    } else if (setPlayPosTick.pause && Preferences.Default.LockStartTime == 1 && Bounds.Width > 0 && (PlayPosX < 0 || PlayPosX > Bounds.Width)) {
                         MaybeAutoScroll(PlayPosX);
                     }
                 } else if (cmd is SetRangeSelectionNotification) {

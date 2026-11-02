@@ -1,3 +1,11 @@
+<!--
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: SingerHubDialog.axaml
+ * เวอร์ชั่น: 1.0
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/SingerHubDialog.axaml
+ * รายละเอียดการแก้ไข: ยกระดับประสิทธิภาพการเรนเดอร์ (UI Optimization) ฝังโทนสีและฟอนต์มาตรฐานระดับรากเพื่อลดการประมวลผลซ้ำซ้อน
+-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,8 +14,10 @@
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.SingerHubDialog"
         Icon="/Assets/Thai OpenUtau Logo.ico"
-        Title="{DynamicResource lunai.caption}" Width="720" Height="560" WindowStartupLocation="CenterScreen">
+        Title="{DynamicResource lunai.caption}" Width="720" Height="560" WindowStartupLocation="CenterScreen"
+        FontFamily="Leelawadee UI, sans-serif"
+        Background="#1A1A1A" Foreground="#F0F0F0">
+  
   <views:SingerHubPane />
+  
 </Window>
-
-

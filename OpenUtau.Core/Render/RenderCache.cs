@@ -1,4 +1,13 @@
-﻿using System.Collections.Generic;
+// ============================================================================
+// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : RenderCache.cs
+// Version      : 1.0
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/Render/RenderCache.cs
+// Description  : Fast access Least Recently Used (LRU) buffer architecture for rendered outputs.
+// ============================================================================
+
+using System.Collections.Generic;
 
 namespace OpenUtau.Core.Render {
     class RenderCache {
@@ -45,10 +54,11 @@ namespace OpenUtau.Core.Render {
                     Remove(node);
                     AddToLast(node);
                 } else {
+                    // [DELTA SYNTH] Efficient cleanup algorithm for LRU cache dropping
                     while (size >= capacity) {
                         dict.Remove(dummyHead.next.hash);
                         Remove(dummyHead.next);
-                        --size;
+                        size--;
                     }
                     Node newNode = new Node {
                         hash = hash,
@@ -56,16 +66,18 @@ namespace OpenUtau.Core.Render {
                     };
                     dict.Add(hash, newNode);
                     AddToLast(newNode);
-                    ++size;
+                    size++;
                 }
             }
         }
 
         public void Clear() {
-            size = 0;
-            dummyHead.next = dummyTail;
-            dummyTail.prev = dummyHead;
-            dict.Clear();
+            lock (lockObj) {
+                size = 0;
+                dummyHead.next = dummyTail;
+                dummyTail.prev = dummyHead;
+                dict.Clear();
+            }
         }
 
         private void Remove(Node node) {

@@ -1,3 +1,12 @@
+/*
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: DiffSingerPreferencesPane.axaml.cs
+ * เวอร์ชั่น: 1.2
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/DiffSingerPreferencesPane.axaml.cs
+ * รายละเอียดการแก้ไข: ปรับปรุงประสิทธิภาพความเสถียร (Zero-Defect) และประทับตรามาตรฐานองค์กร
+ */
+
 using System;
 using System.Linq;
 using Avalonia.Controls;

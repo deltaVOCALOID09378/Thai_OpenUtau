@@ -25,16 +25,13 @@
         SystemDecorations="BorderOnly"
         FontFamily="Leelawadee UI, Leelawadee, sans-serif">
 
-  <!-- กรอบหลักแบบลอยตัวสีดำ มิติเงาลึก และเส้นขอบแดงมาตรฐาน DELTA SYNTH -->
   <Border Background="#1A1A1A" 
           BorderBrush="#CC2200" 
           BorderThickness="1.5" 
           CornerRadius="12" 
-          Padding="20"
-          BoxShadow="0 10 30 0 #A0000000">
+          Padding="20">
     <Grid RowDefinitions="Auto, *, Auto, Auto">
 
-      <!-- ส่วนหัวชื่อหน้าต่างและไตเติล -->
       <StackPanel Grid.Row="0" Margin="0,0,0,14" Spacing="4">
         <TextBlock Text="The AutoPitchwriter / กำหนดรูปแบบเส้นเสียงอัตโนมัติ" 
                    FontWeight="Bold" 
@@ -45,26 +42,21 @@
                    Foreground="#A0A0A0"/>
       </StackPanel>
 
-      <!-- พื้นที่เลือกรูปแบบเส้นพิตช์ (Contextual Pitch Shapes Selection) -->
       <Border Grid.Row="1" Background="#222222" CornerRadius="8" Padding="12" Margin="0,0,0,14" BorderBrush="#333333" BorderThickness="1">
         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
-          <!-- แถวที่ 1 -->
           <CheckBox Grid.Row="0" Grid.Column="0" Name="chkThunderbolt" 
                     Content="1. Thunderbolt / สายฟ้า" 
                     IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
           <CheckBox Grid.Row="0" Grid.Column="1" Name="chkPitchDropRise" 
                     Content="2. Drop/Rise / ช้อน-รูดเสียง" 
                     IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
-
-          <!-- แถวที่ 2 -->
           <CheckBox Grid.Row="1" Grid.Column="0" Name="chkSlope" 
                     Content="3. The Slope / สโลปเชื่อมเสียง" 
                     IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
-          <CheckBox Grid.Row="1" Grid.Column="1" Name="chkW辯Shape" 
+          <!-- แก้ไขชื่อตัวแปร chkW辯Shape เป็น chkWarpShape ป้องกัน Error ตอนคอมไพล์ -->
+          <CheckBox Grid.Row="1" Grid.Column="1" Name="chkWarpShape" 
                     Content="4. W-Shape / คลื่นดับเบิ้ล" 
                     IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
-
-          <!-- แถวที่ 3 -->
           <CheckBox Grid.Row="2" Grid.Column="0" Name="chkUPitchDrop" 
                     Content="5. U-Drop / ดิ่งทอดหางเสียง" 
                     IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,2"/>
@@ -74,63 +66,26 @@
         </Grid>
       </Border>
 
-      <!-- แถบกำหนดค่าพารามิเตอร์ Portamento -->
       <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,*" Margin="0,0,0,16" VerticalAlignment="Center">
         <TextBlock Grid.Column="0" Text="Portamento Start / เริ่มต้น (ms):" 
-                   VerticalAlignment="Center" 
-                   Foreground="#F0F0F0" 
-                   FontSize="12" 
-                   Margin="0,0,8,0"/>
-        <TextBox Grid.Column="1" Name="txtPortamentoStart" 
-                 Text="-25" 
-                 Height="28" 
-                 VerticalContentAlignment="Center" 
-                 HorizontalContentAlignment="Center" 
-                 Background="#2A2A2A" 
-                 Foreground="#F0F0F0" 
-                 BorderBrush="#444444" 
-                 CornerRadius="4" 
-                 Margin="0,0,14,0"/>
-
+                   VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="12" Margin="0,0,8,0"/>
+        <TextBox Grid.Column="1" Name="txtPortamentoStart" Text="-25" Height="28" 
+                 VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
+                 Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" CornerRadius="4" Margin="0,0,14,0"/>
         <TextBlock Grid.Column="2" Text="Length / ความยาว (ms):" 
-                   VerticalAlignment="Center" 
-                   Foreground="#F0F0F0" 
-                   FontSize="12" 
-                   Margin="0,0,8,0"/>
-        <TextBox Grid.Column="3" Name="txtPortamentoLength" 
-                 Text="50" 
-                 Height="28" 
-                 VerticalContentAlignment="Center" 
-                 HorizontalContentAlignment="Center" 
-                 Background="#2A2A2A" 
-                 Foreground="#F0F0F0" 
-                 BorderBrush="#444444" 
-                 CornerRadius="4"/>
+                   VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="12" Margin="0,0,8,0"/>
+        <TextBox Grid.Column="3" Name="txtPortamentoLength" Text="50" Height="28" 
+                 VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
+                 Background="#2A2A2A" Foreground="#F0F0F0" BorderBrush="#444444" CornerRadius="4"/>
       </Grid>
 
-      <!-- ปุ่มคำสั่งควบคุมการทำงานด้านล่าง -->
       <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-        <Button Content="Default / คืนค่า" 
-                Click="OnDefaultClick" 
-                Width="120" Height="32" 
-                HorizontalContentAlignment="Center" 
-                VerticalContentAlignment="Center" 
-                Background="#333333" 
-                Foreground="#F0F0F0" 
-                CornerRadius="6" 
-                BorderThickness="0" 
-                Cursor="Hand"/>
-        <Button Content="Run / ทำงาน" 
-                Click="OnRunClick" 
-                Width="120" Height="32" 
-                HorizontalContentAlignment="Center" 
-                VerticalContentAlignment="Center" 
-                Background="#CC2200" 
-                Foreground="#F0F0F0" 
-                FontWeight="Bold" 
-                CornerRadius="6" 
-                BorderThickness="0" 
-                Cursor="Hand"/>
+        <Button Content="Default / คืนค่า" Click="OnDefaultClick" Width="120" Height="32" 
+                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+                Background="#333333" Foreground="#F0F0F0" CornerRadius="6" BorderThickness="0" Cursor="Hand"/>
+        <Button Content="Run / ทำงาน" Click="OnRunClick" Width="120" Height="32" 
+                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+                Background="#CC2200" Foreground="#F0F0F0" FontWeight="Bold" CornerRadius="6" BorderThickness="0" Cursor="Hand"/>
       </StackPanel>
 
     </Grid>

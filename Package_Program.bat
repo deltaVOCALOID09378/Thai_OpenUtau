@@ -42,13 +42,18 @@ if not "%~1"=="" (
 )
 
 if not exist "%TARGET_DIR%\OpenUtau.exe" (
-    color 0C
-    echo [ERROR] Could not find OpenUtau.exe in target directory:
-    echo         %TARGET_DIR%
-    echo Please build the project first using Compile_Full_Program.bat
-    echo.
-    pause
-    exit /b 1
+    if exist "%PROJECT_ROOT%\All Rendered File\OpenUtau.exe" (
+        set "TARGET_DIR=%PROJECT_ROOT%\All Rendered File"
+        echo [INFO] Using pre-rendered binary directory: %TARGET_DIR%
+    ) else (
+        color 0C
+        echo [ERROR] Could not find OpenUtau.exe in target directory:
+        echo         %TARGET_DIR%
+        echo Please build the project first using Compile_Full_Program.bat
+        echo.
+        if not "%NO_PROMPT%"=="1" pause
+        exit /b 1
+    )
 )
 
 echo [1/3] Target directory verified:

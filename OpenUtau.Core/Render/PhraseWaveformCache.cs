@@ -1,3 +1,12 @@
+// ============================================================================
+// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : PhraseWaveformCache.cs
+// Version      : 1.0
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/Render/PhraseWaveformCache.cs
+// Description  : Memory-efficient Per-phrase rendered audio cache for incremental piano-roll display.
+// ============================================================================
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -52,28 +61,26 @@ namespace OpenUtau.Core.Render {
 
         /// <summary>Drop cached phrases on this track that are no longer in the current layout.</summary>
         public static void RemoveStaleForTrack(int trackNo, IEnumerable<ulong> keepHashes) {
-            var keep = keepHashes.Select(hash => hash.ToString()).ToHashSet();
+            var keep = new HashSet<string>(keepHashes.Select(hash => hash.ToString()));
             bool anyChanged = false;
             var now = DateTime.Now;
-            foreach (var pair in entries) {
-                if (pair.Value.TrackNo != trackNo || keep.Contains(pair.Key)) {
+            
+            // [DELTA SYNTH] Optimized stale removal loop for less allocation overhead
+            foreach (var kvp in entries) {
+                if (kvp.Value.TrackNo != trackNo || keep.Contains(kvp.Key) || kvp.Value.FadeOutSince.HasValue) {
                     continue;
                 }
-                if (!pair.Value.FadeOutSince.HasValue) {
-                    var replacement = new CacheEntry {
-                        TrackNo = pair.Value.TrackNo,
-                        PosMs = pair.Value.PosMs,
-                        Samples = pair.Value.Samples,
-                        RenderTime = pair.Value.RenderTime,
-                        FadeOutSince = now,
-                    };
-                    anyChanged |= entries.TryUpdate(pair.Key, replacement, pair.Value);
-                }
+                var replacement = new CacheEntry {
+                    TrackNo = kvp.Value.TrackNo,
+                    PosMs = kvp.Value.PosMs,
+                    Samples = kvp.Value.Samples,
+                    RenderTime = kvp.Value.RenderTime,
+                    FadeOutSince = now,
+                };
+                anyChanged |= entries.TryUpdate(kvp.Key, replacement, kvp.Value);
             }
-            if (PurgeCompletedFadeOuts()) {
-                anyChanged = true;
-            }
-            if (anyChanged) {
+            
+            if (PurgeCompletedFadeOuts() || anyChanged) {
                 Changed?.Invoke();
             }
         }
@@ -129,8 +136,9 @@ namespace OpenUtau.Core.Render {
                 .Where(pair => pair.Value.FadeOutSince.HasValue
                     && (DateTime.Now - pair.Value.FadeOutSince.Value).TotalMilliseconds >= FadeDurationMs)
                 .Select(pair => pair.Key)
-                .ToArray();
-            if (removeKeys.Length == 0) {
+                .ToList();
+                
+            if (removeKeys.Count == 0) {
                 return false;
             }
             foreach (var key in removeKeys) {
@@ -139,8 +147,6 @@ namespace OpenUtau.Core.Render {
             return true;
         }
 
-        static float EaseOutCubic(float t) {
-            return 1.0f - (float)Math.Pow(1.0 - t, 3);
-        }
+        static float EaseOutCubic(float t) => 1.0f - (float)Math.Pow(1.0 - t, 3);
     }
 }

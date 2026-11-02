@@ -1,8 +1,20 @@
-﻿using System;
+﻿// ============================================================================
+// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : App.axaml.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.App/App.axaml.cs
+// Description  : Application entry point and global resource manager.
+//                Optimized culture and theme initialization to prevent double-painting 
+//                and reduce dictionary lookup overhead.
+// ============================================================================
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -27,7 +39,6 @@ namespace OpenUtau.App {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
                 desktop.MainWindow = new SplashWindow();
             }
-
             base.OnFrameworkInitializationCompleted();
         }
 
@@ -36,14 +47,15 @@ namespace OpenUtau.App {
             string sysLang = CultureInfo.InstalledUICulture.Name;
             string prefLang = Core.Util.Preferences.Default.Language;
             var languages = GetLanguages();
+            
             if (languages.ContainsKey(prefLang)) {
-                SetLanguage(prefLang);
+                SetLanguage(prefLang, languages);
             } else if (languages.ContainsKey(sysLang)) {
-                SetLanguage(sysLang);
+                SetLanguage(sysLang, languages);
                 Core.Util.Preferences.Default.Language = sysLang;
                 Core.Util.Preferences.Save();
             } else {
-                SetLanguage("en-US");
+                SetLanguage("en-US", languages);
             }
 
             // Force using InvariantCulture to prevent issues caused by culture dependent string conversion, especially for floating point numbers.
@@ -53,79 +65,99 @@ namespace OpenUtau.App {
         }
 
         public static Dictionary<string, IResourceProvider> GetLanguages() {
-            if (Current == null) {
-                return new();
-            }
+            if (Current == null) return new Dictionary<string, IResourceProvider>();
+
             var result = new Dictionary<string, IResourceProvider>();
-            foreach (string key in Current.Resources.Keys.OfType<string>()) {
-                if (key.StartsWith("strings-") &&
-                    Current.Resources.TryGetResource(key, ThemeVariant.Default, out var res) &&
+            // [DELTA SYNTH] Optimized dictionary lookup
+            foreach (var key in Current.Resources.Keys.OfType<string>()) {
+                if (key.StartsWith("strings-") && 
+                    Current.Resources.TryGetResource(key, ThemeVariant.Default, out var res) && 
                     res is IResourceProvider rp) {
-                    result.Add(key.Replace("strings-", ""), rp);
+                    result[key.Substring(8)] = rp; // "strings-".Length == 8
                 }
             }
             return result;
         }
 
-        public static void SetLanguage(string language) {
-            if (Current == null) {
-                return;
+        // [DELTA SYNTH] Overload to pass pre-fetched languages and avoid double-fetching
+        public static void SetLanguage(string language, Dictionary<string, IResourceProvider>? languages = null) {
+            if (Current == null) return;
+            languages ??= GetLanguages();
+
+            // Bulk removal to reduce UI layout invalidation checks
+            var merged = Current.Resources.MergedDictionaries;
+            for (int i = merged.Count - 1; i >= 0; i--) {
+                if (languages.Values.Contains(merged[i])) {
+                    merged.RemoveAt(i);
+                }
             }
-            var languages = GetLanguages();
-            foreach (var res in languages.Values) {
-                Current.Resources.MergedDictionaries.Remove(res);
+
+            // Always add English as base fallback
+            if (language != "en-US" && languages.TryGetValue("en-US", out var baseRes)) {
+                merged.Add(baseRes);
             }
-            if (language != "en-US") {
-                Current.Resources.MergedDictionaries.Add(languages["en-US"]);
-            }
-            if (languages.TryGetValue(language, out var res1)) {
-                Current.Resources.MergedDictionaries.Add(res1);
+            
+            // Add the selected language
+            if (languages.TryGetValue(language, out var selectedRes)) {
+                merged.Add(selectedRes);
             }
         }
 
-        static async void InitializeTheme() {
+        static void InitializeTheme() {
             Log.Information("Initializing theme.");
             try {
                 CustomTheme.ListThemes();
-                await OudepLoaderRegistry.LoadAllAsync();
             } catch (Exception e) {
-                Log.Error(e, "Failed to load themes from packages.");
+                Log.Error(e, "Failed to list custom themes.");
             }
+            
+            // [DELTA SYNTH] Set initial theme immediately
             SetTheme();
+            
+            // [DELTA SYNTH] Fire and forget package theme loading to prevent UI blocking
+            _ = Task.Run(async () => {
+                try {
+                    await OudepLoaderRegistry.LoadAllAsync();
+                    // Update theme on UI thread if packages brought in new themes
+                    Avalonia.Threading.Dispatcher.UIThread.Post(SetTheme);
+                } catch (Exception e) {
+                    Log.Error(e, "Failed to load themes from packages.");
+                }
+            });
             Log.Information("Initialized theme.");
         }
 
         public static void SetTheme() {
-            if (Current == null) {
-                return;
+            if (Current == null) return;
+
+            string prefTheme = Core.Util.Preferences.Default.ThemeName;
+            
+            if (prefTheme == BuiltInThemeLoader.LightThemeName) {
+                ApplyTheme((IResourceDictionary)Current.Resources["themes-light"]!);
+                Current.RequestedThemeVariant = ThemeVariant.Light;
+            } 
+            else if (prefTheme == BuiltInThemeLoader.DarkThemeName) {
+                ApplyTheme((IResourceDictionary)Current.Resources["themes-dark"]!);
+                Current.RequestedThemeVariant = ThemeVariant.Dark;
+            } 
+            else {
+                if (BuiltInThemeLoader.TryCreateThemeByName(prefTheme, out var builtInTheme)) {
+                    ThemeApplicator.Apply(builtInTheme);
+                    Current.RequestedThemeVariant = builtInTheme.IsDarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
+                } else {
+                    CustomTheme.ApplyTheme(prefTheme);
+                }
             }
-            var light = (IResourceDictionary) Current.Resources["themes-light"]!;
-            var dark = (IResourceDictionary) Current.Resources["themes-dark"]!;
-            switch (Core.Util.Preferences.Default.ThemeName) {
-                case BuiltInThemeLoader.LightThemeName:
-                    ApplyTheme(light);
-                    Current.RequestedThemeVariant = ThemeVariant.Light;
-                    break;
-                case BuiltInThemeLoader.DarkThemeName:
-                    ApplyTheme(dark);
-                    Current.RequestedThemeVariant = ThemeVariant.Dark;
-                    break;
-                default:
-                    if (BuiltInThemeLoader.TryCreateThemeByName(Core.Util.Preferences.Default.ThemeName, out var builtInTheme)) {
-                        ThemeApplicator.Apply(builtInTheme);
-                        Current.RequestedThemeVariant = builtInTheme.IsDarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
-                    } else {
-                        CustomTheme.ApplyTheme(Core.Util.Preferences.Default.ThemeName);
-                    }
-                    break;
-            }
+            
             ThemeManager.LoadTheme();
         }
 
         private static void ApplyTheme(IResourceDictionary resDict) { 
             var res = Current?.Resources;
+            if (res == null) return;
+            
             foreach (var item in resDict) {
-                res![item.Key] = item.Value;
+                res[item.Key] = item.Value;
             }
         }
     }

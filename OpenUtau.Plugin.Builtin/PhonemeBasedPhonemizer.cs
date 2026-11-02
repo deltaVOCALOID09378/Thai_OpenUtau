@@ -1,27 +1,38 @@
-#pragma warning disable CS0618, CS0649, CS8632, CS0108
+// ============================================================================
+// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 2. ชื่อไฟล์โค้ด: PhonemeBasedPhonemizer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 2.0
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/PhonemeBasedPhonemizer.cs
+// 5. หน้าที่: คลาสแม่สำหรับ Arpasing และ Diphone ทุกภาษา บังคับใช้กฎเหล็กสัดส่วนเสียง
+//            (CV 60%, VC 35-40%, CC/C- 5-7%, Opening -C 10-20% ก่อนโน้ต)
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Authors
+// ============================================================================
+
+#pragma warning disable CS0618, CS0649, CS8632, CS0108, CS8600, CS8601, CS8602, CS8603, CS8604, CS8618
 #nullable enable
-#pragma warning disable CS8632
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using OpenUtau.Api;
 using OpenUtau.Core.Ustx;
 using Serilog;
 
 namespace OpenUtau.Plugin.Builtin {
     public abstract class PhonemeBasedPhonemizer : Phonemizer {
-        protected Dictionary<string, string[]> vowelFallback;
+        protected Dictionary<string, string[]> vowelFallback = new Dictionary<string, string[]>();
         protected USinger singer;
         protected IG2p g2p;
         protected bool isDictionaryLoading;
 
-        //[(index of phoneme, tick position from the lyrical note in notes[], is manual)]
+        // [(index of phoneme, tick position from the lyrical note in notes[], is manual)]
         protected readonly List<Tuple<int, int, bool>> alignments = new List<Tuple<int, int, bool>>();
 
         /// <summary>
-        /// This property will later be exposed in UI for user adjustment.
+        /// Base consonant length in ticks (default 30 ticks for crisp transitions).
         /// </summary>
-        public int ConsonantLength { get; set; } = 60;
+        public int ConsonantLength { get; set; } = 30;
 
         public bool addTail { get; set; } = true;
 
@@ -39,7 +50,7 @@ namespace OpenUtau.Plugin.Builtin {
 
         protected void Initialize() {
             g2p = LoadG2p();
-            vowelFallback = LoadVowelFallbacks();
+            vowelFallback = LoadVowelFallbacks() ?? new Dictionary<string, string[]>();
         }
 
         public override void SetSinger(USinger singer) {
@@ -48,7 +59,7 @@ namespace OpenUtau.Plugin.Builtin {
         }
 
         public override Result Process(Note[] notes, Note? prev, Note? next, Note? prevNeighbour, Note? nextNeighbour, Note[] prevNeighbours) {
-            if (isDictionaryLoading) {
+            if (isDictionaryLoading || notes == null || notes.Length == 0) {
                 return MakeSimpleResult("");
             }
             var note = notes[0];
@@ -60,48 +71,39 @@ namespace OpenUtau.Plugin.Builtin {
 
             // Get the symbols of previous note.
             var prevSymbols = prevNeighbour == null ? null : GetSymbols(prevNeighbour.Value);
-            // The user is using a tail "-" note to produce a "<something> -" sound.
-            if (note.lyric == "-" && prevSymbols != null) {
+            if (note.lyric == "-" && prevSymbols != null && prevSymbols.Length > 0) {
                 var attr = note.phonemeAttributes?.FirstOrDefault() ?? default;
-                string color = attr.voiceColor;
+                string color = attr.voiceColor ?? string.Empty;
                 string alias = $"{prevSymbols.Last()} -";
-                if (singer.TryGetMappedOto(alias, note.tone, color, out var oto)) {
+                if (singer != null && singer.TryGetMappedOto(alias, note.tone, color, out var oto)) {
                     return MakeSimpleResult(oto.Alias);
                 }
                 return MakeSimpleResult(alias);
             }
+
             // Get the symbols of current note.
-            string[] symbols = GetSymbols(note);
+            string[]? symbols = GetSymbols(note);
             if (addTail && nextNeighbour == null) {
-                // Auto add tail "-".
-                if (symbols != null) {
-                    symbols = symbols.Append("-").ToArray();
+                if (symbols != null && symbols.Length > 0) {
+                    if (symbols.Last() != "-") {
+                        symbols = symbols.Append("-").ToArray();
+                    }
                 } else {
                     symbols = new string[] { "-" };
                 }
             }
-            if (symbols == null || symbols.Length == 0) {
-                // No symbol is found for current note.
-                // Otherwise assumes the user put in an alias.
+            if (symbols == null || symbols.Length == 0 || g2p == null) {
                 return MakeSimpleResult(note.lyric);
             }
-            // Find phone types of symbols.
-            var isVowel = symbols.Select(g2p.IsVowel).ToArray();
-            var isGlide = symbols.Select(g2p.IsGlide).ToArray();
-            // Arpasing aligns the first vowel at 0 and shifts leading consonants to negative positions,
-            // so we need to find the first vowel.
+
+            var isVowel = symbols.Select(s => g2p.IsVowel(s)).ToArray();
+            var isGlide = symbols.Select(s => g2p.IsGlide(s)).ToArray();
             var phonemes = new Phoneme[symbols.Length];
 
-            // Alignments
-            // - Tries to align every note to one syllable.
-            // - "+n" manually aligns to n-th phoneme.
             alignments.Clear();
-            //notes except those whose lyrics start witn "+*" or "+~"
             var nonExtensionNotes = notes.Where(n => !IsSyllableVowelExtensionNote(n)).ToArray();
             for (int i = 0; i < symbols.Length; i++) {
                 if (isVowel[i] && alignments.Count < nonExtensionNotes.Length) {
-                    //Handle glide phonemes
-                    //For "Consonant-Glide-Vowel" syllable, the glide phoneme is placed after the start position of the note.
                     if (i >= 2 && isGlide[i - 1] && !isVowel[i - 2]) {
                         alignments.Add(Tuple.Create(i - 1, nonExtensionNotes[alignments.Count].position - notes[0].position, false));
                     } else {
@@ -109,9 +111,10 @@ namespace OpenUtau.Plugin.Builtin {
                     }
                 }
             }
+            int totalDuration = notes.Sum(n => n.duration);
             int position = notes[0].duration;
             for (int i = 1; i < notes.Length; ++i) {
-                if (int.TryParse(notes[i].lyric.Substring(1), out var idx)) {
+                if (!string.IsNullOrEmpty(notes[i].lyric) && notes[i].lyric.Length > 1 && int.TryParse(notes[i].lyric.Substring(1), out var idx)) {
                     alignments.Add(Tuple.Create(idx - 1, position, true));
                 }
                 position += notes[i].duration;
@@ -134,10 +137,19 @@ namespace OpenUtau.Plugin.Builtin {
 
             int startIndex = 0;
             int firstVowel = Array.IndexOf(isVowel, true);
-            int startTick = -ConsonantLength * firstVowel;
+            if (firstVowel < 0) firstVowel = 0;
+
+            // [DELTA SYNTH IRON RULE]
+            // - หากเป็นโน้ตเปิดวลี (ไม่มี prevNeighbour): กลุ่มเปิดเสียง [- C] ใช้พื้นที่ 10-20% ก่อนเข้าโน้ตหลัก
+            // - หากมีโน้ตนำหน้า: กลุ่มเชื่อมคำ [V_C] / [C C] ยืมพื้นที่โน้ตนำหน้าไม่เกิน 5-7%
+            int prevDur = prevNeighbour?.duration ?? notes[0].duration;
+            int preNoteLeadTicks = prevNeighbour == null
+                ? Math.Clamp((int)(notes[0].duration * 0.15), 20, 90)
+                : Math.Clamp((int)(prevDur * 0.06), 10, 40);
+
+            int startTick = firstVowel > 0 ? -preNoteLeadTicks : 0;
             foreach (var alignment in alignments) {
-                // Distributes phonemes between two aligment points.
-                DistributeDuration(isVowel, phonemes, startIndex, alignment.Item1, startTick, alignment.Item2);
+                DistributeDuration(symbols, isVowel, phonemes, startIndex, alignment.Item1, startTick, alignment.Item2);
                 startIndex = alignment.Item1;
                 startTick = alignment.Item2;
             }
@@ -145,11 +157,11 @@ namespace OpenUtau.Plugin.Builtin {
 
             // Select aliases.
             int noteIndex = 0;
-            string prevSymbol = prevSymbols == null ? "-" : prevSymbols.Last();
+            string prevSymbol = (prevSymbols == null || prevSymbols.Length == 0) ? "-" : prevSymbols.Last();
             for (int i = 0; i < symbols.Length; i++) {
                 var attr = note.phonemeAttributes?.FirstOrDefault(attr => attr.index == i) ?? default;
                 string alt = attr.alternate?.ToString() ?? string.Empty;
-                string color = attr.voiceColor;
+                string color = attr.voiceColor ?? string.Empty;
                 int toneShift = attr.toneShift;
                 var phoneme = phonemes[i];
                 while (noteIndex < notes.Length - 1 && notes[noteIndex].position - note.position < phoneme.position) {
@@ -162,41 +174,116 @@ namespace OpenUtau.Plugin.Builtin {
                 prevSymbol = symbols[i];
             }
 
+            EnforceDeltaSynthTimingRules(phonemes, isVowel, totalDuration, prevNeighbour);
+
             return new Result {
                 phonemes = phonemes,
             };
         }
 
         /// <summary>
-        /// Does this note extend the previous syllable?
+        /// [DELTA SYNTH IRON RULE] บังคับสัดส่วนพื้นที่เสียง:
+        /// 1. [- V] / [CV] สระหลัก เริ่มที่ 0 (หรือ <= 5% กรณีควบกล้ำ) และกินพื้นที่เต็ม 60% แรกของโน้ต (0% -> 60%)
+        /// 2. [VC] ตัวสะกดหลัก เริ่มที่ 60%-65% ของโน้ต (ได้พื้นที่ 30%-35%)
+        /// 3. [C C] / [C -] พยัญชนะท้ายและเสียงปิดคำ ห้ามกว้างเกิน 5-7% (อยู่ช่วง 93%-95% ของโน้ต)
         /// </summary>
-        /// <param name="note"></param>
-        /// <returns></returns>
-        protected bool IsSyllableVowelExtensionNote(Note note) {
-            return note.lyric.StartsWith("+~") || note.lyric.StartsWith("+*");
+        protected virtual void EnforceDeltaSynthTimingRules(Phoneme[] phonemes, bool[] isVowel, int noteDur, Note? prevNeighbour) {
+            if (phonemes == null || phonemes.Length == 0) return;
+
+            int firstVowelIdx = Array.IndexOf(isVowel, true);
+            if (firstVowelIdx < 0) firstVowelIdx = 0;
+
+            int prevDur = prevNeighbour?.duration ?? noteDur;
+            int maxPreBorrow = prevNeighbour == null
+                ? Math.Clamp((int)(noteDur * 0.15), 20, 90) // [- C] 10-20%
+                : Math.Clamp((int)(prevDur * 0.06), 10, 40); // [V_C] / [C C] <= 5-7%
+
+            // 1. จัดตำแหน่งกลุ่มหน้าสระตัวแรก (Leading Consonants: [- C], [V_C], [C C])
+            if (firstVowelIdx > 0) {
+                for (int i = 0; i < firstVowelIdx; i++) {
+                    double ratio = (double)(firstVowelIdx - i) / firstVowelIdx;
+                    phonemes[i].position = -(int)Math.Round(maxPreBorrow * ratio);
+                }
+            }
+
+            // 2. ล็อกตำแหน่งสระหลัก [CV] / [- V] ให้เริ่มที่จุดเริ่มต้นโน้ต (0) เสมอ เพื่อไม่ให้ถูกบีบ
+            if (firstVowelIdx < phonemes.Length) {
+                phonemes[firstVowelIdx].position = 0;
+            }
+
+            // 3. จัดตำแหน่งกลุ่มหลังสระตัวสุดท้าย (Coda: [VC], [C C], [C -], [V -])
+            int lastVowelIdx = Array.LastIndexOf(isVowel, true);
+            if (lastVowelIdx >= 0 && lastVowelIdx < phonemes.Length - 1) {
+                int codaCount = phonemes.Length - 1 - lastVowelIdx;
+                int vcStartTick = (int)Math.Round(noteDur * 0.60); // สระหลักได้พื้นที่ 60% เต็ม
+                int tailStartTick = Math.Max(vcStartTick + 10, (int)Math.Round(noteDur * 0.93)); // [C -] หรือ [V -] กินไม่เกิน 7% ท้ายโน้ต
+
+                if (codaCount == 1) {
+                    // กรณีมีตัวปิดตัวเดียว เช่น [V -] หรือ [V C]
+                    string tailAlias = phonemes[lastVowelIdx + 1].phoneme ?? "";
+                    bool isPureBreathTail = tailAlias.EndsWith(" -") || tailAlias.EndsWith("-");
+                    phonemes[lastVowelIdx + 1].position = isPureBreathTail
+                        ? Math.Max((int)Math.Round(noteDur * 0.85), noteDur - 30)
+                        : vcStartTick;
+                } else {
+                    // กรณีมี [V C] ตามด้วย [C C] และ/หรือ [C -]
+                    // ตัวแรกหลังสระ คือ [V C] -> เริ่มที่ 60% ของโน้ต
+                    phonemes[lastVowelIdx + 1].position = vcStartTick;
+
+                    // ตัวที่เหลือ คือ [C C] และ [C -] -> บีบให้อยู่ในโซน 5-7% สุดท้ายของโน้ต (88% - 95%)
+                    int extraCodaCount = codaCount - 1;
+                    int clusterZoneStart = Math.Max(vcStartTick + 10, (int)Math.Round(noteDur * (0.94 - 0.05 * extraCodaCount)));
+                    int clusterZoneSpan = Math.Max(10, tailStartTick - clusterZoneStart);
+
+                    for (int k = 1; k <= extraCodaCount; k++) {
+                        int idx = lastVowelIdx + 1 + k;
+                        if (k == extraCodaCount) {
+                            phonemes[idx].position = tailStartTick;
+                        } else {
+                            phonemes[idx].position = clusterZoneStart + (clusterZoneSpan * (k - 1) / extraCodaCount);
+                        }
+                    }
+                }
+            }
+
+            // 4. Safety Buffer ป้องกันหน่วยเสียงทับกันโดยไม่ดันสระหลักหนี
+            int minGap = noteDur < 120 ? 5 : 10;
+            for (int i = 1; i < phonemes.Length; i++) {
+                if (phonemes[i].position <= phonemes[i - 1].position) {
+                    phonemes[i].position = phonemes[i - 1].position + minGap;
+                }
+                if (phonemes[i].position > noteDur - minGap) {
+                    phonemes[i].position = Math.Max(phonemes[i - 1].position + 2, noteDur - minGap);
+                }
+            }
         }
 
-        string[] GetSymbols(Note note) {
-            if (string.IsNullOrEmpty(note.phoneticHint)) {
-                // User has not provided hint, query CMUdict.
-                return g2p.Query(note.lyric.ToLowerInvariant());
+        protected bool IsSyllableVowelExtensionNote(Note note) {
+            return !string.IsNullOrEmpty(note.lyric) && (note.lyric.StartsWith("+~") || note.lyric.StartsWith("+*"));
+        }
+
+        protected virtual string[] GetSymbols(Note note) {
+            if (g2p == null) {
+                return Array.Empty<string>();
             }
-            // Split space-separated symbols into an array.
-            return note.phoneticHint.Split()
-                .Where(s => g2p.IsValidSymbol(s)) // skip the invalid symbols.
+            if (string.IsNullOrEmpty(note.phoneticHint)) {
+                string cleanLyric = (note.lyric ?? "").Trim().ToLowerInvariant();
+                return g2p.Query(cleanLyric) ?? Array.Empty<string>();
+            }
+            return note.phoneticHint.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(s => g2p.IsValidSymbol(s))
                 .ToArray();
         }
 
         protected abstract string GetPhonemeOrFallback(string prevSymbol, string symbol, int tone, string color, string alt);
 
-        void DistributeDuration(bool[] isVowel, Phoneme[] phonemes, int startIndex, int endIndex, int startTick, int endTick) {
-            if (startIndex == endIndex) {
+        void DistributeDuration(string[] symbols, bool[] isVowel, Phoneme[] phonemes, int startIndex, int endIndex, int startTick, int endTick) {
+            if (startIndex >= endIndex) {
                 return;
             }
-            // First count number of vowels and consonants.
+            int duration = Math.Max(10, endTick - startTick);
             int consonants = 0;
             int vowels = 0;
-            int duration = endTick - startTick;
             for (int i = startIndex; i < endIndex; i++) {
                 if (isVowel[i]) {
                     vowels++;
@@ -204,15 +291,15 @@ namespace OpenUtau.Plugin.Builtin {
                     consonants++;
                 }
             }
-            // If vowels exist, consonants are given fixed length, but combined no more than half duration.
-            // However, if no vowel exists, consonants are evenly distributed within the total duration.
+
+            // [DELTA SYNTH IRON RULE] จำกัดความกว้างของพยัญชนะคั่นกลางไม่ให้เกิน 6% ของช่วงเวลา
+            int maxConsonantTotal = (int)Math.Round(duration * 0.06 * Math.Max(1, consonants));
             int consonantDuration = vowels > 0
-                ? (consonants > 0 ? Math.Min(ConsonantLength, duration / 2 / consonants) : 0)
-                : duration / consonants;
-            // Vowels are evenly distributed within (total duration - total consonant duration).
-            int vowelDuration = vowels > 0 ? (duration - consonantDuration * consonants) / vowels : 0;
+                ? (consonants > 0 ? Math.Min(ConsonantLength, Math.Max(5, maxConsonantTotal / consonants)) : 0)
+                : (consonants > 0 ? duration / consonants : 0);
+
+            int vowelDuration = vowels > 0 ? Math.Max(10, (duration - consonantDuration * consonants) / vowels) : 0;
             int position = startTick;
-            // Compute positions using previously computed durations.
             for (int i = startIndex; i < endIndex; i++) {
                 if (isVowel[i]) {
                     phonemes[i].position = position;

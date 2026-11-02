@@ -1,3 +1,11 @@
+<!--
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: EditSubbanksDialog.axaml
+ * เวอร์ชั่น: 1.2
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/EditSubbanksDialog.axaml
+ * รายละเอียดการแก้ไข: ปรับแต่งหน้าจอ UI ด้วยธีมสีแดง/ดำ และฟอนต์ Leelawadee UI ระดับองค์กร
+-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,7 +16,37 @@
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource singers.subbanks.edit}"
         WindowStartupLocation="CenterScreen"
-        MinWidth="500" MinHeight="600" Width="500" Height="600">
+        MinWidth="500" MinHeight="600" Width="500" Height="600"
+        FontFamily="Leelawadee UI, sans-serif"
+        Background="#1A1A1A" Foreground="#F0F0F0">
+  <Window.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+      <Setter Property="Background" Value="#2D2D2D"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="#CC2200"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#FF4422"/>
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#991100"/>
+    </Style>
+    <Style Selector="DataGrid">
+      <Setter Property="Background" Value="#1A1A1A"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+    </Style>
+  </Window.Styles>
   <Grid ColumnDefinitions="*,10,160" Margin="10">
     <DataGrid Name="SuffixGrid" Grid.Column="0" SelectionMode="Extended" IsReadOnly="True"
               CanUserReorderColumns="False" CanUserSortColumns="False" AutoGenerateColumns="False"
@@ -24,26 +62,26 @@
         <StackPanel VerticalAlignment="Top" Grid.Row="0">
           <ComboBox HorizontalAlignment="Stretch" Margin="0,0,0,4"
                     ItemsSource="{Binding Colors}" SelectedItem="{Binding SelectedColor}"/>
-          <Button Content="{DynamicResource singers.subbanks.color.add}" HorizontalAlignment="Stretch" Click="OnAdd"/>
-          <Button Content="{DynamicResource singers.subbanks.color.remove}" HorizontalAlignment="Stretch" Click="OnRemove"
+          <Button Content="{DynamicResource singers.subbanks.color.add}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Click="OnAdd"/>
+          <Button Content="{DynamicResource singers.subbanks.color.remove}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Click="OnRemove"
                   IsEnabled="{Binding IsEditableColor}"/>
-          <Button Content="{DynamicResource singers.subbanks.color.rename}" HorizontalAlignment="Stretch" Click="OnRename"
+          <Button Content="{DynamicResource singers.subbanks.color.rename}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Click="OnRename"
                   IsEnabled="{Binding IsEditableColor}"/>
         </StackPanel>
         <StackPanel VerticalAlignment="Top" Grid.Row="2">
-          <Button Content="{DynamicResource singers.subbanks.selectall}" HorizontalAlignment="Stretch" Click="OnSelectAll"/>
+          <Button Content="{DynamicResource singers.subbanks.selectall}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="OnSelectAll"/>
           <TextBlock Text="{DynamicResource oto.prefix}"/>
           <TextBox Margin="0,4" Text="{Binding Prefix}"/>
           <TextBlock Text="{DynamicResource oto.suffix}"/>
-          <TextBox Margin="0,4" Text="{Binding Suffix}"/>
-          <Button Content="{DynamicResource singers.subbanks.set}" HorizontalAlignment="Stretch" Click="OnSet"/>
-          <Button Content="{DynamicResource singers.subbanks.clear}" HorizontalAlignment="Stretch" Click="OnClear"/>
-          <Button Content="{DynamicResource singers.subbanks.import}" HorizontalAlignment="Stretch" Click="OnImportMap"/>
+          <TextBox Margin="0,4,0,8" Text="{Binding Suffix}"/>
+          <Button Content="{DynamicResource singers.subbanks.set}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Click="OnSet"/>
+          <Button Content="{DynamicResource singers.subbanks.clear}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Click="OnClear"/>
+          <Button Content="{DynamicResource singers.subbanks.import}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Click="OnImportMap"/>
         </StackPanel>
         <StackPanel VerticalAlignment="Bottom" Grid.Row="4">
-          <Button Content="{DynamicResource button.reset}" HorizontalAlignment="Stretch" Command="{Binding LoadSubbanks}"/>
-          <Button Content="{DynamicResource button.save}" HorizontalAlignment="Stretch" Click="OnSave"/>
-          <Button Content="{DynamicResource singers.subbanks.export}" HorizontalAlignment="Stretch" Click="OnExportMap"/>
+          <Button Content="{DynamicResource button.reset}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Command="{Binding LoadSubbanks}"/>
+          <Button Content="{DynamicResource button.save}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Click="OnSave"/>
+          <Button Content="{DynamicResource singers.subbanks.export}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Click="OnExportMap"/>
           <Button Content="{DynamicResource button.cancel}" Margin="0,4,0,0" HorizontalAlignment="Stretch" Click="OnCancel"/>
         </StackPanel>
       </Grid>

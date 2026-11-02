@@ -1,3 +1,11 @@
+<!--
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: PackageManagerDialog.axaml
+ * เวอร์ชั่น: 1.2
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/PackageManagerDialog.axaml
+ * รายละเอียดการแก้ไข: ปรับสมดุลระบบจัดการแพ็กเกจ เพิ่มความคมชัด และใช้สีมาตรฐานองค์กรเพื่อประสบการณ์ใช้งานที่ลื่นไหล
+-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,10 +14,35 @@
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.PackageManagerDialog"
         Icon="/Assets/Thai OpenUtau Logo.ico"
-        Title="{DynamicResource packages.caption}" Width="900" Height="600" WindowStartupLocation="CenterScreen">
+        Title="{DynamicResource packages.caption}" Width="900" Height="600" WindowStartupLocation="CenterScreen"
+        FontFamily="Leelawadee UI, sans-serif"
+        Background="#1A1A1A" Foreground="#F0F0F0">
   <Design.DataContext>
     <vm:PackageManagerViewModel/>
   </Design.DataContext>
+  <Window.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="#CC2200"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#FF4422"/>
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#991100"/>
+    </Style>
+    <Style Selector="DataGrid">
+      <Setter Property="Background" Value="#1A1A1A"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="BorderBrush" Value="#444444"/>
+    </Style>
+  </Window.Styles>
   <Grid Margin="10">
     <Grid.RowDefinitions>
       <RowDefinition Height="*"/>
@@ -17,7 +50,7 @@
     </Grid.RowDefinitions>
     <Grid Grid.Row="0">
       <DataGrid ItemsSource="{Binding Available}" AutoGenerateColumns="False" CanUserSortColumns="False"
-                BorderThickness="1" BorderBrush="{DynamicResource SystemControlHighlightBaseMediumHighBrush}">
+                BorderThickness="1" BorderBrush="#333333">
         <DataGrid.Columns>
           <DataGridTextColumn Header="{DynamicResource packages.col.id}" Binding="{Binding Id}"/>
           <DataGridTextColumn Header="{DynamicResource packages.col.developer}" Binding="{Binding Developer}"/>
@@ -26,9 +59,9 @@
           <DataGridTemplateColumn Header="{DynamicResource packages.col.action}">
             <DataGridTemplateColumn.CellTemplate>
               <DataTemplate>
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <Button Content="{Binding PrimaryActionLabel}" Click="OnPrimaryActionClick" IsVisible="{Binding CanInstallOrUpdate}"/>
-                  <Button Content="{DynamicResource packages.uninstall}" Click="OnUninstallClick" IsVisible="{Binding CanUninstall}"/>
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="4">
+                  <Button Content="{Binding PrimaryActionLabel}" Click="OnPrimaryActionClick" IsVisible="{Binding CanInstallOrUpdate}" Padding="8,4" MinWidth="70"/>
+                  <Button Content="{DynamicResource packages.uninstall}" Click="OnUninstallClick" IsVisible="{Binding CanUninstall}" Padding="8,4" MinWidth="70" Background="#881100"/>
                 </StackPanel>
               </DataTemplate>
             </DataGridTemplateColumn.CellTemplate>
@@ -37,14 +70,14 @@
       </DataGrid>
     </Grid>
 
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
-      <TextBlock Text="{Binding Status}" Margin="0,4,0,0"/>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
+      <TextBlock Text="{Binding Status}" Margin="0,4,0,0" Foreground="#F0F0F0" FontWeight="SemiBold"/>
     </StackPanel>
 
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,8,0,0" HorizontalAlignment="Right">
-      <Button Content="{DynamicResource packages.installfromfile}" Click="OnInstallFromFile"/>
-      <Button Content="{DynamicResource packages.openinstalllocation}" Click="OpenLocation"/>
-      <Button Content="{DynamicResource packages.refresh}" Command="{Binding RefreshCommand}"/>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,12,0,0" HorizontalAlignment="Right">
+      <Button Content="{DynamicResource packages.installfromfile}" Click="OnInstallFromFile" MinWidth="120"/>
+      <Button Content="{DynamicResource packages.openinstalllocation}" Click="OpenLocation" MinWidth="120"/>
+      <Button Content="{DynamicResource packages.refresh}" Command="{Binding RefreshCommand}" MinWidth="100"/>
     </StackPanel>
   </Grid>
 </Window>

@@ -1,30 +1,28 @@
-﻿using OpenUtau.Api;
+// ============================================================================
+// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : DefaultPhonemizer.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/DefaultPhonemizer.cs
+// Description  : The simplest Phonemizer possible. Optimized with C# 12 collection expressions.
+// ============================================================================
+using OpenUtau.Api;
 using OpenUtau.Core.Ustx;
 using System.Linq;
 
 namespace OpenUtau.Core {
-    /// <summary>
-    /// The simplest Phonemizer possible. Simply pass the lyric as phoneme.
-    /// </summary>
     [Phonemizer("Default UTAU Phonemizer", "Default UTAU", language: "UTAU")]
     public class DefaultPhonemizer : Phonemizer {
         private USinger singer;
         public override void SetSinger(USinger singer) => this.singer = singer;
         public override Result Process(Note[] notes, Note? prev, Note? next, Note? prevNeighbour, Note? nextNeighbour, Note[] prevNeighbours) {
-            // Note that even when input has multiple notes, only the leading note is used to produce phoneme.
-            // This is because the 2nd+ notes will always be extender notes, i.e., with lyric "+" or "+<number>".
-            // For this simple phonemizer, all these notes maps to a single phoneme.
             string alias = notes[0].lyric;
             var attr0 = notes[0].phonemeAttributes?.FirstOrDefault(attr => attr.index == 0) ?? default;
             if (singer.TryGetMappedOto(notes[0].lyric, notes[0].tone + attr0.toneShift, attr0.voiceColor, out var oto)) {
                 alias = oto.Alias;
             }
             return new Result {
-                phonemes = new Phoneme[] {
-                    new Phoneme {
-                        phoneme = alias,
-                    }
-                }
+                phonemes = [new Phoneme { phoneme = alias }]
             };
         }
     }

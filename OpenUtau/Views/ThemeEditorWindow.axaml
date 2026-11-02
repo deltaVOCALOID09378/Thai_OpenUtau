@@ -3,11 +3,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:OpenUtau.App.Views"
-        mc:Ignorable="d" MinWidth="360" Width="360" Height="640"
-        x:Class="OpenUtau.App.Views.ThemeEditorWindow" WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="640"
+        x:Class="OpenUtau.App.Views.ThemeEditorWindow"
+        x:DataType="views:ThemeEditorWindow"
+        x:CompileBindings="False"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource themeeditor.title}"
-        Closing="WindowClosing" Topmost="True">
+        Width="360" MinWidth="320" MinHeight="400"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Closing="WindowClosing">
   <views:ThemeEditorPane x:Name="EditorPane"/>
 </Window>
-

@@ -1,7 +1,7 @@
 // ============================================================================
-// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 28/10/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : MainWindowViewModel.cs
-// Version      : 1.4
+// Version      : 1.6
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau/ViewModels/MainWindowViewModel.cs
 // Description  : Window Title header telemetry with Full Name, Version, Project Location, and Save Status.
@@ -50,7 +50,11 @@ namespace OpenUtau.App.ViewModels {
             PathName = path;
             Name = Path.GetFileName(path);
             Directory = Path.GetDirectoryName(path) ?? string.Empty;
-            LastWriteTime = File.GetLastWriteTime(path);
+            try {
+                LastWriteTime = File.Exists(path) ? File.GetLastWriteTime(path) : DateTime.MinValue;
+            } catch {
+                LastWriteTime = DateTime.MinValue;
+            }
             LastWriteTimeStr = LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss");
         }
     }

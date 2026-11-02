@@ -1,3 +1,11 @@
+<!--
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: DsScriptExportDialog.axaml
+ * เวอร์ชั่น: 1.2
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+ * ตำแหน่งไฟล์: OpenUtau.App/Views/DsScriptExportDialog.axaml
+ * รายละเอียดการแก้ไข: อัปเกรดส่วนติดต่อผู้ใช้ (UI) ฝังโทนสีและฟอนต์มาตรฐาน DELTA SYNTH
+-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,14 +15,29 @@
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource dialogs.exportds.caption}"
         WindowStartupLocation="CenterOwner"
-        SizeToContent="Height" Width="380" CanResize="False">
+        SizeToContent="Height" Width="380" CanResize="False"
+        FontFamily="Leelawadee UI, sans-serif"
+        Background="#1A1A1A" Foreground="#F0F0F0">
   <Window.Styles>
     <Style Selector="TextBlock">
-      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
     </Style>
     <Style Selector="CheckBox">
-      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="#CC2200"/>
+      <Setter Property="Foreground" Value="#F0F0F0"/>
+      <Setter Property="FontFamily" Value="Leelawadee UI, sans-serif"/>
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#FF4422"/>
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#991100"/>
     </Style>
   </Window.Styles>
   <Border Margin="{Binding $parent.WindowDecorationMargin}">
@@ -33,20 +56,19 @@
       </Grid>
       <TextBlock Text="{DynamicResource dialogs.exportds.variance.hint}"
                  FontSize="12"
-                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                 Foreground="#B3B3B3"
                  TextWrapping="Wrap"
                  IsVisible="{Binding !TensorCacheEnabled}"/>
 
       <!-- OK / Cancel -->
       <Grid ColumnDefinitions="*,8,*" Margin="0,4,0,0">
         <Button Grid.Column="0" Content="{DynamicResource button.ok}"
-                HorizontalAlignment="Stretch"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                 Click="OnOkClicked"/>
         <Button Grid.Column="2" Content="{DynamicResource button.cancel}"
-                HorizontalAlignment="Stretch"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                 Click="OnCancelClicked"/>
       </Grid>
     </StackPanel>
   </Border>
 </Window>
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,18 +20,26 @@ using ReactiveUI.Fody.Helpers;
 using Serilog;
 
 // ============================================================================
-// Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
-// Original by Patiphat Wongyai (Delta)
-// Version: 1.2 | Date: 2026-10-27
-// Description: จัดลำดับศิลปิน DELTA SYNTH ไว้ลำดับแรกสุดในหน้าต่างจัดการคลังเสียง
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : SingersViewModel.cs
+// Version      : 1.3
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+// File Location: OpenUtau/ViewModels/SingersViewModel.cs
+// Description  : จัดลำดับศิลปิน DELTA SYNTH -> ภาษา/Phonemizer -> เอนจิน (SingerType) -> ชื่อศิลปิน
+//                พร้อมระบบสำรองข้อมูล oto.ini.bak อัตโนมัติทุกครั้งที่บันทึกการตั้งค่าคลังเสียง
 // ============================================================================
 
 namespace OpenUtau.App.ViewModels {
     public class SingersViewModel : ViewModelBase {
         public IEnumerable<USinger> Singers =>
             SingerManager.Inst.DeltaSynthSingers
-                .Concat(SingerManager.Inst.SingerGroups.Values.SelectMany(l => l))
-                .Distinct();
+            .Concat(
+                SingerManager.Inst.SingerGroups.Values
+                .SelectMany(l => l)
+                .OrderBy(s => s.DefaultPhonemizer ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(s => s.SingerType)
+                .ThenBy(s => s.LocalizedName, StringComparer.CurrentCultureIgnoreCase))
+            .Distinct();
         [Reactive] public USinger? Singer { get; set; }
         [Reactive] public Bitmap? Avatar { get; set; }
         [Reactive] public string? Info { get; set; }

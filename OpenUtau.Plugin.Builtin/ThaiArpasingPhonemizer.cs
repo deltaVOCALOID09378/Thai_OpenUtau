@@ -1,13 +1,13 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 27/10/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : ThaiArpasingPhonemizer.cs
-// Version      : 4.8
+// Version      : 5.0
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
 // File Location: OpenUtau.Plugin.Builtin/ThaiArpasingPhonemizer.cs
-// Description  : Thai Arpasing Phonemizer with Safety Position Buffer (prevPos + 10),
-//                unified ThaiDictionaryManager caching, and singer-level overrides.
+// Description  : Thai Arpasing Phonemizer with Safe Sub-Interval Division, boundary clamping,
+//                pre-utterance collision protection, and unified ThaiDictionaryManager caching.
 // ============================================================================
 
 using System;
@@ -157,7 +157,8 @@ namespace OpenUtau.Plugin.Builtin {
 
         public override Result Process(Note[] notes, Note? prev, Note? next, Note? prevNeighbour, Note? nextNeighbour, Note[] prevNeighbours) {
             var firstNote = notes[0];
-            var currentLyric = string.IsNullOrEmpty(firstNote.phoneticHint) ? firstNote.lyric.Normalize() : firstNote.phoneticHint.Normalize();
+            var lyric = string.IsNullOrEmpty(firstNote.phoneticHint) ? firstNote.lyric : firstNote.phoneticHint;
+            var currentLyric = (lyric ?? "ah").Normalize();
             var syllables = WordToPhonemes(currentLyric);
             if (syllables.Length == 0) syllables = new[] { currentLyric };
 
@@ -174,43 +175,39 @@ namespace OpenUtau.Plugin.Builtin {
                 prevPhoneme = prevTh.EndingConsonant ?? prevTh.Vowel ?? "-";
             }
 
-            int totalNotesDuration = notes.Sum(n => n.duration);
-            int currentNoteIndex = 0;
-            int currentTickPosition = 0;
-            int lastNoteIndex = -1;
-
             for (int sIdx = 0; sIdx < syllables.Length; sIdx++) {
                 string syllable = syllables[sIdx];
                 List<string> aliases = new List<string>();
-                
-                Note currentNote = notes[currentNoteIndex];
-                int noteStartPos = currentNote.position - firstNote.position;
-                int noteEndPos = noteStartPos + currentNote.duration;
 
-                if (sIdx > 0 && currentNoteIndex < notes.Length - 1) {
-                    currentNoteIndex++;
-                    currentNote = notes[currentNoteIndex];
-                    noteStartPos = currentNote.position - firstNote.position;
-                    noteEndPos = noteStartPos + currentNote.duration;
+                // คำนวณช่วงเวลาของพยางค์บนตัวโน้ตอย่างเที่ยงตรง ป้องกันการล้นขอบเขตโน้ต (Safe Sub-Interval Division)
+                int targetNoteIdx;
+                int sylStartPos;
+                int sylEndPos;
+                Note currentNote;
+
+                if (syllables.Length <= notes.Length) {
+                    targetNoteIdx = sIdx;
+                    currentNote = notes[targetNoteIdx];
+                    sylStartPos = currentNote.position - firstNote.position;
+                    sylEndPos = sylStartPos + currentNote.duration;
+                } else {
+                    if (sIdx < notes.Length - 1) {
+                        targetNoteIdx = sIdx;
+                        currentNote = notes[targetNoteIdx];
+                        sylStartPos = currentNote.position - firstNote.position;
+                        sylEndPos = sylStartPos + currentNote.duration;
+                    } else {
+                        targetNoteIdx = notes.Length - 1;
+                        currentNote = notes[targetNoteIdx];
+                        int sharedCount = syllables.Length - (notes.Length - 1);
+                        int subIdx = sIdx - (notes.Length - 1);
+                        int baseStart = currentNote.position - firstNote.position;
+                        int dur = currentNote.duration / sharedCount;
+                        sylStartPos = baseStart + subIdx * dur;
+                        sylEndPos = (subIdx == sharedCount - 1) ? (baseStart + currentNote.duration) : (sylStartPos + dur);
+                    }
                 }
-                
-                int noteDuration = currentNote.duration;
-                int remainingSyllablesOnNote = 1;
-                for (int nextSIdx = sIdx + 1; nextSIdx < syllables.Length; nextSIdx++) {
-                    if (nextSIdx > 0 && currentNoteIndex < notes.Length - 1) break; 
-                    remainingSyllablesOnNote++;
-                }
-                
-                int sylDuration = noteDuration / remainingSyllablesOnNote;
-                if (sIdx > 0 && currentNoteIndex == lastNoteIndex) {
-                    noteStartPos = currentTickPosition;
-                    noteEndPos = noteStartPos + sylDuration;
-                    noteDuration = sylDuration;
-                } else if (remainingSyllablesOnNote > 1) {
-                    noteEndPos = noteStartPos + sylDuration;
-                    noteDuration = sylDuration;
-                }
-                lastNoteIndex = currentNoteIndex;
+                int noteDuration = Math.Max(10, sylEndPos - sylStartPos);
 
                 bool forceClose = false;
                 bool isEnd = false;
@@ -242,6 +239,8 @@ namespace OpenUtau.Plugin.Builtin {
                         } else if (!string.IsNullOrEmpty(V)) {
                             aliases.Add($"{C} {V}");
                         }
+                    } else if (string.IsNullOrEmpty(lead)) {
+                        aliases.Add(syllable);
                     }
 
                     if (!string.IsNullOrEmpty(X) && !string.IsNullOrEmpty(V)) {
@@ -267,10 +266,12 @@ namespace OpenUtau.Plugin.Builtin {
 
                     int position = 0;
                     if (i == 0) {
-                        // ควบคุมรอยต่อ [C C] และการเริ่มเสียง ให้มีช่วง pre-utterance
-                        position = -Math.Min((int)(noteDuration * 0.12), 100);
+                        if (sIdx == 0) {
+                            position = -Math.Min((int)(noteDuration * 0.12), 100);
+                        } else {
+                            position = 0;
+                        }
                     } else if (alias.EndsWith("-")) {
-                        // ปรับการผลักเสียงช่วงพัก (-)
                         position = Math.Max((int)(noteDuration * 0.90), noteDuration - 15); 
                     } else if (X != null && alias == $"{V} {X}") {
                         position = Math.Max((int)(noteDuration * 0.70), noteDuration - 120); 
@@ -286,20 +287,22 @@ namespace OpenUtau.Plugin.Builtin {
                         position = Math.Min((int)(noteDuration * 0.20), 110);
                     }
 
-                    int absolutePosition = position + noteStartPos;
+                    int absolutePosition = position + sylStartPos;
                     int lastPos = phonemes.Count > 0 ? phonemes.Last().position : -120;
                     if (absolutePosition <= lastPos) {
                         absolutePosition = lastPos + 10;
                     }
-                    // ยอมให้ตำแหน่งติดลบได้เพื่อ pre-utterance ของ [C C] (v17.3)
-                    absolutePosition = Math.Min(absolutePosition, noteEndPos - 10);
+                    if (sIdx > 0 && absolutePosition < sylStartPos) {
+                        absolutePosition = sylStartPos;
+                        if (absolutePosition <= lastPos) absolutePosition = lastPos + 10;
+                    }
+                    absolutePosition = Math.Min(absolutePosition, sylEndPos - 10);
                     phonemes.Add(new Phoneme { phoneme = alias, position = absolutePosition });
-                    currentTickPosition = absolutePosition;
                 }
             }
 
             int gap = prevNeighbour == null ? 9999 : firstNote.position - (prevNeighbour.Value.position + prevNeighbour.Value.duration);
-            if (gap >= 120) {
+            if (gap >= 120 && singer != null) {
                 bool hasOpening = phonemes.Count > 0 && (phonemes[0].phoneme.StartsWith("- ") || phonemes[0].phoneme.StartsWith("-"));
                 if (!hasOpening) {
                     var attr = firstNote.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
@@ -350,7 +353,7 @@ namespace OpenUtau.Plugin.Builtin {
             if (string.IsNullOrEmpty(input)) return new string[0];
             
             if (CustomDictionary.ContainsKey(input)) {
-                return new[] { CustomDictionary[input] };
+                return CustomDictionary[input].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             }
 
             input = input.Replace(" ", "");

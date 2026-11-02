@@ -1,3 +1,12 @@
+// ============================================================================
+// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : VoicebankLoader.cs
+// Version      : 1.1
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/Classic/VoicebankLoader.cs
+// Description  : Classic/DiffSinger/Enunu voicebank loader and oto.ini writer
+//                with automatic oto.ini.bak backup before saving.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -527,10 +536,17 @@ namespace OpenUtau.Classic {
 
         public static void WriteOtoSets(Voicebank voicebank) {
             foreach (var otoSet in voicebank.OtoSets) {
+                if (!string.IsNullOrEmpty(otoSet.File) && File.Exists(otoSet.File)) {
+                    try {
+                        File.Copy(otoSet.File, otoSet.File + ".bak", overwrite: true);
+                    } catch (Exception ex) {
+                        Log.Warning(ex, $"Failed to create oto backup for {otoSet.File}");
+                    }
+                }
                 using (var stream = File.Open(otoSet.File, FileMode.Create, FileAccess.Write)) {
                     WriteOtoSet(otoSet, stream, voicebank.TextFileEncoding);
                 }
-                Log.Information($"Write oto set {otoSet.Name}");
+                Log.Information($"Write oto set {otoSet.Name} (backup saved to .bak)");
             }
         }
 

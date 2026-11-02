@@ -54,22 +54,24 @@ namespace OpenUtau.Classic {
             foreach (var item in resamplerItems) {
                 var segment = new Segment();
                 if (item.phone.direct) {
-                    try {
-                        if (!File.Exists(item.inputFile) || new FileInfo(item.inputFile).Length < 44) {
-                            segment.samples = new float[0];
-                        } else {
-                            using (var waveStream = Wave.OpenFile(item.inputFile)) {
-                                float[] samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
-                                int offset = (int)(item.phone.oto.Offset / 1000.0 * 44100.0);
-                                int cutoff = (int)(item.phone.oto.Cutoff / 1000.0 * 44100.0);
-                                int length = cutoff >= 0 ? (samples.Length - offset - cutoff) : -cutoff;
-                                if (length < 0) length = 0;
-                                segment.samples = samples.Skip(Math.Max(0, offset)).Take(length).ToArray();
+                    lock (Renderers.GetCacheLock(item.inputFile ?? string.Empty)) {
+                        try {
+                            if (string.IsNullOrEmpty(item.inputFile) || !File.Exists(item.inputFile) || new FileInfo(item.inputFile).Length < 44) {
+                                segment.samples = new float[0];
+                            } else {
+                                using (var waveStream = Wave.OpenFile(item.inputFile)) {
+                                    float[] samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                                    int offset = (int)(item.phone.oto.Offset / 1000.0 * 44100.0);
+                                    int cutoff = (int)(item.phone.oto.Cutoff / 1000.0 * 44100.0);
+                                    int length = cutoff >= 0 ? (samples.Length - offset - cutoff) : -cutoff;
+                                    if (length < 0) length = 0;
+                                    segment.samples = samples.Skip(Math.Max(0, offset)).Take(length).ToArray();
+                                }
                             }
+                        } catch (Exception ex) {
+                            Log.Error(ex, $"Failed to open direct sample file: {item.inputFile}");
+                            segment.samples = new float[0];
                         }
-                    } catch (Exception ex) {
-                        Log.Error(ex, $"Failed to open direct sample file: {item.inputFile}");
-                        segment.samples = new float[0];
                     }
                 } else {
                     // Serialize the read with the resampler writes (ClassicRenderer), which

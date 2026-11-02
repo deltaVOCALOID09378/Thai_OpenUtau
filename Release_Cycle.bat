@@ -123,8 +123,12 @@ if not defined REL_VER (
     if !REL_MAJOR! GEQ 10 (
         echo [WARNING] csproj Version !REL_VER! looks like BumpVersion drift. Falling back to the newest Published folder version.
         set "REL_VER="
-        for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "Get-ChildItem -LiteralPath 'Published' -Directory -Filter 'Version no. *' -ErrorAction SilentlyContinue | ForEach-Object { $v = $null; if ([version]::TryParse(($_.Name -replace '^Version no\. ',''), [ref]$v)) { $v } } | Sort-Object -Descending | Select-Object -First 1"`) do set "REL_VER=%%v"
-        set "VER_SRC=newest Published folder"
+        for /d %%D in ("Published\Version no. *") do (
+            set "FOLDER_NAME=%%~nxD"
+            set "REL_VER=!FOLDER_NAME:Version no. =!"
+        )
+        if not defined REL_VER set "REL_VER=3.3.0"
+        set "VER_SRC=Published folder fallback"
     )
 )
 if not defined REL_VER (

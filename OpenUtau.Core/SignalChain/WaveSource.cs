@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 28/10/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : WaveSource.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/SignalChain/WaveSource.cs
+// Description  : Thread-safe audio wave source with sub-millisecond head/tail micro-fade and null-safe SetSamples guard.
+// ============================================================================
 using System;
 
 namespace OpenUtau.Core.SignalChain {
@@ -24,6 +32,10 @@ namespace OpenUtau.Core.SignalChain {
 
         public void SetSamples(float[] samples) {
             lock (lockObj) {
+                if (samples == null) {
+                    data = null;
+                    return;
+                }
                 // DELTA SYNTH Optimization: Universal Sub-millisecond Head/Tail Micro-Fade 
                 // Applies to all rendering engines (DiffSinger, UTAU, ENUNU, etc.) to eliminate micro-clicks at buffer boundaries.
                 // 44 samples = approx 0.99 millisecond at 44.1kHz.

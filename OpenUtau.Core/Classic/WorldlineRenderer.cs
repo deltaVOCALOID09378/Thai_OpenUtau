@@ -1,10 +1,18 @@
-﻿using System;
+// ============================================================================
+// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 2. ชื่อไฟล์โค้ด: WorldlineRenderer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 3.1
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/WorldlineRenderer.cs
+// 5. หน้าที่: เรนเดอร์เสียงด้วยระบบ Worldline V1 และ V2 รองรับ CLRY, XSY และแคชแบบ Thread-Safe
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Contributors
+// ============================================================================
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using NAudio.Wave;
@@ -34,6 +42,8 @@ namespace OpenUtau.Classic {
             Ustx.DYN,
             Ustx.PITD,
             Ustx.CLR,
+            Ustx.CLRY,
+            Ustx.XSY,
             Ustx.SHFT,
             Ustx.VEL,
             Ustx.VOL,
@@ -74,14 +84,19 @@ namespace OpenUtau.Classic {
                 phrase.AddCacheFile(wavPath);
                 string progressInfo = $"Track {trackNo + 1}: {this} {string.Join(" ", phrase.phones.Select(p => p.phoneme))}";
                 progress.Complete(0, progressInfo);
-                if (File.Exists(wavPath)) {
-                    using (var waveStream = Wave.OpenFile(wavPath)) {
-                        result.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                lock (Renderers.GetCacheLock(wavPath)) {
+                    if (File.Exists(wavPath) && new FileInfo(wavPath).Length >= 44) {
+                        try {
+                            using (var waveStream = Wave.OpenFile(wavPath)) {
+                                result.samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                            }
+                        } catch (Exception e) {
+                            Serilog.Log.Error(e, $"Failed to read cached worldline audio: {wavPath}");
+                        }
                     }
                 }
                 if (result.samples == null) {
                     var phraseSynth = new Worldline.PhraseSynthV2(44100, version == 1 ? 441 : 512, 2048);
-                    double posOffsetMs = phrase.positionMs - phrase.leadingMs;
                     foreach (var item in resamplerItems) {
                         if (cancellation.IsCancellationRequested) {
                             return result;
@@ -148,7 +163,7 @@ namespace OpenUtau.Classic {
                                     $"Error loading package \"{vocoderPkg}\"",
                                     $"<translate:packages.errors.missing>",
                                     new Exception($"Error loading package \"{vocoderPkg}\""),
-                                true,
+                                    true,
                                     new string[] { vocoderPkg });
                             }
                             var config = Yaml.DefaultDeserializer.Deserialize<Core.DiffSinger.DsVocoderConfig>(
@@ -176,9 +191,18 @@ namespace OpenUtau.Classic {
                         }
                     }
                     AddDirects(phrase, resamplerItems, result);
-                    var source = new WaveSource(0, 0, 0, 1);
-                    source.SetSamples(result.samples);
-                    WaveFileWriter.CreateWaveFile16(wavPath, new ExportAdapter(source).ToMono(1, 0));
+                    if (result.samples != null) {
+                        var samplesCopy = (float[])result.samples.Clone();
+                        Task.Run(() => {
+                            lock (Renderers.GetCacheLock(wavPath)) {
+                                try {
+                                    Wave.WriteMono16Wav(wavPath, samplesCopy);
+                                } catch (Exception e) {
+                                    Serilog.Log.Error(e, $"Failed to write cache file: {wavPath}");
+                                }
+                            }
+                        });
+                    }
                 }
                 progress.Complete(phrase.phones.Length, progressInfo);
                 if (result.samples != null) {
@@ -236,7 +260,7 @@ namespace OpenUtau.Classic {
         }
 
         public UExpressionDescriptor[] GetSuggestedExpressions(USinger singer, URenderSettings renderSettings) {
-            return new UExpressionDescriptor[] { };
+            return Array.Empty<UExpressionDescriptor>();
         }
 
         public override string ToString() => version == 1 ? Renderers.WORLDLINE_R : Renderers.WORLDLINE_R2;

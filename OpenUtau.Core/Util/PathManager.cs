@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -142,6 +142,9 @@ namespace OpenUtau.Core {
         }
 
         public void ClearCache() {
+            if (!Directory.Exists(CachePath)) {
+                return;
+            }
             var files = Directory.GetFiles(CachePath);
             foreach (var file in files) {
                 try {

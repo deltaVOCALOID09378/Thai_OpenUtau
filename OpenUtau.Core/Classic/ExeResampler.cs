@@ -1,15 +1,23 @@
-﻿using System;
+// ============================================================================
+// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 2. ชื่อไฟล์โค้ด: ExeResampler.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 3.1
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/ExeResampler.cs
+// 5. หน้าที่: จัดการรัน Resampler ภายนอกแบบแยกไฟล์ Staging พร้อม Atomic Cache Swap
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Contributors
+// ============================================================================
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using NAudio.Wave;
 using OpenUtau.Core;
 using OpenUtau.Core.Format;
+using OpenUtau.Core.Render;
 using OpenUtau.Core.Util;
-using OpenUtau.Core.Ustx;
 using Serilog;
 
 namespace OpenUtau.Classic {
@@ -23,12 +31,10 @@ namespace OpenUtau.Classic {
         readonly string winePath;
         readonly bool useWine;
 
-
         public ResamplerManifest LoadManifest() {
             try {
                 var ManifestPath = Path.ChangeExtension(FilePath, ".yaml");
                 if (!File.Exists(ManifestPath)) {
-                    //TODO: Write Resampler Manifests shipped by OpenUtau
                     return new ResamplerManifest();
                 }
                 return ResamplerManifest.Load(ManifestPath);
@@ -39,14 +45,18 @@ namespace OpenUtau.Classic {
         }
 
         void FixMoreConfig(string moreConfigPath) {
-            var lines = new List<string> { };
+            var lines = new List<string>();
             if (File.Exists(moreConfigPath)) {
-                lines = File.ReadAllLines(moreConfigPath).ToList();
+                using var fs = new FileStream(moreConfigPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var sr = new StreamReader(fs);
+                string line;
+                while ((line = sr.ReadLine()) != null) {
+                    lines.Add(line);
+                }
             }
             for (int i = 0; i < lines.Count; i++) {
                 if (lines[i].StartsWith("resampler-compatibility")) {
-                    if(lines[i] == "resampler-compatibility on"){
-                        //moreconfig.txt is correct
+                    if (lines[i] == "resampler-compatibility on") {
                         return;
                     } else {
                         lines[i] = "resampler-compatibility on";
@@ -63,34 +73,31 @@ namespace OpenUtau.Classic {
             if (File.Exists(filePath)) {
                 FilePath = filePath;
                 _name = Path.GetRelativePath(basePath, filePath);
+                Name = _name;
                 _isLegalPlugin = true;
             }
-            //Check if should use wine
-            string ext = Path.GetExtension(filePath).ToLower();
+            string ext = Path.GetExtension(filePath).ToLowerInvariant();
             winePath = Preferences.Default.WinePath;
             useWine = !OS.IsWindows() && !string.IsNullOrEmpty(winePath) && (ext == ".exe" || ext == ".bat");
-            //Load Resampler Manifest
             Manifest = LoadManifest();
-            //Make moresampler happy
-            try{
-                if(Path.GetFileNameWithoutExtension(filePath) == "moresampler"){
-                    //Load moreconfig.txt under the same folder with filePath
+            try {
+                if (Path.GetFileNameWithoutExtension(filePath) == "moresampler") {
                     var moreConfigPath = Path.Combine(Path.GetDirectoryName(filePath), "moreconfig.txt");
                     FixMoreConfig(moreConfigPath);
                 }
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 Log.Error($"Failed fixing moreconfig.txt for {filePath}: {ex}");
             }
         }
 
         public float[] DoResampler(ResamplerItem args, ILogger logger) {
             string tmpFile = DoResamplerReturnsFile(args, logger);
-            if (string.IsNullOrEmpty(tmpFile) || File.Exists(tmpFile)) {
+            if (!string.IsNullOrEmpty(tmpFile) && File.Exists(tmpFile)) {
                 using (var waveStream = Wave.OpenFile(tmpFile)) {
                     return Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
                 }
             }
-            return new float[0];
+            return Array.Empty<float>();
         }
 
         public string DoResamplerReturnsFile(ResamplerItem args, ILogger logger) {
@@ -98,16 +105,38 @@ namespace OpenUtau.Classic {
                 return null;
             }
             var threadId = Thread.CurrentThread.ManagedThreadId;
-            string tmpFile = args.outputFile;
-            string ArgParam = FormattableString.Invariant(
-                $"\"{args.inputTemp}\" \"{tmpFile}\" {MusicMath.GetToneName(args.tone)} {args.velocity} \"{args.GetFlagsString()}\" {args.offset} {args.durRequired} {args.consonant} {args.cutoff} {args.volume} {args.modulation} !{args.tempo} {Base64.Base64EncodeInt12(args.pitches)}");
-            logger.Information($" > [thread-{threadId}] {FilePath} {ArgParam}");
-            if (useWine) {
-                ProcessRunner.Run(winePath, $"{FilePath} {ArgParam}", logger);
-            } else {
-                ProcessRunner.Run(FilePath, ArgParam, logger);
+            string finalFile = args.outputFile;
+            string stagingFile = $"{finalFile}.{threadId}.{Guid.NewGuid():N}.tmp.wav";
+            try {
+                string ArgParam = FormattableString.Invariant(
+                    $"\"{args.inputTemp}\" \"{stagingFile}\" {MusicMath.GetToneName(args.tone)} {args.velocity} \"{args.GetFlagsString()}\" {args.offset} {args.durRequired} {args.consonant} {args.cutoff} {args.volume} {args.modulation} !{args.tempo} {Base64.Base64EncodeInt12(args.pitches)}");
+                logger.Information($" > [thread-{threadId}] {FilePath} {ArgParam}");
+                string resamplerOutput;
+                if (useWine) {
+                    resamplerOutput = ProcessRunner.Run(winePath, $"\"{FilePath}\" {ArgParam}", logger);
+                } else {
+                    resamplerOutput = ProcessRunner.Run(FilePath, ArgParam, logger);
+                }
+                if (!File.Exists(stagingFile)) {
+                    throw new ResamplerFailedException($" > [thread-{threadId}]\n{resamplerOutput}");
+                }
+                lock (Renderers.GetCacheLock(finalFile)) {
+                    try {
+                        File.Move(stagingFile, finalFile, overwrite: true);
+                    } catch (IOException) {
+                        using var src = new FileStream(stagingFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                        using var dst = new FileStream(finalFile, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+                        src.CopyTo(dst);
+                    }
+                }
+            } finally {
+                try {
+                    if (File.Exists(stagingFile)) {
+                        File.Delete(stagingFile);
+                    }
+                } catch { }
             }
-            return tmpFile;
+            return finalFile;
         }
 
         [DllImport("libc", SetLastError = true)]
@@ -122,7 +151,7 @@ namespace OpenUtau.Classic {
         }
 
         public bool SupportsFlag(string abbr) {
-            if(Manifest == null || !Manifest.expressionFilter){
+            if (Manifest == null || !Manifest.expressionFilter) {
                 return true;
             }
             return Manifest.expressions.ContainsKey(abbr);

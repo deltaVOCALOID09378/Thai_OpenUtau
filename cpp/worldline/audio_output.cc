@@ -1,6 +1,18 @@
+/*
+ * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * ชื่อไฟล์โค้ด: audio_output.cc
+ * เวอร์ชั่น: 1.1
+ * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & Staff
+ * Original by: OpenUtau Contributors
+ * รายละเอียดการแก้ไข: ปิดช่องโหว่ Memory Leak (strdup/new), อัปเกรดความปลอดภัยของ MiniAudio Context
+ */
+
 #include "worldline/audio_output.h"
 
 #include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <new> // สำหรับ std::nothrow
 
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
@@ -20,51 +32,67 @@ DLL_API int32_t ou_get_audio_device_infos(ou_audio_device_info_t* device_infos,
       continue;
     }
 
-    ma_device_info* playback_device_infos;
-    ma_uint32 playback_device_count;
-    ma_device_info* capture_device_infos;
-    ma_uint32 capture_device_count;
+    ma_device_info* playback_device_infos = NULL;
+    ma_uint32 playback_device_count = 0;
+    ma_device_info* capture_device_infos = NULL;
+    ma_uint32 capture_device_count = 0;
+    
     result = ma_context_get_devices(
         &context, &playback_device_infos, &playback_device_count,
         &capture_device_infos, &capture_device_count);
+        
     if (result != MA_SUCCESS) {
       ma_context_uninit(&context);
       continue;
     }
 
-    for (int j = 0; j < playback_device_count; j++) {
+    for (ma_uint32 j = 0; j < playback_device_count; j++) {
       if (device_count >= max_count) {
-        device_count++;
-        break;
+        break; // ออกจาก Loop ทันทีที่เกิน max_count ไม่นับเพิ่มมั่วซั่ว
       }
 
       ma_device_info* info = &playback_device_infos[j];
-      device_infos[device_count].name = strdup(info->name);
-      device_infos[device_count].id =
-          XXH64(&(info->id), sizeof(ma_device_id), 0);
-      device_infos[device_count].api =
-          strdup(ma_get_backend_name(context.backend));
-      device_infos[device_count].api_id = context.backend;
-      device_count++;
+      
+      // ป้องกัน strdup return NULL หากหน่วยความจำเต็ม
+      char* name_dup = strdup(info->name);
+      char* api_dup = strdup(ma_get_backend_name(context.backend));
+      
+      if (name_dup && api_dup) {
+          device_infos[device_count].name = name_dup;
+          device_infos[device_count].id = XXH64(&(info->id), sizeof(ma_device_id), 0);
+          device_infos[device_count].api = api_dup;
+          device_infos[device_count].api_id = context.backend;
+          device_count++;
+      } else {
+          // หาก Allocate ไม่ผ่าน ให้เคลียร์สิ่งที่จองไปแล้ว
+          free(name_dup);
+          free(api_dup);
+      }
     }
 
     ma_context_uninit(&context);
+    if (device_count >= max_count) break;
   }
   return device_count;
 }
 
 DLL_API void ou_free_audio_device_infos(ou_audio_device_info_t* device_infos,
                                         int32_t count) {
+  if (!device_infos) return;
   for (int32_t i = 0; i < count; i++) {
     free(device_infos[i].name);
     free(device_infos[i].api);
+    device_infos[i].name = NULL;
+    device_infos[i].api = NULL;
   }
 }
 
 static ou_audio_data_callback_t g_data_callback = NULL;
 
 static void silence(float* buffer, uint32_t channels, uint32_t frame_count) {
-  memset(buffer, 0, channels * frame_count * sizeof(float));
+  if (buffer) {
+      memset(buffer, 0, channels * frame_count * sizeof(float));
+  }
 }
 
 static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput,
@@ -78,7 +106,8 @@ static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput,
 
 DLL_API ou_audio_context_t* ou_init_audio_device(
     uint32_t api_id, uint64_t id, ou_audio_data_callback_t callback) {
-  ou_audio_context_t* result = new ou_audio_context_t();
+        
+  ou_audio_context_t* result = new (std::nothrow) ou_audio_context_t();
   if (result == NULL) {
     return NULL;
   }
@@ -89,10 +118,11 @@ DLL_API ou_audio_context_t* ou_init_audio_device(
     return NULL;
   }
 
-  ma_device_info* playback_device_infos;
-  ma_uint32 playback_device_count;
-  ma_device_info* capture_device_infos;
-  ma_uint32 capture_device_count;
+  ma_device_info* playback_device_infos = NULL;
+  ma_uint32 playback_device_count = 0;
+  ma_device_info* capture_device_infos = NULL;
+  ma_uint32 capture_device_count = 0;
+  
   if (ma_context_get_devices(&result->context, &playback_device_infos,
                              &playback_device_count, &capture_device_infos,
                              &capture_device_count) != MA_SUCCESS) {
@@ -123,8 +153,7 @@ DLL_API ou_audio_context_t* ou_init_audio_device(
     return NULL;
   }
 
-  if (ma_device_init(&result->context, &config, &result->device) !=
-      MA_SUCCESS) {
+  if (ma_device_init(&result->context, &config, &result->device) != MA_SUCCESS) {
     ma_context_uninit(&result->context);
     delete result;
     return NULL;
@@ -135,7 +164,8 @@ DLL_API ou_audio_context_t* ou_init_audio_device(
 
 DLL_API ou_audio_context_t* ou_init_audio_device_auto(
     ou_audio_data_callback_t callback) {
-  ou_audio_context_t* result = new ou_audio_context_t();
+        
+  ou_audio_context_t* result = new (std::nothrow) ou_audio_context_t();
   if (result == NULL) {
     return NULL;
   }
@@ -157,32 +187,41 @@ DLL_API ou_audio_context_t* ou_init_audio_device_auto(
 }
 
 DLL_API const char* ou_get_audio_device_api(ou_audio_context_t* context) {
+  if (!context) return "Unknown";
   ma_backend backend = context->device.pContext->backend;
   return ma_get_backend_name(backend);
 }
 
 DLL_API const char* ou_get_audio_device_name(ou_audio_context_t* context) {
+  if (!context) return "Unknown";
   return context->device.playback.name;
 }
 
 DLL_API int ou_free_audio_device(ou_audio_context_t* context) {
+  if (!context) return 0;
+  
   bool release_context = !context->device.isOwnerOfContext;
   ma_device_uninit(&context->device);
+  
+  int return_code = 0;
   if (release_context) {
     ma_result result = ma_context_uninit(&context->context);
     if (result != MA_SUCCESS) {
-      return result;
+      return_code = result;
     }
   }
+  
   delete context;
-  return 0;
+  return return_code;
 }
 
 DLL_API int ou_audio_device_start(ou_audio_context_t* context) {
+  if (!context) return -1;
   return ma_device_start(&context->device);
 }
 
 DLL_API int ou_audio_device_stop(ou_audio_context_t* context) {
+  if (!context) return -1;
   return ma_device_stop(&context->device);
 }
 

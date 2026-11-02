@@ -49,10 +49,20 @@ namespace OpenUtau {
             }
         }
 
+        public static bool IsValidWebUrl(string url) {
+            return !string.IsNullOrWhiteSpace(url)
+                && Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        }
+
         public static void OpenWeb(string url) {
+            if (!IsValidWebUrl(url)) {
+                throw new ArgumentException("Only HTTP and HTTPS URLs are permitted.", nameof(url));
+            }
+            var uri = new Uri(url, UriKind.Absolute);
             Process.Start(new ProcessStartInfo {
                 FileName = GetOpener(),
-                Arguments = url,
+                Arguments = uri.AbsoluteUri,
             });
         }
 

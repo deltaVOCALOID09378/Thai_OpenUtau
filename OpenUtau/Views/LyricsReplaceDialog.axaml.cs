@@ -5,17 +5,21 @@ using OpenUtau.App.ViewModels;
 
 namespace OpenUtau.App.Views {
     public partial class LyricsReplaceDialog : Window {
+        private bool finished;
+
         public LyricsReplaceDialog() {
             InitializeComponent();
         }
 
         void OnCancel(object? sender, RoutedEventArgs e) {
-            Close();
+            CloseSafe();
         }
 
         void OnFinish(object? sender, RoutedEventArgs e) {
-            if((DataContext as LyricsReplaceViewModel)!.Finish()) {
-                Close();
+            if (finished) return;
+
+            if (DataContext is LyricsReplaceViewModel vm && vm.Finish()) {
+                CloseSafe();
             }
         }
 
@@ -32,6 +36,12 @@ namespace OpenUtau.App.Views {
                 default:
                     break;
             }
+        }
+
+        private void CloseSafe() {
+            if (finished) return;
+            finished = true;
+            Close();
         }
     }
 }

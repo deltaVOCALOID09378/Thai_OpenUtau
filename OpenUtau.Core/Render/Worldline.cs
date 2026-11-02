@@ -24,6 +24,25 @@ namespace OpenUtau.Core.Render {
     public class CutOffBeforeOffsetError : SynthRequestError { }
 
     public static class Worldline {
+        static Worldline() {
+            NativeLibrary.SetDllImportResolver(typeof(Worldline).Assembly, (libraryName, assembly, searchPath) => {
+                if (!string.Equals(libraryName, "worldline", StringComparison.OrdinalIgnoreCase)) {
+                    return IntPtr.Zero;
+                }
+                string baseDir = AppContext.BaseDirectory;
+                string directPath = Path.Combine(baseDir, "worldline.dll");
+                if (File.Exists(directPath) && NativeLibrary.TryLoad(directPath, out IntPtr handle)) {
+                    return handle;
+                }
+                string rid = Environment.Is64BitProcess ? "win-x64" : "win-x86";
+                string runtimePath = Path.Combine(baseDir, "runtimes", rid, "native", "worldline.dll");
+                if (File.Exists(runtimePath) && NativeLibrary.TryLoad(runtimePath, out handle)) {
+                    return handle;
+                }
+                return IntPtr.Zero;
+            });
+        }
+
         [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
         static extern int F0(
             float[] samples, int length, int fs, double framePeriod, int method, ref IntPtr f0);

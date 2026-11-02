@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -39,20 +39,40 @@ namespace OpenUtau.Classic {
                 Overwrite = true,
             };
             using (var archive = ArchiveFactory.OpenArchive(path, readerOptions)) {
+                var initialCanonicalBase = Path.GetFullPath(basePath);
+                if (!initialCanonicalBase.EndsWith(Path.DirectorySeparatorChar)) {
+                    initialCanonicalBase += Path.DirectorySeparatorChar;
+                }
                 var touches = new List<string>();
                 AdjustBasePath(archive, path, touches);
+                var canonicalBase = Path.GetFullPath(basePath);
+                if (!canonicalBase.EndsWith(Path.DirectorySeparatorChar)) {
+                    canonicalBase += Path.DirectorySeparatorChar;
+                }
+                if (!canonicalBase.StartsWith(initialCanonicalBase, StringComparison.OrdinalIgnoreCase)) {
+                    throw new InvalidOperationException("Archive base path escaped target directory.");
+                }
                 int total = archive.Entries.Count();
                 int count = 0;
                 bool hasCharacterYaml = archive.Entries.Any(e => Path.GetFileName(e.Key) == kCharacterYaml);
                 foreach (var entry in archive.Entries) {
-                    string fixedKey = entry.Key!.Replace("\\", "/");
+                    if (string.IsNullOrEmpty(entry.Key)) {
+                        continue;
+                    }
+                    string fixedKey = entry.Key.Replace("\\", "/");
                     progress.Invoke(100.0 * ++count / total, fixedKey);
                     if (entry.Key.Contains("..")) {
                         // Prevent zipSlip attack
                         continue;
                     }
-                    var filePath = Path.Combine(basePath, fixedKey);
-                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                    var filePath = Path.GetFullPath(Path.Combine(basePath, fixedKey));
+                    if (!filePath.StartsWith(canonicalBase, StringComparison.OrdinalIgnoreCase)) {
+                        continue;
+                    }
+                    var dirPath = Path.GetDirectoryName(filePath);
+                    if (!string.IsNullOrEmpty(dirPath)) {
+                        Directory.CreateDirectory(dirPath);
+                    }
                     if (!entry.IsDirectory && fixedKey != kInstallTxt) {
                         entry.WriteToFile(filePath, extractionOptions);
                         if (!hasCharacterYaml && Path.GetFileName(filePath) == kCharacterTxt) {
@@ -60,7 +80,7 @@ namespace OpenUtau.Classic {
                                 TextFileEncoding = textEncoding.WebName,
                                 SingerType = singerType,
                             };
-                            using (var stream = File.Open(filePath.Replace(".txt", ".yaml"), FileMode.Create)) {
+                            using (var stream = File.Open(Path.ChangeExtension(filePath, ".yaml"), FileMode.Create)) {
                                 config.Save(stream);
                             }
                         }
@@ -79,11 +99,19 @@ namespace OpenUtau.Classic {
                     }
                 }
                 foreach (var touch in touches) {
-                    File.WriteAllText(touch, "\n");
+                    var fullTouch = Path.GetFullPath(touch);
+                    if (!fullTouch.StartsWith(canonicalBase, StringComparison.OrdinalIgnoreCase)) {
+                        continue;
+                    }
+                    var touchDir = Path.GetDirectoryName(fullTouch);
+                    if (!string.IsNullOrEmpty(touchDir)) {
+                        Directory.CreateDirectory(touchDir);
+                    }
+                    File.WriteAllText(fullTouch, "\n");
                     var config = new VoicebankConfig() {
                         TextFileEncoding = textEncoding.WebName,
                     };
-                    using (var stream = File.Open(touch.Replace(".txt", ".yaml"), FileMode.Create)) {
+                    using (var stream = File.Open(Path.ChangeExtension(fullTouch, ".yaml"), FileMode.Create)) {
                         config.Save(stream);
                     }
                 }
@@ -91,19 +119,28 @@ namespace OpenUtau.Classic {
         }
 
         private void AdjustBasePath(IArchive archive, string archivePath, List<string> touches) {
-            var dirsAndFiles = archive.Entries.Select(e => e.Key).ToHashSet();
+            var dirsAndFiles = archive.Entries
+                .Select(e => e.Key)
+                .Where(k => !string.IsNullOrEmpty(k))
+                .ToHashSet();
             var rootDirs = archive.Entries
-                .Where(e => e.IsDirectory)
+                .Where(e => e.IsDirectory && !string.IsNullOrEmpty(e.Key))
+                .Where(e => !e.Key.Contains("..") && !Path.IsPathRooted(e.Key))
                 .Where(e => (e.Key.IndexOf('\\') < 0 || e.Key.IndexOf('\\') == e.Key.Length - 1)
                          && (e.Key.IndexOf('/') < 0 || e.Key.IndexOf('/') == e.Key.Length - 1))
                 .ToArray();
             var rootFiles = archive.Entries
-                .Where(e => !e.IsDirectory)
+                .Where(e => !e.IsDirectory && !string.IsNullOrEmpty(e.Key))
+                .Where(e => !e.Key.Contains("..") && !Path.IsPathRooted(e.Key))
                 .Where(e => !e.Key.Contains('\\') && !e.Key.Contains('/') && e.Key != kInstallTxt)
                 .ToArray();
             if (rootFiles.Count() > 0) {
                 // Need to create root folder.
-                basePath = Path.Combine(basePath, Path.GetFileNameWithoutExtension(archivePath).Trim());
+                var folderName = Path.GetFileNameWithoutExtension(archivePath).Trim();
+                if (string.IsNullOrEmpty(folderName) || folderName == "." || folderName.Contains("..")) {
+                    folderName = "voicebank";
+                }
+                basePath = Path.Combine(basePath, folderName);
                 if (rootFiles.Where(e => e.Key == kCharacterTxt).Count() == 0) {
                     // Need to create character.txt.
                     touches.Add(Path.Combine(basePath, kCharacterTxt));

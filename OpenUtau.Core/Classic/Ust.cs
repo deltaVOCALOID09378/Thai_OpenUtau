@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -403,11 +403,14 @@ namespace OpenUtau.Classic {
                     writer.WriteLine($"[#NEXT]");
                     WriteNoteBody(project, track, part, next, writer);
                 }
+                WriteFooter(writer);
             }
             return sequence;
         }
 
         static void WriteHeader(UProject project, UVoicePart part, StreamWriter writer) {
+            writer.WriteLine("[#VERSION]");
+            writer.WriteLine("UST Version1.2");
             writer.WriteLine("[#SETTING]");
             writer.WriteLine($"Tempo={project.timeAxis.GetBpmAtTick(part.position)}");
             writer.WriteLine("Tracks=1");

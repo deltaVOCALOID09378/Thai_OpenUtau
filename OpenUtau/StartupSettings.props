@@ -5,7 +5,7 @@
       permit compatible roll-forward within the requested major version
       according to the .NET host's Minor policy.
     -->
-    <RollForward>Minor</RollForward>
+    <RollForward>LatestMajor</RollForward>
 
     <!-- Required for nullable reference annotations in Program.cs. -->
     <Nullable>enable</Nullable>

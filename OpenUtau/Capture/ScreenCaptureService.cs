@@ -50,22 +50,16 @@ namespace OpenUtau.App.Capture {
         /// คำนวณและดึงตำแหน่งโฟลเดอร์สำหรับส่งออกไฟล์ที่ปลอดภัย
         /// รองรับทั้ง Custom Path ใน Preferences และ Default Path ในโฟลเดอร์ Videos
         /// </summary>
+        public string GetResolvedScreenshotLocation() {
+            return Preferences.ResolveDefaultScreenshotLocation();
+        }
+
+        public string GetResolvedVideoRenderLocation() {
+            return Preferences.ResolveDefaultVideoRenderLocation();
+        }
+
         public string GetResolvedExportLocation() {
-            string customLocation = Preferences.Default.CaptureExportLocation;
-            if (!string.IsNullOrWhiteSpace(customLocation) && Directory.Exists(customLocation)) {
-                return customLocation;
-            }
-
-            string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string defaultPath = Path.Combine(userProfile, "Videos", "ThaiOpenUtau Captures");
-            if (!Directory.Exists(defaultPath)) {
-                defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "ThaiOpenUtau Captures");
-            }
-            try {
-                Directory.CreateDirectory(defaultPath);
-            } catch { }
-
-            return defaultPath;
+            return GetResolvedVideoRenderLocation();
         }
 
         /// <summary>
@@ -119,16 +113,28 @@ namespace OpenUtau.App.Capture {
             if (boundsWidth <= 0) boundsWidth = 1920;
             if (boundsHeight <= 0) boundsHeight = 1080;
 
-            // ตรวจสอบค่าความละเอียดจาก Preferences.Default.CaptureResolution
-            int targetHeight = Preferences.Default.CaptureResolution switch {
-                240 => 240,
-                480 => 480,
-                720 => 720,
-                1080 => 1080,
-                1440 or 2048 => 1440,       // 2K QHD (2560x1440)
-                2160 or 4096 => 2160,       // 4K UHD (3840x2160)
-                _ => 1080
-            };
+            // ตรวจสอบค่าความละเอียดจาก Preferences.Default.CaptureResolutionPreset / CaptureResolution
+            // รองรับความคมชัด: 240, 480, 720, 1080, 2k (1440), 2160, 4k (2160)
+            int targetHeight = 1080;
+            string preset = Preferences.Default.CaptureResolutionPreset?.ToLowerInvariant().Trim() ?? "";
+            if (preset == "240") targetHeight = 240;
+            else if (preset == "480") targetHeight = 480;
+            else if (preset == "720") targetHeight = 720;
+            else if (preset == "1080") targetHeight = 1080;
+            else if (preset == "2k" || preset == "1440") targetHeight = 1440;
+            else if (preset == "2160") targetHeight = 2160;
+            else if (preset == "4k") targetHeight = 2160;
+            else {
+                targetHeight = Preferences.Default.CaptureResolution switch {
+                    240 => 240,
+                    480 => 480,
+                    720 => 720,
+                    1080 => 1080,
+                    1440 or 2048 => 1440,       // 2K QHD (2560x1440)
+                    2160 or 4096 => 2160,       // 4K UHD (3840x2160)
+                    _ => 1080
+                };
+            }
 
             double scale = (double)targetHeight / boundsHeight;
             int targetWidth = (int)Math.Round(boundsWidth * scale);
@@ -145,7 +151,7 @@ namespace OpenUtau.App.Capture {
         /// </summary>
         public async Task<string?> CapturePictureAsync(Control control) {
             try {
-                string exportDir = GetResolvedExportLocation();
+                string exportDir = GetResolvedScreenshotLocation();
                 Directory.CreateDirectory(exportDir);
 
                 string filename = GenerateFilename(".png");
@@ -216,7 +222,7 @@ namespace OpenUtau.App.Capture {
             }
 
             try {
-                string exportDir = GetResolvedExportLocation();
+                string exportDir = GetResolvedVideoRenderLocation();
                 Directory.CreateDirectory(exportDir);
 
                 string ext = Preferences.Default.CaptureVideoFormat?.TrimStart('.') ?? "mp4";

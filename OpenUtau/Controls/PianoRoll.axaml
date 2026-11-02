@@ -484,6 +484,7 @@
             </MenuItem>
 
             <MenuItem Header="{DynamicResource pianoroll.menu.batch}">
+              <MenuItem Header="{DynamicResource pianoroll.menu.vocaltuning}" ItemsSource="{Binding VocalTuningEdits}" Classes="MenuItemWithSubMenu"/>
               <MenuItem Header="{DynamicResource pianoroll.menu.notes}" ItemsSource="{Binding NoteBatchEdits}" Classes="MenuItemWithSubMenu"/>
               <MenuItem Header="{DynamicResource pianoroll.menu.lyrics}" ItemsSource="{Binding LyricBatchEdits}" Classes="MenuItemWithSubMenu"/>
               <MenuItem Header="{DynamicResource pianoroll.menu.reset}" ItemsSource="{Binding ResetBatchEdits}" Classes="MenuItemWithSubMenu"/>
@@ -589,6 +590,16 @@
               <Button.ContextMenu>
                 <ContextMenu Name="KeyMenu" Classes="WithCommand" Placement="BottomEdgeAlignedLeft"
                              ItemsSource="{Binding NotesViewModel.Keys}" KeyDown="OnKeyKeyDown"/>
+              </Button.ContextMenu>
+            </Button>
+            <Button Classes="topBarTextChip" Margin="4,0,0,0" Padding="6,0" Click="OnVocalTuningMenuButton"
+              ToolTip.Tip="{DynamicResource pianoroll.menu.vocaltuning}">
+              <TextBlock Text="{DynamicResource pianoroll.menu.vocaltuning}"
+                         TextAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <Button.ContextMenu>
+                <ContextMenu Name="VocalTuningMenu" Classes="WithCommand" Placement="BottomEdgeAlignedLeft"
+                             ItemsSource="{Binding VocalTuningEdits}"/>
               </Button.ContextMenu>
             </Button>
             <Border Width="12" IsVisible="{Binding UsesExpandedPianoRollLayout}"/>
@@ -801,7 +812,6 @@
                               TickOrigin="{Binding NotesViewModel.TickOrigin}"
                               TickOffset="{Binding NotesViewModel.TickOffset}"
                               SnapDiv="{Binding NotesViewModel.SnapDiv, Mode=OneWay}"
-                              SnapTicks="{Binding NotesViewModel.SnapTicks}"
                               ShowBar="True"/>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0">
               <Button Classes="expToolButton" Width="24" Height="24" Margin="0" Padding="0"
@@ -891,6 +901,51 @@
             IsEnabled="{Binding NotesViewModel.ShowNoteParams}"
             IsVisible="{Binding NotesViewModel.ShowNoteParams}">
       <c:NotePropertiesControl x:Name="NoteProperties"/>
+    </Border>
+    <!-- Floating Transparent Screen Capture & Video Toolbar (Bottom-Right Corner) -->
+    <Border Grid.Column="0" Grid.ColumnSpan="9"
+            HorizontalAlignment="Right" VerticalAlignment="Bottom"
+            Margin="0,0,24,24" ZIndex="1000"
+            Background="#66202025" CornerRadius="8"
+            BorderBrush="#40FFFFFF" BorderThickness="1"
+            BoxShadow="0 4 12 0 #40000000">
+      <StackPanel Orientation="Horizontal" Spacing="4" Margin="4">
+        <!-- Photo / Screenshot Camera Button -->
+        <Button x:Name="CapturePhotoButton"
+                Width="36" Height="36" Padding="0"
+                Background="Transparent" BorderThickness="0"
+                Click="OnCapturePhotoClick"
+                ToolTip.Tip="{DynamicResource capture.screenshot.tooltip}">
+          <Button.Styles>
+            <Style Selector="Button:pointerover">
+              <Setter Property="Background" Value="#33FFFFFF"/>
+            </Style>
+          </Button.Styles>
+          <Path Width="20" Height="20" Stretch="Uniform"
+                Fill="{DynamicResource NeutralAccentBrush}"
+                Data="M 4 8 L 7 8 L 8.5 5.5 L 15.5 5.5 L 17 8 L 20 8 C 21.1 8 22 8.9 22 10 L 22 20 C 22 21.1 21.1 22 20 22 L 4 22 C 2.9 22 2 21.1 2 20 L 2 10 C 2 8.9 2.9 8 4 8 Z M 12 19 C 14.76 19 17 16.76 17 14 C 17 11.24 14.76 9 12 9 C 9.24 9 7 11.24 7 14 C 7 16.76 9.24 19 12 19 Z M 12 17 C 10.34 17 9 15.66 9 14 C 9 12.34 10.34 11 12 11 C 13.66 11 15 12.34 15 14 C 15 15.66 13.66 17 12 17 Z"/>
+        </Button>
+        <!-- Video Recording Camera Button -->
+        <Button x:Name="CaptureVideoButton"
+                Width="36" Height="36" Padding="0"
+                Background="Transparent" BorderThickness="0"
+                Click="OnCaptureVideoClick"
+                ToolTip.Tip="{DynamicResource capture.video.tooltip}">
+          <Button.Styles>
+            <Style Selector="Button:pointerover">
+              <Setter Property="Background" Value="#33FFFFFF"/>
+            </Style>
+          </Button.Styles>
+          <Grid>
+            <Path x:Name="CaptureVideoIcon" Width="20" Height="20" Stretch="Uniform"
+                  Fill="{DynamicResource NeutralAccentBrush}"
+                  Data="M 3 6 C 1.9 6 1 6.9 1 8 L 1 18 C 1 19.1 1.9 20 3 20 L 15 20 C 16.1 20 17 19.1 17 18 L 17 15.5 L 22.3 19.5 C 22.8 19.9 23.5 19.5 23.5 18.9 L 23.5 7.1 C 23.5 6.5 22.8 6.1 22.3 6.5 L 17 10.5 L 17 8 C 17 6.9 16.1 6 15 6 L 3 6 Z"/>
+            <Ellipse x:Name="CaptureRecordingDot" Width="8" Height="8"
+                     Fill="#FF3B30" HorizontalAlignment="Right" VerticalAlignment="Top"
+                     Margin="0,0,2,2" IsVisible="False"/>
+          </Grid>
+        </Button>
+      </StackPanel>
     </Border>
   </Grid>
 </UserControl>

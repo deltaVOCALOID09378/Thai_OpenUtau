@@ -5,7 +5,10 @@
              xmlns:vm="using:OpenUtau.App.ViewModels"
              xmlns:c="using:OpenUtau.App.Controls"
              mc:Ignorable="d" d:DesignWidth="300"
-             x:Class="OpenUtau.App.Views.ThemePickerControl">
+             x:Class="OpenUtau.App.Views.ThemePickerControl"
+             x:DataType="vm:PreferencesViewModel"
+             x:CompileBindings="True">
+
   <UserControl.Styles>
     <Style Selector="Border.themePickerTile">
       <Setter Property="Width" Value="60"/>
@@ -36,11 +39,6 @@
       <Setter Property="IsVisible" Value="False"/>
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="VerticalAlignment" Value="Stretch"/>
-      <Setter Property="Margin" Value="0"/>
-    </Style>
-    <Style Selector="Border.themePickerTile Panel.themePickerActions > StackPanel">
-      <Setter Property="HorizontalAlignment" Value="Center"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
     <Style Selector="Border.themePickerTile.themePickerEditable:pointerover Panel.themePickerActions">
       <Setter Property="IsVisible" Value="True"/>
@@ -68,51 +66,33 @@
       <Setter Property="Padding" Value="0"/>
       <Setter Property="MinWidth" Value="22"/>
       <Setter Property="MinHeight" Value="22"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
   </UserControl.Styles>
+
   <StackPanel Spacing="4">
-    <TextBlock Classes="themePickerSectionLabel"
-               Text="{DynamicResource prefs.appearance.theme.builtin}"/>
-    <ItemsControl ItemsSource="{Binding BuiltInThemePickerItems}"
-                  IsEnabled="{Binding !IsThemeEditorOpen}">
+    
+    <!-- 1. ธีมแบบ Built-in -->
+    <TextBlock Classes="themePickerSectionLabel" Text="{DynamicResource prefs.appearance.theme.builtin}"/>
+    <ItemsControl ItemsSource="{Binding BuiltInThemePickerItems}" IsEnabled="{Binding !IsThemeEditorOpen}">
       <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <WrapPanel Orientation="Horizontal"/>
-        </ItemsPanelTemplate>
+        <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
       </ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate>
         <DataTemplate x:DataType="vm:ThemePickerItemViewModel">
-          <Border Classes="themePickerTile"
-                  Classes.selected="{Binding IsSelected}"
-                  Classes.themePickerEditable="{Binding IsEditable}"
-                  PointerPressed="OnThemeTilePointerPressed"
-                  ToolTip.Tip="{Binding DisplayName}">
+          <Border Classes="themePickerTile" Classes.selected="{Binding IsSelected}" Classes.themePickerEditable="{Binding IsEditable}"
+                  PointerPressed="OnThemeTilePointerPressed" ToolTip.Tip="{Binding DisplayName}">
             <Grid RowDefinitions="Auto,Auto">
-              <Border Grid.Row="0" Classes="themePreviewStrip">
-                <c:ThemePickerPreview/>
-              </Border>
-              <TextBlock Grid.Row="1" Classes="themePickerTileLabel"
-                         Text="{Binding DisplayName}"/>
+              <Border Grid.Row="0" Classes="themePreviewStrip"><c:ThemePickerPreview/></Border>
+              <TextBlock Grid.Row="1" Classes="themePickerTileLabel" Text="{Binding DisplayName}"/>
               <Panel Grid.Row="0" Classes="themePickerActions">
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                  <Button Classes="iconButton themePickerActionButton"
-                          IsVisible="{Binding IsEditable}"
-                          Click="OnThemeEditClick"
-                          ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.edit.title}">
-                    <Viewbox Width="14" Height="14">
-                      <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                            Classes="filled"
-                            Data="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z"/>
-                    </Viewbox>
+                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <Button Classes="iconButton themePickerActionButton" IsVisible="{Binding IsEditable}" Click="OnThemeEditClick" ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.edit.title}">
+                    <Viewbox Width="14" Height="14"><Path Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Data="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z"/></Viewbox>
                   </Button>
-                  <Button Classes="iconButton themePickerActionButton"
-                          IsVisible="{Binding IsEditable}"
-                          Click="OnThemeDeleteClick"
-                          ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.delete.title}">
-                    <Viewbox Width="14" Height="14" Margin="-2,-1,0,0">
-                      <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                            Data="M7.03 2.81c-.23 0-.38.17-.38.37v1.27h-2.65c-.19 0-.38.17-.38.37v.29c0 .21.19.37.38.37h.26v8.9c0 .21.19.37.38.37h8.7c.23 0 .38-.17.38-.42V5.68h.26c.23 0 .38-.17.38-.37v-.29c0-.21-.15-.42-.38-.42h-2.65V3.22c0-.21-.15-.42-.38-.42H7.05zm.76 1.04h2.42v.75h-2.38v-.75zm-2.49 1.79h7.4v8.23H5.29V6.28zm1.82 1.49a.38.38 0 0 0-.38.42v4.32c0 .21.19.42.38.42h.42a.38.38 0 0 0 .38-.42V7.77a.38.38 0 0 0-.38-.42h-.42zm3.37 0a.38.38 0 0 0-.38.42v4.32c0 .21.15.42.38.42h.38a.38.38 0 0 0 .38-.42V7.77a.38.38 0 0 0-.38-.42h-.38z"/>
-                    </Viewbox>
+                  <Button Classes="iconButton themePickerActionButton" IsVisible="{Binding IsEditable}" Click="OnThemeDeleteClick" ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.delete.title}">
+                    <Viewbox Width="14" Height="14"><Path Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Data="M7.03 2.81c-.23 0-.38.17-.38.37v1.27h-2.65c-.19 0-.38.17-.38.37v.29c0 .21.19.37.38.37h.26v8.9c0 .21.19.37.38.37h8.7c.23 0 .38-.17.38-.42V5.68h.26c.23 0 .38-.17.38-.37v-.29c0-.21-.15-.42-.38-.42h-2.65V3.22c0-.21-.15-.42-.38-.42H7.05zm.76 1.04h2.42v.75h-2.38v-.75zm-2.49 1.79h7.4v8.23H5.29V6.28zm1.82 1.49a.38.38 0 0 0-.38.42v4.32c0 .21.19.42.38.42h.42a.38.38 0 0 0 .38-.42V7.77a.38.38 0 0 0-.38-.42h-.42zm3.37 0a.38.38 0 0 0-.38.42v4.32c0 .21.15.42.38.42h.38a.38.38 0 0 0 .38-.42V7.77a.38.38 0 0 0-.38-.42h-.38z"/></Viewbox>
                   </Button>
                 </StackPanel>
               </Panel>
@@ -122,91 +102,54 @@
       </ItemsControl.ItemTemplate>
     </ItemsControl>
 
-    <TextBlock Classes="themePickerSectionLabel"
-               Text="{DynamicResource prefs.appearance.theme.builtin.custom}"/>
-    <ItemsControl ItemsSource="{Binding BuiltInCustomThemePickerItems}"
-                  IsEnabled="{Binding !IsThemeEditorOpen}">
+    <!-- 2. ธีมแบบ Built-in Custom -->
+    <TextBlock Classes="themePickerSectionLabel" Text="{DynamicResource prefs.appearance.theme.builtin.custom}"/>
+    <ItemsControl ItemsSource="{Binding BuiltInCustomThemePickerItems}" IsEnabled="{Binding !IsThemeEditorOpen}">
       <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <WrapPanel Orientation="Horizontal"/>
-        </ItemsPanelTemplate>
+        <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
       </ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate>
         <DataTemplate x:DataType="vm:ThemePickerItemViewModel">
-          <Border Classes="themePickerTile"
-                  Classes.selected="{Binding IsSelected}"
-                  PointerPressed="OnThemeTilePointerPressed"
-                  ToolTip.Tip="{Binding DisplayName}">
+          <Border Classes="themePickerTile" Classes.selected="{Binding IsSelected}" PointerPressed="OnThemeTilePointerPressed" ToolTip.Tip="{Binding DisplayName}">
             <Grid RowDefinitions="Auto,Auto">
-              <Border Grid.Row="0" Classes="themePreviewStrip">
-                <c:ThemePickerPreview/>
-              </Border>
-              <TextBlock Grid.Row="1" Classes="themePickerTileLabel"
-                         Text="{Binding DisplayName}"/>
+              <Border Grid.Row="0" Classes="themePreviewStrip"><c:ThemePickerPreview/></Border>
+              <TextBlock Grid.Row="1" Classes="themePickerTileLabel" Text="{Binding DisplayName}"/>
             </Grid>
           </Border>
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
 
-    <TextBlock Classes="themePickerSectionLabel"
-               Text="{DynamicResource prefs.appearance.theme.custom}"/>
-    <ItemsControl ItemsSource="{Binding CustomThemePickerItems}"
-                  IsEnabled="{Binding !IsThemeEditorOpen}">
+    <!-- 3. ธีมแบบ Custom (รวมปุ่มสร้างใหม่ + รายการผู้ใช้) -->
+    <TextBlock Classes="themePickerSectionLabel" Text="{DynamicResource prefs.appearance.theme.custom}"/>
+    <ItemsControl ItemsSource="{Binding CustomThemePickerItems}" IsEnabled="{Binding !IsThemeEditorOpen}">
       <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <WrapPanel Orientation="Horizontal"/>
-        </ItemsPanelTemplate>
+        <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
       </ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate>
         <DataTemplate x:DataType="vm:ThemePickerItemViewModel">
-          <Border Classes="themePickerTile"
-                  Classes.selected="{Binding IsSelected}"
-                  Classes.themePickerEditable="{Binding IsEditable}"
-                  Classes.themePickerCreate="{Binding IsCreateTile}"
-                  PointerPressed="OnThemeTilePointerPressed"
-                  ToolTip.Tip="{Binding DisplayName, TargetNullValue={x:Null}}">
+          <Border Classes="themePickerTile" Classes.selected="{Binding IsSelected}" Classes.themePickerEditable="{Binding IsEditable}"
+                  PointerPressed="OnThemeTilePointerPressed" ToolTip.Tip="{Binding DisplayName, TargetNullValue={x:Null}}">
             <Grid RowDefinitions="Auto,Auto">
-              <Border Grid.Row="0" Classes="themePreviewStrip"
-                      IsVisible="{Binding !IsCreateTile}">
+              <!-- แสดงตัวอย่างธีม หรือ ปุ่มบวกสร้างธีมใหม่ -->
+              <Border Grid.Row="0" Classes="themePreviewStrip" IsVisible="{Binding !IsCreateTile}">
                 <c:ThemePickerPreview/>
               </Border>
-              <Border Grid.Row="0" Classes="themePreviewStrip"
-                      IsVisible="{Binding IsCreateTile}"
-                      Background="Transparent"
-                      ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.create.title}">
-                <Path Width="20" Height="20" Margin="1,0,0,0"
-                      HorizontalAlignment="Center" VerticalAlignment="Center"
-                      Fill="{DynamicResource MutedIconBrush}"
-                      Data="M8.43 3.33 a0.38 0.38 0 0 0 -0.38 0.38 v4.35 H3.7 a0.38 0.38 0 0 0 -0.38 0.38 v1.13 c0 0.23 0.19 0.38 0.38 0.38 h4.35 v4.35 c0 0.23 0.19 0.38 0.38 0.38 h1.13 a0.38 0.38 0 0 0 0.38 -0.38 V9.97 h4.35 a0.38 0.38 0 0 0 0.38 -0.38 v-1.13 a0.38 0.38 0 0 0 -0.38 -0.38 H9.97 V3.7 a0.38 0.38 0 0 0 -0.38 -0.38 h-1.13 z"/>
+              <Border Grid.Row="0" Classes="themePreviewStrip" IsVisible="{Binding IsCreateTile}" Background="Transparent" ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.create.title}">
+                <Path Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="{DynamicResource MutedIconBrush}" Data="M8.43 3.33 a0.38 0.38 0 0 0 -0.38 0.38 v4.35 H3.7 a0.38 0.38 0 0 0 -0.38 0.38 v1.13 c0 0.23 0.19 0.38 0.38 0.38 h4.35 v4.35 c0 0.23 0.19 0.38 0.38 0.38 h1.13 a0.38 0.38 0 0 0 0.38 -0.38 V9.97 h4.35 a0.38 0.38 0 0 0 0.38 -0.38 v-1.13 a0.38 0.38 0 0 0 -0.38 -0.38 H9.97 V3.7 a0.38 0.38 0 0 0 -0.38 -0.38 h-1.13 z"/>
               </Border>
-              <TextBlock Grid.Row="1" Classes="themePickerTileLabel"
-                         Text="{Binding DisplayName}"
-                         IsVisible="{Binding !IsCreateTile}"/>
-              <TextBlock Grid.Row="1" Classes="themePickerTileLabel"
-                         Text="{DynamicResource prefs.appearance.customtheme.create.short}"
-                         IsVisible="{Binding IsCreateTile}"
-                         Foreground="{DynamicResource MutedIconBrush}"/>
+
+              <TextBlock Grid.Row="1" Classes="themePickerTileLabel" Text="{Binding DisplayName}" IsVisible="{Binding !IsCreateTile}"/>
+              <TextBlock Grid.Row="1" Classes="themePickerTileLabel" Text="{DynamicResource prefs.appearance.customtheme.create.short}" IsVisible="{Binding IsCreateTile}" Foreground="{DynamicResource MutedIconBrush}"/>
+
+              <!-- ปุ่มจัดการ (แก้ไข/ลบ) เฉพาะ tile ที่กำหนด -->
               <Panel Grid.Row="0" Classes="themePickerActions">
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                  <Button Classes="iconButton themePickerActionButton"
-                          IsVisible="{Binding IsEditable}"
-                          Click="OnThemeEditClick"
-                          ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.edit.title}">
-                    <Viewbox Width="14" Height="14">
-                      <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                            Classes="filled"
-                            Data="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z"/>
-                    </Viewbox>
+                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <Button Classes="iconButton themePickerActionButton" IsVisible="{Binding IsEditable}" Click="OnThemeEditClick" ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.edit.title}">
+                    <Viewbox Width="14" Height="14"><Path Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Data="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z"/></Viewbox>
                   </Button>
-                  <Button Classes="iconButton themePickerActionButton"
-                          IsVisible="{Binding IsEditable}"
-                          Click="OnThemeDeleteClick"
-                          ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.delete.title}">
-                    <Viewbox Width="14" Height="14" Margin="-2,-1,0,0">
-                      <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                            Data="M7.03 2.81c-.23 0-.38.17-.38.37v1.27h-2.65c-.19 0-.38.17-.38.37v.29c0 .21.19.37.38.37h.26v8.9c0 .21.19.37.38.37h8.7c.23 0 .38-.17.38-.42V5.68h.26c.23 0 .38-.17.38-.37v-.29c0-.21-.15-.42-.38-.42h-2.65V3.22c0-.21-.15-.42-.38-.42H7.05zm.76 1.04h2.42v.75h-2.38v-.75zm-2.49 1.79h7.4v8.23H5.29V6.28zm1.82 1.49a.38.38 0 0 0-.38.42v4.32c0 .21.19.42.38.42h.42a.38.38 0 0 0 .38-.42V7.77a.38.38 0 0 0-.38-.42h-.42zm3.37 0a.38.38 0 0 0-.38.42v4.32c0 .21.15.42.38.42h.38a.38.38 0 0 0 .38-.42V7.77a.38.38 0 0 0-.38-.42h-.38z"/>
-                    </Viewbox>
+                  <Button Classes="iconButton themePickerActionButton" IsVisible="{Binding IsEditable}" Click="OnThemeDeleteClick" ToolTip.Tip="{DynamicResource prefs.appearance.customtheme.delete.title}">
+                    <Viewbox Width="14" Height="14"><Path Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Data="M7.03 2.81c-.23 0-.38.17-.38.37v1.27h-2.65c-.19 0-.38.17-.38.37v.29c0 .21.19.37.38.37h.26v8.9c0 .21.19.37.38.37h8.7c.23 0 .38-.17.38-.42V5.68h.26c.23 0 .38-.17.38-.37v-.29c0-.21-.15-.42-.38-.42h-2.65V3.22c0-.21-.15-.42-.38-.42H7.05zm.76 1.04h2.42v.75h-2.38v-.75zm-2.49 1.79h7.4v8.23H5.29V6.28zm1.82 1.49a.38.38 0 0 0-.38.42v4.32c0 .21.19.42.38.42h.42a.38.38 0 0 0 .38-.42V7.77a.38.38 0 0 0-.38-.42h-.42zm3.37 0a.38.38 0 0 0-.38.42v4.32c0 .21.15.42.38.42h.38a.38.38 0 0 0 .38-.42V7.77a.38.38 0 0 0-.38-.42h-.38z"/></Viewbox>
                   </Button>
                 </StackPanel>
               </Panel>
@@ -215,5 +158,6 @@
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
+
   </StackPanel>
 </UserControl>

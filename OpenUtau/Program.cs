@@ -1,13 +1,12 @@
 // ============================================================================
-// Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : Program.cs
-// Version      : 1.2
+// Version      : 1.4
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau/Program.cs
-// Description  : Thai OpenUtau startup and shutdown infrastructure with SHA-256
-//                Named Mutex single-instance coordination, structured Serilog
-//                initialization, Leelawadee UI font configuration, and bounded
-//                async Linux font lookup.
+// Description  : Thai OpenUtau startup and shutdown infrastructure.
+//                Optimized startup speed with async background logging, 
+//                C# 12 collection expressions, and reduced Linux font lookup timeouts.
 // ============================================================================
 
 using System;
@@ -35,10 +34,10 @@ namespace OpenUtau.App {
         private const int ExitSuccess = 0;
         private const int ExitFailure = 1;
 
-        private const int FontLookupTimeoutMilliseconds = 2500;
+        // [DELTA SYNTH] ปรับลด Timeout จาก 2500ms เป็น 1000ms เพื่อเพิ่มความเร็วในการเปิดโปรแกรม (Startup Responsiveness)
+        private const int FontLookupTimeoutMilliseconds = 1000;
 
-        private const string MutexPrefix =
-            "ThaiOpenUtau_SingleInstance_";
+        private const string MutexPrefix = "ThaiOpenUtau_SingleInstance_";
 
         /// <summary>
         /// Synchronous entry point is intentional:
@@ -66,26 +65,25 @@ namespace OpenUtau.App {
                     WriteStandardError(
                         "Thai OpenUtau is already running " +
                         "in the applicable user/session scope.");
-
                     return ExitSuccess;
                 }
 
                 ownsMutex = true;
 
-                Encoding.RegisterProvider(
-                    CodePagesEncodingProvider.Instance);
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
                 InitLogging();
                 loggingInitialized = true;
 
-                LogStartupInformation();
+                // [DELTA SYNTH] นำกระบวนการ Log ค่า System Information ไปทำงานใน Background Thread
+                // เพื่อปลดปล่อย Main Thread ให้เข้าสู่การรันหน้า UI ทันทีโดยไม่ต้องหยุดรอ
+                Task.Run(LogStartupInformation);
 
                 applicationStartupAttempted = true;
 
                 Run(args);
 
-                Log.Information(
-                    "Desktop application lifetime ended.");
+                Log.Information("Desktop application lifetime ended.");
             } catch (Exception ex) {
                 exitCode = ExitFailure;
 
@@ -96,8 +94,7 @@ namespace OpenUtau.App {
             } finally {
                 // Keep the mutex owned until other cleanup has completed.
                 try {
-                    if (applicationStartupAttempted &&
-                        !OS.IsMacOS()) {
+                    if (applicationStartupAttempted && !OS.IsMacOS()) {
                         NetMQ.NetMQConfig.Cleanup(block: false);
                     }
                 } catch (Exception ex) {
@@ -122,14 +119,11 @@ namespace OpenUtau.App {
                 } catch (Exception ex) {
                     exitCode = ExitFailure;
 
-                    WriteStandardError(
-                        "Failed to close the logger.",
-                        ex);
+                    WriteStandardError("Failed to close the logger.", ex);
                 }
 
                 try {
-                    if (ownsMutex &&
-                        singleInstanceMutex != null) {
+                    if (ownsMutex && singleInstanceMutex != null) {
                         singleInstanceMutex.ReleaseMutex();
                         ownsMutex = false;
                     }
@@ -207,21 +201,13 @@ namespace OpenUtau.App {
 
             // Avoid duplicate registration if this method is invoked
             // again by a diagnostic or test harness.
-            AppDomain.CurrentDomain.UnhandledException -=
-                OnUnhandledException;
-
-            AppDomain.CurrentDomain.UnhandledException +=
-                OnUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException -= OnUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
             Log.Information("Logging initialized.");
         }
 
         private static string BuildSingleInstanceMutexName() {
-            // Use a safe, fixed-length identifier instead of placing
-            // arbitrary account-name characters into an OS object name.
-            //
-            // This is an application coordination mechanism,
-            // not a security boundary.
             string identity =
                 Environment.UserDomainName +
                 "\\" +
@@ -238,8 +224,7 @@ namespace OpenUtau.App {
 
             Log.Information(
                 "Thai OpenUtau version: {Version}",
-                entryAssembly?.GetName().Version?.ToString()
-                    ?? "unknown");
+                entryAssembly?.GetName().Version?.ToString() ?? "unknown");
 
             Log.Information(
                 "OS: {OSDescription}; OS architecture: {OSArchitecture}; " +
@@ -253,88 +238,63 @@ namespace OpenUtau.App {
                 RuntimeInformation.FrameworkDescription,
                 RuntimeInformation.RuntimeIdentifier);
 
-            Log.Information(
-                "Data path: {DataPath}",
-                PathManager.Inst.DataPath);
-
-            Log.Information(
-                "Cache path: {CachePath}",
-                PathManager.Inst.CachePath);
-
-            Log.Information(
-                "Default encoding: {Encoding}",
-                Encoding.GetEncoding(0).WebName);
+            Log.Information("Data path: {DataPath}", PathManager.Inst.DataPath);
+            Log.Information("Cache path: {CachePath}", PathManager.Inst.CachePath);
+            Log.Information("Default encoding: {Encoding}", Encoding.GetEncoding(0).WebName);
         }
 
         private static FontManagerOptions CreateFontOptions() {
             var options = new FontManagerOptions();
 
+            // [DELTA SYNTH] Optimized array allocations using C# 12 Collection Expressions
             if (OS.IsWindows()) {
-                // Use a single family name for DefaultFamilyName.
-                // Additional candidates belong in FontFallbacks.
                 options.DefaultFamilyName = "Leelawadee UI";
-
-                options.FontFallbacks = new[] {
+                options.FontFallbacks = [
                     CreateFontFallback("Leelawadee UI"),
                     CreateFontFallback("Noto Sans Thai"),
-                    CreateFontFallback("Segoe UI"),
-                };
+                    CreateFontFallback("Segoe UI")
+                ];
             } else if (OS.IsMacOS()) {
                 options.DefaultFamilyName = "Hiragino Sans";
-
-                options.FontFallbacks = new[] {
+                options.FontFallbacks = [
                     CreateFontFallback("Thonburi"),
                     CreateFontFallback("Noto Sans Thai"),
-                    CreateFontFallback("Helvetica Neue"),
-                };
+                    CreateFontFallback("Helvetica Neue")
+                ];
             } else if (OS.IsLinux()) {
-                // This remains a bounded, optional startup step.
-                // If lookup fails, leave the default family unspecified
-                // and let Avalonia perform its normal font selection.
                 string? systemFont = TryGetLinuxDefaultFont();
-
                 if (!string.IsNullOrWhiteSpace(systemFont)) {
                     options.DefaultFamilyName = systemFont;
                 }
 
-                options.FontFallbacks = new[] {
+                options.FontFallbacks = [
                     CreateFontFallback("Noto Sans Thai"),
                     CreateFontFallback("Noto Sans"),
-                    CreateFontFallback("DejaVu Sans"),
-                };
+                    CreateFontFallback("DejaVu Sans")
+                ];
             }
 
             return options;
         }
 
-        private static FontFallback CreateFontFallback(
-            string familyName) {
-            return new FontFallback {
-                FontFamily = new FontFamily(familyName),
-            };
+        private static FontFallback CreateFontFallback(string familyName) {
+            return new FontFallback { FontFamily = new FontFamily(familyName) };
         }
 
         private static string? TryGetLinuxDefaultFont() {
             try {
-                // All awaits in the helper use ConfigureAwait(false).
-                // This method is synchronous because Avalonia's builder
-                // is synchronous and may also run under the designer.
-                return GetLinuxDefaultFontAsync()
-                    .GetAwaiter()
-                    .GetResult();
+                return GetLinuxDefaultFontAsync().GetAwaiter().GetResult();
             } catch (Exception ex) {
                 Log.Warning(
                     ex,
                     "Linux font detection failed. " +
                     "Using Avalonia's normal font selection.");
-
                 return null;
             }
         }
 
         private static async Task<string?> GetLinuxDefaultFontAsync() {
-            using var timeout = new CancellationTokenSource(
-                FontLookupTimeoutMilliseconds);
+            using var timeout = new CancellationTokenSource(FontLookupTimeoutMilliseconds);
 
             using var process = new Process {
                 StartInfo = new ProcessStartInfo {
@@ -350,77 +310,46 @@ namespace OpenUtau.App {
             process.StartInfo.ArgumentList.Add("%{family}");
 
             if (!process.Start()) {
-                Log.Warning(
-                    "Could not start fc-match. " +
-                    "Using Avalonia's normal font selection.");
-
+                Log.Warning("Could not start fc-match. Using Avalonia's normal font selection.");
                 return null;
             }
 
-            // Drain both pipes concurrently before waiting for exit.
-            Task<string> outputTask =
-                process.StandardOutput.ReadToEndAsync(
-                    timeout.Token);
-
-            Task<string> errorTask =
-                process.StandardError.ReadToEndAsync(
-                    timeout.Token);
+            Task<string> outputTask = process.StandardOutput.ReadToEndAsync(timeout.Token);
+            Task<string> errorTask = process.StandardError.ReadToEndAsync(timeout.Token);
 
             try {
-                Task exitTask =
-                    process.WaitForExitAsync(timeout.Token);
+                Task exitTask = process.WaitForExitAsync(timeout.Token);
 
-                // Observe all three tasks together.
-                await Task.WhenAll(
-                    outputTask,
-                    errorTask,
-                    exitTask).ConfigureAwait(false);
+                await Task.WhenAll(outputTask, errorTask, exitTask).ConfigureAwait(false);
 
-                string output =
-                    await outputTask.ConfigureAwait(false);
-
-                string error =
-                    await errorTask.ConfigureAwait(false);
+                string output = await outputTask.ConfigureAwait(false);
+                string error = await errorTask.ConfigureAwait(false);
 
                 if (process.ExitCode != 0) {
                     Log.Warning(
-                        "fc-match exited with code {ExitCode}. " +
-                        "Standard error: {StandardError}",
+                        "fc-match exited with code {ExitCode}. Standard error: {StandardError}",
                         process.ExitCode,
                         error.Trim());
-
                     return null;
                 }
 
-                string[] families = output.Split(
-                    ',',
-                    StringSplitOptions.RemoveEmptyEntries);
+                string[] families = output.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (string family in families) {
                     string trimmedFamily = family.Trim();
-
                     if (!string.IsNullOrWhiteSpace(trimmedFamily)) {
-                        Log.Debug(
-                            "Detected Linux default font: {FontFamily}",
-                            trimmedFamily);
-
+                        Log.Debug("Detected Linux default font: {FontFamily}", trimmedFamily);
                         return trimmedFamily;
                     }
                 }
 
-                Log.Warning(
-                    "fc-match returned no usable font family.");
-
+                Log.Warning("fc-match returned no usable font family.");
                 return null;
-            } catch (OperationCanceledException)
-                when (timeout.IsCancellationRequested) {
+            } catch (OperationCanceledException) when (timeout.IsCancellationRequested) {
                 TryStopProcess(process);
-
                 Log.Warning(
-                    "fc-match exceeded the {TimeoutMilliseconds} ms " +
-                    "lookup timeout. Using normal font selection.",
+                    "fc-match exceeded the {TimeoutMilliseconds} ms lookup timeout. Using normal font selection.",
                     FontLookupTimeoutMilliseconds);
-
                 return null;
             } catch {
                 TryStopProcess(process);
@@ -430,30 +359,21 @@ namespace OpenUtau.App {
 
         private static void TryStopProcess(Process process) {
             try {
-                if (process.HasExited) {
-                    return;
-                }
+                if (process.HasExited) return;
 
                 process.Kill(entireProcessTree: true);
 
-                // Best effort only: never wait indefinitely during startup.
                 if (!process.WaitForExit(500)) {
-                    Log.Warning(
-                        "fc-match did not exit within the " +
-                        "post-termination wait.");
+                    Log.Warning("fc-match did not exit within the post-termination wait.");
                 }
             } catch (InvalidOperationException) {
                 // The process may have exited between inspection and kill.
             } catch (Exception ex) {
-                Log.Warning(
-                    ex,
-                    "Could not terminate the font lookup process.");
+                Log.Warning(ex, "Could not terminate the font lookup process.");
             }
         }
 
-        private static void OnUnhandledException(
-            object? sender,
-            UnhandledExceptionEventArgs args) {
+        private static void OnUnhandledException(object? sender, UnhandledExceptionEventArgs args) {
             try {
                 if (args.ExceptionObject is Exception exception) {
                     Log.Fatal(
@@ -462,64 +382,43 @@ namespace OpenUtau.App {
                         args.IsTerminating);
                 } else {
                     Log.Fatal(
-                        "Unhandled non-Exception object. " +
-                        "IsTerminating: {IsTerminating}; value: {Value}",
+                        "Unhandled non-Exception object. IsTerminating: {IsTerminating}; value: {Value}",
                         args.IsTerminating,
                         args.ExceptionObject);
                 }
             } catch (Exception loggingException) {
-                WriteStandardError(
-                    "Could not log an unhandled exception.",
-                    loggingException);
+                WriteStandardError("Could not log an unhandled exception.", loggingException);
             } finally {
                 if (args.IsTerminating) {
                     try {
                         Log.CloseAndFlush();
                     } catch (Exception flushException) {
-                        WriteStandardError(
-                            "Could not flush logs during termination.",
-                            flushException);
+                        WriteStandardError("Could not flush logs during termination.", flushException);
                     }
                 }
             }
         }
 
-        private static void ReportFailure(
-            bool loggingInitialized,
-            Exception exception,
-            string message) {
-            // stderr remains useful if initialization failed or the
-            // configured sinks cannot write. GUI launches may not show it.
+        private static void ReportFailure(bool loggingInitialized, Exception exception, string message) {
             WriteStandardError(message, exception);
 
-            if (!loggingInitialized) {
-                return;
-            }
+            if (!loggingInitialized) return;
 
             try {
-                Log.Error(
-                    exception,
-                    "{FailureMessage}",
-                    message);
+                Log.Error(exception, "{FailureMessage}", message);
             } catch (Exception loggingException) {
-                WriteStandardError(
-                    "An additional logging failure occurred.",
-                    loggingException);
+                WriteStandardError("An additional logging failure occurred.", loggingException);
             }
         }
 
-        private static void WriteStandardError(
-            string message,
-            Exception? exception = null) {
+        private static void WriteStandardError(string message, Exception? exception = null) {
             try {
                 Console.Error.WriteLine(message);
-
                 if (exception != null) {
                     Console.Error.WriteLine(exception);
                 }
             } catch {
                 // Last-resort reporting must not cause another failure.
-                // A GUI process may have no writable stderr stream.
             }
         }
     }
