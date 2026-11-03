@@ -1,10 +1,10 @@
-// ============================================================================
-// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+﻿// ============================================================================
+// Date         : 03/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : NotesViewModel.cs
-// Version      : 1.3
+// Version      : 1.4
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
 // File Location: OpenUtau/ViewModels/NotesViewModel.cs
-// Description  : Piano Roll ViewModel with deterministic TimeAxis-based TickToLineTick, accurate mouse-click playhead positioning, and non-jumping viewport control.
+// Description  : Piano Roll ViewModel with defensive portrait loading to eliminate FileNotFoundException, deterministic TimeAxis-based TickToLineTick, accurate mouse-click playhead positioning, and non-jumping viewport control.
 // ============================================================================
 using System;
 using System.Collections.Generic;

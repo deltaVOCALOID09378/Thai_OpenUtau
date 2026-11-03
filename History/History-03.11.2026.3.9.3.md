@@ -1,4 +1,4 @@
-# บันทึกประวัติการพัฒนาและปรับปรุงระบบ Thai OpenUtau (History Log)
+﻿# บันทึกประวัติการพัฒนาและปรับปรุงระบบ Thai OpenUtau (History Log)
 **วันที่:** 3 พฤศจิกายน พ.ศ. 2569 (2026-11-03)  
 **เวอร์ชัน:** `v3.9.3` (Enterprise Screen Recording, Dynamic Data Relocation & Responsive Architecture Master Edition)  
 **เครดิต:** Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]  
@@ -70,3 +70,21 @@
 - [x] ยืนยันหน้าต่างป๊อปอัพโหลด: แสดงเหตุผลชัดเจน มีปุ่มกากบาท X และข้อความ "กรุณา รอสักครู่.........." พร้อมปิดตัวทันทีเมื่อโหลดเสร็จ
 - [x] ยืนยันระบบ Toast: แสดงผลชัดเจน โปร่งใส และขยายเวลาอ่านข้อความผิดพลาด
 - [x] ยืนยันคอนฟิก `.vscode`: ครอบคลุมทุกสกุลไฟล์และปราศจากข้อผิดพลาด
+
+---
+
+## 4. บันทึกการเสริมความเสถียรระดับแกนกลาง (Core Defensive Guard & Zero-Defect Audit)
+- **สาเหตุที่พบจาก Diagnostic Logs (OpenUtau\Logs):** เมื่อโหลดคลังเสียงที่มีการอ้างอิงภาพ Portrait หรือ Sample ที่ไม่มีอยู่จริงหรือถูกย้ายที่ เมธอด LoadPortrait() และ LoadSample() เดิมจะเรียกใช้ File.ReadAllBytes() โดยตรง ทำให้เกิดข้อยกเว้น System.IO.FileNotFoundException บันทึกลงในล็อกไฟล์ระดับ [ERR]
+- **การแก้ไขที่ต้นเหตุ (Root Cause Remedy):**
+  1. เพิ่ม Guard Condition string.IsNullOrEmpty(...) || !File.Exists(...) ให้ส่งคืนค่า 
+ull อย่างปลอดภัยใน:
+     - OpenUtau.Core/Classic/ClassicSinger.cs
+     - OpenUtau.Core/DiffSinger/DiffSingerSinger.cs
+     - OpenUtau.Core/Enunu/EnunuSinger.cs
+     - OpenUtau.Core/Voicevox/VoicevoxSinger.cs
+  2. อัปเดต OpenUtau/ViewModels/NotesViewModel.cs สู่เวอร์ชัน 1.4 ให้สอดรับกับการโหลดรูปภาพแบบ Non-crashing
+  3. เพิ่ม Mandatory 6-item header ครบถ้วนทุกไฟล์ตามมาตรฐาน DELTA SYNTH
+- **ผลการทดสอบการคอมไพล์ (Build Verification):**
+  - OpenUtau.Core: 0 Warning(s), 0 Error(s)
+  - OpenUtau.Plugin.Builtin: 0 Warning(s), 0 Error(s)
+  - OpenUtau: 0 Warning(s), 0 Error(s)

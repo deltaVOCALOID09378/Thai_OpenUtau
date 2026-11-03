@@ -1,3 +1,11 @@
+﻿// ============================================================================
+// Date         : 03/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : ClassicSinger.cs
+// Version      : 1.0
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/Classic/ClassicSinger.cs
+// Description  : Classic UTAU singer loader with defensive portrait check to avoid FileNotFoundException.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -208,7 +216,7 @@ namespace OpenUtau.Classic {
         }
 
         public override byte[] LoadPortrait() {
-            return string.IsNullOrEmpty(Portrait)
+            return string.IsNullOrEmpty(Portrait) || !File.Exists(Portrait)
                 ? null
                 : File.ReadAllBytes(Portrait);
         }

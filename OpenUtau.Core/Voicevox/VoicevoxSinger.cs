@@ -1,4 +1,12 @@
-﻿using System;
+﻿// ============================================================================
+// Date         : 03/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : VoicevoxSinger.cs
+// Version      : 1.0
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/Voicevox/VoicevoxSinger.cs
+// Description  : VOICEVOX singer loader with defensive portrait and sample checks to avoid FileNotFoundException.
+// ============================================================================
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -177,13 +185,13 @@ namespace OpenUtau.Core.Voicevox {
         }
 
         public override byte[] LoadPortrait() {
-            return string.IsNullOrEmpty(Portrait)
+            return string.IsNullOrEmpty(Portrait) || !File.Exists(Portrait)
                 ? null
                 : File.ReadAllBytes(Portrait);
         }
 
         public override byte[] LoadSample() {
-            return string.IsNullOrEmpty(Sample)
+            return string.IsNullOrEmpty(Sample) || !File.Exists(Sample)
                 ? null
                 : File.ReadAllBytes(Sample);
         }
