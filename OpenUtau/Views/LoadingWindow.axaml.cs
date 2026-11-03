@@ -34,7 +34,38 @@ namespace OpenUtau.App.Views {
             loadingDialog = new LoadingWindow() {
                 Title = "Thai OpenUtau Loading"
             };
-            loadingDialog.Text.Text = "กำลังโหลดระบบ... / Loading...";
+            loadingDialog.Text.Text = "ระบบกำลังเตรียมข้อมูลสำหรับการทำงาน...\n\nกรุณา รอสักครู่..........";
+        }
+
+        public void OnCloseButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e) {
+            CloseLoadingWindow();
+        }
+
+        public static string FormatReason(string? loadObject) {
+            string obj = (loadObject ?? string.Empty).ToLowerInvariant().Trim();
+            if (obj.Contains("singer") || obj.Contains("นักร้อง")) {
+                return "ระบบกำลังโหลดข้อมูลนักร้องและเสียงพากย์...";
+            }
+            if (obj.Contains("project") || obj.Contains("โปรเจกต์") || obj.Contains("track") || obj.Contains("แทร็ก")) {
+                return "ระบบกำลังโหลดข้อมูลโปรเจกต์และแทร็กเสียง...";
+            }
+            if (obj.Contains("oto")) {
+                return "ระบบกำลังโหลดข้อมูลการตั้งค่า Oto.ini...";
+            }
+            if (obj.Contains("plugin") || obj.Contains("ปลั๊กอิน")) {
+                return "ระบบกำลังประมวลผลปลั๊กอินคำสั่ง...";
+            }
+            return !string.IsNullOrWhiteSpace(loadObject) ? $"ระบบกำลังโหลดข้อมูล: {loadObject}" : "ระบบกำลังเตรียมข้อมูลสำหรับการทำงาน...";
+        }
+
+        public static void SetLoadingStatus(string reason, string? detail = null) {
+            string bottomLine = "กรุณา รอสักครู่..........";
+            string msg = string.IsNullOrWhiteSpace(detail)
+                ? $"{reason}\n\n{bottomLine}"
+                : $"{reason}\n{detail}\n\n{bottomLine}";
+            if (loadingDialog != null) {
+                loadingDialog.Text.Text = msg;
+            }
         }
 
         private static void ShowLoadingWindow(Window parent) {

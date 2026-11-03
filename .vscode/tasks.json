@@ -1,0 +1,76 @@
+// ============================================================================
+// 1. วันที่แก้ไข (Date): 3 พฤศจิกายน พ.ศ. 2569 (November 3, 2026)
+// 2. ชื่อไฟล์ (File Name): tasks.json
+// 3. เวอร์ชัน (Version): 1.0
+// 4. เครดิตผู้สร้าง (Creator Credit):
+//    Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
+//    [ Original by DELTA SYNTH ]
+// 5. ตำแหน่งจัดวางไฟล์ (File Location):
+//    d:\Program Developing\Thai_OpenUtau\.vscode\tasks.json
+// 6. รายละเอียดการแก้ไข (Modification Summary):
+//    - กำหนด Tasks มาตรฐานสำหรับ Build, Rebuild, Test, Clean ของโซลูชัน Thai OpenUtau
+//    - เชื่อมโยงกับ launch.json เป็น preLaunchTask อย่างสมบูรณ์ ไร้ข้อผิดพลาด
+// ============================================================================
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Thai OpenUtau.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "clean",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "clean",
+                "${workspaceFolder}/Thai OpenUtau.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "${workspaceFolder}/Thai OpenUtau.sln",
+                "--logger",
+                "console;verbosity=normal"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "publish-win-x64",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/OpenUtau/OpenUtau.csproj",
+                "-c",
+                "Release",
+                "-r",
+                "win-x64",
+                "--self-contained",
+                "false"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

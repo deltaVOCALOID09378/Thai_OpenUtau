@@ -45,6 +45,11 @@ namespace OpenUtau.App.Capture {
         public bool IsRecording => isRecording;
         public Action<string>? OnStatusChanged { get; set; }
         public Action<bool>? OnRecordingStateChanged { get; set; }
+        public Action? BeforeRenderFrame { get; set; }
+        public Action? AfterRenderFrame { get; set; }
+        public Action<TimeSpan>? OnRecordingDurationTick { get; set; }
+        private Stopwatch? recordingStopwatch;
+        public TimeSpan ElapsedTime => recordingStopwatch?.Elapsed ?? TimeSpan.Zero;
 
         /// <summary>
         /// คำนวณและดึงตำแหน่งโฟลเดอร์สำหรับส่งออกไฟล์ที่ปลอดภัย
@@ -161,7 +166,12 @@ namespace OpenUtau.App.Capture {
                 var dpi = new Vector(96 * scale, 96 * scale);
 
                 using var rtb = new RenderTargetBitmap(new PixelSize(width, height), dpi);
-                rtb.Render(control);
+                BeforeRenderFrame?.Invoke();
+                try {
+                    rtb.Render(control);
+                } finally {
+                    AfterRenderFrame?.Invoke();
+                }
                 await Task.Run(() => rtb.Save(fullPath));
 
                 Log.Information("Piano Roll screenshot captured: {FullPath}", fullPath);
@@ -250,6 +260,7 @@ namespace OpenUtau.App.Capture {
                 ffmpegStdin = new BufferedStream(ffmpegProcess.StandardInput.BaseStream, 8 * 1024 * 1024);
 
                 isRecording = true;
+                recordingStopwatch = Stopwatch.StartNew();
                 cts = new CancellationTokenSource();
                 frameQueue = new BlockingCollection<byte[]>(new ConcurrentQueue<byte[]>(), boundedCapacity: 120);
 
@@ -308,6 +319,8 @@ namespace OpenUtau.App.Capture {
 
             recordTimer?.Stop();
             recordTimer = null;
+            recordingStopwatch?.Stop();
+            recordingStopwatch = null;
             frameQueue?.CompleteAdding();
             cts?.Cancel();
 

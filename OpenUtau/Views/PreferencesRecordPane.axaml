@@ -25,13 +25,8 @@
       </StackPanel>
 
       <StackPanel Spacing="5">
-        <TextBlock Text="Quality (Piano Roll only)"/>
-        <ComboBox SelectedIndex="{Binding CaptureResolutionIndex}" HorizontalAlignment="Stretch">
-          <ComboBoxItem Content="720p"/>
-          <ComboBoxItem Content="1080p"/>
-          <ComboBoxItem Content="2K"/>
-          <ComboBoxItem Content="4K"/>
-        </ComboBox>
+        <TextBlock Text="Quality (Piano Roll: 240p - 4K)"/>
+        <ComboBox ItemsSource="{Binding CaptureResolutions}" SelectedItem="{Binding SelectedCaptureResolution}" HorizontalAlignment="Stretch"/>
       </StackPanel>
 
       <StackPanel Spacing="5">

@@ -903,13 +903,22 @@
       <c:NotePropertiesControl x:Name="NoteProperties"/>
     </Border>
     <!-- Floating Transparent Screen Capture & Video Toolbar (Bottom-Right Corner) -->
-    <Border Grid.Column="0" Grid.ColumnSpan="9"
+    <Border x:Name="CaptureToolbarBorder" Grid.Column="0" Grid.ColumnSpan="9"
             HorizontalAlignment="Right" VerticalAlignment="Bottom"
             Margin="0,0,24,24" ZIndex="1000"
             Background="#66202025" CornerRadius="8"
             BorderBrush="#40FFFFFF" BorderThickness="1"
             BoxShadow="0 4 12 0 #40000000">
-      <StackPanel Orientation="Horizontal" Spacing="4" Margin="4">
+      <StackPanel Orientation="Horizontal" Spacing="4" Margin="6,4">
+        <!-- Duration Display (Visible only when recording, excluded from recorded output) -->
+        <TextBlock x:Name="CaptureDurationText"
+                   VerticalAlignment="Center"
+                   FontFamily="Leelawadee UI, sans-serif"
+                   FontSize="12" FontWeight="SemiBold"
+                   Foreground="#F0F0F0"
+                   Margin="4,0,2,0"
+                   IsVisible="False"
+                   Text="00:00"/>
         <!-- Photo / Screenshot Camera Button -->
         <Button x:Name="CapturePhotoButton"
                 Width="36" Height="36" Padding="0"

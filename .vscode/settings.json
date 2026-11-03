@@ -1,0 +1,29 @@
+// ============================================================================
+// 1. วันที่แก้ไข (Date): 3 พฤศจิกายน พ.ศ. 2569 (November 3, 2026)
+// 2. ชื่อไฟล์ (File Name): settings.json
+// 3. เวอร์ชัน (Version): 2.0 (อัปเกรดจาก 1.0 -> 2.0)
+// 4. เครดิตผู้สร้าง (Creator Credit):
+//    Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
+//    [ Original by DELTA SYNTH ]
+// 5. ตำแหน่งจัดวางไฟล์ (File Location):
+//    d:\Program Developing\Thai_OpenUtau\.vscode\settings.json
+// 6. รายละเอียดการแก้ไข (Modification Summary):
+//    - กำจัดปัญหา Path ค้างบนไดรฟ์อื่น ปรับเป็นตำแหน่งเวิร์กสเปซปัจจุบัน
+//    - กำหนด Solution หลัก Thai OpenUtau.sln สำหรับ Roslyn, DotRush และ OmniSharp
+//    - ปรับแต่งการเข้ารหัสไฟล์เป็น UTF-8 และสอดคล้องกับมาตรฐาน DELTA SYNTH
+// ============================================================================
+{
+    "dotnet.defaultSolution": "Thai OpenUtau.sln",
+    "omnisharp.defaultLaunchSolution": "Thai OpenUtau.sln",
+    "dotrush.roslyn.projectOrSolutionFiles": [
+        "Thai OpenUtau.sln",
+        "OpenUtau/OpenUtau.csproj",
+        "OpenUtau.Core/OpenUtau.Core.csproj",
+        "OpenUtau.Plugin.Builtin/OpenUtau.Plugin.Builtin.csproj",
+        "OpenUtau.Test/OpenUtau.Test.csproj"
+    ],
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "csharp.inlayHints.enableInlayHintsForImplicitObjectCreation": true,
+    "csharp.inlayHints.enableInlayHintsForImplicitVariableTypes": true
+}

@@ -22,6 +22,19 @@
         Padding="40,30,40,25"
         BoxShadow="0 12 40 0 #C0000000">
     <Grid RowDefinitions="Auto, Auto, Auto, Auto">
+        <!-- ปุ่มกากบาท (X) ปิดหน้าต่างป๊อปอัพที่มุมขวาบน -->
+        <Button Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                Width="28" Height="28" Background="Transparent" BorderThickness="0"
+                Margin="0,-15,-25,0" Cursor="Hand" Click="OnCloseButtonClick"
+                ToolTip.Tip="ปิดหน้าต่างโหลด / Dismiss Loading">
+            <Button.Styles>
+                <Style Selector="Button:pointerover">
+                    <Setter Property="Background" Value="#33FF4422"/>
+                </Style>
+            </Button.Styles>
+            <Path Data="M 6.4 5 L 5 6.4 L 10.6 12 L 5 17.6 L 6.4 19 L 12 13.4 L 17.6 19 L 19 17.6 L 13.4 12 L 19 6.4 L 17.6 5 L 12 10.6 Z"
+                  Fill="#F0F0F0" Stretch="Uniform" Width="11" Height="11"/>
+        </Button>
         
         <!-- โลโก้แบรนด์ (ปรับให้เรนเดอร์ภาพคมชัดสูง) -->
         <Image Grid.Row="0" Margin="0,0,0,20" Width="96" Height="96"

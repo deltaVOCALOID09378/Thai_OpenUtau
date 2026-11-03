@@ -500,6 +500,7 @@ namespace OpenUtau.App.Views {
         public void OnNext(UCommand cmd, bool isUndo) {
             if (cmd is LoadingNotification loadingNotif && loadingNotif.window == typeof(SingersDialog)) {
                 if (loadingNotif.startLoading) {
+                    LoadingWindow.SetLoadingStatus(LoadingWindow.FormatReason(loadingNotif.loadObject));
                     LoadingWindow.BeginLoading(this);
                 } else {
                     LoadingWindow.EndLoading();

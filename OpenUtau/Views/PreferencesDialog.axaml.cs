@@ -49,6 +49,29 @@ namespace OpenUtau.App.Views {
             }
         }
 
+        void OpenUserDataFolder(object sender, RoutedEventArgs e) {
+            try {
+                Directory.CreateDirectory(PathManager.Inst.DataPath);
+                OS.OpenFolder(PathManager.Inst.DataPath);
+            } catch (Exception ex) {
+                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
+            }
+        }
+
+        void ResetUserDataPath(object sender, RoutedEventArgs e) {
+            viewModel?.ResetUserDataPath();
+        }
+
+        async void SelectUserDataPath(object sender, RoutedEventArgs e) {
+            var path = await FilePicker.OpenFolder(this, "prefs.paths.data", viewModel?.UserDataPath);
+            if (string.IsNullOrEmpty(path)) {
+                return;
+            }
+            if (Directory.Exists(path)) {
+                viewModel?.SetUserDataPath(path);
+            }
+        }
+
         void OpenSingersFolder(object sender, RoutedEventArgs e) {
             try {
                 Directory.CreateDirectory(viewModel!.SingerPath);
@@ -83,6 +106,7 @@ namespace OpenUtau.App.Views {
         }
 
         async void ReloadSingers(object sender, RoutedEventArgs e) {
+            LoadingWindow.SetLoadingStatus(LoadingWindow.FormatReason("singer"));
             LoadingWindow.BeginLoading(this);
             await Task.Run(() => {
                 SingerManager.Inst.SearchAllSingers();

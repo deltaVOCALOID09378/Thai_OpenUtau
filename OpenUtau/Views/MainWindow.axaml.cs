@@ -636,6 +636,7 @@ namespace OpenUtau.App.Views {
                 return;
             }
 
+            LoadingWindow.SetLoadingStatus(LoadingWindow.FormatReason("singer"));
             LoadingWindow.BeginLoadingImmediate(this);
             var dialog = await Task.Run(() => lifetime.Windows.FirstOrDefault(w => w is SingersDialog));
             try {
@@ -1327,6 +1328,7 @@ namespace OpenUtau.App.Views {
             var control = canvas.InputHitTest(args.GetPosition(canvas));
             if (control is PartControl partControl && partControl.part is UVoicePart) {
                 if (pianoRoll == null) {
+                    LoadingWindow.SetLoadingStatus(LoadingWindow.FormatReason("track"));
                     LoadingWindow.BeginLoading(this);
 
                     var model = await Task.Run<PianoRollViewModel>(() => new PianoRollViewModel());
@@ -2328,6 +2330,14 @@ namespace OpenUtau.App.Views {
         }
 
         public void OnNext(UCommand cmd, bool isUndo) {
+            if (cmd is LoadingNotification loadingNotif && loadingNotif.window == typeof(MainWindow)) {
+                if (loadingNotif.startLoading) {
+                    LoadingWindow.SetLoadingStatus(LoadingWindow.FormatReason(loadingNotif.loadObject));
+                    LoadingWindow.BeginLoading(this);
+                } else {
+                    LoadingWindow.EndLoading();
+                }
+            }
             if (cmd is SingersRefreshedNotification) {
                 TrackHeaderViewModel.ClearAvatarCache();
             }

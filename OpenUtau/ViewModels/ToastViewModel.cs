@@ -60,19 +60,37 @@ namespace OpenUtau.App.ViewModels
 
         private ToastViewModel() { }
 
-        // ShowMessage — แสดง Toast แล้วลบออกอัตโนมัติหลัง 1 วินาที
+        // ClarifyMessage — ถอดรหัสข้อความเทคนิคให้อธิบายตรงไปตรงมา เข้าใจง่าย
+        public static string ClarifyMessage(string rawMessage)
+        {
+            if (string.IsNullOrWhiteSpace(rawMessage)) return rawMessage;
+            if (rawMessage.Contains("NoResamplerException") || rawMessage.Contains("Resampler"))
+                return "⚠️ ไม่พบ Resampler ที่กำหนด: แนะนำตรวจสอบการตั้งค่า Resamplers หรือเลือกใช้ Worldline";
+            if (rawMessage.Contains("NoWavtoolException") || rawMessage.Contains("Wavtool"))
+                return "⚠️ ไม่พบ Wavtool: แนะนำตรวจสอบการตั้งค่า Wavtools ใน Preferences";
+            if (rawMessage.Contains("UnauthorizedAccessException") || rawMessage.Contains("Access to the path is denied"))
+                return "🔒 ไม่สามารถเขียนไฟล์ได้เนื่องจากสิทธิ์ของระบบ: โปรดตรวจสอบสิทธิ์โฟลเดอร์หรือพื้นที่จัดเก็บ";
+            if (rawMessage.Contains("Sharing violation") || rawMessage.Contains("used by another process"))
+                return "📄 ไฟล์กำลังถูกใช้งานโดยโปรแกรมอื่น: ระบบกำลังรอเพื่อลองใหม่อย่างปลอดภัย";
+            if (rawMessage.Contains("FFmpeg not found"))
+                return "⚠️ ไม่พบ ffmpeg.exe: โปรดวาง ffmpeg.exe ในโฟลเดอร์โปรแกรมเพื่อเปิดใช้การบันทึกวิดีโอ";
+            return rawMessage;
+        }
+
+        // ShowMessage — แสดง Toast โปร่งใส แจ้งเตือนครบถ้วน พร้อมเวลาแสดงผลที่เหมาะสม
         public void ShowMessage(string message, string level)
         {
+            string friendlyMessage = ClarifyMessage(message);
             Dispatcher.UIThread.Post(() =>
             {
-                var toast = new ToastMessage(message, level);
+                var toast = new ToastMessage(friendlyMessage, level);
                 Messages.Add(toast);
 
-                // ตั้ง timer 1 วินาที (ลดจาก 2s เดิม ตาม DELTA SYNTH UX Standard)
-                // Toast หายเร็ว ไม่รบกวนการทำงาน
+                // ปรับระยะเวลา: 5s สำหรับ Error/Fatal เพื่อให้ผู้ใช้อ่านรายละเอียดได้ทัน, 3s สำหรับ Info/Warning
+                double durationSeconds = (level == "Error" || level == "Fatal") ? 5.0 : 3.0;
                 var timer = new DispatcherTimer
                 {
-                    Interval = TimeSpan.FromSeconds(1)
+                    Interval = TimeSpan.FromSeconds(durationSeconds)
                 };
                 timer.Tick += (sender, e) =>
                 {

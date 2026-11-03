@@ -1,0 +1,272 @@
+// ============================================================================
+// 1. วันที่แก้ไข (Date): 3 พฤศจิกายน พ.ศ. 2569 (November 3, 2026)
+// 2. ชื่อไฟล์ (File Name): launch.json
+// 3. เวอร์ชัน (Version): 2.0 (อัปเกรดสะสมจาก 1.0 -> 1.2 -> 1.4 -> 1.6 -> 2.0)
+// 4. เครดิตผู้สร้าง (Creator Credit):
+//    Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
+//    [ Original by OpenUtau Community & Stakira ]
+// 5. ตำแหน่งจัดวางไฟล์ (File Location):
+//    d:\Program Developing\Thai_OpenUtau\.vscode\launch.json
+// 6. รายละเอียดการแก้ไข (Modification Summary):
+//    - หลอมรวมระบบดีบั๊กครอบคลุมทุกภาษา/สกุลไฟล์ (.NET/C#, Python, C++ Native, Tests)
+//    - กำจัดปัญหา Path คลาดเคลื่อน ใช้ ${workspaceFolder} 100% สอดคล้องกับทุกสภาพแวดล้อม
+//    - เพิ่มคอนฟิกดีบั๊ก Python สำหรับระบบ Thai G2P และสคริปต์เครื่องมือเสริม
+//    - เพิ่มคอนฟิกดีบั๊ก C++ Native สำหรับ Core DSP / Resamplers / Worldline
+//    - รองรับ preLaunchTask "build" เชื่อมโยงกับ tasks.json อัตโนมัติ ไร้คำเตือน (Zero Warnings)
+// ============================================================================
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "DELTA SYNTH: Debug Thai OpenUtau (.NET 8)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows/OpenUtau.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "requireExactSource": false,
+            "justMyCode": true,
+            "logging": {
+                "moduleLoad": false,
+                "diagnosticsLog": {
+                    "protocolMessages": false
+                },
+                "programOutput": true,
+                "exceptions": true
+            },
+            "symbolOptions": {
+                "searchPaths": [
+                    "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows",
+                    "${workspaceFolder}/OpenUtau.Core/bin/Debug/net8.0",
+                    "${workspaceFolder}/OpenUtau.Plugin.Builtin/bin/Debug/net8.0"
+                ],
+                "searchMicrosoftSymbolServer": false,
+                "searchNuGetOrgSymbolServer": false
+            },
+            "env": {
+                "DOTNET_CLI_UI_LANGUAGE": "en",
+                "DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTIONS": "1",
+                "PYTHONIOENCODING": "utf-8",
+                "OMP_NUM_THREADS": "2",
+                "MKL_NUM_THREADS": "2",
+                "ORT_TENSORRT_UNAVAILABLE": "1",
+                "DOTNET_PROCESSOR_COUNT": "4",
+                "DOTNET_GCHeapHardLimitPercent": "75"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "1_delta_primary",
+                "order": 1
+            }
+        },
+        {
+            "name": "DELTA SYNTH: Deep Debug (Core & Thai Phonemizer)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows/OpenUtau.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "requireExactSource": false,
+            "justMyCode": false,
+            "logging": {
+                "moduleLoad": false,
+                "diagnosticsLog": {
+                    "protocolMessages": false
+                },
+                "programOutput": true,
+                "exceptions": true,
+                "threadExit": false,
+                "processExit": true
+            },
+            "symbolOptions": {
+                "searchPaths": [
+                    "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows",
+                    "${workspaceFolder}/OpenUtau.Core/bin/Debug/net8.0",
+                    "${workspaceFolder}/OpenUtau.Plugin.Builtin/bin/Debug/net8.0"
+                ],
+                "searchMicrosoftSymbolServer": false,
+                "searchNuGetOrgSymbolServer": false
+            },
+            "env": {
+                "DOTNET_CLI_UI_LANGUAGE": "en",
+                "DOTNET_TieredPGO": "0",
+                "DOTNET_ReadyToRun": "0",
+                "DOTNET_TC_QuickJitForLoops": "0",
+                "PYTHONIOENCODING": "utf-8",
+                "OMP_NUM_THREADS": "2",
+                "MKL_NUM_THREADS": "2",
+                "DOTNET_PROCESSOR_COUNT": "4"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "1_delta_primary",
+                "order": 2
+            }
+        },
+        {
+            "name": "DELTA SYNTH: Clean Verify (Release Mode)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/OpenUtau/bin/Release/net8.0-windows/OpenUtau.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/OpenUtau/bin/Release/net8.0-windows",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "requireExactSource": false,
+            "justMyCode": true,
+            "logging": {
+                "moduleLoad": false,
+                "diagnosticsLog": {
+                    "protocolMessages": false
+                },
+                "programOutput": true,
+                "exceptions": true
+            },
+            "env": {
+                "PYTHONIOENCODING": "utf-8",
+                "OMP_NUM_THREADS": "2",
+                "MKL_NUM_THREADS": "2",
+                "DOTNET_PROCESSOR_COUNT": "4"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "2_delta_verify",
+                "order": 3
+            }
+        },
+        {
+            "name": "DELTA SYNTH: Debug Unit Tests (OpenUtau.Test)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "dotnet",
+            "args": [
+                "test",
+                "${workspaceFolder}/OpenUtau.Test/OpenUtau.Test.csproj",
+                "--no-build",
+                "--logger",
+                "console;verbosity=normal"
+            ],
+            "cwd": "${workspaceFolder}/OpenUtau.Test",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "presentation": {
+                "hidden": false,
+                "group": "2_delta_verify",
+                "order": 4
+            }
+        },
+        {
+            "name": "DELTA SYNTH: Attach to Running OpenUtau",
+            "type": "coreclr",
+            "request": "attach",
+            "processName": "OpenUtau",
+            "requireExactSource": false,
+            "justMyCode": false,
+            "logging": {
+                "moduleLoad": false,
+                "diagnosticsLog": {
+                    "protocolMessages": false
+                },
+                "programOutput": true,
+                "exceptions": true
+            },
+            "symbolOptions": {
+                "searchPaths": [
+                    "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows",
+                    "${workspaceFolder}/OpenUtau.Core/bin/Debug/net8.0",
+                    "${workspaceFolder}/OpenUtau.Plugin.Builtin/bin/Debug/net8.0"
+                ],
+                "searchMicrosoftSymbolServer": false,
+                "searchNuGetOrgSymbolServer": false
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "3_delta_utility",
+                "order": 5
+            }
+        },
+        {
+            "name": "DELTA SYNTH: Debug Current Python File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${fileDirname}",
+            "justMyCode": false,
+            "presentation": {
+                "hidden": false,
+                "group": "4_delta_python",
+                "order": 6
+            }
+        },
+        {
+            "name": "DELTA SYNTH: Debug Thai G2P Model",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/py/g2p/g2p.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/py/g2p",
+            "justMyCode": false,
+            "env": {
+                "PYTHONIOENCODING": "utf-8"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "4_delta_python",
+                "order": 7
+            }
+        },
+        {
+            "name": "DELTA SYNTH: Debug Fixes Script (apply_all_delta_synth_fixes.py)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/apply_all_delta_synth_fixes.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false,
+            "presentation": {
+                "hidden": false,
+                "group": "4_delta_python",
+                "order": 8
+            }
+        },
+        {
+            "name": "DELTA SYNTH: Debug C++ Native (cppvsdbg)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows/OpenUtau.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/OpenUtau/bin/Debug/net8.0-windows",
+            "environment": [],
+            "console": "internalConsole",
+            "presentation": {
+                "hidden": false,
+                "group": "5_delta_native",
+                "order": 9
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "DELTA SYNTH: Full Diagnostics Suite",
+            "configurations": [
+                "DELTA SYNTH: Debug Thai OpenUtau (.NET 8)",
+                "DELTA SYNTH: Debug Thai G2P Model"
+            ],
+            "stopAll": true,
+            "presentation": {
+                "hidden": false,
+                "group": "0_delta_compound",
+                "order": 1
+            }
+        }
+    ]
+}

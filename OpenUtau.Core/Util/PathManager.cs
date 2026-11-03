@@ -1,4 +1,12 @@
 using System;
+// ============================================================================
+// Date         : 03/11/2569 (B.E.) / 03/11/2026 (A.D.)
+// File Name    : PathManager.cs
+// Version      : 1.1
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+// File Location: OpenUtau.Core/Util/PathManager.cs
+// Description  : Added user-selectable data folder (datapath.txt pointer) for Windows reinstall / restore.
+// ============================================================================
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -49,6 +57,13 @@ namespace OpenUtau.Core {
                     string dataHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                     DataPath = Path.Combine(dataHome, "OpenUtau");
                 }
+                DefaultDataPath = DataPath;
+                // DELTA SYNTH: user-selected data folder (after reinstalling Windows / restoring a backup).
+                string customDataPath = ReadCustomDataPath();
+                if (!string.IsNullOrEmpty(customDataPath)) {
+                    DataPath = customDataPath;
+                    IsCustomDataPath = true;
+                }
                 CachePath = Path.Combine(DataPath, "Cache");
                 HomePathIsAscii = true;
                 var etor = StringInfo.GetTextElementEnumerator(DataPath);
@@ -62,6 +77,52 @@ namespace OpenUtau.Core {
             }
         }
 
+        /// <summary>
+        /// Pointer file stored outside the data folder so the selected location survives
+        /// moving or restoring the data folder itself. Contains a single absolute path.
+        /// </summary>
+        public static string CustomDataPathFile => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "ThaiOpenUtau", "datapath.txt");
+
+        static string ReadCustomDataPath() {
+            try {
+                if (!File.Exists(CustomDataPathFile)) {
+                    return null;
+                }
+                string path = File.ReadAllText(CustomDataPathFile).Trim();
+                if (string.IsNullOrEmpty(path) || !Path.IsPathRooted(path) || !Directory.Exists(path)) {
+                    return null; // Missing drive/folder: fall back to default instead of failing startup.
+                }
+                return Path.GetFullPath(path);
+            } catch (Exception) {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Saves (or clears with null/empty) the custom user data folder. Takes effect after restart.
+        /// </summary>
+        public static void SetCustomDataPath(string path) {
+            string file = CustomDataPathFile;
+            if (string.IsNullOrWhiteSpace(path)) {
+                if (File.Exists(file)) {
+                    File.Delete(file);
+                }
+                return;
+            }
+            string full = Path.GetFullPath(path);
+            if (!Directory.Exists(full)) {
+                throw new DirectoryNotFoundException(full);
+            }
+            Directory.CreateDirectory(Path.GetDirectoryName(file));
+            string tmp = file + ".tmp";
+            File.WriteAllText(tmp, full);
+            File.Move(tmp, file, true);
+        }
+
+        public string DefaultDataPath { get; private set; } = string.Empty;
+        public bool IsCustomDataPath { get; private set; }
         public string RootPath { get; private set; }
         public string DataPath { get; private set; }
         public string CachePath { get; private set; }

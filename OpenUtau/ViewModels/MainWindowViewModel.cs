@@ -574,6 +574,7 @@ namespace OpenUtau.App.ViewModels {
                     }
                 }, DispatcherPriority.Background);
             } else if (cmd is UserMessageNotification userMsgNotification) {
+                ToastViewModel.Inst.ShowMessage(userMsgNotification.Message, "Information");
                 Dispatcher.UIThread.InvokeAsync(() => {
                     ProgressText = userMsgNotification.Message;
                     progressTextClearTimer?.Stop();

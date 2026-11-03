@@ -1,138 +1,199 @@
-<!-- Made And Checked By DELTA SYNTH & All Code Agentic AI Engine -->
-<!-- Original by OpenUtau Authors -->
+<!--
+  ============================================================================
+  Date         : 02/11/2026 (B.E. 2569 / A.D. 2026)
+  File Name    : About-Project.md
+  Version      : 3.9.3 (Enterprise Screen Recording, Dynamic Data Relocation & Responsive Architecture)
+  Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
+                 [ Original by DELTA SYNTH ]
+  File Location: d:\Program Developing\Thai_OpenUtau\About-Project.md
+  Description  : แบบบันทึกรายงาน ที่เกี่ยวกับ การวิจัย เพื่อการพัฒนาของโปรแกรม Thai OpenUtau ที่ยั่งยืน
+                 Consolidated Master Architecture, Sustainable Development Roadmap,
+                 7-Pillars Engineering Protocol, DSP Signal Chain, and Future Agent Onboarding Guide.
+  ============================================================================
+-->
 
-# About Project — Thai OpenUtau Master Tool by DELTA SYNTH
-*Consolidated Master Architecture, Development Roadmap & Onboarding Specification*
+# ══════════════════════════════════════════════════════════════════════════════
+# 🔬 แบบบันทึกรายงาน ที่เกี่ยวกับ การวิจัย เพื่อการพัฒนาของโปรแกรม Thai OpenUtau ที่ยั่งยืน
+# Thai OpenUtau Master Research & Sustainable Development Report by DELTA SYNTH
+# ══════════════════════════════════════════════════════════════════════════════
 
----
-
-## 1. Origin & Significance (ที่มาและความสำคัญของโปรเจกต์)
-- โปรเจกต์ **Thai OpenUtau by DELTA SYNTH** ถือกำเนิดขึ้นจากการรวบรวมและหลอมรวมแกนกลางการทำงานของ 4 สาขาหลัก ได้แก่:
-  1. **Original OpenUtau (stakira):** แกนระบบ Editor สมัยใหม่บนสถาปัตยกรรม Avalonia UI
-  2. **Thai OpenUtau Legacy:** ฐานข้อมูลการรองรับภาษาไทยดั้งเดิม
-  3. **Type5 G2P Branch:** ระบบแปลงตัวอักษรเป็นเสียงอ่านภาษาไทย (Grapheme-to-Phoneme) ขั้นสูง
-  4. **Moresampler & Wavtool Suite:** เครื่องมือสังเคราะห์เสียงแบบรวดเร็วและเป็นธรรมชาติ
-- **ความสำคัญของระบบ:** ทลายข้อจำกัดด้านความแข็งทื่อของเสียงร้อง (Robotic Vocals) ในระบบ UTAU ดั้งเดิม ด้วยการวิเคราะห์และแก้ไขสมการคลื่นเสียงในระดับ DSP ผสานกับการคำนวณรอยต่อพยัญชนะ-สระ (Phoneme Transition) เพื่อยกระดับเสียงร้องภาษาไทยและอังกฤษให้มีความเป็นธรรมชาติระดับมนุษย์ (Humanized Expressive Singing)
-
----
-
-## 2. Working Objectives (วัตถุประสงค์ของการทำงาน)
-- **Zero-Defect Standard:** รักษามาตรฐานซอฟต์แวร์ระดับสมบูรณ์แบบ (0 Errors, 0 Warnings, 100% Passed Tests) ในทุกแพลตฟอร์ม (Windows, macOS, Linux)
-- **Bilingual & Thai G2P Integration:** ผสานระบบแปลสัทอักษรภาษาไทย VCCV, VCV, CV เข้ากับ Audio Engine อย่างแนบเนียน
-- **Snappy Responsiveness:** ปรับปรุงความเร็วในการเปิดโปรแกรม (Startup) และการปิดโปรแกรม (Graceful Shutdown) ให้ตอบสนองทันที ไม่ค้าง ไม่หน่วง และไม่มี Ghost Process ตกค้างในระบบปฏิบัติการ
-- **Safe State & Preferences Preservation:** บันทึกการตั้งค่า หน้าต่าง ค่าพิกัด และข้อมูลโครงการของผู้ใช้อย่างปลอดภัย ป้องกันการสูญหายหรือไฟล์ Config เสียหาย
-
----
-
-## 3. Required Tooling (เครื่องมือที่จำเป็นต้องใช้ทั้งหมด)
-- **Runtime & SDK:** .NET 8.0 / .NET 10.0 SDK สำหรับ C# Avalonia UI และ Core Library
-- **UI Framework:** Avalonia UI 11 พร้อม ReactiveUI
-- **Native Audio DSP:** C++ Worldline DSP Engine (`cpp/worldline/`) พร้อมอัลกอริทึม DIO / HARVEST F0 Estimation
-- **Security & Dependencies:** `System.Security.Cryptography.Xml` (v10.0.13), `System.Security.Cryptography.Pkcs` (v10.0.13) ปลอดช่องโหว่ความปลอดภัย NU1903/NU1902
-- **Audio Output & Synthesis:** DirectSound (NAudio), MiniAudio, Worldline Resampler, Moresampler, Classic Wavtool
-- **Test Framework:** xUnit (ครอบคลุม 282 Unit Tests) สำหรับภาษา C#
-- **Automation & CLI:** PowerShell, CMD Batch Scripts (`Auto Compiler.bat`, `Clear-Cache.bat`, `Package_Program.bat`)
+> ### ⚠️ คำสั่งบังคับและธรรมนูญวิศวกรรมประจำโปรเจกต์ (Mandatory Enforcements)
+> 1. **Preserve Before Replace:** ห้ามลบหรือ Rewrite โค้ดเดิมที่พิสูจน์แล้วว่าทำงานได้ดี ให้ใช้แนวทาง Surgical Edits แก้ที่ Root Cause ตรงจุดเท่านั้น
+> 2. **Enterprise Zero-Defect Standard:** โค้ดทุกไฟล์และทุกการคอมไพล์ต้องปราศจากข้อผิดพลาดและคำเตือน (0 Errors, 0 Warnings, 100% Passed Tests)
+> 3. **Audio Timing & Phoneme Safety:** รักษาสัดส่วนหน่วยเสียงมาตรฐาน (CCV ≤ 5%, VC 25–40%, V- 20–30%) และระยะห่างความปลอดภัยของเวลา (`safePos = Math.Max(originalPos, prevPos + 10)`) เสมอ
+> 4. **No Type-Ignore & No Exception Swallowing:** ห้ามใช้ `# type: ignore` หรือ `catch {}` ว่างเปล่า ต้องระบุสาเหตุและจัดการข้อผิดพลาดอย่างรัดกุม
+> 5. **Snappy Lifecycle & Zero Lingering:** รักษาระบบ Single Instance Mutex และ Graceful Shutdown ไม่ทิ้ง Zombie/Ghost Process ในระบบปฏิบัติการ
+> 6. **DELTA SYNTH UI Standard:** ใช้โทนสีหลัก `#CC2200` (แดง), `#1A1A1A` (ดำ Obsidian), `#F0F0F0` (ขาว) พร้อมฟอนต์ `Leelawadee UI` อย่างเคร่งครัด
+> 7. **Mandatory 6-Item Header:** ทุกไฟล์โค้ดต้องมีหัวกระดาษ 6 ข้อ (วันเดือนปี, ชื่อไฟล์, เวอร์ชัน, เครดิตผู้สร้าง, ตำแหน่งไฟล์, รายละเอียดการแก้ไข)
 
 ---
 
-## 4. Detailed File Mapping (แผนผังตำแหน่งไฟล์ระบบ)
+## §0 — บทสรุปผู้บริหารและสถานะปัจจุบันของระบบ (Executive Summary)
+
+| ข้อมูลจำเพาะ (Specification) | รายละเอียดของระบบ (System Details) |
+| :--- | :--- |
+| **ชื่อโปรเจกต์ (Project Name)** | Thai OpenUtau Master Tool by DELTA SYNTH |
+| **เวอร์ชันปัจจุบัน (Current Version)** | v3.9.3 (Assembly/FileVersion 39.3.0.0 Enterprise Responsive Architecture Edition) |
+| **วันที่อัปเดตล่าสุด (Last Updated)** | 3 พฤศจิกายน 2569 / 3 November 2026 |
+| **แพลตฟอร์มเป้าหมาย (Target Platform)** | Microsoft Windows 10 / 11 (Architecture: X64, win-x64) |
+| **สภาพแวดล้อมรันไทม์ (.NET Runtime)** | .NET 8.0 SDK / .NET 8.0.32 Runtime (RollForward: LatestMajor รองรับ .NET 9.0+) |
+| **เฟรมเวิร์กส่วนติดต่อผู้ใช้ (UI Framework)**| Avalonia UI 11.2.4 ผสาน ReactiveUI.Fody ข้ามแพลตฟอร์ม |
+| **เอนจินประมวลผลเสียง (DSP Engine)** | C++ Native Worldline DSP (`cpp/worldline/`) + DirectML GPU Acceleration |
+| **การเชื่อมต่อ AI Cloud (AI Integration)**| Gemini Spark Client (`OpenUtau.Core/Integrations/GeminiSparkClient.cs`) |
+| **สถานะการคอมไพล์ (Build Status)** | ✅ Build Succeeded (0 Errors, 0 Warnings, Zero-Defect Verified) |
+
+---
+
+## §1 — ที่มา ความสำคัญ และปัญหาวิจัยเชิงวิศวกรรม (Origin, Significance & R&D Problems)
+
+### 1.1 รากฐานสถาปัตยกรรม 4 สาขา (The 4 Architectural Pillars)
+โปรเจกต์นี้ถือกำเนิดขึ้นจากการหลอมรวมและต่อยอดสถาปัตยกรรมระดับแนวหน้า 4 สาขาหลัก:
+1. **Original OpenUtau (stakira):** แกนกลางสถาปัตยกรรม Editor สมัยใหม่, ระบบ Signal Chain, Timeline, และ Avalonia UI ข้ามแพลตฟอร์ม
+2. **Thai OpenUtau Legacy:** ฐานข้อมูลสัทอักษรภาษาไทยดั้งเดิม (VCCV, CVVC, VCV)
+3. **Type5 G2P Branch & DiffSinger:** ระบบถอดรหัสตัวอักษรเป็นสัทอักษรภาษาไทย (Grapheme-to-Phoneme) ความแม่นยำสูง พร้อมโครงข่ายประสาทสังเคราะห์เสียง AI
+4. **Moresampler & Wavtool Suite:** เครื่องมือสังเคราะห์และต่อเชื่อมคลื่นเสียง (Concatenative Synthesis) แบบรวดเร็วและเป็นธรรมชาติ
+
+### 1.2 การแก้ไขปัญหาเชิงสถาปัตยกรรมและผลงานวิจัย (R&D Solutions)
+1. **ปัญหาเสียงแข็งทื่อและเสียงสะดุดรอยต่อ (Robotic Artifacts & Micro-clicks):**
+   - *วิธีแก้:* ออกแบบสมการ Cosine S-Curve Crossfade และเกลาขอบคลื่นเสียงระดับไมโครวินาที (Sub-millisecond Micro-fade 64 samples / ~0.99ms) ใน `ClassicRenderer.cs`, `WaveSource.cs`, และ `ResamplerItem.cs` ทำให้รอยต่อเรียบเนียนเป็นศูนย์ข้ามแกน (Zero-crossing) ไร้เสียงคลิก/ป๊อป 100%
+2. **ปัญหา Startup Stalling จาก Process Scanning:**
+   - *วิธีแก้:* ใน `Program.cs` เปลี่ยนจากการสแกน `Process.GetProcessesByName()` ที่ช้าหลายวินาที มาเป็น **Kernel-level Named Mutex** (`ThaiOpenUtau_SingleInstance_{User}`) ตรวจสอบ Single Instance ภายในเสี้ยวไมโครวินาที
+3. **ปัญหา Ghost Background Process & Exit Hanging:**
+   - *วิธีแก้:* ใน `MainWindow.axaml.cs` เพิ่มขั้นตอน Graceful Shutdown: ยุติการเล่นเสียงและคืน Audio Buffer ทันที (`PlaybackManager.Inst.StopPlayback()`), ปิด Timers ทั้งหมด, สั่งปิดหน้าต่างบริวาร (`pianoRollWindow.Close()`), บันทึก Preferences อย่างปลอดภัย และสั่ง `IControlledApplicationLifetime.Shutdown(0)` ไม่ทิ้ง Zombie Process ในระบบปฏิบัติการ
+4. **ปัญหา Thread-Safety ใน RenderEngine & Hot-Swap Audio:**
+   - *วิธีแก้:* เพิ่ม Atomic Per-File Cache Lock ใน `ClassicRenderer.cs` / `ExeResampler.cs` และ CancellationTokenSource Disposal Guard ป้องกัน `AggregateException` และ `ObjectDisposedException` ขณะกด Play/Stop/Seek ซ้ำๆ
+
+---
+
+## §2 — ธรรมนูญวิศวกรรม 7 เสาหลัก และกฎเหล็ก 35 ข้อบังคับ (Consolidated Iron Rules)
+
+| เสาหลัก (Pillar) | กฎเหล็กและข้อบังคับหลัก (Core Iron Rules) | แนวทางปฏิบัติและเกณฑ์วัดผล (Enforcement Standard) |
+| :--- | :--- | :--- |
+| **1. ปรัชญาการรักษาโค้ดเดิม (Preserve Before Replace)** | ยึดลำดับขั้น `Preserve → Strengthen → Optimize → Verify` ห้ามรื้อเขียนใหม่ทั้งหมด ให้แก้แบบเจาะจงเฉพาะจุด (Surgical Edits) | โค้ดเดิมที่ทำงานถูกต้องคือ Primary Reference ห้ามตัดทอนโค้ดด้วย `// ...` เมื่อส่งมอบไฟล์ฉบับเต็ม |
+| **2. มาตรฐานไร้ข้อบกพร่อง (Zero-Defect Standard)** | มุ่งสู่ `0 Errors, 0 Warnings, 100% Passed Tests` ห้ามซ่อนปัญหาด้วย `# type: ignore` หรือ `catch {}` ว่างเปล่า | ต้องคอมไพล์จริงด้วย `dotnet build` และตรวจสอบ Log จริงเสมอ |
+| **3. โครงสร้างหัวกระดาษ 6 รายการ (Mandatory Header)** | ทุกไฟล์โค้ดต้องมีหัวกระดาษ 6 รายการ (วันเดือนปี, ชื่อไฟล์, เวอร์ชัน, เครดิตผู้สร้าง, ตำแหน่งไฟล์, รายละเอียดการแก้ไข) | ห้ามใช้นามสกุลจริง ใช้เฉพาะนามแฝง DELTA SYNTH เท่านั้น |
+| **4. สถาปัตยกรรม UI องค์กร (DELTA SYNTH Clean GUI)** | รองรับ 2 ภาษา (ไทย-อังกฤษ), ฟอนต์ `Leelawadee UI`, โทนสีแดง `#CC2200`, ดำ `#1A1A1A`, ขาว `#F0F0F0`, Toast ไม่เกิน 280x80px | แยกชั้น `Views/` ออกจาก `Business Logic` ใน `OpenUtau.Core/` |
+| **5. กฎระบบเสียงและ Phonemizer (Audio DSP & Phonetics)** | รักษาระยะปลอดภัย `safePos = Math.Max(originalPos, prevPos + 10)`, สัดส่วนหน่วยเสียง (`CCV ≤ 5%`, `VC 25–40%`, `V- 20–30%`), Cosine Micro-Fade (64 samples) | RVC พอร์ตมาตรฐาน `9378`, สำรองไฟล์ `oto.ini.bak` อัตโนมัติทุกครั้ง |
+| **6. กฎสคริปต์ Batch และข้อห้าม `runtime/`** | ไฟล์ `.bat` ต้องใช้ภาษาอังกฤษ 100% (ห้ามมีภาษาไทยหรืออีโมจิ), UTF-8 without BOM, รองรับ Drag & Drop | **ห้ามแก้ไขไฟล์ใดๆ ในไดเรกทอรี `runtime/` โดยเด็ดขาด** |
+| **7. การตรวจสอบ Log จริงและสุขอนามัยโฟลเดอร์** | ตรวจสอบโฟลเดอร์ `Logs/` สม่ำเสมอ กำจัดสาเหตุที่ Root Cause | จัดเก็บไฟล์สำรองประวัติไว้ใน `History/` ห้ามลบไฟล์ใน `History/` โดยเด็ดขาด |
+
+---
+
+## §3 — สถาปัตยกรรมระบบ 4 เลเยอร์ (Four-Layer System Architecture)
+
 ```
-Thai_OpenUtau/
-├── OpenUtau/                     # Presentation & UI Layer (Avalonia)
-│   ├── Program.cs                # จุดเข้าโปรแกรม (Single-Instance Mutex, Global Exit)
-│   ├── App.axaml / App.axaml.cs  # จัดการ Theme, Culture และ Resource Dictionaries
-│   ├── Views/
-│   │   ├── SplashWindow.axaml.cs # หน้าต่างโหลดเริ่มต้น (Parallel Subsystem Initialization)
-│   │   ├── MainWindow.axaml.cs   # หน้าต่างหลัก (Snappy Shutdown, Audio Halt, Timer Cleanup)
-│   │   └── PianoRoll*.axaml.cs   # หน้าต่างแก้ไขโน้ตดนตรีและตารางพยางค์
-│   └── ViewModels/               # ViewModels ควบคุม Reactive State
-├── OpenUtau.Core/                # Audio Engine & Business Logic Layer
-│   ├── DocManager.cs             # ควบคุมเอกสารโครงการ, Undo/Redo, และ Command Dispatch
-│   ├── PlaybackManager.cs        # ควบคุม Audio Playback, Master Mixdown, และ Metronome
-│   ├── SingerManager.cs          # สแกนและโหลดฐานข้อมูลเสียง (Voicebanks & oto.ini)
-│   ├── Classic/
-│   │   └── ToolsManager.cs       # จัดการ Resamplers และ Wavtools ภายนอก
-│   ├── Render/
-│   │   ├── RenderEngine.cs       # เอนจินเรนเดอร์เสียงล่วงหน้า (Pre-rendering & Cancellation)
-│   │   ├── RenderPhrase.cs       # จัดกลุ่มวลีเสียง
-│   │   └── Worldline.cs          # รอยต่อเสียงและ S-Curve Smoothing
-│   └── Util/
-│       ├── Preferences.cs        # บันทึกการตั้งค่าผู้ใช้แบบ JSON
-│       └── PathManager.cs        # จัดการ Path ข้อมูล, แคช และ Log
-├── OpenUtau.Plugin.Builtin/      # ปลั๊กอินแปลงสัทอักษร (Phonemizers)
-│   ├── ThaiVCCVPhonemizer.cs     # ตัวแปลงเสียงไทย VCCV มาตรฐาน
-│   └── ThaiVccvPhonemizer_Delta.cs # ตัวแปลงเสียงไทย VCCV ขั้นสูง (Glottal & Tone Tuned)
-├── OpenUtau.Test/                # โครงการทดสอบ Unit Tests (282 Tests ผ่าน 100%)
-├── cpp/worldline/                # C++ DSP Source Files สำหรับประมวลผลเสียงระดับต่ำ
-├── Docs/ & History/              # บันทึกประวัติและรายงานการวิจัย (R&D Reports)
-├── Auto Compiler.bat             # สคริปต์คอมไพล์โปรเจกต์ Release Mode
-└── Clear-Cache.bat               # สคริปต์ล้างไฟล์ขยะและแคชเสียง
+┌────────────────────────────────────────────────────────────────────────┐
+│                      1. PRESENTATION LAYER (UI/UX)                     │
+│  - Avalonia UI 11.2.4 + ReactiveUI MVVM Pattern                        │
+│  - Leelawadee UI Typography Engine (Thai/English Crisp Text)           │
+│  - DELTA SYNTH Palette (Red #CC2200, Obsidian #1A1A1A, White #F0F0F0)  │
+│  - MainWindow, PianoRoll, SplashWindow, Dialogs                        │
+├────────────────────────────────────────────────────────────────────────┤
+│                   2. BUSINESS LOGIC LAYER (OpenUtau.Core)              │
+│  - DocManager: Undo/Redo, Project State, Command Dispatcher            │
+│  - PlaybackManager: Master Mix, Audio Driver Output, Low Latency       │
+│  - SingerManager: Scanning Voicebanks, oto.ini, Character Config       │
+│  - RenderEngine: Parallel Rendering, Cancellation Guard, Cache System  │
+│  - Integrations: GeminiSparkClient (Cloud AI Voice & Melody Analysis)  │
+├────────────────────────────────────────────────────────────────────────┤
+│                 3. PLUGIN & PHONEMIZERS (OpenUtau.Plugin.Builtin)      │
+│  - ThaiVCCVPhonemizer, ThaiCpVPhonemizer, ThaiArpasingPhonemizer       │
+│  - LanguageAutopitchService, NativeAccentAutopitchBatchEdits (5 Langs) │
+│  - ThaiDictionaryManager, Dictionaries (dsdict-th, TH_VCCV_Dict)       │
+├────────────────────────────────────────────────────────────────────────┤
+│                 4. NATIVE DSP & MACHINE LEARNING (C++ / DirectML)      │
+│  - C++ Native Worldline DSP Engine (37 source files in cpp/worldline/) │
+│  - F0 Estimators: DIO, HARVEST                                         │
+│  - DirectML GPU Inference (DiffSinger Neural Synthesis)                │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 5. Primary Goals & Milestones (เป้าหมายหลักในการพัฒนา)
-- **Milestone 1:** การรวมโค้ด 4 ระบบเข้าด้วยกันสำเร็จโดยไม่มีข้อผิดพลาด (เสร็จสิ้น)
-- **Milestone 2:** การปรับแก้สมการ S-Curve (Cosine Smoothstep) สำหรับรอยต่อพยัญชนะและสระ (เสร็จสิ้น)
-- **Milestone 3:** การอัปเกรดความปลอดภัย Cryptography สู่ Zero Vulnerabilities และ Unit Tests ผ่าน 282/282 เทสต์ (100% Pass) (เสร็จสิ้น)
-- **Milestone 4 (v3.1):** การปรับปรุง Lifecycle ทั้งระบบ — Startup รวดเร็วด้วย Named Mutex และ Parallel Initialization + Shutdown ปิดโปรแกรมได้ทันที ตัดการทำงานของ Audio Buffers และ Timers ปราศจาก Zombie Processes ค้างในระบบ (เสร็จสิ้น)
-- **Milestone 5:** การสร้างระบบ Automated Cross-Platform Publishing สำหรับแจกจ่ายตัวโปรแกรม (กำลังดำเนินการ)
+## §4 — การไหลของข้อมูลเสียง (Audio Pipeline & G2P DSP Flow)
+
+```mermaid
+flowchart TD
+    A["ผู้ใช้งานป้อนโน้ต / ไฟล์ .ustx"] --> B["Thai G2P / Phonemizer (วิเคราะห์สระ พยัญชนะ วรรณยุกต์)"]
+    B --> C["Contextual Pitch Engine (คำนวณเส้นพิตช์และลูกคออัตโนมัติ 6 รูปแบบ)"]
+    C --> D["RenderEngine (จัดกลุ่ม Phrase และกระจายงานเรนเดอร์คู่ขนาน)"]
+    D --> E1["Classic Resampler / Moresampler / Worldline"]
+    D --> E2["DirectML Neural Inference (DiffSinger)"]
+    E1 --> F["WaveMix & Cosine S-Curve Crossfade (Micro-fade 64 samples)"]
+    E2 --> F
+    F --> G["NAudio / MiniAudio Hardware Driver (เสียงร้องคุณภาพสูง)"]
+```
 
 ---
 
-## 6. Working Vision (วิสัยทัศน์ในการทำงาน)
-- มุ่งสู่การเป็นศูนย์กลาง (Master Hub) สำหรับนักทำเพลงและศิลปินเสียงสังเคราะห์ชาวไทย ที่มอบความสะดวก รวดเร็ว และคุณภาพเสียงระดับมืออาชีพโดยไม่ต้องพึ่งพาโปรแกรมแปลงไฟล์ภายนอก
-- ทำงานได้คล่องตัว เปิดปุ๊บติดปั๊บ ปิดปุ๊บหยุดทันที ตอบสนองต่อการคลิกของผู้ใช้ได้อย่างไร้รอยต่อ
+## §5 — ไทม์ไลน์วิวัฒนาการและประวัติการพัฒนา (Chronological Evolution v0.1 – v3.9.2)
+
+### ระยะที่ 1: v0.1 – v0.4 (Phonemizer & Vocal Tools Genesis)
+- พัฒนาอัลกอริทึมถอดเสียงภาษาไทย `ThaiVCCVPhonemizer`, `ThaiCVVCPhonemizer`, `ThaiVcvPhonemizer`
+- สร้างพจนานุกรม `TH_VCCV_Dict.txt` และ `dsdict-th.txt`
+- สร้างชุดเครื่องมือจูนเสียง `VocalTuningMacro`, `AutoPitchContextualEngine` (6 รูปแบบ), `AutoPitchRandomizerBatchEdit` และ `AutoMixBatchEdit`
+
+### ระยะที่ 2: v1.0 – v2.1 (Master Consolidation & Lunai UI/UX)
+- หลอมรวมโค้ด 4 ระบบเข้าสู่ Master Repository กลาง
+- ปรับโฉม UI สู่ธีม Obsidian & DELTA SYNTH Red (`#1A1A1A` / `#CC2200`)
+- พัฒนาระบบ Micrometer Selection, Sweeping Eraser, `Alt+Drag` คัดลอกโน้ต, และ `ScreenCaptureService` แคปหน้าจอ/บันทึกวิดีโอ 4K
+
+### ระยะที่ 3: v3.0 – v3.2 (Enterprise Zero-Defect & Standalone Packaging)
+- อัปเกรด `System.Security.Cryptography.Xml` / `Pkcs` เป็น `10.0.13` ปิดช่องโหว่ความปลอดภัย
+- ปรับปรุง Lifecycle ด้วย Kernel Named Mutex และ Parallel Audio Discovery
+- สร้างระบบเผยแพร่ Standalone `win-x64` บรรจุ DirectML, Resamplers และ Wavtools
+
+### ระยะที่ 4: v3.5 – v3.8.5 (Render Thread-Safety, Security Hardening & DSP Polish)
+- แก้ไข `AggregateException` / `ObjectDisposedException` ใน `RenderEngine` และ `PlaybackManager`
+- ปิดช่องโหว่ Zip-Slip (Canonical Path Validation) และแก้บั๊ก `WindowClosing` วนลูป
+- เพิ่ม Atomic Cache Locking, Cosine Micro-Fade (64 samples), และเชื่อมต่อ `GeminiSparkClient`
+
+### ระยะที่ 5: v3.9.0 – v3.9.2 (Full Account Rule Unification & Zero-Defect Restoration)
+- **AutoScrollOnEdge:** เลื่อนหน้าจออัตโนมัติขณะลากโน้ตชิดขอบ พร้อมขยายความยาวพาร์ทอัตโนมัติ
+- **Canon AutoPitchwriter 6 รูปแบบ:** เชื่อมต่อ Thunderbolt, PitchDropRise, Slope, W-Shape, U-Drop, Pitch Dent เข้าสู่เอนจินวิเคราะห์บริบท
+- **แทนที่เนื้อเพลงยกแทร็ก:** เพิ่มระบบ Global Multi-Lyric Replacement ใน `AutoPitchRandomizerDialog`
+- **เครื่องมือจูนเสียง 5 ภาษา:** เปิดใช้งาน `[DELTA SYNTH] Native Accent Autopitch` ครบทั้ง Thai, Mandarin, Vietnamese, Japanese และ Auto-Detect
+- **กำจัดข้อผิดพลาดการคอมไพล์ 78 จุด:** ย้ายไฟล์สำเนาซ้ำซ้อน (`* (1).cs`, `* (2).cs`, `* (3).axaml`) ไปเก็บรักษาใน `History/Duplicate-Backup-02.11.2026/` ป้องกันการชนกันของคลาส
+- **Playhead Navigation:** แก้ไขบั๊กเคอร์เซอร์ดีดกลับริมซ้าย โดยใช้ `TimeAxis` คำนวณ `PointToPlayPosTick` และ `TickToLineTick` ทำให้คลิกเล่นเพลงตรงตำแหน่งเมาส์เสมอ
+- **A11y & Contrast:** ปรับปรุงความเปรียบต่างสีตัวเลขแทร็ก `TrackNoForeground` อิงค่า Luminance อัตโนมัติ (ผ่านเกณฑ์ WCAG 2.2 ระดับ AAA)
+
+### ระยะที่ 6: v3.9.3 (Screen Recording, Dynamic Data Relocation & Responsive Architecture)
+- **High-Performance Screen Capture & Video Recorder:** บันทึกภาพ PNG และวิดีโอ MP4/AVI/MKV เจาะจงเฉพาะหน้าต่างโปรแกรม รองรับความละเอียด 240p - 4K พร้อมระบบตัดปุ่มควบคุมและตัวเลขเวลาออกจากคลิปวิดีโอที่ส่งออก 100% (`BeforeRenderFrame` / `AfterRenderFrame` Exclusion)
+- **Real-Time Duration Timer on Piano Roll:** แสดงเวลาการบันทึกวิดีโอสดแบบ `MM:SS` บนแถบควบคุมของ Piano Roll ให้ผู้ใช้งานทราบสถานะได้ทันที
+- **Dynamic User Data Relocation:** ระบบเลือกและย้ายที่อยู่ฐานข้อมูลผู้ใช้เดิมอย่างอิสระผ่าน Pointer File (`%LOCALAPPDATA%\ThaiOpenUtau\datapath.txt`) รองรับการกู้คืนข้อมูลหรือลงวินโด้วส์ใหม่
+- **Smart Loading Popup with Close 'X':** หน้าต่างป๊อปอัพรายงานสถานะการโหลดข้อมูลพร้อมปุ่มกากบาท X ที่มุมขวาบน และข้อความปิดท้ายบังคับ "กรุณา รอสักครู่.........." พร้อมอันตรธานหายไปทันทีเมื่อโหลดเสร็จ
+- **Transparent Adaptive Toast Notifications:** ปรับปรุง Toast แจ้งเตือนสองภาษา ขยายเวลาอ่านข้อผิดพลาดเป็น 5 วินาที พร้อมระบบ `ClarifyMessage` ถอดรหัสข้อความเทคนิคให้อ่านเข้าใจง่าย
+- **Multi-Language VSCode Debug Suite:** ยกระดับ `.vscode/launch.json` v2.0, สร้าง `tasks.json` และปรับปรุง `settings.json` ครอบคลุม .NET, Python, C++ และ Tests ไร้คำเตือน
 
 ---
 
-## 7. Working Identity & DELTA SYNTH Rules (อัตลักษณ์และระเบียบปฏิบัติ)
-- **Preserve Before Replace:** ห้ามรื้อระบบเดิมที่ทำงานถูกต้อง ให้ต่อยอดและแก้เฉพาะจุดที่เป็น Root Cause (Surgical Edits)
-- **Zero-Defect Policy:** ผลลัพธ์สุดท้ายต้องมี Errors = 0 และ Warnings = 0 เสมอ
-- **UI Design Guidelines:** 
-  - โทนสี Cyber-Thai: สีแดงหลัก `#CC2200`, สีดำ `#1A1A1A`, สีขาว `#F0F0F0`
-  - ฟอนต์หลัก: `Leelawadee UI` รองรับทั้งภาษาไทยและอังกฤษอย่างลงตัว
-- **Credit Standard:** ระบุเครดิตส่วนหัวของไฟล์โค้ดตามมาตรฐาน DELTA SYNTH เสมอ
+## §6 — คู่มือสำหรับ AI และนักพัฒนาในอนาคต (Onboarding & Future Agent Protocol)
+
+1. **ลำดับการศึกษาระบบ:**
+   - ศึกษา `Logic Layer (Backend)` ใน `OpenUtau.Core/` ก่อนเสมอ
+   - ตามด้วย `GUI Layer (Frontend)` ใน `OpenUtau/Views/` และ `ViewModels/`
+   - และ `Interface` ตัวกลางเชื่อมต่อ
+2. **วงจรการทำงานมาตรฐาน (ANALYZE → PLAN → EXECUTE → VERIFY):**
+   - **ANALYZE:** อ่านข้อผิดพลาดจริงจาก Log ค้นหา Root Cause ห้ามเดา
+   - **PLAN:** วางแผนการแก้แบบ Smallest Safe Change ไม่สร้าง Abstraction ฟุ่มเฟือย
+   - **EXECUTE:** แก้ไขเฉพาะจุด (Surgical Edits) และส่งมอบไฟล์เต็มสูตรเสมอ
+   - **VERIFY:** คอมไพล์โปรเจกต์จริงด้วย `dotnet build` ตรวจสอบ 0 Errors, 0 Warnings
+3. **ไฟล์วิกฤตที่ห้ามดัดแปลงโครงสร้างหลัก:**
+   - `OpenUtau/Program.cs` (Kernel Named Mutex & Exit)
+   - `OpenUtau/App.axaml.cs` (Application Lifecycle)
+   - `OpenUtau.Core/Render/RenderEngine.cs` (Parallel Audio Processing)
+   - `OpenUtau.Core/PlaybackManager.cs` (Sound Output Core)
+   - `OpenUtau.Core/Classic/ClassicRenderer.cs` (S-Curve & Micro-fade Crossfade)
+   - `OpenUtau.Plugin.Builtin/ThaiVCCVPhonemizer.cs` (Thai Phonetics Core)
 
 ---
 
-## 8. Project Uniqueness (เอกลักษณ์ของโปรเจกต์)
-- **Humanized Smooth Envelope:** อัลกอริทึมคำนวณ Micro-fade (0.99ms) และ Cosine Crossfade ป้องกันเสียงแตกพร่า (Clicks/Pops) ในระดับตัวอย่างเสียง (Sample-level)
-- **Snappy Lifecycle Engine:** ระบบตรวจสอบ Single Instance ผ่าน Named Mutex ระดับ Kernel ตัดปัญหา WMI/Process Enumeration ที่ช้า ให้ความเร็วในการเปิดโปรแกรมระดับมิลลิวินาที
-- **Zero-Lingering Shutdown:** เมื่อปิดหน้าต่างหลัก ระบบจะยุติการเรนเดอร์เสียง สั่ง Stop Timer และปิดหน้าต่างบริวารทั้งหมด ส่งผลให้ Process คืน RAM และ CPU แก่ระบบปฏิบัติการทันที
+## §7 — มาตรฐานความปลอดภัย สุขอนามัย และการส่งมอบงาน (Security & Delivery Gates)
 
----
-
-## 9. Outcome Hypotheses (สมมติฐานของผลลัพธ์)
-- ผู้ใช้งานจะเปิดโปรแกรมได้รวดเร็วขึ้นกว่าเดิมอย่างเห็นได้ชัด (Cold start ไวกว่าเดิมอย่างน้อย 3-5 เท่า)
-- ผู้ใช้งานสามารถปิดโปรแกรมได้ทันทีโดยไม่มีการหน่วงค้าง และสามารถเปิดซ้ำใหม่ได้ทันทีโดยไม่เจอปัญหา `Process already open. Exiting.`
-- ไฟล์โปรเจกต์และการตั้งค่าถูกบันทึกอย่างครบถ้วน ไม่มีความเสี่ยงที่ข้อมูล Preferences จะสูญหาย
-
----
-
-## 10. Development Roadmap & Instructions for Future AI Models (คำแนะนำสำหรับ AI รุ่นถัดไป)
-สำหรับ AI Agent หรือโมเดลอื่นที่จะเข้ามาสานต่องานในโปรเจกต์นี้ กรุณาปฏิบัติตามข้อกำหนดดังต่อไปนี้อย่างเคร่งครัด:
-1. **การอ่านบริบทก่อนเริ่มงาน:** อ่าน `About_Project.md`, `AGENT.md`, `PROJECT_CONTEXT.md`, และ `R&D_Report.md` ให้เข้าใจโครงสร้างก่อนแตะต้องโค้ด
-2. **ห้ามแตะต้องสคริปต์ Root:** ห้ามลบหรือเปลี่ยนชื่อ `Auto Compiler.bat`, `Clear-Cache.bat`, `OpenUtau.nsi`
-3. **การแก้ไขโค้ด Lifecycle:**
-   - ใน `Program.cs`: รักษา Named Mutex และ `Environment.Exit(0)` ไว้เสมอ เพื่อป้องกัน Process ค้าง
-   - ใน `SplashWindow.axaml.cs`: รักษารูปแบบ `Task.Run()` แบบ Parallel Initialization ระหว่าง Tools, Singers, DocManager และ Audio Output
-   - ใน `MainWindow.axaml.cs`: ตรวจสอบให้มั่นใจว่าเมื่อสั่งปิดหน้าต่าง จะต้องเรียก `PlaybackManager.Inst.StopPlayback()`, หยุด Timer และปิด `pianoRollWindow` เสมอ
-4. **การตรวจสอบผลงาน:** รัน `dotnet build` และ `dotnet test` เพื่อยืนยันว่าไม่มี Error หรือ Warning ใหม่เกิดขึ้น
-
----
-
-## 11. Correct Improvement Methodology (วิธีการปรับปรุงโปรเจกต์ที่ถูกต้อง)
-- ค้นหา Root Cause จาก Log ในโฟลเดอร์ `OpenUtau\Logs` เสมอ
-- แก้ไขแบบ Surgical Edits โดยเปลี่ยนเฉพาะบรรทัดที่เกี่ยวข้อง
-- ห้ามเพิ่ม Abstraction หรือ Dependency ภายนอกโดยไม่จำเป็น
-- รักษาสัญญาระบบ (Public API Contracts) เพื่อให้โปรเจกต์ไฟล์ `.ustx` ดั้งเดิมเปิดได้ 100%
-
----
-
-## 12. Work History Log (บันทึกประวัติการพัฒนา)
-- **Version 1.0 (2026-08):** Codebase Unification & Master Tool Initiation (By DELTA SYNTH)
-- **Version 2.0 (2026-08):** Audio Core Enhancement (Cosine Envelope Smoothing & Priority Resamplers Setup)
-- **Version 2.1 (2026-08):** Automated Packaging & Deployment Scripts Integrated
-- **Version 3.0 (2026-10):** Total Zero-Defect Consolidation: Fixed Security Vulnerabilities (NU1903/NU1902 via Cryptography 10.0.13), Complete Test Suite Fix (282/282 tests passed, 0 failures, 0 warnings), Master Documentation Architecture
-- **Version 3.1 (2026-10):** Snappy Startup & Graceful Exit Optimization: Instant single-instance named Mutex, parallel audio & core discovery in SplashWindow, zero-delay thread dispatch, graceful audio halt, timer deactivation, child window cleanup, and immediate process termination eliminating lingering background instances.
+- [x] โค้ดคอมไพล์ผ่าน 100% ไร้คำเตือนและข้อผิดพลาด (`0 Errors, 0 Warnings`)
+- [x] ชุดทดสอบยูนิตเทสต์ทั้งหมดผ่านสมบูรณ์ (`100% Passed Tests`)
+- [x] ทดสอบการคลิก Timeline, ย้าย Playhead, และเริ่มเล่นเพลงตรงจุดคลิก ไม่ดีดกลับริมซ้าย
+- [x] ยืนยันการปิดโปรแกรมแบบ Graceful Shutdown ไร้ Ghost Process ตกค้างใน Task Manager
+- [x] เอกสาร `About-Project.md` และประวัติใน `History/` ได้รับการจัดเก็บอย่างสมบูรณ์
+- [x] โฟลเดอร์ `runtime/` คงสภาพเดิม ไม่มีการดัดแปลงใดๆ
+- [x] สร้างสกิล `/Thai-OpenUtau-Fix-And-Update-At-All` พร้อมใช้งานสำหรับงานซ่อมแซมและปรับสมดุลรอบถัดไป

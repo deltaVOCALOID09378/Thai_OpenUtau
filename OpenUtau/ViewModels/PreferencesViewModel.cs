@@ -106,6 +106,9 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public bool PlaybackPitchFollowShowPath { get; set; }
 
         // Paths
+        // DELTA SYNTH: User data path selection & relocation
+        public string UserDataPath => PathManager.Inst.DataPath;
+        public bool IsCustomUserDataPath => PathManager.Inst.IsCustomDataPath;
         public string SingerPath => PathManager.Inst.SingersPath;
         public string AdditionalSingersPath => !string.IsNullOrWhiteSpace(PathManager.Inst.AdditionalSingersPath) ? PathManager.Inst.AdditionalSingersPath : "(None)";
         [Reactive] public bool InstallToAdditionalSingersPath { get; set; }
@@ -1149,6 +1152,31 @@ namespace OpenUtau.App.ViewModels {
                 OS.OpenFolder(path);
             } catch (Exception e) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
+            }
+        }
+
+        public void SetUserDataPath(string path) {
+            try {
+                PathManager.SetCustomDataPath(path);
+                this.RaisePropertyChanged(nameof(UserDataPath));
+                this.RaisePropertyChanged(nameof(IsCustomUserDataPath));
+                this.RaisePropertyChanged(nameof(SingerPath));
+                DocManager.Inst.ExecuteCmd(new UserMessageNotification($"📁 กำหนดที่อยู่ฐานข้อมูลผู้ใช้ใหม่เรียบร้อยแล้ว: {path} (โปรดรีสตาร์ทโปรแกรมเพื่อให้มีผลสมบูรณ์)"));
+            } catch (Exception ex) {
+                Serilog.Log.Error(ex, "Failed to set custom user data path");
+                DocManager.Inst.ExecuteCmd(new UserMessageNotification("เกิดข้อผิดพลาดในการตั้งค่าที่อยู่ฐานข้อมูล"));
+            }
+        }
+
+        public void ResetUserDataPath() {
+            try {
+                PathManager.SetCustomDataPath(null);
+                this.RaisePropertyChanged(nameof(UserDataPath));
+                this.RaisePropertyChanged(nameof(IsCustomUserDataPath));
+                this.RaisePropertyChanged(nameof(SingerPath));
+                DocManager.Inst.ExecuteCmd(new UserMessageNotification("📁 รีเซ็ตที่อยู่ฐานข้อมูลกลับสู่ค่าเริ่มต้นเรียบร้อยแล้ว (โปรดรีสตาร์ทโปรแกรมเพื่อให้มีผลสมบูรณ์)"));
+            } catch (Exception ex) {
+                Serilog.Log.Error(ex, "Failed to reset user data path");
             }
         }
 

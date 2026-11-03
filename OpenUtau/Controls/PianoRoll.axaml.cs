@@ -2658,6 +2658,7 @@ namespace OpenUtau.App.Controls {
         public void OnNext(UCommand cmd, bool isUndo) {
             if (cmd is LoadingNotification loadingNotif && loadingNotif.window == typeof(PianoRoll)) {
                 if (loadingNotif.startLoading) {
+                    LoadingWindow.SetLoadingStatus(LoadingWindow.FormatReason(loadingNotif.loadObject));
                     LoadingWindow.BeginLoadingImmediate(RootWindow);
                 } else {
                     LoadingWindow.EndLoading();
@@ -2666,7 +2667,32 @@ namespace OpenUtau.App.Controls {
         }
 
         #region Screen Capture & Video Recording Handlers
+        private void InitializeCaptureServiceHooks() {
+            ScreenCaptureService.Inst.BeforeRenderFrame = () => {
+                var toolbar = this.FindControl<Border>("CaptureToolbarBorder");
+                if (toolbar != null) {
+                    toolbar.IsVisible = false;
+                }
+            };
+            ScreenCaptureService.Inst.AfterRenderFrame = () => {
+                var toolbar = this.FindControl<Border>("CaptureToolbarBorder");
+                if (toolbar != null) {
+                    toolbar.IsVisible = true;
+                }
+            };
+            ScreenCaptureService.Inst.OnRecordingDurationTick = elapsed => {
+                Dispatcher.UIThread.Post(() => {
+                    var txt = this.FindControl<TextBlock>("CaptureDurationText");
+                    if (txt != null) {
+                        txt.Text = string.Format("{0:00}:{1:00}", (int)elapsed.TotalMinutes, elapsed.Seconds);
+                        txt.IsVisible = true;
+                    }
+                });
+            };
+        }
+
         private async void OnCapturePhotoClick(object? sender, RoutedEventArgs e) {
+            InitializeCaptureServiceHooks();
             try {
                 await ScreenCaptureService.Inst.CapturePictureAsync(this);
             } catch (Exception ex) {
@@ -2675,6 +2701,7 @@ namespace OpenUtau.App.Controls {
         }
 
         private async void OnCaptureVideoClick(object? sender, RoutedEventArgs e) {
+            InitializeCaptureServiceHooks();
             try {
                 if (ScreenCaptureService.Inst.IsRecording) {
                     await ScreenCaptureService.Inst.StopRecordingAsync();
@@ -2693,6 +2720,13 @@ namespace OpenUtau.App.Controls {
                 var dot = this.FindControl<Avalonia.Controls.Shapes.Ellipse>("CaptureRecordingDot");
                 if (dot != null) {
                     dot.IsVisible = isRecording;
+                }
+                var durationText = this.FindControl<TextBlock>("CaptureDurationText");
+                if (durationText != null) {
+                    durationText.IsVisible = isRecording;
+                    if (!isRecording) {
+                        durationText.Text = "00:00";
+                    }
                 }
                 var btn = this.FindControl<Button>("CaptureVideoButton");
                 if (btn != null) {

@@ -894,7 +894,8 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="prefs.paths.addlsinger.install">อนุญาตให้ติดตั้งคลังเสียงใหม่ลงในโฟลเดอร์เสริม</system:String>
 <system:String x:Key="prefs.paths.detect">ตรวจหาอัตโนมัติ</system:String>
 <system:String x:Key="prefs.paths.loaddeepfolders">โหลดคลังเสียงที่ซ่อนอยู่ในโฟลเดอร์ลึกๆ ให้ครบทุกชั้น</system:String>
-<system:String x:Key="prefs.paths.singer">โฟลเดอร์เก็บคลังเสียงนักร้องหลัก (Singer Path)</system:String>
+<system:String x:Key="prefs.paths.data">ตำแหน่งฐานข้อมูลผู้ใช้หลัก (Singers, Dictionaries, Plugins ฯลฯ)</system:String>
+  <system:String x:Key="prefs.paths.singer">โฟลเดอร์เก็บคลังเสียงนักร้องหลัก (Singer Path)</system:String>
 <system:String x:Key="prefs.paths.reset">คืนค่าตำแหน่งเริ่มต้น</system:String>
 <system:String x:Key="prefs.paths.select">เลือกโฟลเดอร์</system:String>
 <system:String x:Key="prefs.playback">▶ การเล่นเสียงและฟังพรีวิว (Playback)</system:String>
