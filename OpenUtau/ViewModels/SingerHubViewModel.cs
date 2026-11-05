@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Concurrent;
@@ -215,7 +215,7 @@ namespace OpenUtau.App.ViewModels {
             // ALL: только исполнители из реестров (любой host).
             if (SelectedTabIndex == 0) q = q.Where(r => r.HasRegistry);
             // LUNAI: все с host == "lunai".
-            else if (SelectedTabIndex == 1) q = q.Where(r => r.Host == "lunai");
+            else if (SelectedTabIndex == 1) q = q.Where(r => r.Host == "delta" || r.Host == "lunai");
             // UFR: все с host == "ufr".
             else if (SelectedTabIndex == 2) q = q.Where(r => r.Host == "ufr");
             // BRAPA: все с host == "brapa".
@@ -314,7 +314,7 @@ namespace OpenUtau.App.ViewModels {
         public async Task RefreshAsync() {
             try {
                 Status = ThemeManager.GetString("lunai.status.fetching");
-                var lunaiList = await FetchRegistrySafeAsync();
+                var lunaiList = DeltaSynthSingerRegistry.GetOfficialEntries().Concat(await FetchRegistrySafeAsync()).ToList();
 
                 // UFR registry: remote JSON only; on error just skip.
                 var ufrList = await FetchRegistrySafeAsync("https://utaufrance.com/ufr-pack/singers.json");

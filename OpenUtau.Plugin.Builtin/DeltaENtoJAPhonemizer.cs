@@ -1,3 +1,4 @@
+﻿#pragma warning disable CS0618, CS0649, CS8632, CS0108, CS8600, CS8601, CS8602, CS8603, CS8604, CS8618
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -316,6 +317,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
 
             // จัดเตรียมช่องว่างให้พยัญชนะเพื่อให้ปรับระยะเวลาเส้น Pitch Bend ได้ดีขึ้น
+            if (string.IsNullOrEmpty(cons)) return (false, new string[0]);
             var vc = $"{vowel} {cons}";
             var altVc = $"{vowel} {cons[0]}";
             

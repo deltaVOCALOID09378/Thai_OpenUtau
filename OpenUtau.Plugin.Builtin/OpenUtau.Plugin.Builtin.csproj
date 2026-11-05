@@ -1,3 +1,13 @@
+﻿<!-- 
+============================================================================
+1. วัน/เดือน/ปี: 1 พฤศจิกายน พ.ศ. 2569 / 01 November 2026
+2. ชื่อไฟล์โค้ด: OpenUtau.Plugin.Builtin.csproj
+3. ลำดับเวอร์ชันของไฟล์: 1.4
+4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/OpenUtau.Plugin.Builtin.csproj
+5. หน้าที่: กำหนดค่าการคอมไพล์ปลั๊กอิน Phonemizer มาตรฐาน พร้อมยกเว้นโฟลเดอร์ Archive และปิดคำเตือนทั้งหมด
+6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Authors
+============================================================================
+-->
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -6,18 +16,30 @@
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <DebugType>embedded</DebugType>
     <Nullable>disable</Nullable>
-    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8612;CS8618;CS8619;CS8625;CS8629;CS8714;CS8767;CS8769;CS0108;CS0649;CS0414;CS0618;CS0612;CS0162;CS0219;CS8632;CS8981</NoWarn>
+    <LangVersion>12</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8612;CS8618;CS8619;CS8622;CS8625;CS8629;CS8632;CS8714;CS8765;CS8767;CS8769;CS0108;CS0162;CS0168;CS0219;CS0414;CS0436;CS0612;CS0618;CS0649;CA2255;CS8981</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.2" />
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+    <Compile Remove="AI_Agent_Commands_And_Archive\**" />
+    <EmbeddedResource Remove="AI_Agent_Commands_And_Archive\**" />
+    <None Remove="AI_Agent_Commands_And_Archive\**" />
+    <Compile Remove=".agents\**" />
+    <EmbeddedResource Remove=".agents\**" />
+    <None Remove=".agents\**" />
+    <Compile Remove="Dictionary\**" />
+    <EmbeddedResource Remove="Dictionary\**" />
+    <None Remove="Dictionary\**" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OpenUtau.Core\OpenUtau.Core.csproj" />
-    <Compile Remove="AI_Agent_Commands_And_Archive\**" />
-    <Compile Remove="Dictionary\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.2" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,7 @@
-// ============================================================================
-// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+﻿// ============================================================================
+// 1. วัน/เดือน/ปี: 5 พฤศจิกายน พ.ศ. 2569 / 5 November 2026
 // 2. ชื่อไฟล์โค้ด: PhonemeBasedPhonemizer.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 2.0
+// 3. ลำดับเวอร์ชันของไฟล์: 2.1
 // 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/PhonemeBasedPhonemizer.cs
 // 5. หน้าที่: คลาสแม่สำหรับ Arpasing และ Diphone ทุกภาษา บังคับใช้กฎเหล็กสัดส่วนเสียง
 //            (CV 60%, VC 35-40%, CC/C- 5-7%, Opening -C 10-20% ก่อนโน้ต)
@@ -136,7 +136,7 @@ namespace OpenUtau.Plugin.Builtin {
             }
 
             int startIndex = 0;
-            int firstVowel = Array.IndexOf(isVowel, true);
+            int firstVowel = Math.Max(0, Array.IndexOf(isVowel, true));
             if (firstVowel < 0) firstVowel = 0;
 
             // [DELTA SYNTH IRON RULE]

@@ -53,7 +53,7 @@
           <CheckBox Grid.Row="1" Grid.Column="0" Name="chkSlope" 
                     Content="3. The Slope / สโลปเชื่อมเสียง" 
                     IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>
-          <!-- แก้ไขชื่อตัวแปร chkW辯Shape เป็น chkWarpShape ป้องกัน Error ตอนคอมไพล์ -->
+          <!-- แก้ไขชื่อตัวแปร chkWShape เป็น chkWarpShape ป้องกัน Error ตอนคอมไพล์ -->
           <CheckBox Grid.Row="1" Grid.Column="1" Name="chkWarpShape" 
                     Content="4. W-Shape / คลื่นดับเบิ้ล" 
                     IsChecked="True" Foreground="#F0F0F0" Margin="0,2,0,6"/>

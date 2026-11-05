@@ -1,5 +1,5 @@
-// ============================================================================
-// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+﻿// ============================================================================
+// 1. วัน/เดือน/ปี: 1 พฤศจิกายน พ.ศ. 2569 / 01 November 2026
 // 2. ชื่อไฟล์โค้ด: OpusOggWaveReader.cs
 // 3. ลำดับเวอร์ชันของไฟล์: 1.2
 // 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Format/OpusOggWaveReader.cs
@@ -14,7 +14,6 @@ using Concentus.Structs;
 using NAudio.Wave;
 
 namespace OpenUtau.Core.Format {
-    // Preliminary blocking Opus reader supporting both file paths and shared streams.
     public class OpusOggWaveReader : WaveStream {
         WaveFormat waveFormat;
         MemoryStream oggStream;

@@ -1,5 +1,5 @@
-// ============================================================================
-// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+﻿// ============================================================================
+// 1. วัน/เดือน/ปี: 1 พฤศจิกายน พ.ศ. 2569 / 01 November 2026
 // 2. ชื่อไฟล์โค้ด: ProcessRunner.cs
 // 3. ลำดับเวอร์ชันของไฟล์: 1.2
 // 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Util/ProcessRunner.cs
@@ -89,7 +89,6 @@ namespace OpenUtau.Core.Util {
                 try {
                     proc.WaitForExit();
                 } catch {
-                    // Process already disposed or exited
                 }
 
                 stdoutDone.Wait(TimeSpan.FromSeconds(5));

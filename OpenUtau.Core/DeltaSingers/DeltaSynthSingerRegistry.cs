@@ -1,4 +1,4 @@
-// Made And Checked By DELTA SYNTH & Gemini AI
+﻿// Made And Checked By DELTA SYNTH & Gemini AI
 // Complete DELTA SYNTH Singer Profile Registry (55 Official Singers)
 
 using System;
@@ -31,7 +31,7 @@ namespace OpenUtau.Core.SingerHub {
                 NameTh = "อายานามิ ฮิคารุ",
                 Gender = "Male",
                 Age = "Thai, Japanese, English",
-                Voicer = "deltaVOCALOID (Delta)",
+                Voicer = "DELTA SYNTH",
                 Engine = "UTAU / DiffSinger",
                 Type = "Official DELTA",
                 Genre = "Pop / Rock / Anisong",
@@ -759,7 +759,7 @@ namespace OpenUtau.Core.SingerHub {
                 NameTh = "เฮเลน",
                 Gender = "Female",
                 Age = "English, Japanese",
-                Voicer = "DELTA SYNTH",
+                Voicer = "ไม่ได้ระบุ (Unspecified)",
                 Engine = "UTAU VCV / Arpasing",
                 Type = "Official DELTA",
                 Genre = "Pop / Ballad / Electronic",

@@ -1,5 +1,5 @@
-// ============================================================================
-// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+﻿// ============================================================================
+// 1. วัน/เดือน/ปี: 1 พฤศจิกายน พ.ศ. 2569 / 01 November 2026
 // 2. ชื่อไฟล์โค้ด: IRenderer.cs
 // 3. ลำดับเวอร์ชันของไฟล์: 1.1
 // 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Render/IRenderer.cs
@@ -23,9 +23,6 @@ namespace OpenUtau.Core.Render {
         public ResamplerFailedException(string message, Exception innerException) : base(message, innerException) { }
     }
 
-    /// <summary>
-    /// Render result of a phrase.
-    /// </summary>
     public class RenderResult {
         public float[] samples;
         public double leadingMs;
@@ -59,27 +56,17 @@ namespace OpenUtau.Core.Render {
         }
     }
 
-    /// <summary>
-    /// Interface of phrase-based renderer.
-    /// </summary>
     public interface IRenderer {
         USingerType SingerType { get; }
         bool SupportsRenderPitch { get; }
-
-        // [DELTA SYNTH] Optimized using expression body
         bool SupportsRealCurve => false;
 
         bool SupportsExpression(UExpressionDescriptor descriptor);
         RenderResult Layout(RenderPhrase phrase);
         Task<RenderResult> Render(RenderPhrase phrase, Progress progress, int trackNo, CancellationTokenSource cancellation, bool isPreRender = false, RenderPhraseEvents? renderEvents = null);
         RenderPitchResult LoadRenderedPitch(RenderPhrase phrase);
-
-        // [DELTA SYNTH] Optimized using expression body
         RenderPitchResult LoadRenderedPitch(RenderPhrase phrase, HashSet<int> selectedNotePositions) => LoadRenderedPitch(phrase);
-
-        // [DELTA SYNTH] Optimized using expression body
         List<RenderRealCurveResult> LoadRenderedRealCurves(RenderPhrase phrase) => new List<RenderRealCurveResult>(0);
-
         void ScheduleRealCurveRefresh(UProject project, UVoicePart part, UCommand command) { }
         UExpressionDescriptor[] GetSuggestedExpressions(USinger singer, URenderSettings renderSettings);
     }
