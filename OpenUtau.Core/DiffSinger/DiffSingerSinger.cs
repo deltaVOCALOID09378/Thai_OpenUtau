@@ -1,10 +1,10 @@
 // ============================================================================
-// Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : DiffSingerSinger.cs
-// Version      : 1.1
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
-// File Location: OpenUtau.Core/DiffSinger/DiffSingerSinger.cs
-// Description  : DiffSinger singer loader with defensive portrait check, suggestion provider, and language/phoneme support detection (TryGetOto/GetSuggestions/SupportsPhoneme/SupportsLanguage).
+// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
+// 2. ชื่อไฟล์: DiffSingerSinger.cs
+// 3. ลำดับเวอร์ชัน: 1.2
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวาง: OpenUtau.Core/DiffSinger/DiffSingerSinger.cs
+// 6. รายละเอียดการแก้ไข: แก้ไขข้อผิดพลาด CS0111 สมาชิกซ้ำซ้อนของ TryGetOto และ GetSuggestions รักษาตาราง Phoneme และระบบตรวจสอบภาษา DiffSinger ให้ถูกต้องสมบูรณ์
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -280,47 +280,16 @@ namespace OpenUtau.Core.DiffSinger {
             return variancePredictor;
         }
 
-        public override bool TryGetOto(string phoneme, out UOto oto) {
-            if (otoMap.TryGetValue(phoneme, out oto)) {
-                return true;
-            }
-            if (phoneme.Contains('/')) {
-                var sub = phoneme.Substring(phoneme.IndexOf('/') + 1);
-                if (otoMap.TryGetValue(sub, out oto)) {
-                    return true;
-                }
-            }
-            oto = default;
-            return false;
-        }
-
-        public override bool TryGetMappedOto(string phoneme, int tone, out UOto oto) {
-            return TryGetOto(phoneme, out oto);
-        }
-
-        public override bool TryGetMappedOto(string phoneme, int tone, string color, out UOto oto) {
-            return TryGetOto(phoneme, out oto);
-        }
-
-        public override IEnumerable<UOto> GetSuggestions(string text) {
-            if (text != null) {
-                text = text.ToLowerInvariant().Replace(" ", "");
-            }
-            bool all = string.IsNullOrEmpty(text);
-            return otoMap.Values
-                .Where(oto => all || oto.Alias.ToLowerInvariant().Replace(" ", "").Contains(text));
-        }
-
         public override bool SupportsPhoneme(string phoneme) {
             if (string.IsNullOrWhiteSpace(phoneme)) {
                 return false;
             }
             phoneme = phoneme.Trim();
-            if (TryGetOto(phoneme, out _)) {
+            if (table.ContainsKey(phoneme)) {
                 return true;
             }
             string clean = phoneme.Trim('[', ']');
-            if (clean != phoneme && TryGetOto(clean, out _)) {
+            if (clean != phoneme && table.ContainsKey(clean)) {
                 return true;
             }
             return false;

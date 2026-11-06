@@ -1,7 +1,7 @@
 // ============================================================================
 // Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : PhonemizerFactory.cs
-// Version      : 1.1
+// Version      : 1.2
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau.Core/Api/PhonemizerFactory.cs
 // Description  : เพิ่มการกรอง Phonemizer ใน EnumerateForSinger ให้แสดงเฉพาะภาษาและหน่วยเสียงที่คลังเสียงรองรับจริง (IsPhonemizerSupportedBySinger)
@@ -75,23 +75,31 @@ namespace OpenUtau.Api {
 
         public static bool IsPhonemizerSupportedBySinger(PhonemizerFactory factory, USinger singer) {
             if (factory == null || singer == null) return false;
-            if (string.Equals(factory.language, "UTAU", StringComparison.OrdinalIgnoreCase)) {
+            // Universal Default Phonemizer is always supported
+            if (factory.type?.FullName == "OpenUtau.Core.DefaultPhonemizer" ||
+                string.Equals(factory.name, "Default UTAU Phonemizer", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(factory.name, "Default Phonemizer", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(factory.tag, "Default UTAU", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(factory.tag, "---", StringComparison.OrdinalIgnoreCase)) {
                 return true;
             }
+            // Universal DiffSinger Phonemizer is always supported on DiffSinger
             if (singer.SingerType == USingerType.DiffSinger &&
                 (string.Equals(factory.name, "DiffSinger Phonemizer", StringComparison.OrdinalIgnoreCase) ||
-                 string.Equals(factory.type.Name, "DiffSingerPhonemizer", StringComparison.OrdinalIgnoreCase))) {
+                 string.Equals(factory.type?.Name, "DiffSingerPhonemizer", StringComparison.OrdinalIgnoreCase))) {
                 return true;
             }
+            // Singer default phonemizer is always supported
             if (!string.IsNullOrEmpty(singer.DefaultPhonemizer) &&
                 (string.Equals(singer.DefaultPhonemizer, factory.name, StringComparison.OrdinalIgnoreCase) ||
-                 string.Equals(singer.DefaultPhonemizer, factory.type.FullName, StringComparison.OrdinalIgnoreCase))) {
+                 string.Equals(singer.DefaultPhonemizer, factory.type?.FullName, StringComparison.OrdinalIgnoreCase))) {
                 return true;
             }
 
             string lang = factory.language ?? "";
             string tag = factory.tag ?? "";
 
+            // DiffSinger voicebank check
             if (singer.SingerType == USingerType.DiffSinger) {
                 var tagParts = tag.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (tagParts.Length > 0) {
@@ -106,15 +114,21 @@ namespace OpenUtau.Api {
                         return true;
                     }
                 }
-                return singer.SupportsLanguage(lang);
+                return !string.IsNullOrEmpty(lang) && !string.Equals(lang, "UTAU", StringComparison.OrdinalIgnoreCase) && singer.SupportsLanguage(lang);
             }
 
-            if (singer.SupportsLanguage(lang)) {
+            // Classic / ENUNU / other singers check
+            if (!string.IsNullOrEmpty(lang) && !string.Equals(lang, "UTAU", StringComparison.OrdinalIgnoreCase) && singer.SupportsLanguage(lang)) {
                 return true;
             }
             var partsClassic = tag.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (partsClassic.Length > 0 && singer.SupportsLanguage(partsClassic[0])) {
-                return true;
+            if (partsClassic.Length > 0) {
+                var cleanTag = partsClassic[0].Replace("+", "").Replace("/", " ");
+                foreach (var part in cleanTag.Split(' ', StringSplitOptions.RemoveEmptyEntries)) {
+                    if (singer.SupportsLanguage(part)) {
+                        return true;
+                    }
+                }
             }
 
             return false;
@@ -122,9 +136,11 @@ namespace OpenUtau.Api {
 
         public static IEnumerable<PhonemizerFactory> EnumerateForSinger(USinger? singer) {
             var all = GetAll();
-
-            if (singer == null || !singer.Found || !singer.Loaded) {
+            if (singer == null || !singer.Found) {
                 return all.Where(factory => !IsDiffSingerPhonemizer(factory));
+            }
+            if (!singer.Loaded) {
+                singer.EnsureLoaded();
             }
             if (singer.SingerType == USingerType.DiffSinger) {
                 var dsFactories = all.Where(IsDiffSingerPhonemizer);
@@ -134,14 +150,6 @@ namespace OpenUtau.Api {
             var classicFactories = all.Where(factory => !IsDiffSingerPhonemizer(factory));
             var supportedClassic = classicFactories.Where(factory => IsPhonemizerSupportedBySinger(factory, singer)).ToList();
             return supportedClassic.Count > 0 ? supportedClassic : classicFactories;
-        }
-
-
-
-            if (singer != null && singer.Found && singer.SingerType == USingerType.DiffSinger) {
-                return all.Where(IsDiffSingerPhonemizer);
-            }
-            return all.Where(factory => !IsDiffSingerPhonemizer(factory));
         }
     }
 }

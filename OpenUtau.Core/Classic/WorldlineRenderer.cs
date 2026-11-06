@@ -1,7 +1,7 @@
 // ============================================================================
-// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
 // 2. ชื่อไฟล์โค้ด: WorldlineRenderer.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 3.1
+// 3. ลำดับเวอร์ชันของไฟล์: 3.2
 // 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/WorldlineRenderer.cs
 // 5. หน้าที่: เรนเดอร์เสียงด้วยระบบ Worldline V1 และ V2 รองรับ CLRY, XSY และแคชแบบ Thread-Safe
 // 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Contributors
@@ -245,7 +245,10 @@ namespace OpenUtau.Classic {
                     float[] samples = Wave.GetSamples(waveStream!.ToSampleProvider().ToMono(1, 0));
                     int offset = (int)(item.phone.oto.Offset / 1000 * 44100);
                     int cutoff = (int)(item.phone.oto.Cutoff / 1000 * 44100);
-                    int length = cutoff >= 0 ? (samples.Length - offset - cutoff) : -cutoff;
+                    int length = cutoff > 0 ? (samples.Length - offset - cutoff) : (cutoff < 0 ? -cutoff : samples.Length - offset);
+                    if (length <= 0) length = Math.Max(0, samples.Length - offset);
+                    offset = Math.Clamp(offset, 0, Math.Max(0, samples.Length - 1));
+                    length = Math.Clamp(length, 0, samples.Length - offset);
                     samples = samples.Skip(offset).Take(length).ToArray();
                     item.ApplyEnvelope(samples);
                     for (int i = 0; i < Math.Min(samples.Length, result.samples.Length - startPhraseIndex); ++i) {

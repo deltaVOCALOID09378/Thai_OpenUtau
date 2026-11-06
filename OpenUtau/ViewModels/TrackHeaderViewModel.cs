@@ -1,11 +1,11 @@
 // ============================================================================
-// Date         : 02/11/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : TrackHeaderViewModel.cs
-// Version      : 3.2.1
+// Version      : 3.2.3
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau/ViewModels/TrackHeaderViewModel.cs
 // Description  : Track header ViewModel with static ConcurrentDictionary avatar memory cache
-//                and dynamic high-contrast TrackNoForeground luminance calculation.
+//                dynamic high-contrast TrackNoForeground luminance calculation, and singer-supported phonemizer filtering.
 // ============================================================================
 using System;
 using System.Collections.Concurrent;
@@ -711,6 +711,16 @@ namespace OpenUtau.App.ViewModels {
                     items.Add(MenuLineSeparator());
                 }
                 items.AddRange(remaining);
+                var allDs = PhonemizerFactory.GetAll().Where(PhonemizerFactory.IsDiffSingerPhonemizer).ToArray();
+                if (allDs.Length > remaining.Length) {
+                    var otherDs = allDs.Where(f => !listed.Contains(f.type) && !remaining.Any(r => Equals(r.CommandParameter, f.name))).ToArray();
+                    if (otherDs.Length > 0) {
+                        items.Add(new MenuItemViewModel() {
+                            Header = (ThemeManager.GetString("tracks.all_languages") ?? "All DiffSinger Languages (แสดงทั้งหมด)") + " ...",
+                            Items = otherDs.Select(factory => new PhonemizerMenuItemViewModel(factory, SelectPhonemizerCommand, null, AllSetPhonemizerCommand)).ToArray()
+                        });
+                    }
+                }
             } else {
                 //more phonemizers grouped by singing language
                 if (items.Count > 0) {
@@ -718,6 +728,7 @@ namespace OpenUtau.App.ViewModels {
                 }
                 items.Add(new MenuItemViewModel() {
                     Header = $"{ThemeManager.GetString("tracks.more")} ...",
+
                     Items = available.GroupBy(factory => factory.language)
                     .OrderBy(group => group.Key)
                     .Select(group => new MenuItemViewModel() {

@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : LyricBoxViewModel.cs
+// Version      : 1.1
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/ViewModels/LyricBoxViewModel.cs
+// Description  : กรองคำแนะนำการเลือกหน่วยเสียง (Suggestions) ให้แสดงเฉพาะหน่วยเสียงที่คลังเสียงรองรับจริง (SupportsPhoneme)
+// ============================================================================
 using System;
 using System.Linq;
 using System.Reactive.Linq;
@@ -70,10 +78,18 @@ namespace OpenUtau.App.ViewModels {
                     if (Core.Util.Preferences.Default.LyricsHelperBrackets) {
                         text = $"[{text}]";
                     }
-                    Suggestions.Add(new SuggestionItem() {
-                        Alias = text,
-                        Source = Core.Util.ActiveLyricsHelper.Inst.Current.Source,
-                    });
+                    // กรองหน่วยเสียงให้แสดงเฉพาะส่วนที่คลังเสียงรองรับจริงเท่านั้น
+                    bool supported = true;
+                    if (IsAliasBox) {
+                        string clean = text.Trim('[', ']');
+                        supported = singer.SupportsPhoneme(clean);
+                    }
+                    if (supported) {
+                        Suggestions.Add(new SuggestionItem() {
+                            Alias = text,
+                            Source = Core.Util.ActiveLyricsHelper.Inst.Current.Source,
+                        });
+                    }
                 }
                 if (!task.IsFaulted) {
                     Suggestions.AddRange(task.Result);

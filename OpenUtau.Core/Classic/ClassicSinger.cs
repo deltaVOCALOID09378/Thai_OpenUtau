@@ -1,10 +1,10 @@
 // ============================================================================
 // Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : ClassicSinger.cs
-// Version      : 1.1
+// Version      : 1.2
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau.Core/Classic/ClassicSinger.cs
-// Description  : Classic UTAU singer loader with defensive portrait check and language/phoneme support detection (SupportsPhoneme/SupportsLanguage).
+// Description  : Classic UTAU singer loader with defensive portrait check, mock voicebank safe reload, and accurate language/phoneme support detection.
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -91,10 +91,12 @@ namespace OpenUtau.Classic {
                 return;
             }
             try {
-                voicebank.Reload();
+                if (!string.IsNullOrEmpty(voicebank.File) && voicebank.File != "null" && File.Exists(voicebank.File)) {
+                    voicebank.Reload();
+                }
                 Load();
                 loaded = true;
-                if (otoWatcher == null) {
+                if (otoWatcher == null && !string.IsNullOrEmpty(Location) && Location != "null" && Directory.Exists(Location)) {
                     otoWatcher = new OtoWatcher(this, Location);
                 }
                 OtoDirty = false;
@@ -228,12 +230,21 @@ namespace OpenUtau.Classic {
             if (TryGetMappedOto(phoneme, 60, out _)) {
                 return true;
             }
-            if (otoMap.ContainsKey(phoneme)) {
+            if (otoMap != null && otoMap.ContainsKey(phoneme)) {
                 return true;
             }
             string clean = phoneme.Trim('[', ']');
-            if (clean != phoneme && (TryGetOto(clean, out _) || TryGetMappedOto(clean, 60, out _) || otoMap.ContainsKey(clean))) {
+            if (clean != phoneme && (TryGetOto(clean, out _) || TryGetMappedOto(clean, 60, out _) || (otoMap != null && otoMap.ContainsKey(clean)))) {
                 return true;
+            }
+            if (voicebank?.OtoSets != null) {
+                foreach (var set in voicebank.OtoSets) {
+                    if (set?.Otos != null) {
+                        if (set.Otos.Any(o => o.Alias == phoneme || o.Phonetic == phoneme || o.Alias == clean || o.Phonetic == clean)) {
+                            return true;
+                        }
+                    }
+                }
             }
             return false;
         }
@@ -264,9 +275,9 @@ namespace OpenUtau.Classic {
                 langs.Add("TH");
             }
 
-            if (otoMap == null || otoMap.Count == 0) {
-                return langs;
-            }
+            var aliases = (otoMap != null && otoMap.Count > 0)
+                ? (IEnumerable<string>)otoMap.Keys
+                : (voicebank?.OtoSets?.SelectMany(s => s?.Otos?.Select(o => o.Alias) ?? Enumerable.Empty<string>()) ?? Enumerable.Empty<string>());
 
             bool hasJa = false;
             bool hasTh = false;
@@ -275,7 +286,7 @@ namespace OpenUtau.Classic {
             bool hasKo = false;
             bool hasRu = false;
 
-            foreach (var alias in otoMap.Keys) {
+            foreach (var alias in aliases) {
                 if (string.IsNullOrEmpty(alias)) continue;
 
                 if (!hasTh) {
@@ -290,10 +301,27 @@ namespace OpenUtau.Classic {
 
                 if (!hasJa) {
                     if (alias.Any(c => (c >= 0x3040 && c <= 0x309F) || (c >= 0x30A0 && c <= 0x30FF)) ||
-                        alias == "a" || alias == "i" || alias == "u" || alias == "e" || alias == "o" ||
-                        alias == "ka" || alias == "sa" || alias == "ta" || alias == "na" || alias == "ha" || alias == "ma" || alias == "ya" || alias == "ra" || alias == "wa" ||
-                        alias.EndsWith(" a") || alias.EndsWith(" i") || alias.EndsWith(" u") || alias.EndsWith(" e") || alias.EndsWith(" o") ||
-                        alias.StartsWith("- ") || alias.StartsWith("_")) {
+                        alias == "a" || alias == "i" || alias == "u" || alias == "e" || alias == "o" || alias == "n" || alias == "nn" ||
+                        alias == "ka" || alias == "ki" || alias == "ku" || alias == "ke" || alias == "ko" ||
+                        alias == "sa" || alias == "shi" || alias == "su" || alias == "se" || alias == "so" ||
+                        alias == "ta" || alias == "chi" || alias == "tsu" || alias == "te" || alias == "to" ||
+                        alias == "na" || alias == "ni" || alias == "nu" || alias == "ne" || alias == "no" ||
+                        alias == "ha" || alias == "hi" || alias == "fu" || alias == "he" || alias == "ho" ||
+                        alias == "ma" || alias == "mi" || alias == "mu" || alias == "me" || alias == "mo" ||
+                        alias == "ya" || alias == "yu" || alias == "yo" ||
+                        alias == "ra" || alias == "ri" || alias == "ru" || alias == "re" || alias == "ro" ||
+                        alias == "wa" || alias == "wo" ||
+                        ((alias.StartsWith("- ") || alias.StartsWith("a ") || alias.StartsWith("i ") || alias.StartsWith("u ") || alias.StartsWith("e ") || alias.StartsWith("o ") || alias.StartsWith("n ")) &&
+                         (alias.EndsWith("ka") || alias.EndsWith("ki") || alias.EndsWith("ku") || alias.EndsWith("ke") || alias.EndsWith("ko") ||
+                          alias.EndsWith("sa") || alias.EndsWith("shi") || alias.EndsWith("su") || alias.EndsWith("se") || alias.EndsWith("so") ||
+                          alias.EndsWith("ta") || alias.EndsWith("chi") || alias.EndsWith("tsu") || alias.EndsWith("te") || alias.EndsWith("to") ||
+                          alias.EndsWith("na") || alias.EndsWith("ni") || alias.EndsWith("nu") || alias.EndsWith("ne") || alias.EndsWith("no") ||
+                          alias.EndsWith("ha") || alias.EndsWith("hi") || alias.EndsWith("fu") || alias.EndsWith("he") || alias.EndsWith("ho") ||
+                          alias.EndsWith("ma") || alias.EndsWith("mi") || alias.EndsWith("mu") || alias.EndsWith("me") || alias.EndsWith("mo") ||
+                          alias.EndsWith("ya") || alias.EndsWith("yu") || alias.EndsWith("yo") ||
+                          alias.EndsWith("ra") || alias.EndsWith("ri") || alias.EndsWith("ru") || alias.EndsWith("re") || alias.EndsWith("ro") ||
+                          alias.EndsWith("wa") || alias.EndsWith("wo") ||
+                          alias.Any(c => (c >= 0x3040 && c <= 0x309F) || (c >= 0x30A0 && c <= 0x30FF))))) {
                         hasJa = true;
                         langs.Add("JA");
                     }

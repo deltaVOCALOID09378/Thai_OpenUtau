@@ -29,6 +29,13 @@
                                AcceptsReturn="False" AcceptsTab="False"
                                Text="{Binding Grapheme}"/>
 
+      <!-- แสดงสถานะคลังเสียงที่กำลังกรองหน่วยเสียง -->
+      <TextBlock Text="{Binding ActiveSingerInfo}"
+                 IsVisible="{Binding HasActiveSinger}"
+                 FontSize="11" Opacity="0.85"
+                 HorizontalAlignment="Left"
+                 Foreground="{DynamicResource NeutralAccentBrushSemi}"/>
+
       <!-- ช่องแสดงผลลัพธ์เสียง (Phonemes) ปรับให้รองรับข้อความยาว -->
       <TextBox Name="PhonemesText"
                Classes="workspacePanelTextBox"

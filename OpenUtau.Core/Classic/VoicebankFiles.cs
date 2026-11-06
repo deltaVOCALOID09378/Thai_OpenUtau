@@ -1,4 +1,12 @@
-﻿using System;
+// ============================================================================
+// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
+// 2. ชื่อไฟล์โค้ด: VoicebankFiles.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 2.0
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/VoicebankFiles.cs
+// 6. รายละเอียดการแก้ไข: รองรับการค้นหาไฟล์ .frq ทั้งแบบ _wav.frq และ .frq ดั้งเดิม เพื่อให้ Worldline ดึงข้อมูล Pitch ได้แม่นยำ
+// ============================================================================
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -113,7 +121,15 @@ namespace OpenUtau.Classic {
             string ext = Path.GetExtension(source);
             string noExt = source.Substring(0, source.Length - ext.Length);
             string frqExt = ext.Replace('.', '_') + ".frq";
-            return noExt + frqExt;
+            string path1 = noExt + frqExt;
+            if (File.Exists(path1)) {
+                return path1;
+            }
+            string path2 = Path.ChangeExtension(source, ".frq");
+            if (File.Exists(path2)) {
+                return path2;
+            }
+            return path1;
         }
         public static string GetMrqFile(string source) {
             return Path.Combine(Path.GetDirectoryName(source), "desc.mrq");

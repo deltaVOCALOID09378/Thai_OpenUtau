@@ -1,7 +1,7 @@
 // ============================================================================
-// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : PianoRoll.axaml.cs
-// Version      : 3.4.0
+// Version      : 3.4.1
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
 // File Location: OpenUtau/Controls/PianoRoll.axaml.cs
 // Description  : Piano Roll controller with Vocal Tuning macro menu & toolbar integration,
@@ -257,7 +257,7 @@ namespace OpenUtau.App.Controls {
         }
 
         private void UpdatePortraitPosition() {
-            const double rightPad = 100;
+
             var portrait = ViewModel?.NotesViewModel?.Portrait;
             bool show = Preferences.Default.ShowPortrait && portrait != null;
             if (!show || WorkspaceDockGrid.Bounds.Width <= 0) {
@@ -294,10 +294,25 @@ namespace OpenUtau.App.Controls {
                 return;
             }
             double aspect = size.Width / (double)size.Height;
-            double imgHeight = spanHeight;
+            double rightPad = Math.Clamp(notesRect.Width * 0.05, 12.0, 72.0);
+            double maxAllowedWidth = Math.Max(20.0, notesRect.Width - rightPad);
+            double maxAllowedHeight = Math.Max(20.0, spanHeight);
+            double imgHeight = maxAllowedHeight;
             double imgWidth = imgHeight * aspect;
+            if (imgWidth > maxAllowedWidth) {
+                imgWidth = maxAllowedWidth;
+                imgHeight = imgWidth / aspect;
+            }
+            if (imgHeight > maxAllowedHeight) {
+                imgHeight = maxAllowedHeight;
+                imgWidth = imgHeight * aspect;
+            }
             double imgLeft = notesRect.Right - imgWidth - rightPad;
-            var portraitRect = new Rect(imgLeft, spanTop, imgWidth, imgHeight);
+            if (imgLeft < notesRect.Left) {
+                imgLeft = notesRect.Left;
+            }
+            double imgTop = spanTop + (spanHeight - imgHeight);
+            var portraitRect = new Rect(imgLeft, imgTop, imgWidth, imgHeight);
 
             var notesVm = ViewModel!.NotesViewModel;
             UpdatePortraitLayer(PortraitLayerNotes, PortraitImageNotes, portraitRect, NotesCanvas, true);
