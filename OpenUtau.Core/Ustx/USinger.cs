@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -10,8 +10,8 @@ using OpenUtau.Core.Util;
 // ============================================================================
 // Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
 // Original by Patiphat Wongyai (Delta)
-// Version: 1.0 | Date: 2026-10-27
-// Description: รองรับการระบุศิลปินคลังเสียงสังเคราะห์ของ DELTA SYNTH อัตโนมัติ
+// Version: 1.1 | Date: 06/11/2026 (B.E. 2569 / A.D. 2026)
+// Description: รองรับการระบุศิลปินคลังเสียงสังเคราะห์ของ DELTA SYNTH และเพิ่มการกรองหน่วยเสียงตามที่คลังเสียงรองรับจริง (SupportsPhoneme/SupportsLanguage)
 // ============================================================================
 
 namespace OpenUtau.Core.Ustx {
@@ -352,6 +352,41 @@ namespace OpenUtau.Core.Ustx {
         }
 
         public virtual IEnumerable<UOto> GetSuggestions(string text) { return emptyOtos; }
+
+        /// <summary>
+        /// Checks whether this voicebank actually supports the specified phoneme or alias.
+        /// </summary>
+        public virtual bool SupportsPhoneme(string phoneme) {
+            if (string.IsNullOrWhiteSpace(phoneme)) {
+                return false;
+            }
+            phoneme = phoneme.Trim();
+            if (TryGetOto(phoneme, out _)) {
+                return true;
+            }
+            if (TryGetMappedOto(phoneme, 60, out _)) {
+                return true;
+            }
+            string clean = phoneme.Trim('[', ']');
+            if (clean != phoneme && (TryGetOto(clean, out _) || TryGetMappedOto(clean, 60, out _))) {
+                return true;
+            }
+            if (Otos != null && Otos.Count > 0) {
+                if (Otos.Any(o => string.Equals(o.Alias, phoneme, StringComparison.OrdinalIgnoreCase) ||
+                                  string.Equals(o.Phonetic, phoneme, StringComparison.OrdinalIgnoreCase) ||
+                                  string.Equals(o.Alias, clean, StringComparison.OrdinalIgnoreCase))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Checks whether this voicebank supports phonemizers of the given language.
+        /// </summary>
+        public virtual bool SupportsLanguage(string language) {
+            return true;
+        }
         public virtual byte[] LoadPortrait() => null;
         public virtual byte[] LoadSample() => null;
         public override string ToString() => LocalizedName;

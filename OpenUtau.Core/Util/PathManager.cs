@@ -1,12 +1,12 @@
+// ============================================================================
+// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
+// 2. ชื่อไฟล์โค้ด: PathManager.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.2
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Util/PathManager.cs
+// 6. รายละเอียดการแก้ไข: เพิ่ม LegacyDataPath เพื่อรักษาความเข้ากันได้แบบ 100% ย้อนหลัง ป้องกัน MissingMethodException
+// ============================================================================
 using System;
-// ============================================================================
-// Date         : 03/11/2569 (B.E.) / 03/11/2026 (A.D.)
-// File Name    : PathManager.cs
-// Version      : 1.1
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
-// File Location: OpenUtau.Core/Util/PathManager.cs
-// Description  : Added user-selectable data folder (datapath.txt pointer) for Windows reinstall / restore.
-// ============================================================================
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -122,6 +122,7 @@ namespace OpenUtau.Core {
         }
 
         public string DefaultDataPath { get; private set; } = string.Empty;
+        public string LegacyDataPath => DefaultDataPath;
         public bool IsCustomDataPath { get; private set; }
         public string RootPath { get; private set; }
         public string DataPath { get; private set; }

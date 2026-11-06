@@ -1,5 +1,5 @@
-Version=3.9.0
+Version=3.9.4
 BaseVersion=3
-LastDate=2026-10-31
-BuildNumber=9
-ModifiedFilesCount=154
+LastDate=2026-11-06
+BuildNumber=10
+ModifiedFilesCount=155

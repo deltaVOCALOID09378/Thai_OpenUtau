@@ -1,10 +1,10 @@
-﻿// ============================================================================
-// Date         : 03/11/2026 (B.E. 2569 / A.D. 2026)
+// ============================================================================
+// Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : DiffSingerSinger.cs
-// Version      : 1.0
+// Version      : 1.1
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau.Core/DiffSinger/DiffSingerSinger.cs
-// Description  : DiffSinger singer loader with defensive portrait check to avoid FileNotFoundException.
+// Description  : DiffSinger singer loader with defensive portrait check, suggestion provider, and language/phoneme support detection (TryGetOto/GetSuggestions/SupportsPhoneme/SupportsLanguage).
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -278,6 +278,108 @@ namespace OpenUtau.Core.DiffSinger {
                 }
             }
             return variancePredictor;
+        }
+
+        public override bool TryGetOto(string phoneme, out UOto oto) {
+            if (otoMap.TryGetValue(phoneme, out oto)) {
+                return true;
+            }
+            if (phoneme.Contains('/')) {
+                var sub = phoneme.Substring(phoneme.IndexOf('/') + 1);
+                if (otoMap.TryGetValue(sub, out oto)) {
+                    return true;
+                }
+            }
+            oto = default;
+            return false;
+        }
+
+        public override bool TryGetMappedOto(string phoneme, int tone, out UOto oto) {
+            return TryGetOto(phoneme, out oto);
+        }
+
+        public override bool TryGetMappedOto(string phoneme, int tone, string color, out UOto oto) {
+            return TryGetOto(phoneme, out oto);
+        }
+
+        public override IEnumerable<UOto> GetSuggestions(string text) {
+            if (text != null) {
+                text = text.ToLowerInvariant().Replace(" ", "");
+            }
+            bool all = string.IsNullOrEmpty(text);
+            return otoMap.Values
+                .Where(oto => all || oto.Alias.ToLowerInvariant().Replace(" ", "").Contains(text));
+        }
+
+        public override bool SupportsPhoneme(string phoneme) {
+            if (string.IsNullOrWhiteSpace(phoneme)) {
+                return false;
+            }
+            phoneme = phoneme.Trim();
+            if (TryGetOto(phoneme, out _)) {
+                return true;
+            }
+            string clean = phoneme.Trim('[', ']');
+            if (clean != phoneme && TryGetOto(clean, out _)) {
+                return true;
+            }
+            return false;
+        }
+
+        private HashSet<string>? detectedLanguages;
+
+        public override bool SupportsLanguage(string language) {
+            if (string.IsNullOrEmpty(language) || language.Equals("DiffSinger", StringComparison.OrdinalIgnoreCase)) {
+                return true;
+            }
+            if (detectedLanguages == null) {
+                detectedLanguages = DetectSupportedLanguages();
+            }
+            return detectedLanguages.Contains(language.ToUpperInvariant());
+        }
+
+        private HashSet<string> DetectSupportedLanguages() {
+            var langs = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "DIFFSINGER" };
+
+            // 1. Check dictionary files in voicebank folder (e.g. dsdict-th.yaml, dsdict-ja.yaml)
+            if (!string.IsNullOrEmpty(Location) && Directory.Exists(Location)) {
+                try {
+                    var dictFiles = Directory.GetFiles(Location, "dsdict-*.yaml");
+                    foreach (var file in dictFiles) {
+                        var filename = Path.GetFileNameWithoutExtension(file); // e.g. "dsdict-th"
+                        var langCode = filename.Replace("dsdict-", "").ToUpperInvariant(); // "TH"
+                        langs.Add(langCode);
+                    }
+                } catch { }
+            }
+
+            // 2. Check language IDs in dsconfig.yaml
+            if (languageIds != null && languageIds.Count > 0) {
+                foreach (var langId in languageIds.Keys) {
+                    langs.Add(langId.ToUpperInvariant());
+                }
+            }
+
+            // 3. Check phoneme tokens for language-specific prefixes (e.g. "th/a", "ja/a", "zh/a")
+            if (phonemes != null && phonemes.Count > 0) {
+                foreach (var ph in phonemes) {
+                    if (ph.Contains('/')) {
+                        var prefix = ph.Substring(0, ph.IndexOf('/')).ToUpperInvariant();
+                        if (prefix.Length <= 4) {
+                            langs.Add(prefix);
+                        }
+                    }
+                }
+            }
+
+            // 4. Check DELTA SYNTH / Thai indicators
+            if (IsDeltaSynthSinger || 
+                (!string.IsNullOrEmpty(Location) && (Location.Contains("Thai", StringComparison.OrdinalIgnoreCase) || Location.Contains("DELTA SYNTH", StringComparison.OrdinalIgnoreCase))) ||
+                (!string.IsNullOrEmpty(Name) && Name.Contains("Thai", StringComparison.OrdinalIgnoreCase))) {
+                langs.Add("TH");
+            }
+
+            return langs;
         }
 
         public int PhonemeTokenize(string phoneme){

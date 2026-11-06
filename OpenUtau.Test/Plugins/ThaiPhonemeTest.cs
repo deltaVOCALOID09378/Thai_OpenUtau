@@ -28,7 +28,7 @@ namespace OpenUtau.Plugins {
         [InlineData("th_vccv", new string[] { "สวรรค์", "บรรณ", "ธรรม", "พรรค" }, 
             new string[] { "sa", "wa", "an", "ba", "an", "tham", "pha", "ak" })]
         [InlineData("th_vccv", new string[] { "จันทรา", "ปรารถนา", "ปราถนา" }, 
-            new string[] { "ja", "an", "tha", "ra", "pr", "ra", "ad", "tha", "na", "pr", "ra", "ad", "า" })]
+            new string[] { "ja", "an", "tha", "ra", "pr", "ra", "ad", "tha", "na", "pr", "ra", "ad", "าa" })]
         [InlineData("th_vccv", new string[] { "ป่วน", "เหลือ", "โสน", "ขวัญ", "หนาม", "อย่า" }, 
             new string[] { "pua", "uan", "l6", "sa", "no", "khw", "wa", "an", "nam", "ya" })]
         [InlineData("th_vccv", new string[] { "บ่", "ธ", "ณ" }, 

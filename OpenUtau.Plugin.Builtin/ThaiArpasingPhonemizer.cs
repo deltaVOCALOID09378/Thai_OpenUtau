@@ -1,12 +1,12 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// 1. วัน/เดือน/ปี: 5 พฤศจิกายน พ.ศ. 2569 / 5 November 2026
+// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
 // 2. ชื่อไฟล์โค้ด: ThaiArpasingPhonemizer.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 5.1
+// 3. ลำดับเวอร์ชันของไฟล์: 5.2
 // 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
 // 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/ThaiArpasingPhonemizer.cs
-// 6. รายละเอียดการแก้ไข: ปรับปรุงการโหลดพจนานุกรมผ่าน ThaiDictionaryManager โดยระบุประเภทพจนานุกรม "arp" อย่างเจาะจง
+// 6. รายละเอียดการแก้ไข: ปรับปรุง Timing Safety ให้ Monotonic Spacing แน่นหนา ป้องกันการชนกันของหน่วยเสียงเมื่อโน้ตสั้น
 // ============================================================================
 
 using System;
@@ -288,15 +288,14 @@ namespace OpenUtau.Plugin.Builtin {
 
                     int absolutePosition = position + sylStartPos;
                     int lastPos = phonemes.Count > 0 ? phonemes.Last().position : -120;
-                    if (absolutePosition <= lastPos) {
-                        absolutePosition = lastPos + 10;
+                    int safePos = Math.Max(absolutePosition, lastPos + 10);
+                    if (sIdx > 0 && safePos < sylStartPos) {
+                        safePos = Math.Max(sylStartPos, lastPos + 10);
                     }
-                    if (sIdx > 0 && absolutePosition < sylStartPos) {
-                        absolutePosition = sylStartPos;
-                        if (absolutePosition <= lastPos) absolutePosition = lastPos + 10;
+                    if (safePos >= sylEndPos && sylEndPos - 10 > lastPos) {
+                        safePos = Math.Max(lastPos + 10, sylEndPos - 10);
                     }
-                    absolutePosition = Math.Min(absolutePosition, sylEndPos - 10);
-                    phonemes.Add(new Phoneme { phoneme = alias, position = absolutePosition });
+                    phonemes.Add(new Phoneme { phoneme = alias, position = safePos });
                 }
             }
 

@@ -1,12 +1,10 @@
 // ============================================================================
-// Date         : 28/10/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : ThaiBasePhonemizer_v1.2.0.cs
-// Version      : 1.4
-// Author Credit: Made And Checked By DELTA SYNTH & Gemini AI [ Original by Patiphat Wongyai (Delta) ]
-// File Location: OpenUtau.Plugin.Builtin/ThaiBasePhonemizer_v1.2.0.cs
-// Description  : Professional Thai Phoneme Timing Manager with cached YamlDotNet
-//                deserializer, precise struct mutation safety, consonant
-//                clustering, and duration bounds.
+// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
+// 2. ชื่อไฟล์โค้ด: ThaiBasePhonemizer_v1.2.0.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.5
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai (Delta) ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/ThaiBasePhonemizer_v1.2.0.cs
+// 6. รายละเอียดการแก้ไข: ป้องกันหน่วยเสียงชนกันด้วย Monotonic Spacing และเกลี่ยตัวสะกดหลายตัวให้กระจายอย่างสม่ำเสมอ
 // ============================================================================
 
 using System;
@@ -132,11 +130,20 @@ namespace OpenUtau.Plugin.Builtin
                 }
                 else
                 {
-                    // ตัวสะกด — อยู่ในช่วงท้ายของโน้ต
-                    p.position = finalStart;
+                    // ตัวสะกด — กระจายอย่างเป็นระเบียบในช่วงท้ายของโน้ต ไม่ให้ชนกันที่ tick เดียวกัน
+                    int finalIdx = i - vowelIdx - 1;
+                    int subFinalOffset = (finalConsonants.Count > 1)
+                        ? (int)(finalArea * finalIdx / (double)finalConsonants.Count)
+                        : 0;
+                    p.position = finalStart + subFinalOffset;
                 }
-                // Safety: ห้าม position ทะลุขอบโน้ต
-                p.position = Math.Max(0, Math.Min(p.position, totalDuration - 10));
+                // Safety: ป้องกันการชนกันของหน่วยเสียง (Monotonic Spacing >= 10 ticks) และห้าม position ทะลุขอบโน้ต
+                int prevPos = (i > 0) ? phonemes[i - 1].position : -120;
+                p.position = Math.Max(p.position, prevPos + 10);
+                if (p.position > totalDuration - 10)
+                {
+                    p.position = Math.Max(prevPos + 10, totalDuration - 10);
+                }
                 phonemes[i] = p;
             }
         }

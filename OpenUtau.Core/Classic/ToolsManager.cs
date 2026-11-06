@@ -1,3 +1,11 @@
+﻿// ============================================================================
+// Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : ToolsManager.cs
+// Version      : 1.0
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau.Core/Classic/ToolsManager.cs
+// Description  : ToolsManager managing resamplers and wavtools with Moresampler prioritization as default.
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -121,21 +129,46 @@ namespace OpenUtau.Classic {
 
         public IResampler GetResampler(string name) {
             lock (_locker) {
-                if (name != null && resamplersMap.TryGetValue(name, out var resampler)) {
-                    return resampler;
-                } else {
-                    return resamplersMap[WorldlineResampler.name];
+                if (!string.IsNullOrEmpty(name)) {
+                    if (resamplersMap.TryGetValue(name, out var resampler)) {
+                        return resampler;
+                    }
+                    var match = resamplers.FirstOrDefault(r =>
+                        string.Equals(r.ToString(), name, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(Path.GetFileName(r.ToString()), Path.GetFileName(name), StringComparison.OrdinalIgnoreCase));
+                    if (match != null) {
+                        return match;
+                    }
                 }
+                // [DELTA SYNTH] กำหนดให้ Moresampler เป็นชุดเริ่มต้นสำหรับการเรนเดอร์ (Default Classic Resampler)
+                var moresampler = resamplers.FirstOrDefault(r =>
+                    r.ToString().ToLowerInvariant().Contains("moresampler"));
+                if (moresampler != null) {
+                    return moresampler;
+                }
+                if (resamplersMap.TryGetValue(WorldlineResampler.name, out var worldline)) {
+                    return worldline;
+                }
+                return resamplers.FirstOrDefault();
             }
         }
 
         public IWavtool GetWavtool(string name) {
             lock (_locker) {
-                if (name != null && wavtoolsMap.TryGetValue(name, out var wavtool)) {
-                    return wavtool;
-                } else {
-                    return wavtoolsMap[SharpWavtool.nameConvergence];
+                if (!string.IsNullOrEmpty(name)) {
+                    if (wavtoolsMap.TryGetValue(name, out var wavtool)) {
+                        return wavtool;
+                    }
+                    var match = wavtools.FirstOrDefault(w =>
+                        string.Equals(w.ToString(), name, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(Path.GetFileName(w.ToString()), Path.GetFileName(name), StringComparison.OrdinalIgnoreCase));
+                    if (match != null) {
+                        return match;
+                    }
                 }
+                return wavtoolsMap.TryGetValue(SharpWavtool.nameConvergence, out var defaultWavtool)
+                    ? defaultWavtool
+                    : wavtools.FirstOrDefault();
             }
         }
     }

@@ -1,13 +1,12 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// Date         : 27/10/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : ThaiCpVPhonemizer.cs
-// Version      : 4.0
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
-// File Location: OpenUtau.Plugin.Builtin/ThaiCpVPhonemizer.cs
-// Description  : ระบบแปลงหน่วยเสียงสไตล์ C+V (Consonant + Vowel) พร้อมระบบป้องกัน Null,
-//                การจัดสรรพยางค์ข้ามโน้ตแม่นยำ (Safe Sub-Interval Division) และ Consonant Space Widening
+// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
+// 2. ชื่อไฟล์โค้ด: ThaiCpVPhonemizer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 4.1
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/ThaiCpVPhonemizer.cs
+// 6. รายละเอียดการแก้ไข: ปรับปรุง Timing Safety ให้ Monotonic Spacing แน่นหนา และจัดสรรพยางค์ข้ามโน้ตแม่นยำ
 // ============================================================================
 
 using System;
@@ -321,14 +320,17 @@ namespace OpenUtau.Plugin.Builtin {
                         position = Math.Max((int)(noteDuration * 0.80), noteDuration - 90);
                     }
 
-                    // ป้องกันเสียงผีสิง หรือตำแหน่งล้นขอบเขต
+                    // ป้องกันเสียงผีสิง หรือตำแหน่งล้นขอบเขต (Monotonic Timing Safety)
                     int absolutePosition = position + sylStartPos;
                     int lastPos = phonemes.Count > 0 ? phonemes.Last().position : -120;
-                    if (absolutePosition <= lastPos) {
-                        absolutePosition = lastPos + 10;
+                    int safePos = Math.Max(absolutePosition, lastPos + 10);
+                    if (sIdx > 0 && safePos < sylStartPos) {
+                        safePos = Math.Max(sylStartPos, lastPos + 10);
                     }
-                    absolutePosition = Math.Max(sylStartPos, Math.Min(absolutePosition, sylEndPos - 10));
-                    phonemes.Add(new Phoneme { phoneme = alias, position = absolutePosition });
+                    if (safePos >= sylEndPos && sylEndPos - 10 > lastPos) {
+                        safePos = Math.Max(lastPos + 10, sylEndPos - 10);
+                    }
+                    phonemes.Add(new Phoneme { phoneme = alias, position = safePos });
                 }
             }
 

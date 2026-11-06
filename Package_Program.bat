@@ -1,14 +1,13 @@
 @echo off
 rem ======================================================================
-rem Date         : 27/10/2026 (B.E. 2569 / A.D. 2026)
+rem Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
 rem File Name    : Package_Program.bat
-rem Version      : 2.0
+rem Version      : 2.1
 rem Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
 rem Location     : Package_Program.bat
 rem Description  : Professional Standalone Packaging Pipeline for Thai OpenUtau with dictionary bundling.
-rem                Creates Standalone ZIP Archive and Executable SFX Installer.
-rem                Supports Drag & Drop of any published directory.
-rem                v2.0: PKG_VER may be preset by the caller (Release_Cycle.bat); default stays 3.3.0.
+rem                Creates Standalone ZIP Archive and Executable SFX Installer with instant GUI display (<1s).
+rem                v2.1: Updated default PKG_VER to 3.9.4 and embedded Thai OpenUtau Logo icon into SFX.
 rem ======================================================================
 
 setlocal enabledelayedexpansion
@@ -84,7 +83,7 @@ if exist "%PROJECT_ROOT%\All Rendered File\DirectML.dll" (
 )
 
 rem Step 2: Prepare Export Directories
-if not defined PKG_VER set "PKG_VER=3.3.0"
+if not defined PKG_VER set "PKG_VER=3.9.4"
 set "EXPORT_DIR=%PROJECT_ROOT%\Published\Version no. %PKG_VER%"
 if not exist "%EXPORT_DIR%" mkdir "%EXPORT_DIR%" >nul 2>&1
 
@@ -148,7 +147,9 @@ if exist "%RAR_EXE%" (
         echo Shortcut=P, "Start-The-Program.bat", "", "Thai OpenUtau by DELTA SYNTH", "Thai OpenUtau"
     ) > "%TEMP%\sfx_config.txt"
 
-    "%RAR_EXE%" a -r -ep1 -sfx -m5 -z"%TEMP%\sfx_config.txt" -y "%EXPORT_DIR%\Thai_OpenUtau_Installer_v%PKG_VER%.exe" "%TARGET_DIR%\*" >nul 2>&1
+    set "ICON_PARAM="
+    if exist "%PROJECT_ROOT%\OpenUtau\Assets\Thai OpenUtau Logo.ico" set "ICON_PARAM=-iicon"%PROJECT_ROOT%\OpenUtau\Assets\Thai OpenUtau Logo.ico""
+    "%RAR_EXE%" a -r -ep1 -sfx -m5 !ICON_PARAM! -z"%TEMP%\sfx_config.txt" -y "%EXPORT_DIR%\Thai_OpenUtau_Installer_v%PKG_VER%.exe" "%TARGET_DIR%\*" >nul 2>&1
     if !errorlevel! equ 0 (
         copy /y "%EXPORT_DIR%\Thai_OpenUtau_Installer_v%PKG_VER%.exe" "%PROJECT_ROOT%\" >nul 2>&1
         echo [OK] Standalone Installer EXE created successfully:

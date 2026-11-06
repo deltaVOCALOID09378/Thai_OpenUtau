@@ -146,5 +146,92 @@ namespace OpenUtau.Plugin.Builtin {
                 }
             }
         }
+
+        // พจนานุกรมคำศัพท์พื้นฐานเฉพาะระบบ UTAU VCCV (Pure UTAU VCCV Core Entries)
+        private static readonly (string Word, string Phonemes)[] BuiltinCoreVccvEntries = new[] {
+            ("ไม่", "m ay"), ("มี", "m i"), ("อีก", "i k"), ("ฝน", "f o n"), ("ฟ้า", "f a"),
+            ("สวย", "s ua y"), ("ไม้", "m a y"), ("งาม", "g a m"), ("ขาด", "kh a d"), ("ความ", "kh w a m"),
+            ("รัก", "r a k"), ("ไร้", "r ay"), ("ค่า", "kh a"), ("สิ่ง", "s i g"), ("หัว", "h ua"),
+            ("ใจ", "j ay"), ("หัวใจ", "h ua j ay"), ("ให้", "h ay"), ("ใน", "n ay"), ("ได้", "d a y"),
+            ("ไป", "p ay"), ("มา", "m a"), ("คน", "kh o n"), ("เธอ", "th 3"), ("ฉัน", "ch a n"),
+            ("เรา", "r aw"), ("เขา", "kh aw"), ("คิด", "kh i d"), ("ถึง", "th 1 g"), ("คิดถึง", "kh i d th 1 g"),
+            ("วัน", "w a n"), ("คืน", "kh 1 n"), ("ดาว", "d a w"), ("เดือน", "d 6 n"), ("ลม", "l o m"),
+            ("หนาว", "n a w"), ("ร้อน", "r Q n"), ("แสง", "s @ g"), ("เงา", "g aw"), ("ทาง", "th a g"),
+            ("ฝัน", "f a n"), ("ความฝัน", "kh w a m f a n"), ("ความรัก", "kh w a m r a k"), ("ความจริง", "kh w a m j i g"),
+            ("ชีวิต", "ch i w i d"), ("เวลา", "w e l a"), ("น้ำตา", "n a m t a"), ("รอยยิ้ม", "r Q y y i m"),
+            ("เสียง", "s ia g"), ("เพลง", "ph l e g"), ("เรื่องราว", "r 6 g r a w"), ("ตลอดไป", "t a l Q d p ay"),
+            ("เมื่อไหร่", "m 6 r ay"), ("เท่าไหร่", "th aw r ay"), ("ทำไม", "th a m m ay"), ("อย่างไร", "y a g r ay"),
+            ("เพราะ", "ph r Q"), ("เพื่อ", "ph 6"), ("แต่", "t @"), ("และ", "l @"), ("หรือ", "r 1"),
+            ("ก็", "k Q"), ("แล้ว", "l @ w"), ("อยู่", "y u"), ("อย่าง", "y a g"), ("อยาก", "y a k"),
+            ("อย่า", "y a"), ("อาจ", "a d"), ("ออก", "Q k"), ("อ่อน", "Q n"), ("อ้อมกอด", "Q m k Q d")
+        };
+
+        /// <summary>
+        /// อ่านไฟล์ YAML เฉพาะของระบบ UTAU VCCV เท่านั้น
+        /// </summary>
+        public static void ParseVccvYamlDictionary(string fullPath, Dictionary<string, string> targetDict, ref int counter) {
+            if (!File.Exists(fullPath)) return;
+            bool inDictSection = false;
+            foreach (var rawLine in File.ReadAllLines(fullPath, Encoding.UTF8)) {
+                string line = rawLine.Trim();
+                if (string.IsNullOrEmpty(line) || line.StartsWith("#")) continue;
+
+                if (line.StartsWith("dictionary:", StringComparison.OrdinalIgnoreCase)) {
+                    inDictSection = true;
+                    continue;
+                }
+                if (!rawLine.StartsWith(" ") && !rawLine.StartsWith("\t") && line.EndsWith(":")) {
+                    inDictSection = false;
+                    continue;
+                }
+                if (inDictSection && line.Contains(":")) {
+                    int idx = line.IndexOf(':');
+                    string k = line.Substring(0, idx).Trim().Trim('"', '\'').Normalize(NormalizationForm.FormC);
+                    string v = line.Substring(idx + 1).Trim().Trim('"', '\'').Normalize(NormalizationForm.FormC);
+                    if (!string.IsNullOrEmpty(k) && !string.IsNullOrEmpty(v)) {
+                        targetDict[k] = v;
+                        counter++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// สร้างไฟล์ตั้งค่าหน่วยเสียงเบื้องต้นเฉพาะสำหรับ UTAU VCCV ในคลังเสียงของนักร้อง (Pure UTAU VCCV YAML)
+        /// </summary>
+        public static string EnsureSingerVccvYaml(string singerLocation) {
+            if (string.IsNullOrEmpty(singerLocation) || !Directory.Exists(singerLocation)) return string.Empty;
+            string yamlPath = Path.Combine(singerLocation, "th_vccv_phonemes.yaml");
+            if (File.Exists(yamlPath)) return yamlPath;
+
+            try {
+                string content = @"# ============================================================================
+# Thai UTAU VCCV Voicebank Phoneme Configuration (th_vccv_phonemes.yaml)
+# Pure UTAU VCCV Phoneme Set (Strictly separated from DiffSinger)
+# ============================================================================
+language: TH
+phonemizer: Thai VCCV Phonemizer
+vowels: [a, i, u, e, o, '@', Q, '3', '6', '1', ia, ua, I, aw, am]
+diphthongs: [r, l, w]
+consonants: [b, ch, d, f, g, h, j, k, kh, l, m, n, p, ph, r, s, t, th, w, y, '-']
+endingConsonants: [b, ch, d, f, g, h, j, k, kh, l, m, n, p, ph, r, s, t, th, w, y]
+dictionary:
+  ไม่: m ay
+  มี: m i
+  ฝน: f o n
+  ฟ้า: f a
+  หัวใจ: h ua j ay
+  เธอ: th 3
+  ฉัน: ch a n
+  เรา: r aw
+  ชีวิต: ch i w i d
+  รัก: r a k
+";
+                File.WriteAllText(yamlPath, content, Encoding.UTF8);
+            } catch (Exception ex) {
+                Log.Warning(ex, $"[ThaiDictionaryManager] ไม่สามารถสร้างไฟล์ th_vccv_phonemes.yaml ในคลังเสียงได้: {singerLocation}");
+            }
+            return yamlPath;
+        }
     }
 }

@@ -1,13 +1,12 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// 1. วัน/เดือน/ปี: 27 ตุลาคม พ.ศ. 2569 / 27 October 2026
+// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
 // 2. ชื่อไฟล์โค้ด: ThaiVCVPhonemizer.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 2.9
+// 3. ลำดับเวอร์ชันของไฟล์: 3.0
 // 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
 // 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/ThaiVCVPhonemizer.cs
-// 6. รายละเอียดการแก้ไข: ปรับปรุงการกระจายพยางค์บนตัวโน้ตไม่ให้ล้นขอบเขตโน้ต (Safe Sub-Interval Division)
-//                       พร้อมระบบ Fallback สู่ coreCV/V ป้องกันการสูญหายของหน่วยเสียง และ Timing Safety
+// 6. รายละเอียดการแก้ไข: ปรับปรุง Timing Safety ให้ Monotonic Spacing แน่นหนา พร้อมระบบ Fallback สู่ coreCV/V
 // ============================================================================
 
 using System;
@@ -358,14 +357,17 @@ namespace OpenUtau.Plugin.Builtin {
                         }
                     }
                     
-                    // ป้องกัน Overlap และรักษาขอบเขตเวลาของพยางค์อย่างเคร่งครัด
+                    // ป้องกัน Overlap และรักษาขอบเขตเวลาของพยางค์อย่างเคร่งครัด (Monotonic Timing Safety)
                     int absolutePosition = position + sylStartPos;
                     int lastPos = phonemes.Count > 0 ? phonemes.Last().position : -120;
-                    if (absolutePosition <= lastPos) {
-                        absolutePosition = lastPos + 10;
+                    int safePos = Math.Max(absolutePosition, lastPos + 10);
+                    if (sIdx > 0 && safePos < sylStartPos) {
+                        safePos = Math.Max(sylStartPos, lastPos + 10);
                     }
-                    absolutePosition = Math.Max(sylStartPos, Math.Min(absolutePosition, sylEndPos - 10));
-                    phonemes.Add(new Phoneme { phoneme = alias, position = absolutePosition });
+                    if (safePos >= sylEndPos && sylEndPos - 10 > lastPos) {
+                        safePos = Math.Max(lastPos + 10, sylEndPos - 10);
+                    }
+                    phonemes.Add(new Phoneme { phoneme = alias, position = safePos });
                 }
             }
 

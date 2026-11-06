@@ -21,7 +21,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 title DELTA SYNTH - Thai OpenUtau Release Cycle v1.0
 color 0B
 chcp 65001 >nul
-set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1"
+set "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0"
 
 set "PROJECT_ROOT=%~dp0"
 if "%PROJECT_ROOT:~-1%"=="\" set "PROJECT_ROOT=%PROJECT_ROOT:~0,-1%"

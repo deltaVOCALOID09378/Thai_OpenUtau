@@ -1,10 +1,10 @@
-﻿// ============================================================================
-// Date         : 03/11/2026 (B.E. 2569 / A.D. 2026)
+// ============================================================================
+// Date         : 06/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : ClassicSinger.cs
-// Version      : 1.0
+// Version      : 1.1
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau.Core/Classic/ClassicSinger.cs
-// Description  : Classic UTAU singer loader with defensive portrait check to avoid FileNotFoundException.
+// Description  : Classic UTAU singer loader with defensive portrait check and language/phoneme support detection (SupportsPhoneme/SupportsLanguage).
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -213,6 +213,131 @@ namespace OpenUtau.Classic {
             bool all = string.IsNullOrEmpty(text);
             return otoMap.Values
                 .Where(oto => all || oto.SearchTerms.Exists(term => term.Contains(text)));
+        }
+
+        private HashSet<string>? detectedLanguages;
+
+        public override bool SupportsPhoneme(string phoneme) {
+            if (string.IsNullOrWhiteSpace(phoneme)) {
+                return false;
+            }
+            phoneme = phoneme.Trim();
+            if (TryGetOto(phoneme, out _)) {
+                return true;
+            }
+            if (TryGetMappedOto(phoneme, 60, out _)) {
+                return true;
+            }
+            if (otoMap.ContainsKey(phoneme)) {
+                return true;
+            }
+            string clean = phoneme.Trim('[', ']');
+            if (clean != phoneme && (TryGetOto(clean, out _) || TryGetMappedOto(clean, 60, out _) || otoMap.ContainsKey(clean))) {
+                return true;
+            }
+            return false;
+        }
+
+        public override bool SupportsLanguage(string language) {
+            if (string.IsNullOrEmpty(language) || language.Equals("UTAU", StringComparison.OrdinalIgnoreCase)) {
+                return true;
+            }
+            if (detectedLanguages == null) {
+                detectedLanguages = DetectSupportedLanguages();
+            }
+            return detectedLanguages.Contains(language.ToUpperInvariant());
+        }
+
+        private HashSet<string> DetectSupportedLanguages() {
+            var langs = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "UTAU" };
+
+            if (!string.IsNullOrEmpty(DefaultPhonemizer)) {
+                var defaultFactory = OpenUtau.Api.PhonemizerFactory.Get(DefaultPhonemizer);
+                if (defaultFactory != null && !string.IsNullOrEmpty(defaultFactory.language)) {
+                    langs.Add(defaultFactory.language.ToUpperInvariant());
+                }
+            }
+
+            if (IsDeltaSynthSinger || 
+                (!string.IsNullOrEmpty(Location) && (Location.Contains("Thai", StringComparison.OrdinalIgnoreCase) || Location.Contains("DELTA SYNTH", StringComparison.OrdinalIgnoreCase))) ||
+                (!string.IsNullOrEmpty(Name) && Name.Contains("Thai", StringComparison.OrdinalIgnoreCase))) {
+                langs.Add("TH");
+            }
+
+            if (otoMap == null || otoMap.Count == 0) {
+                return langs;
+            }
+
+            bool hasJa = false;
+            bool hasTh = false;
+            bool hasEn = false;
+            bool hasZh = false;
+            bool hasKo = false;
+            bool hasRu = false;
+
+            foreach (var alias in otoMap.Keys) {
+                if (string.IsNullOrEmpty(alias)) continue;
+
+                if (!hasTh) {
+                    if (alias.Any(c => c >= 0x0E00 && c <= 0x0E7F) ||
+                        alias.Contains("k a") || alias.Contains("t a") || alias.Contains("p a") ||
+                        alias.Contains("a-") || alias.Contains("_a") || alias.EndsWith(" 6") ||
+                        alias.EndsWith(" @") || alias.EndsWith(" 1") || alias.EndsWith(" 3") || alias.EndsWith(" Q")) {
+                        hasTh = true;
+                        langs.Add("TH");
+                    }
+                }
+
+                if (!hasJa) {
+                    if (alias.Any(c => (c >= 0x3040 && c <= 0x309F) || (c >= 0x30A0 && c <= 0x30FF)) ||
+                        alias == "a" || alias == "i" || alias == "u" || alias == "e" || alias == "o" ||
+                        alias == "ka" || alias == "sa" || alias == "ta" || alias == "na" || alias == "ha" || alias == "ma" || alias == "ya" || alias == "ra" || alias == "wa" ||
+                        alias.EndsWith(" a") || alias.EndsWith(" i") || alias.EndsWith(" u") || alias.EndsWith(" e") || alias.EndsWith(" o") ||
+                        alias.StartsWith("- ") || alias.StartsWith("_")) {
+                        hasJa = true;
+                        langs.Add("JA");
+                    }
+                }
+
+                if (!hasEn) {
+                    if ((alias.StartsWith("[- ") && alias.EndsWith("]")) ||
+                        alias.Contains("aa") || alias.Contains("ae") || alias.Contains("ah") ||
+                        alias.Contains("ao") || alias.Contains("aw") || alias.Contains("ay") ||
+                        alias.Contains("eh") || alias.Contains("er") || alias.Contains("ey") ||
+                        alias.Contains("ih") || alias.Contains("iy") || alias.Contains("ow") ||
+                        alias.Contains("oy") || alias.Contains("uh") || alias.Contains("uw")) {
+                        hasEn = true;
+                        langs.Add("EN");
+                    }
+                }
+
+                if (!hasZh) {
+                    if (alias.Any(c => c >= 0x4E00 && c <= 0x9FFF)) {
+                        hasZh = true;
+                        langs.Add("ZH");
+                    }
+                }
+
+                if (!hasKo) {
+                    if (alias.Any(c => c >= 0xAC00 && c <= 0xD7AF)) {
+                        hasKo = true;
+                        langs.Add("KO");
+                    }
+                }
+
+                if (!hasRu) {
+                    if (alias.Any(c => c >= 0x0400 && c <= 0x04FF)) {
+                        hasRu = true;
+                        langs.Add("RU");
+                    }
+                }
+            }
+
+            if (!hasJa && !hasTh && !hasEn && !hasZh && !hasKo && !hasRu) {
+                langs.Add("JA");
+            }
+
+            return langs;
         }
 
         public override byte[] LoadPortrait() {
