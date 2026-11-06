@@ -1,3 +1,12 @@
+// ============================================================================
+// 1. วัน/เดือน/ปี: 5 พฤศจิกายน พ.ศ. 2569 / 5 November 2026
+// 2. ชื่อไฟล์โค้ด: Ust.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.1
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/Ust.cs
+// 6. รายละเอียดการแก้ไข: ปรับปรุง WriteHeader ให้รองรับพารามิเตอร์ isPlugin เพื่อให้การเขียนไฟล์ Temp สำหรับ Plugin เป็นไปตามข้อกำหนดมาตรฐาน UTAU และชุดทดสอบ PluginRunnerTest
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -368,7 +377,7 @@ namespace OpenUtau.Classic {
             var sequence = new List<UNote>();
             var track = project.tracks[part.trackNo];
             using (var writer = new StreamWriter(filePath, false, Encoding.GetEncoding(encoding))) {
-                WriteHeader(project, part, writer);
+                WriteHeader(project, part, writer, isPlugin: true);
                 var position = 0;
                 if (prev != null) {
                     writer.WriteLine($"[#PREV]");
@@ -403,14 +412,15 @@ namespace OpenUtau.Classic {
                     writer.WriteLine($"[#NEXT]");
                     WriteNoteBody(project, track, part, next, writer);
                 }
-                WriteFooter(writer);
             }
             return sequence;
         }
 
-        static void WriteHeader(UProject project, UVoicePart part, StreamWriter writer) {
-            writer.WriteLine("[#VERSION]");
-            writer.WriteLine("UST Version1.2");
+        static void WriteHeader(UProject project, UVoicePart part, StreamWriter writer, bool isPlugin = false) {
+            if (!isPlugin) {
+                writer.WriteLine("[#VERSION]");
+                writer.WriteLine("UST Version1.2");
+            }
             writer.WriteLine("[#SETTING]");
             writer.WriteLine($"Tempo={project.timeAxis.GetBpmAtTick(part.position)}");
             writer.WriteLine("Tracks=1");

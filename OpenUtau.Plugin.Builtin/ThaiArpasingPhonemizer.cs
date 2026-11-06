@@ -1,13 +1,12 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// Date         : 27/10/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : ThaiArpasingPhonemizer.cs
-// Version      : 5.0
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
-// File Location: OpenUtau.Plugin.Builtin/ThaiArpasingPhonemizer.cs
-// Description  : Thai Arpasing Phonemizer with Safe Sub-Interval Division, boundary clamping,
-//                pre-utterance collision protection, and unified ThaiDictionaryManager caching.
+// 1. วัน/เดือน/ปี: 5 พฤศจิกายน พ.ศ. 2569 / 5 November 2026
+// 2. ชื่อไฟล์โค้ด: ThaiArpasingPhonemizer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 5.1
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/ThaiArpasingPhonemizer.cs
+// 6. รายละเอียดการแก้ไข: ปรับปรุงการโหลดพจนานุกรมผ่าน ThaiDictionaryManager โดยระบุประเภทพจนานุกรม "arp" อย่างเจาะจง
 // ============================================================================
 
 using System;
@@ -116,7 +115,7 @@ namespace OpenUtau.Plugin.Builtin {
         private void LoadCustomDictionary() {
             if (isDictLoaded) return;
             try {
-                ThaiDictionaryManager.ApplyToDictionary(CustomDictionary);
+                ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, null, "arp");
                 if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
                     string[] singerDicts = { "dsdict-th.txt", "words_th.txt", "words_th_dict.txt", "th_custom_dict.txt" };
                     foreach (var dict in singerDicts) {
