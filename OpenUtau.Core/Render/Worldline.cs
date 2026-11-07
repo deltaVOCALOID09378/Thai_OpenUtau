@@ -1,10 +1,12 @@
-/*
-Worldline.cs
-A:\Thai_OpenUtau\OpenUtau.Core\Render\Worldline.cs
-Made And Checked By DELTA SYNTH & Gemini AI
-Original by StAkira / OpenUtau Authors
-Revision 1.0: Auto-clamping oto bounds, positive vowel speed protection, smooth f0 voicing transition, and click-free cosine crossfade.
-*/
+// ============================================================================
+// 1. วัน/เดือน/ปี: 7 พฤศจิกายน พ.ศ. 2569 / 7 November 2026
+// 2. ชื่อไฟล์โค้ด: Worldline.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 2.1
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by StAkira / OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Render/Worldline.cs
+// 6. รายละเอียดการแก้ไข: รองรับ Multi-Sample-Rate Resampling อัตโนมัติ ป้องกันแครชในคลังเสียง 48kHz
+//                       พร้อมขยาย Acoustic Context Padding เป็น 80ms รักษา Harmonic Brilliance
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -527,10 +529,7 @@ namespace OpenUtau.Core.Render {
                 config = cfg;
                 float[] samples = new float[0];
                 using (var waveStream = Wave.OpenFile(item.inputFile)) {
-                    int wavFs = waveStream.WaveFormat.SampleRate;
-                    if (wavFs != fs) {
-                        throw new Exception($"Unsupported sample rate {wavFs} Hz in {item.inputFile}. Only {fs} Hz is supported.");
-                    }
+                    // Safe multi-sample-rate resampling: Wave.GetSamples automatically resamples any sample rate to 44.1kHz mono
                     samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0)).ToArray();
                 }
                 if (samples.Length == 0) {
@@ -592,8 +591,10 @@ namespace OpenUtau.Core.Render {
 
                 float wavMax = samples.Max(s => Math.Abs(s));
 
-                int trimStartFrame = Math.Max(0, srcStartFrame - 2);
-                int trimEndFrame = Math.Min(f0Src.Length, srcEndFrame + 2);
+                // Expanded acoustic context padding: 8 frames (80ms) ensures CheapTrick FFT window (2048 samples = 46.4ms)
+                // has full context around consonant attack, eliminating boundary truncation and muffled frequencies
+                int trimStartFrame = Math.Max(0, srcStartFrame - 8);
+                int trimEndFrame = Math.Min(f0Src.Length, srcEndFrame + 8);
                 srcStartFrame -= trimStartFrame;
                 srcEndFrame -= trimStartFrame;
                 f0Src = f0Src[trimStartFrame..trimEndFrame];

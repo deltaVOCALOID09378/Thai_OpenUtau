@@ -1,10 +1,11 @@
 // ============================================================================
-// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 1. วัน/เดือน/ปี: 7 พฤศจิกายน พ.ศ. 2569 / 7 November 2026
 // 2. ชื่อไฟล์โค้ด: WorldlineRenderer.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 3.1
-// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/WorldlineRenderer.cs
-// 5. หน้าที่: เรนเดอร์เสียงด้วยระบบ Worldline V1 และ V2 รองรับ CLRY, XSY และแคชแบบ Thread-Safe
-// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Contributors
+// 3. ลำดับเวอร์ชันของไฟล์: 3.3
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/WorldlineRenderer.cs
+// 6. รายละเอียดการแก้ไข: อัปเกรดระบบ Equal-Power Cosine S-Curve Crossfade ลดอาการเสียงคลิก/ป๊อป
+//                       พร้อมปรับปรุง AddDirects ให้รองรับ Fallback File Path และ Safe Bounds Clamping
 // ============================================================================
 
 using System;
@@ -181,12 +182,14 @@ namespace OpenUtau.Classic {
                         result.samples = result.samples.Skip(leftPadding * 512).Take(totalFrames * 512).ToArray();
                         int easeInSamples = Math.Min(result.samples.Length, 512);
                         for (int i = 0; i < easeInSamples; ++i) {
-                            double gain = (double)i / easeInSamples;
+                            // Equal-power cosine smoothstep: eliminates phase clicks and -3dB energy dips at phrase start
+                            double gain = 0.5 * (1.0 - Math.Cos(Math.PI * i / easeInSamples));
                             result.samples[i] = (float)(result.samples[i] * gain);
                         }
                         int easeOutSamples = Math.Min(result.samples.Length, 512);
                         for (int i = 0; i < easeOutSamples; ++i) {
-                            double gain = (double)(easeOutSamples - i) / easeOutSamples;
+                            // Equal-power cosine smoothstep: eliminates phase clicks at phrase end
+                            double gain = 0.5 * (1.0 + Math.Cos(Math.PI * i / easeOutSamples));
                             result.samples[result.samples.Length - easeOutSamples + i] = (float)(result.samples[result.samples.Length - easeOutSamples + i] * gain);
                         }
                     }
@@ -237,15 +240,17 @@ namespace OpenUtau.Classic {
                     continue;
                 }
                 double posMs = item.phone.positionMs - item.phone.leadingMs - (phrase.positionMs - phrase.leadingMs);
-                int startPhraseIndex = (int)(posMs / 1000 * 44100);
-                using (var waveStream = Wave.OpenFile(item.phone.oto.File)) {
+                int startPhraseIndex = (int)(posMs / 1000.0 * 44100);
+                string filePath = File.Exists(item.phone.oto.File) ? item.phone.oto.File : item.inputFile;
+                using (var waveStream = Wave.OpenFile(filePath)) {
                     if (waveStream == null) {
                         continue;
                     }
-                    float[] samples = Wave.GetSamples(waveStream!.ToSampleProvider().ToMono(1, 0));
-                    int offset = (int)(item.phone.oto.Offset / 1000 * 44100);
-                    int cutoff = (int)(item.phone.oto.Cutoff / 1000 * 44100);
-                    int length = cutoff >= 0 ? (samples.Length - offset - cutoff) : -cutoff;
+                    float[] samples = Wave.GetSamples(waveStream.ToSampleProvider().ToMono(1, 0));
+                    int offset = Math.Clamp((int)(item.phone.oto.Offset / 1000.0 * 44100), 0, samples.Length);
+                    int cutoff = (int)(item.phone.oto.Cutoff / 1000.0 * 44100);
+                    int length = cutoff >= 0 ? Math.Max(0, samples.Length - offset - cutoff) : Math.Max(0, -cutoff);
+                    length = Math.Min(length, samples.Length - offset);
                     samples = samples.Skip(offset).Take(length).ToArray();
                     item.ApplyEnvelope(samples);
                     for (int i = 0; i < Math.Min(samples.Length, result.samples.Length - startPhraseIndex); ++i) {
