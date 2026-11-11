@@ -132,8 +132,7 @@ namespace OpenUtau.Core {
         public string CachePath { get; private set; }
         public bool HomePathIsAscii { get; private set; }
         public bool IsInstalled { get; private set; }
-        // DELTA SYNTH: Restores LegacyDataPath for backward compatibility with older components & forks
-        public string LegacyDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "OpenUtau");
+
         public string SingersPathOld => Path.Combine(DataPath, "Content", "Singers");
         public string SingersPath => Path.Combine(DataPath, "Singers");
         public string AdditionalSingersPath => Preferences.Default.AdditionalSingerPath;

@@ -624,7 +624,7 @@ namespace OpenUtau.Core.Render {
                 int dstFrameCount = Math.Max(1, (int)Math.Ceiling(item.durRequired / cfg.frame_ms));
                 double[] tDst = new double[dstFrameCount];
                 {
-                    double srcLengthMs = Math.Max(cfg.frame_ms, (localEndFrame - localStartFrame) * cfg.frame_ms);
+                    double srcLengthMs = Math.Max(cfg.frame_ms, (srcEndFrame - srcStartFrame) * cfg.frame_ms);
                     double consonantSpeed = Math.Pow(0.5, 1.0 - item.velocity / 100.0);
                     double maxConsonantMs = Math.Max(0.0, srcLengthMs - cfg.frame_ms);
                     double srcConsonantMs = Math.Clamp(item.consonant, 0.0, maxConsonantMs);
@@ -677,7 +677,7 @@ namespace OpenUtau.Core.Render {
                             }
                         }
                         srcMs = Math.Clamp(srcMs, 0.0, srcLengthMs);
-                        tDst[i] = srcMs / cfg.frame_ms + localStartFrame;
+                        tDst[i] = srcMs / cfg.frame_ms + srcStartFrame;
                     }
                 }
 

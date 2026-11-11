@@ -104,14 +104,12 @@ namespace OpenUtau.Plugin.Builtin {
             var dictDiphthongs = new HashSet<string>(diphthongs);
             var dictEndingConsonants = new HashSet<string>(endingConsonants);
 
-            for (int i = 0; i < phonemes.Length; i++) {
-                string p = phonemes[i];
-                
-                if (DsConsonantMap.TryGetValue(p, out string? mappedC)) p = mappedC;
-                else if (DsVowelMap.TryGetValue(p, out string? mappedV)) p = mappedV;
-                
-                if (p == "I" || p == "ay" || p == "aw" || p == "am") {
-                    if (p == "ay") p = "I";
+            for (int i = 0; i < tokens.Length; i++) {
+                string p = tokens[i];
+                // ในไฟล์ TH-VCCV_Dict.txt สระไอ/ใอ ใช้สัญลักษณ์ "ay" ซึ่งตรงกับหน่วยเสียง "I" ในโครงสร้างหลักของ ThaiVCCVPhonemizer
+                if (p == "ay") p = "I";
+
+                if (p == "I" || p == "aw" || p == "am") {
                     currentSyllable += p;
                     syllables.Add(currentSyllable);
                     currentSyllable = "";
