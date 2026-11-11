@@ -63,6 +63,7 @@ build_*.log
 # ===================================================
 # 4. แคชของระบบและโปรแกรม (Application & Audio Cache)
 # ===================================================
+AI_Agent_Commands_And_Archive/
 UCache/
 Cache/
 cache/
@@ -96,7 +97,7 @@ cache/
 !**/[Pp]ackages/build/
 *.nuget.props
 *.nuget.targets
-
+Published/
 # ===================================================
 # 7. ผลการทดสอบ (Unit Tests & Benchmarks)
 # ===================================================
@@ -175,4 +176,3 @@ Program_backup.cs
 .vscode/
 .claude/
 .github/
-Published/

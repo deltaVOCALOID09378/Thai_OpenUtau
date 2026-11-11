@@ -1,3 +1,11 @@
+// ============================================================================
+// วัน/เดือน/ปี: 10 พฤศจิกายน 2569 (2026-11-10)
+// ชื่อไฟล์: KeyTranslator.cs
+// ลำดับเวอร์ชัน: 2.0
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// ตำแหน่งที่จัดวาง: OpenUtau/ViewModels/KeyTranslator.cs
+// รายละเอียดการแก้ไขงาน: ขยายระบบตรวจสอบคีย์ลัดให้รองรับ Numpad 0-9, Enter/Return, Delete/Back เพื่อให้กดปุ่มลัดได้สะดวกไร้อุปสรรค
+// ============================================================================
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -73,6 +81,28 @@ namespace OpenUtau.App.ViewModels {
             if (savedKey == pressedKey) return true;
 
             return savedKey switch {
+                Key.D0 => pressedKey == Key.NumPad0,
+                Key.D1 => pressedKey == Key.NumPad1,
+                Key.D2 => pressedKey == Key.NumPad2,
+                Key.D3 => pressedKey == Key.NumPad3,
+                Key.D4 => pressedKey == Key.NumPad4,
+                Key.D5 => pressedKey == Key.NumPad5,
+                Key.D6 => pressedKey == Key.NumPad6,
+                Key.D7 => pressedKey == Key.NumPad7,
+                Key.D8 => pressedKey == Key.NumPad8,
+                Key.D9 => pressedKey == Key.NumPad9,
+                Key.NumPad0 => pressedKey == Key.D0,
+                Key.NumPad1 => pressedKey == Key.D1,
+                Key.NumPad2 => pressedKey == Key.D2,
+                Key.NumPad3 => pressedKey == Key.D3,
+                Key.NumPad4 => pressedKey == Key.D4,
+                Key.NumPad5 => pressedKey == Key.D5,
+                Key.NumPad6 => pressedKey == Key.D6,
+                Key.NumPad7 => pressedKey == Key.D7,
+                Key.NumPad8 => pressedKey == Key.D8,
+                Key.NumPad9 => pressedKey == Key.D9,
+                Key.Delete => pressedKey == Key.Back,
+                Key.Back => pressedKey == Key.Delete,
                 Key.OemPipe => pressedKey == Key.Oem5 || pressedKey == Key.OemBackslash,
                 Key.OemOpenBrackets => pressedKey == Key.Oem4,
                 Key.OemCloseBrackets => pressedKey == Key.Oem6,
@@ -80,7 +110,9 @@ namespace OpenUtau.App.ViewModels {
                 Key.OemSemicolon => pressedKey == Key.Oem1,
                 Key.OemTilde => pressedKey == Key.Oem3 || pressedKey == Key.Oem8,
                 Key.OemMinus => pressedKey == Key.Subtract,
+                Key.Subtract => pressedKey == Key.OemMinus,
                 Key.OemPlus => pressedKey == Key.Add,
+                Key.Add => pressedKey == Key.OemPlus,
                 Key.OemQuestion => pressedKey == Key.Oem2,
                 _ => false
             };

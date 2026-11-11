@@ -807,6 +807,7 @@ namespace OpenUtau.Core.SingerHub {
                     Company = "DELTA SYNTH",
                     Type = p.Engine.IndexOf("diffsinger", StringComparison.OrdinalIgnoreCase) >= 0 ? "diffsinger" : "utau",
                     Host = "delta",
+                    GroupType = p.Type,
                     DownloadUrl = p.DownloadUrl,
                     Tos = "https://deltasynth.com/termsofuse",
                     Icon = $"https://deltasynth.com/assets/images/voicebanks/{p.Name}.png",

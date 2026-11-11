@@ -1,4 +1,13 @@
-﻿using System;
+// ============================================================================
+// Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : UpdaterDialog.axaml.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/Views/UpdaterDialog.axaml.cs
+// Description  : Update notification dialog that verifies the installed system version before prompting any download.
+// ============================================================================
+using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -26,8 +35,15 @@ namespace OpenUtau.App.Views {
                     return false;
                 }
                 var info = await updater.CheckForUpdatesQuietly(true);
-                if (info.Status == UpdateStatus.UpdateAvailable) {
-                    if (info.Updates[0].Version.ToString() == Preferences.Default.SkipUpdate) {
+                if (info != null && info.Status == UpdateStatus.UpdateAvailable && info.Updates != null && info.Updates.Count > 0) {
+                    var remoteVerStr = info.Updates[0].Version?.ToString() ?? string.Empty;
+                    if (remoteVerStr == Preferences.Default.SkipUpdate) {
+                        return false;
+                    }
+                    var installedVer = Assembly.GetEntryAssembly()?.GetName().Version;
+                    if (installedVer != null &&
+                        DowngradableFilter.TryParseNormalizedVersion(remoteVerStr, out var remoteVer) &&
+                        DowngradableFilter.CompareVersions(installedVer, remoteVer) >= 0) {
                         return false;
                     }
                     return true;
@@ -50,3 +66,4 @@ namespace OpenUtau.App.Views {
         }
     }
 }
+

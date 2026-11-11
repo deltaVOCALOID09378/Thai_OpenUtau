@@ -61,6 +61,7 @@
       <TabItem Header="{DynamicResource lunai.tab.lunai}"><Panel/></TabItem>
       <TabItem Header="{DynamicResource lunai.tab.ufr}"><Panel/></TabItem>
       <TabItem Header="{DynamicResource lunai.tab.brapa}"><Panel/></TabItem>
+      <TabItem Header="{DynamicResource lunai.tab.deltasynth}"><Panel/></TabItem>
     </TabControl>
 
     <c:WorkspacePanelTextBox Grid.Row="1" Classes="workspacePanelTextBox" HorizontalAlignment="Stretch" Margin="0,0,0,10"
@@ -92,12 +93,12 @@
                           <ItemsControl ItemsSource="{Binding VersionStatusSegments}" FontSize="12" Opacity="0.9">
                             <ItemsControl.ItemsPanel>
                               <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="0"/>
+                                <WrapPanel Orientation="Horizontal"/>
                               </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                               <DataTemplate x:DataType="vm:VersionStatusSegment">
-                                <TextBlock Text="{Binding Text}" FontWeight="{Binding SegmentFontWeight}"/>
+                                <TextBlock Text="{Binding Text}" FontWeight="{Binding SegmentFontWeight}" TextWrapping="Wrap"/>
                               </DataTemplate>
                             </ItemsControl.ItemTemplate>
                           </ItemsControl>

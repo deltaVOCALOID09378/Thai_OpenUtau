@@ -1,10 +1,11 @@
-﻿// ============================================================================
-// 1. วัน/เดือน/ปี: 5 พฤศจิกายน พ.ศ. 2569 / 5 November 2026
+// ============================================================================
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
 // 2. ชื่อไฟล์โค้ด: PhonemeBasedPhonemizer.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 2.1
+// 3. ลำดับเวอร์ชันของไฟล์: 2.2
 // 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/PhonemeBasedPhonemizer.cs
 // 5. หน้าที่: คลาสแม่สำหรับ Arpasing และ Diphone ทุกภาษา บังคับใช้กฎเหล็กสัดส่วนเสียง
-//            (CV 60%, VC 35-40%, CC/C- 5-7%, Opening -C 10-20% ก่อนโน้ต)
+//            ปรับความกว้าง [v c] แบบ Dynamic ทศนิยมยืดหยุ่นตามความยาวโน้ต (30-40%)
+//            และพยัญชนะ/คลัสเตอร์คั่นกลางไม่เกิน 5-7% เสมอ
 // 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by OpenUtau Authors
 // ============================================================================
 
@@ -71,6 +72,14 @@ namespace OpenUtau.Plugin.Builtin {
 
             // Get the symbols of previous note.
             var prevSymbols = prevNeighbour == null ? null : GetSymbols(prevNeighbour.Value);
+            if ((prevSymbols == null || prevSymbols.Length == 0) && prevNeighbour != null && prevNeighbour.Value.lyric == "-" && prevNeighbours != null && prevNeighbours.Length > 0) {
+                for (int pIdx = prevNeighbours.Length - 1; pIdx >= 0; pIdx--) {
+                    if (prevNeighbours[pIdx].lyric != "-") {
+                        prevSymbols = GetSymbols(prevNeighbours[pIdx]);
+                        if (prevSymbols != null && prevSymbols.Length > 0) break;
+                    }
+                }
+            }
             if (note.lyric == "-" && prevSymbols != null && prevSymbols.Length > 0) {
                 var attr = note.phonemeAttributes?.FirstOrDefault() ?? default;
                 string color = attr.voiceColor ?? string.Empty;
@@ -141,11 +150,11 @@ namespace OpenUtau.Plugin.Builtin {
 
             // [DELTA SYNTH IRON RULE]
             // - หากเป็นโน้ตเปิดวลี (ไม่มี prevNeighbour): กลุ่มเปิดเสียง [- C] ใช้พื้นที่ 10-20% ก่อนเข้าโน้ตหลัก
-            // - หากมีโน้ตนำหน้า: กลุ่มเชื่อมคำ [V_C] / [C C] ยืมพื้นที่โน้ตนำหน้าไม่เกิน 5-7%
+            // - หากมีโน้ตนำหน้า: กลุ่มเชื่อมคำ [V_C] / [C C] ยืมพื้นที่โน้ตนำหน้าไม่เกิน 5-7% เสมอ
             int prevDur = prevNeighbour?.duration ?? notes[0].duration;
             int preNoteLeadTicks = prevNeighbour == null
-                ? Math.Clamp((int)(notes[0].duration * 0.15), 20, 90)
-                : Math.Clamp((int)(prevDur * 0.06), 10, 40);
+                ? Math.Max(15, (int)Math.Round(notes[0].duration * 0.15))
+                : Math.Max(10, (int)Math.Round(prevDur * 0.06));
 
             int startTick = firstVowel > 0 ? -preNoteLeadTicks : 0;
             foreach (var alignment in alignments) {
@@ -182,10 +191,10 @@ namespace OpenUtau.Plugin.Builtin {
         }
 
         /// <summary>
-        /// [DELTA SYNTH IRON RULE] บังคับสัดส่วนพื้นที่เสียง:
-        /// 1. [- V] / [CV] สระหลัก เริ่มที่ 0 (หรือ <= 5% กรณีควบกล้ำ) และกินพื้นที่เต็ม 60% แรกของโน้ต (0% -> 60%)
-        /// 2. [VC] ตัวสะกดหลัก เริ่มที่ 60%-65% ของโน้ต (ได้พื้นที่ 30%-35%)
-        /// 3. [C C] / [C -] พยัญชนะท้ายและเสียงปิดคำ ห้ามกว้างเกิน 5-7% (อยู่ช่วง 93%-95% ของโน้ต)
+        /// [DELTA SYNTH IRON RULE] บังคับสัดส่วนพื้นที่เสียงตามหลักทศนิยมและยืดหยุ่นตามความยาวโน้ต:
+        /// 1. [- V] / [CV] สระหลัก เริ่มที่ 0 (หรือ <= 5-7% กรณีพยัญชนะควบกล้ำ)
+        /// 2. [VC] ตัวสะกดหลัก ได้พื้นที่กว้างขึ้นอย่างยืดหยุ่นตามความยาวของโน้ตรายตัว โดยอยู่ในช่วง 30%-40% เสมอ (ไม่ล็อกค่าคงที่ตายตัว)
+        /// 3. [C C] / [C -] พยัญชนะท้ายและเสียงปิดคำ ห้ามกว้างเกิน 5-7% (อยู่ช่วงท้ายโน้ต 93%-95%)
         /// </summary>
         protected virtual void EnforceDeltaSynthTimingRules(Phoneme[] phonemes, bool[] isVowel, int noteDur, Note? prevNeighbour) {
             if (phonemes == null || phonemes.Length == 0) return;
@@ -195,8 +204,8 @@ namespace OpenUtau.Plugin.Builtin {
 
             int prevDur = prevNeighbour?.duration ?? noteDur;
             int maxPreBorrow = prevNeighbour == null
-                ? Math.Clamp((int)(noteDur * 0.15), 20, 90) // [- C] 10-20%
-                : Math.Clamp((int)(prevDur * 0.06), 10, 40); // [V_C] / [C C] <= 5-7%
+                ? Math.Max(15, (int)Math.Round(noteDur * 0.15)) // [- C] 10-20%
+                : Math.Max(10, (int)Math.Round(prevDur * 0.06)); // [V_C] / [C C] <= 5-7%
 
             // 1. จัดตำแหน่งกลุ่มหน้าสระตัวแรก (Leading Consonants: [- C], [V_C], [C C])
             if (firstVowelIdx > 0) {
@@ -215,24 +224,28 @@ namespace OpenUtau.Plugin.Builtin {
             int lastVowelIdx = Array.LastIndexOf(isVowel, true);
             if (lastVowelIdx >= 0 && lastVowelIdx < phonemes.Length - 1) {
                 int codaCount = phonemes.Length - 1 - lastVowelIdx;
-                int vcStartTick = (int)Math.Round(noteDur * 0.60); // สระหลักได้พื้นที่ 60% เต็ม
-                int tailStartTick = Math.Max(vcStartTick + 10, (int)Math.Round(noteDur * 0.93)); // [C -] หรือ [V -] กินไม่เกิน 7% ท้ายโน้ต
+
+                // [DELTA SYNTH] คำนวณความกว้างของกลุ่ม [v c] แบบยืดหยุ่นตามความยาวโน้ตรายตัว (Dynamic Decimal Ratio)
+                // ความกว้างของ [v c] อยู่ในช่วง 30% ถึง 40% (0.30 - 0.40) เสมอตามทศนิยม ไม่ล็อก ticks ตายตัว
+                double vcRatio = Math.Clamp(0.33 + 0.05 * Math.Min(1.0, (double)noteDur / 480.0), 0.30, 0.40);
+                int vcStartTick = (int)Math.Round(noteDur * (1.0 - vcRatio));
+                int tailStartTick = Math.Max(vcStartTick + 10, (int)Math.Round(noteDur * 0.94)); // [C -] หรือ [V -] ท้ายโน้ต (ไม่เกิน 5-6%)
 
                 if (codaCount == 1) {
                     // กรณีมีตัวปิดตัวเดียว เช่น [V -] หรือ [V C]
                     string tailAlias = phonemes[lastVowelIdx + 1].phoneme ?? "";
                     bool isPureBreathTail = tailAlias.EndsWith(" -") || tailAlias.EndsWith("-");
                     phonemes[lastVowelIdx + 1].position = isPureBreathTail
-                        ? Math.Max((int)Math.Round(noteDur * 0.85), noteDur - 30)
+                        ? Math.Max((int)Math.Round(noteDur * 0.88), noteDur - 25)
                         : vcStartTick;
                 } else {
                     // กรณีมี [V C] ตามด้วย [C C] และ/หรือ [C -]
-                    // ตัวแรกหลังสระ คือ [V C] -> เริ่มที่ 60% ของโน้ต
+                    // ตัวแรกหลังสระ คือ [V C] -> ได้พื้นที่ 30%-40%
                     phonemes[lastVowelIdx + 1].position = vcStartTick;
 
-                    // ตัวที่เหลือ คือ [C C] และ [C -] -> บีบให้อยู่ในโซน 5-7% สุดท้ายของโน้ต (88% - 95%)
+                    // ตัวที่เหลือ คือ [C C] และ [C -] -> บีบให้อยู่ในโซน 5-7% สุดท้ายของโน้ต (ไม่เกิน 6-7%)
                     int extraCodaCount = codaCount - 1;
-                    int clusterZoneStart = Math.Max(vcStartTick + 10, (int)Math.Round(noteDur * (0.94 - 0.05 * extraCodaCount)));
+                    int clusterZoneStart = Math.Max(vcStartTick + 10, (int)Math.Round(noteDur * (0.94 - 0.04 * extraCodaCount)));
                     int clusterZoneSpan = Math.Max(10, tailStartTick - clusterZoneStart);
 
                     for (int k = 1; k <= extraCodaCount; k++) {
@@ -268,7 +281,11 @@ namespace OpenUtau.Plugin.Builtin {
             }
             if (string.IsNullOrEmpty(note.phoneticHint)) {
                 string cleanLyric = (note.lyric ?? "").Trim().ToLowerInvariant();
-                return g2p.Query(cleanLyric) ?? Array.Empty<string>();
+                var result = g2p.Query(cleanLyric);
+                if (result == null && cleanLyric.EndsWith("-") && cleanLyric.Length > 1) {
+                    result = g2p.Query(cleanLyric.TrimEnd('-'));
+                }
+                return result ?? Array.Empty<string>();
             }
             return note.phoneticHint.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 .Where(s => g2p.IsValidSymbol(s))
@@ -292,7 +309,7 @@ namespace OpenUtau.Plugin.Builtin {
                 }
             }
 
-            // [DELTA SYNTH IRON RULE] จำกัดความกว้างของพยัญชนะคั่นกลางไม่ให้เกิน 6% ของช่วงเวลา
+            // [DELTA SYNTH IRON RULE] จำกัดความกว้างของพยัญชนะคั่นกลางไม่ให้เกิน 5-7% ของช่วงเวลาโน้ต
             int maxConsonantTotal = (int)Math.Round(duration * 0.06 * Math.Max(1, consonants));
             int consonantDuration = vowels > 0
                 ? (consonants > 0 ? Math.Min(ConsonantLength, Math.Max(5, maxConsonantTotal / consonants)) : 0)

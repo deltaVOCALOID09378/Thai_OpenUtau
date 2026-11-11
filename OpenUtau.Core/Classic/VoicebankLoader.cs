@@ -1,11 +1,10 @@
 // ============================================================================
-// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : VoicebankLoader.cs
-// Version      : 1.1
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
-// File Location: OpenUtau.Core/Classic/VoicebankLoader.cs
-// Description  : Classic/DiffSinger/Enunu voicebank loader and oto.ini writer
-//                with automatic oto.ini.bak backup before saving.
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
+// 2. ชื่อไฟล์โค้ด: VoicebankLoader.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.2
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/VoicebankLoader.cs
+// 6. รายละเอียดการแก้ไข: จำกัดความถี่การแจ้งเตือน Sound file missing เพื่อลด Log Flood และเร่งความเร็วในการโหลด
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -431,6 +430,8 @@ namespace OpenUtau.Classic {
                 .Where(file => !file.IsNormalized())
                 .ToDictionary(file => file.Normalize());
 
+            int missingCount = 0;
+            string lastMissingSample = null;
             foreach (var group in wavGroups) {
                 if (string.IsNullOrEmpty(group.Key) || group.Key == ".wav") {
                     foreach (Oto oto in group) {
@@ -445,7 +446,12 @@ namespace OpenUtau.Classic {
                             oto.Wav = NFDFile;
                         }
                     } else {
-                        Log.Warning($"Sound file missing. {path}");
+                        missingCount++;
+                        if (missingCount <= 3) {
+                            Log.Warning($"Sound file missing. {path}");
+                        } else {
+                            lastMissingSample = path;
+                        }
                         foreach (Oto oto in group) {
                             if (string.IsNullOrEmpty(oto.Error)) {
                                 oto.Error = $"Sound file missing. {path}";
@@ -454,6 +460,9 @@ namespace OpenUtau.Classic {
                         }
                     }
                 }
+            }
+            if (missingCount > 3) {
+                Log.Warning($"Sound file missing in {dir}: {missingCount} total missing files (e.g. {lastMissingSample})");
             }
         }
 

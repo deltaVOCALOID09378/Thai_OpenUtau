@@ -1,11 +1,11 @@
-/*
- * วัน/เดือน/ปี: 30/10/2569 (2026)
- * ชื่อไฟล์โค้ด: LyricsDialog.axaml.cs
- * เวอร์ชั่น: 1.2
- * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
- * ตำแหน่งไฟล์: OpenUtau.App/Views/LyricsDialog.axaml.cs
- * รายละเอียดการแก้ไข: อัปเกรดความปลอดภัยของโค้ด (Refactoring) ป้องกันบั๊ก Null Reference Exception ในระหว่างการบันทึกค่าและยกเลิก
- */
+// ======================================================================
+// 1. วัน/เดือน/ปี (Date)        : 11 พฤศจิกายน พ.ศ. 2569 / 11 November 2026 (B.E. 2569 / A.D. 2026)
+// 2. ชื่อไฟล์ (File Name)       : LyricsDialog.axaml.cs
+// 3. ลำดับเวอร์ชัน (Version)    : v1.3
+// 4. รายชื่อเครดิต (Credit)     : Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
+// 5. ตำแหน่งที่จัดวาง (Path)    : OpenUtau/Views/LyricsDialog.axaml.cs
+// 6. รายละเอียดการแก้ไข (Summary): ปรับปรุงพฤติกรรมกล่องข้อความให้เหมือน Notepad 100% โดยกด Enter เป็นการขึ้นบรรทัดใหม่ และใช้ Ctrl+Enter ในการยืนยัน
+// ======================================================================
 
 using System;
 using Avalonia.Controls;
@@ -25,7 +25,6 @@ namespace OpenUtau.App.Views {
         }
 
         void OnCancel(object? sender, RoutedEventArgs e) {
-            // [DELTA SYNTH] Refactored to Type Pattern Matching for safe execution
             if (DataContext is LyricsViewModel vm) {
                 vm.Cancel();
             }
@@ -33,7 +32,6 @@ namespace OpenUtau.App.Views {
         }
 
         void OnFinish(object? sender, RoutedEventArgs e) {
-            // [DELTA SYNTH] Refactored to Type Pattern Matching for safe execution
             if (DataContext is LyricsViewModel vm) {
                 vm.Finish();
             }
@@ -43,12 +41,12 @@ namespace OpenUtau.App.Views {
         private void TextBoxKeyDown(object? sender, KeyEventArgs e) {
             switch (e.Key) {
                 case Key.Enter:
-                    // If Shift+Enter, insert line break (default textbox behavior).
-                    if (e.KeyModifiers == KeyModifiers.Shift) {
-                        return;
+                    // Notepad behavior: Enter inserts a newline in multiline text box.
+                    // Submitting via keyboard is Ctrl+Enter.
+                    if (e.KeyModifiers == KeyModifiers.Control) {
+                        OnFinish(sender, e);
+                        e.Handled = true;
                     }
-                    OnFinish(sender, e);
-                    e.Handled = true;
                     break;
                 case Key.Escape:
                     OnCancel(sender, e);

@@ -1,11 +1,12 @@
 // ============================================================================
-// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
-// 2. ชื่อไฟล์: DiffSingerSinger.cs
-// 3. ลำดับเวอร์ชัน: 1.2
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
+// 2. ชื่อไฟล์โค้ด: DiffSingerSinger.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.3
 // 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
-// 5. ตำแหน่งที่จัดวาง: OpenUtau.Core/DiffSinger/DiffSingerSinger.cs
-// 6. รายละเอียดการแก้ไข: แก้ไขข้อผิดพลาด CS0111 สมาชิกซ้ำซ้อนของ TryGetOto และ GetSuggestions รักษาตาราง Phoneme และระบบตรวจสอบภาษา DiffSinger ให้ถูกต้องสมบูรณ์
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/DiffSinger/DiffSingerSinger.cs
+// 6. รายละเอียดการแก้ไขงาน: เพิ่มการค้นหาและตรวจสอบเวอร์ชัน Vocoder ที่ติดตั้งในเครื่อง (เช่น pc_nsf_hifigan_44.1k_hop512_128bin_2025.02) อัตโนมัติก่อนแจ้งเตือนให้ดาวน์โหลด
 // ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,9 +34,9 @@ namespace OpenUtau.Core.DiffSinger {
         public override string Version => voicebank.Version;
         public override string OtherInfo => voicebank.OtherInfo;
         public override IList<string> Errors => errors;
-        public override string Avatar => voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image);
+        public override string Avatar => DeltaSingerProfileResolver.ResolveAvatar(Name, Location, voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image)) ?? (voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image));
         public override byte[] AvatarData => LoadAvatarDataLazy();
-        public override string Portrait => voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait);
+        public override string Portrait => DeltaSingerProfileResolver.ResolvePortrait(Name, Location, voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait)) ?? (voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait));
         public override float PortraitOpacity => voicebank.PortraitOpacity;
         public override int PortraitHeight => voicebank.PortraitHeight;
         public override string Sample => voicebank.Sample == null ? null : Path.Combine(Location, voicebank.Sample);
@@ -237,22 +238,68 @@ namespace OpenUtau.Core.DiffSinger {
         }
 
         public DsVocoder getVocoder() {
-            if(vocoder is null) {
-                if(File.Exists(Path.Join(Location, "dsvocoder", "vocoder.yaml"))) {
+            if (vocoder is null) {
+                if (File.Exists(Path.Join(Location, "dsvocoder", "vocoder.yaml"))) {
                     vocoder = new DsVocoder(Path.Join(Location, "dsvocoder"));
                     return vocoder;
                 }
                 string vocoderPath = Path.Combine(PathManager.Inst.DependencyPath, dsConfig.vocoder);
                 if (!File.Exists(Path.Combine(vocoderPath, "vocoder.yaml"))) {
-                    const string defaultPkg = "pc-nsf-hifigan";
-                    string installedPath = PackageManager.Inst.GetInstalledPath(defaultPkg) ?? "";
-                    if (!string.IsNullOrEmpty(installedPath) && File.Exists(Path.Combine(installedPath, "vocoder.yaml"))) {
-                        vocoderPath = installedPath;
+                    string? resolved = ResolveInstalledCompatibleVocoderPath(dsConfig);
+                    if (!string.IsNullOrEmpty(resolved)) {
+                        Log.Information("Resolved compatible installed vocoder at {ResolvedPath} for requested {RequestedVocoder}",
+                            resolved, dsConfig.vocoder);
+                        vocoderPath = resolved;
                     }
                 }
                 vocoder = new DsVocoder(vocoderPath);
             }
             return vocoder;
+        }
+
+        private static string? ResolveInstalledCompatibleVocoderPath(DsConfig dsConfig) {
+            const string defaultPkg = "pc-nsf-hifigan";
+            string installedPath = PackageManager.Inst.GetInstalledPath(defaultPkg) ?? "";
+            if (!string.IsNullOrEmpty(installedPath) && File.Exists(Path.Combine(installedPath, "vocoder.yaml"))) {
+                return installedPath;
+            }
+            string depPath = PathManager.Inst.DependencyPath;
+            if (!Directory.Exists(depPath)) {
+                return null;
+            }
+            string? bestDir = null;
+            string bestName = string.Empty;
+            foreach (var dir in Directory.GetDirectories(depPath)) {
+                string yamlPath = Path.Combine(dir, "vocoder.yaml");
+                if (!File.Exists(yamlPath)) {
+                    continue;
+                }
+                try {
+                    var cfg = Core.Yaml.DefaultDeserializer.Deserialize<DsVocoderConfig>(
+                        File.ReadAllText(yamlPath, Encoding.UTF8));
+                    if (cfg == null) {
+                        continue;
+                    }
+                    bool compatible = cfg.sample_rate == dsConfig.sample_rate &&
+                                      cfg.hop_size == dsConfig.hop_size &&
+                                      cfg.win_size == dsConfig.win_size &&
+                                      cfg.fft_size == dsConfig.fft_size &&
+                                      cfg.num_mel_bins == dsConfig.num_mel_bins &&
+                                      Math.Abs(cfg.mel_fmin - dsConfig.mel_fmin) <= 1e-5 &&
+                                      Math.Abs(cfg.mel_fmax - dsConfig.mel_fmax) <= 1e-5 &&
+                                      cfg.mel_scale == dsConfig.mel_scale;
+                    if (compatible) {
+                        string dirName = Path.GetFileName(dir);
+                        if (bestDir == null || PackageManager.CompareVersions(dirName, bestName) > 0) {
+                            bestDir = dir;
+                            bestName = dirName;
+                        }
+                    }
+                } catch {
+                    // Ignore malformed vocoder.yaml during fallback scan
+                }
+            }
+            return bestDir;
         }
 
         public DsPitch? getPitchPredictor(){

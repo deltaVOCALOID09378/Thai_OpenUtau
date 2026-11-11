@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using DynamicData.Binding;
 using NAudio.Wave;
+using NWaves.Audio;
 using NWaves.Signals;
 using OpenUtau.Api;
 using OpenUtau.App.Views;
@@ -18,15 +19,15 @@ using OpenUtau.Core.Ustx;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
+using OpenUtau.Core.SingerHub;
 
 // ============================================================================
-// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : SingersViewModel.cs
-// Version      : 1.3
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
-// File Location: OpenUtau/ViewModels/SingersViewModel.cs
-// Description  : จัดลำดับศิลปิน DELTA SYNTH -> ภาษา/Phonemizer -> เอนจิน (SingerType) -> ชื่อศิลปิน
-//                พร้อมระบบสำรองข้อมูล oto.ini.bak อัตโนมัติทุกครั้งที่บันทึกการตั้งค่าคลังเสียง
+// วัน/เดือน/ปี: 11 พฤศจิกายน 2569 (2026-11-11)
+// ชื่อไฟล์: SingersViewModel.cs
+// ลำดับเวอร์ชัน: 1.5
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors / DELTA SYNTH ]
+// ตำแหน่งที่จัดวาง: OpenUtau/ViewModels/SingersViewModel.cs
+// รายละเอียดการแก้ไขงาน: เพิ่มพรีวิวภาพเต็มตัว Portrait, รองรับการซิงก์รูปภาพนักร้องอัตโนมัติ (Sync Pictures) และป้องกันรูปสลับกัน
 // ============================================================================
 
 namespace OpenUtau.App.ViewModels {
@@ -42,6 +43,7 @@ namespace OpenUtau.App.ViewModels {
             .Distinct();
         [Reactive] public USinger? Singer { get; set; }
         [Reactive] public Bitmap? Avatar { get; set; }
+        [Reactive] public Bitmap? Portrait { get; set; }
         [Reactive] public string? Info { get; set; }
         [Reactive] public bool HasWebsite { get; set; }
         public bool IsClassic => Singer != null && Singer.SingerType == USingerType.Classic;
@@ -102,6 +104,7 @@ namespace OpenUtau.App.ViewModels {
                     void AttachSinger() {
                         singer.EnsureLoaded();
                         Avatar = LoadAvatar(singer);
+                        Portrait = LoadPortrait(singer);
                         Otos.Clear();
                         Otos.AddRange(singer.Otos);
                         DisplayedOtos.Clear();
@@ -345,6 +348,33 @@ namespace OpenUtau.App.ViewModels {
             }
         }
 
+        Bitmap? LoadPortrait(USinger singer) {
+            byte[]? data = singer.LoadPortrait();
+            if (data == null || data.Length == 0) {
+                return null;
+            }
+            try {
+                using (var stream = new MemoryStream(data)) {
+                    return new Bitmap(stream);
+                }
+            } catch (Exception e) {
+                Log.Error(e, "Failed to load portrait.");
+                return null;
+            }
+        }
+
+        public void SyncCurrentSingerPictures() {
+            if (Singer == null) return;
+            try {
+                int count = DeltaSingerProfileResolver.DeployPicturesToVoicebanks(Singer.Location);
+                RefreshSinger();
+                DocManager.Inst.ExecuteCmd(new UserMessageNotification($"✅ ซิงก์รูปภาพของ {Singer.LocalizedName} สำเร็จ!"));
+            } catch (Exception ex) {
+                Log.Error(ex, "Failed to sync pictures for singer {Name}", Singer.LocalizedName);
+                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
+            }
+        }
+
         public void OpenLocation() {
             try {
                 if (Singer != null) {
@@ -383,6 +413,7 @@ namespace OpenUtau.App.ViewModels {
 
             Singer.Reload();
             Avatar = LoadAvatar(Singer);
+            Portrait = LoadPortrait(Singer);
             Otos.Clear();
             Otos.AddRange(Singer.Otos);
             LoadSubbanks();
@@ -466,6 +497,136 @@ namespace OpenUtau.App.ViewModels {
             if (cutoff < minCutoff) {
                 oto.Cutoff = -(minCutoff - oto.Offset);
             }
+        }
+
+        private class CopiedOtoTiming {
+            public double Offset;
+            public double Overlap;
+            public double Preutter;
+            public double Consonant;
+            public double Cutoff;
+        }
+        private static CopiedOtoTiming? _copiedTiming;
+
+        public bool HasCopiedTiming => _copiedTiming != null;
+
+        public void CopyTiming() {
+            if (SelectedOto == null) return;
+            _copiedTiming = new CopiedOtoTiming {
+                Offset = SelectedOto.Offset,
+                Overlap = SelectedOto.Overlap,
+                Preutter = SelectedOto.Preutter,
+                Consonant = SelectedOto.Consonant,
+                Cutoff = SelectedOto.Cutoff
+            };
+        }
+
+        public void PasteTiming(double totalDur) {
+            if (SelectedOto == null || _copiedTiming == null) return;
+            SelectedOto.Offset = _copiedTiming.Offset;
+            SelectedOto.Overlap = _copiedTiming.Overlap;
+            SelectedOto.Preutter = _copiedTiming.Preutter;
+            SelectedOto.Consonant = _copiedTiming.Consonant;
+            SelectedOto.Cutoff = _copiedTiming.Cutoff;
+            FixCutoff(SelectedOto, totalDur);
+            NotifyOtoChanged();
+        }
+
+        public void ApplyCvPreset(double pointerMs, double totalDur) {
+            if (SelectedOto == null) return;
+            double baseMs = pointerMs > 0 ? pointerMs : Math.Max(0, SelectedOto.Offset);
+            SelectedOto.Offset = Math.Max(0, baseMs);
+            SelectedOto.Overlap = 50;
+            SelectedOto.Preutter = 100;
+            SelectedOto.Consonant = 150;
+            double remaining = totalDur - SelectedOto.Offset;
+            SelectedOto.Cutoff = remaining > 250 ? -(remaining - 100) : -(SelectedOto.Consonant + 10);
+            FixCutoff(SelectedOto, totalDur);
+            NotifyOtoChanged();
+        }
+
+        public void ApplyVcvPreset(double pointerMs, double totalDur) {
+            if (SelectedOto == null) return;
+            double baseMs = pointerMs > 0 ? pointerMs : Math.Max(0, SelectedOto.Offset);
+            SelectedOto.Offset = Math.Max(0, baseMs);
+            SelectedOto.Overlap = 100;
+            SelectedOto.Preutter = 200;
+            SelectedOto.Consonant = 300;
+            double remaining = totalDur - SelectedOto.Offset;
+            SelectedOto.Cutoff = remaining > 400 ? -(remaining - 100) : -(SelectedOto.Consonant + 10);
+            FixCutoff(SelectedOto, totalDur);
+            NotifyOtoChanged();
+        }
+
+        public void ApplyAutoDetect(NWaves.Audio.WaveFile? wav) {
+            if (SelectedOto == null || wav == null || wav.Signals == null || wav.Signals.Count == 0) return;
+            var signal = wav.Signals[0];
+            var samples = signal.Samples;
+            int sampleRate = wav.WaveFmt.SamplingRate;
+            double totalDurMs = signal.Duration * 1000.0;
+
+            if (samples == null || samples.Length == 0 || sampleRate <= 0) return;
+
+            float peak = 0f;
+            for (int i = 0; i < samples.Length; i++) {
+                float abs = Math.Abs(samples[i]);
+                if (abs > peak) peak = abs;
+            }
+
+            if (peak < 0.001f) {
+                ApplyCvPreset(0, totalDurMs);
+                return;
+            }
+
+            int windowSize = Math.Max(64, sampleRate / 100);
+            float threshold = Math.Max(0.015f, peak * 0.05f);
+
+            int onsetIdx = 0;
+            for (int i = 0; i < samples.Length - windowSize; i += windowSize / 2) {
+                float sum = 0f;
+                for (int j = 0; j < windowSize; j++) {
+                    float s = samples[i + j];
+                    sum += s * s;
+                }
+                float rms = (float)Math.Sqrt(sum / windowSize);
+                if (rms >= threshold) {
+                    onsetIdx = Math.Max(0, i - windowSize);
+                    break;
+                }
+            }
+
+            int endIdx = samples.Length - 1;
+            for (int i = samples.Length - windowSize; i >= windowSize; i -= windowSize / 2) {
+                float sum = 0f;
+                for (int j = 0; j < windowSize; j++) {
+                    float s = samples[i + j];
+                    sum += s * s;
+                }
+                float rms = (float)Math.Sqrt(sum / windowSize);
+                if (rms >= threshold) {
+                    endIdx = Math.Min(samples.Length - 1, i + windowSize * 2);
+                    break;
+                }
+            }
+
+            double onsetMs = (double)onsetIdx / sampleRate * 1000.0;
+            double endMs = (double)endIdx / sampleRate * 1000.0;
+
+            SelectedOto.Offset = Math.Max(0, onsetMs);
+            SelectedOto.Overlap = 50;
+            SelectedOto.Preutter = 100;
+            SelectedOto.Consonant = 160;
+
+            double tailCutoffMs = totalDurMs - endMs;
+            if (tailCutoffMs > 50 && totalDurMs - SelectedOto.Offset - tailCutoffMs > SelectedOto.Consonant + 20) {
+                SelectedOto.Cutoff = -tailCutoffMs;
+            } else {
+                double remaining = totalDurMs - SelectedOto.Offset;
+                SelectedOto.Cutoff = remaining > 250 ? -(remaining - 80) : -(SelectedOto.Consonant + 10);
+            }
+
+            FixCutoff(SelectedOto, totalDurMs);
+            NotifyOtoChanged();
         }
 
         public void NotifyOtoChanged() {

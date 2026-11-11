@@ -1,10 +1,10 @@
 ﻿// ============================================================================
-// Date         : 03/11/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : VoicevoxSinger.cs
-// Version      : 1.0
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
-// File Location: OpenUtau.Core/Voicevox/VoicevoxSinger.cs
-// Description  : VOICEVOX singer loader with defensive portrait and sample checks to avoid FileNotFoundException.
+// 1. วัน/เดือน/ปี: 9 พฤศจิกายน พ.ศ. 2569 / 9 November 2026
+// 2. ชื่อไฟล์โค้ด: VoicevoxSinger.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.1
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Voicevox/VoicevoxSinger.cs
+// 6. รายละเอียดการแก้ไข: ตรวจสอบความปลอดภัยของไฟล์ Portrait และ Sample ป้องกัน FileNotFoundException
 // ============================================================================
 using System;
 using System.Collections.Generic;

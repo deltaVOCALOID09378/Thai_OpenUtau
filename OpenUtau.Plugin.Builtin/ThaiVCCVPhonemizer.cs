@@ -1,11 +1,11 @@
 // ============================================================================
-// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
 // 2. ชื่อไฟล์โค้ด: ThaiVCCVPhonemizer.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 19.6
-// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by PRINTmov & Patiphat Wongyai ]
+// 3. ลำดับเวอร์ชันของไฟล์: 19.2
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & Gemini AI [ Original by PRINTmov & Patiphat Wongyai (Delta) ]
 // 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/ThaiVCCVPhonemizer.cs
-// 6. รายละเอียดการแก้ไข: แยกหน่วยเสียงและพจนานุกรมของ UTAU (VCCV) กับ DiffSinger ออกจากกันอย่างเด็ดขาด 100%
-//                       ห้ามนำไฟล์หรือหน่วยเสียงข้ามระบบมาปะปนกัน และคืนค่าโครงสร้างหลักของ ThaiVCCVPhonemizer ให้ครบถ้วนสมบูรณ์
+// 6. รายละเอียดการแก้ไข: ปรับปรุงการหั่นเสียงตัวสะกด [v c] ให้กว้างขึ้นเป็น 30-40% ทศนิยมยืดหยุ่นตามความยาวโน้ต
+//                       และจำกัดพยัญชนะควบกล้ำไม่เกิน 5-7% ปลดล็อกค่าคงที่ ticks เพื่อรองรับทุกความยาวของโน้ต
 // ============================================================================
 
 #nullable enable
@@ -29,8 +29,7 @@ namespace OpenUtau.Plugin.Builtin {
     [Phonemizer("Thai VCCV Phonemizer", "TH VCCV Delta", "DELTA SYNTH", language: "TH")]
     public class ThaiVCCVPhonemizer : Phonemizer {
 
-        // หน่วยเสียงมาตรฐานของ UTAU Thai VCCV เท่านั้น (ไม่มีหน่วยเสียงของ DiffSinger ปะปน)
-        static readonly string[] vowels = new string[] { "a", "i", "u", "e", "o", "@", "Q", "3", "6", "1", "ia", "ua", "I", "aw", "am" };
+        static readonly string[] vowels = new string[] { "a", "i", "u", "e", "o", "@", "Q", "3", "6", "1", "ia", "ua", "I", "ay", "aw", "am" };
         static readonly string[] diphthongs = new string[] { "r", "l", "w" };
         static readonly string[] consonants = new string[] { "b", "ch", "d", "f", "g", "h", "j", "k", "kh", "l", "m", "n", "p", "ph", "r", "s", "t", "th", "w", "y", "-" };
         static readonly string[] endingConsonants = new string[] { "b", "ch", "d", "f", "g", "h", "j", "k", "kh", "l", "m", "n", "p", "ph", "r", "s", "t", "th", "w", "y" };
@@ -82,6 +81,7 @@ namespace OpenUtau.Plugin.Builtin {
 
         private readonly Dictionary<string, string> CustomDictionary = new Dictionary<string, string>(StringComparer.Ordinal);
         private bool isDictLoaded = false;
+        private int loadedDictVersion = -1;
         private readonly object dictLock = new object();
         private USinger? singer;
 
@@ -104,12 +104,14 @@ namespace OpenUtau.Plugin.Builtin {
             var dictDiphthongs = new HashSet<string>(diphthongs);
             var dictEndingConsonants = new HashSet<string>(endingConsonants);
 
-            for (int i = 0; i < tokens.Length; i++) {
-                string p = tokens[i];
-                // ในไฟล์ TH-VCCV_Dict.txt สระไอ/ใอ ใช้สัญลักษณ์ "ay" ซึ่งตรงกับหน่วยเสียง "I" ในโครงสร้างหลักของ ThaiVCCVPhonemizer
-                if (p == "ay") p = "I";
-
-                if (p == "I" || p == "aw" || p == "am") {
+            for (int i = 0; i < phonemes.Length; i++) {
+                string p = phonemes[i];
+                
+                if (DsConsonantMap.TryGetValue(p, out string? mappedC)) p = mappedC;
+                else if (DsVowelMap.TryGetValue(p, out string? mappedV)) p = mappedV;
+                
+                if (p == "I" || p == "ay" || p == "aw" || p == "am") {
+                    if (p == "ay") p = "I";
                     currentSyllable += p;
                     syllables.Add(currentSyllable);
                     currentSyllable = "";
@@ -165,12 +167,12 @@ namespace OpenUtau.Plugin.Builtin {
         }
 
         private void LoadCustomDictionary() {
-            if (isDictLoaded) return;
-
+            int currentVer = ThaiDictionaryManager.EnsureUpToDate();
+            if (isDictLoaded && loadedDictVersion == currentVer) return;
+            
             lock (dictLock) {
-                if (isDictLoaded) return;
-                CustomDictionary.Clear();
-
+                if (isDictLoaded && loadedDictVersion == currentVer) return;
+                
                 try {
                     // โหลดเฉพาะพจนานุกรมของระบบ UTAU VCCV เท่านั้น ("vccv")
                     ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => {
@@ -206,9 +208,8 @@ namespace OpenUtau.Plugin.Builtin {
                             }
                         }
                     }
-                } catch (Exception ex) {
-                    Log.Error(ex, "เกิดข้อผิดพลาดในการโหลดพจนานุกรม UTAU VCCV (Failed to load UTAU VCCV custom dictionary)");
-                }
+                    loadedDictVersion = ThaiDictionaryManager.CurrentVersion;
+                } catch (Exception ex) { Log.Error(ex, "เกิดข้อผิดพลาดในการโหลดพจนานุกรมแบบกำหนดเอง (Failed to load custom dictionary)"); }
                 isDictLoaded = true;
             }
         }
@@ -262,9 +263,11 @@ namespace OpenUtau.Plugin.Builtin {
                 input = PunctuationCleanupRegex.Replace(input, "").Trim();
             }
             if (string.IsNullOrEmpty(input)) return Array.Empty<string>();
-
-            if (CustomDictionary.TryGetValue(input, out string? dictPhonemes)) {
-                return dictPhonemes.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            LoadCustomDictionary();
+            input = input.Normalize(NormalizationForm.FormC);
+            
+            if (CustomDictionary.ContainsKey(input)) {
+                return CustomDictionary[input].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             }
 
             if (!ThaiCharRegex.IsMatch(input) && !input.Contains("+")) {
@@ -528,7 +531,9 @@ namespace OpenUtau.Plugin.Builtin {
 
                     for (int i = 0; i < testsArray.Length; i++) {
                         int position = 0;
-                        int vcPosition = Math.Max(0, noteDuration - 120);
+                        double consRatio = Math.Clamp(0.05 + 0.02 * Math.Min(1.0, (double)noteDuration / 480.0), 0.05, 0.07);
+                        double vcRatio = Math.Clamp(0.33 + 0.05 * Math.Min(1.0, (double)noteDuration / 480.0), 0.30, 0.40);
+                        int vcPosition = (int)Math.Round(noteDuration * (1.0 - vcRatio));
 
                         if (nextSylNeighbour != null && testsArray[i].Contains(" ")) {
                             var nextSylStrs = WordToPhonemes(GetLyricOrHint(nextSylNeighbour.Value));
@@ -538,33 +543,31 @@ namespace OpenUtau.Plugin.Builtin {
                             if (nextTh.Dipthong != null) nextCheck = nextTh.Consonant + nextTh.Dipthong + nextTh.Vowel;
 
                             var nextAttr = nextSylNeighbour.Value.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
-                            if (singer != null && !string.IsNullOrEmpty(nextCheck) && singer.TryGetMappedOto(nextCheck, nextSylNeighbour.Value.tone + nextAttr.toneShift, nextAttr.voiceColor, out var nextOto) && nextOto.Overlap > 0) {
-                                vcPosition = Math.Max(0, noteDuration - MsToTick(nextOto.Overlap) - MsToTick(nextOto.Preutter));
+                            if (singer != null && singer.TryGetMappedOto(nextCheck, nextSylNeighbour.Value.tone + nextAttr.toneShift, nextAttr.voiceColor, out var nextOto) && nextOto.Overlap > 0) {
+                                int rawPos = noteDuration - MsToTick(nextOto.Overlap) - MsToTick(nextOto.Preutter);
+                                vcPosition = Math.Clamp(rawPos, (int)Math.Round(noteDuration * 0.60), (int)Math.Round(noteDuration * 0.70));
                             }
                         }
 
+                        // [DELTA SYNTH] Flexible [v c] Allocation (30-40%) & Consonant Limit (5-7%)
                         if (noteTh.Dipthong == null || testsArray.Length <= 2) {
                             if (i == 1) {
-                                position = Math.Max((int)(noteDuration * 0.65), vcPosition);
+                                position = vcPosition;
                             }
                         } else {
                             if (i == 1) {
-                                position = Math.Min((int)(noteDuration * 0.16), 120);
+                                // พยัญชนะควบกล้ำตัวกลางไม่เกิน 5-7% ของโน้ต
+                                position = (int)Math.Round(noteDuration * consRatio);
                             } else if (i == 2) {
-                                position = Math.Max((int)(noteDuration * 0.65), vcPosition);
+                                position = vcPosition;
                             }
                         }
 
                         if (testsArray[i].EndsWith("-") && testsArray.Length > 1 && i == testsArray.Length - 1) {
-                            position = Math.Max((int)(noteDuration * 0.90), noteDuration - 18);
+                            position = (int)Math.Round(noteDuration * 0.95);
                         } else if (noteTh.EndingConsonant != null && i == testsArray.Length - 1) {
-                            int consLength = 150;
-                            if (noteDuration < 300) {
-                                consLength = Math.Max(15, (int)(noteDuration * 0.4));
-                            } else if (noteDuration < consLength * 1.5) {
-                                consLength = (int)(noteDuration / 1.5);
-                            }
-                            position = Math.Max(0, noteDuration - consLength);
+                            // ตัวสะกดท้าย [v c] ขยายพื้นที่กว้างขึ้นเป็น 30-40% แบบยืดหยุ่นตามความยาวโน้ต
+                            position = vcPosition;
                         }
 
                         int absolutePosition = sylStartPos + position;

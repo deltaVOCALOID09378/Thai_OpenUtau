@@ -1,9 +1,12 @@
-﻿/*
- * Made And Checked By DELTA SYNTH & Gemini AI
- * Original by Patiphat Wongyai
- * Version: v1.0
- * History/Summary: Completely rewritten Indonesian VCCV Phonemizer to use Native G2P, removing the dependency on SyllableBasedPhonemizer and external CMU dictionaries. Implements Safety Position Buffer and Auto-Breath.
- */
+// ============================================================================
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
+// 2. ชื่อไฟล์ที่ทำ: IndonesianVCCVPhonemizer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.2
+// 4. รายชื่อเครดิต: Made And Checked By DELTA SYNTH & Gemini AI [ Original by Patiphat Wongyai (Delta) ]
+// 5. ตำแหน่งที่จัดวางของไฟล์: OpenUtau.Plugin.Builtin/IndonesianVCCVPhonemizer.cs
+// 6. รายละเอียดการแก้ไขงาน: ปรับปรุงการหั่นเสียงตัวสะกด [v c] ให้กว้างขึ้นเป็น 30-40% ทศนิยมยืดหยุ่นตามความยาวโน้ต
+//                       และพยัญชนะต้นไม่เกิน 5-7% ปลดล็อกค่าคงที่ ticks ให้สอดคล้องกับทุกตัวโน้ต
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -116,8 +119,10 @@ namespace OpenUtau.Plugin.Builtin {
                 if (prevNeighbour != null) {
                     string? endSound = prevId.Vowel;
                     if (endSound != null && checkOtoUntilHit(new[] { endSound + " -", endSound + "-" }, note, out var tempOto)) tests.Add(tempOto.Alias);
+                    else if (endSound != null) tests.Add(endSound);
                 }
                 if (tests.Count == 0 && checkOtoUntilHit(new[] { "-" }, note, out var fallbackOto)) tests.Add(fallbackOto.Alias);
+                if (tests.Count == 0) tests.Add("-");
             } else {
                 if (currentLyric.EndsWith("-") && currentLyric.Length > 1) {
                     forceClose = true;
@@ -130,8 +135,10 @@ namespace OpenUtau.Plugin.Builtin {
                     if (noteId.Vowel != null) {
                         if (checkOtoUntilHit(new[] { noteId.Consonant + noteId.Vowel, noteId.Consonant + " " + noteId.Vowel }, note, out var tempOto)) tests.Add(tempOto.Alias);
                         else if (checkOtoUntilHit(new[] { noteId.Consonant }, note, out tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteId.Consonant + noteId.Vowel);
                     } else {
                         if (checkOtoUntilHit(new[] { noteId.Consonant }, note, out var tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteId.Consonant);
                     }
                 }
 
@@ -139,16 +146,20 @@ namespace OpenUtau.Plugin.Builtin {
                     if (prevId.EndingConsonant != null) {
                         if (checkOtoUntilHit(new[] { prevId.EndingConsonant + " " + noteId.Vowel, prevId.EndingConsonant + noteId.Vowel }, note, out var tempOto)) tests.Add(tempOto.Alias);
                         else if (checkOtoUntilHit(new[] { noteId.Vowel }, note, out tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteId.Vowel);
                     } else if (prevId.Vowel != null) {
                         if (checkOtoUntilHit(new[] { prevId.Vowel + " " + noteId.Vowel, noteId.Vowel }, note, out var tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteId.Vowel);
                     } else {
                         if (checkOtoUntilHit(new[] { "- " + noteId.Vowel, "-" + noteId.Vowel, noteId.Vowel }, note, out var tempOto)) tests.Add(tempOto.Alias);
+                        else tests.Add(noteId.Vowel);
                     }
                 }
 
                 if (noteId.EndingConsonant != null && noteId.Vowel != null) {
                     if (checkOtoUntilHit(new[] { noteId.Vowel + " " + noteId.EndingConsonant, noteId.Vowel + noteId.EndingConsonant }, note, out var tempOto)) tests.Add(tempOto.Alias);
                     else if (checkOtoUntilHit(new[] { noteId.EndingConsonant }, note, out tempOto)) tests.Add(tempOto.Alias);
+                    else tests.Add(noteId.EndingConsonant);
                 } else if (nextNeighbour != null && noteId.Vowel != null && noteId.EndingConsonant == null) {
                     var nextId = ParseInput(nextNeighbour.Value.lyric);
                     if (nextId.Consonant != null) {
@@ -166,10 +177,14 @@ namespace OpenUtau.Plugin.Builtin {
                     }
                 }
 
-                if (tests.Count <= 0 && checkOtoUntilHit(new[] { currentLyric }, note, out var fallbackOto)) tests.Add(currentLyric);
+                if (tests.Count <= 0) {
+                    if (checkOtoUntilHit(new[] { currentLyric }, note, out var fallbackOto)) tests.Add(fallbackOto.Alias);
+                    else tests.Add(string.IsNullOrEmpty(currentLyric) ? "a" : currentLyric);
+                }
             }
 
-            if (checkOtoUntilHit(tests.ToArray(), note, out var oto)) {
+            checkOtoUntilHit(tests.ToArray(), note, out var oto);
+            if (tests.Count > 0) {
                 var noteDuration = notes.Sum(n => n.duration);
 
                 if (currentLyric != "-" && prevNeighbour == null && checkOtoUntilHit(new[] { "breath" }, note, out var breathOto)) {
@@ -190,7 +205,9 @@ namespace OpenUtau.Plugin.Builtin {
 
                 for (int i = 0; i < tests.Count; i++) {
                     int position = 0;
-                    int vcPosition = noteDuration - 120;
+                    double consRatio = Math.Clamp(0.05 + 0.02 * Math.Min(1.0, (double)noteDuration / 480.0), 0.05, 0.07);
+                    double vcRatio = Math.Clamp(0.33 + 0.05 * Math.Min(1.0, (double)noteDuration / 480.0), 0.30, 0.40);
+                    int vcPosition = (int)Math.Round(noteDuration * (1.0 - vcRatio));
 
                     if (nextNeighbour != null && tests[i].Contains(" ")) {
                         var nextLyric = string.IsNullOrEmpty(nextNeighbour.Value.phoneticHint) ? nextNeighbour.Value.lyric.Normalize() : nextNeighbour.Value.phoneticHint.Normalize();
@@ -200,24 +217,26 @@ namespace OpenUtau.Plugin.Builtin {
 
                         var nextAttr = nextNeighbour.Value.phonemeAttributes?.FirstOrDefault(a => a.index == 0) ?? default;
                         if (singer != null && singer.TryGetMappedOto(nextCheck ?? "", nextNeighbour.Value.tone + nextAttr.toneShift, nextAttr.voiceColor, out var nextOto) && oto.Overlap > 0) {
-                            vcPosition = noteDuration - timeAxis.MsPosToTickPos(nextOto.Overlap) - timeAxis.MsPosToTickPos(nextOto.Preutter);
+                            int rawPos = noteDuration - timeAxis.MsPosToTickPos(nextOto.Overlap) - timeAxis.MsPosToTickPos(nextOto.Preutter);
+                            vcPosition = Math.Clamp(rawPos, (int)Math.Round(noteDuration * 0.60), (int)Math.Round(noteDuration * 0.70));
                         }
                     }
 
                     if (i < mainVowelIndex) {
-                        int offset = (mainVowelIndex - i) * Math.Max(60, (int)(noteDuration * 0.05));
+                        int offset = (int)Math.Round((mainVowelIndex - i) * noteDuration * consRatio);
                         position = -offset;
                     } else if (i == mainVowelIndex) {
                         position = 0;
                     } else {
                         if (tests[i].EndsWith("-") && tests.Count > 1) {
-                            position = Math.Max((int)(noteDuration * 0.90), noteDuration - 18);
+                            position = (int)Math.Round(noteDuration * 0.95);
                         } else if (ParseInput(currentLyric).EndingConsonant != null && i == tests.Count - 1) {
-                            position = (int)(noteDuration * 0.75);
+                            // ตัวสะกดท้าย [v c] ขยายพื้นที่กว้างขึ้นเป็น 30-40% แบบยืดหยุ่นตามความยาวโน้ต
+                            position = vcPosition;
                         } else {
-                            position = Math.Max((int)(noteDuration * 0.70), vcPosition);
+                            position = vcPosition;
                             if (tests.Count > 2 && i == tests.Count - 2 && tests[tests.Count - 1].EndsWith("-")) {
-                                position = Math.Max((int)(noteDuration * 0.65), vcPosition - 60);
+                                position = (int)Math.Round(noteDuration * Math.Max(0.60, 1.0 - vcRatio - 0.05));
                             }
                         }
                     }

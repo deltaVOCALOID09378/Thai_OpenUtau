@@ -1,10 +1,11 @@
 <!-- 
 ============================================================================
-Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
-File Name    : OpenUtau.App.csproj
-Version      : 1.2
+Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
+File Name    : OpenUtau.csproj
+Version      : 1.3
 Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
-Description  : Main Application Project Configuration. Optimized properties grouping 
+File Location: OpenUtau/OpenUtau.csproj
+Description  : Main Application Project Configuration. Restored canonical version 3.9.5
                and enforced DELTA SYNTH standards.
 ============================================================================
 -->
@@ -22,10 +23,9 @@ Description  : Main Application Project Configuration. Optimized properties grou
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8612;CS8618;CS8619;CS8622;CS8625;CS8629;CS8632;CS8714;CS8765;CS8767;CS8769;CS0108;CS0168;CS0649;CS0414;CS0618;CS0612;CS0162;CS0219</NoWarn>
-    <Version>114.4.18</Version>
-    <AssemblyVersion>114.4.18.0</AssemblyVersion>
-    <FileVersion>114.4.18.0</FileVersion>
+    <Version>3.9.5</Version>
+    <AssemblyVersion>3.9.5.0</AssemblyVersion>
+    <FileVersion>3.9.5.0</FileVersion>
     <ApplicationIcon>Assets\Thai OpenUtau Logo.ico</ApplicationIcon>
     <PublishReadyToRun>true</PublishReadyToRun>
     <DebugType>embedded</DebugType>
@@ -34,8 +34,8 @@ Description  : Main Application Project Configuration. Optimized properties grou
     <CFBundleName>Thai OpenUtau</CFBundleName>
     <CFBundleDisplayName>Thai OpenUtau</CFBundleDisplayName>
     <CFBundleIdentifier>com.deltasynth.thaiopenutau</CFBundleIdentifier>
-    <CFBundleVersion>114.4</CFBundleVersion>
-    <CFBundleShortVersionString>114.4</CFBundleShortVersionString>
+    <CFBundleVersion>3.9.5</CFBundleVersion>
+    <CFBundleShortVersionString>3.9</CFBundleShortVersionString>
     <CFBundlePackageType>APPL</CFBundlePackageType>
     <CFBundleSignature>DLTA</CFBundleSignature>
     <CFBundleExecutable>OpenUtau</CFBundleExecutable>

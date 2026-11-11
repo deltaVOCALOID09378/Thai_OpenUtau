@@ -1,3 +1,11 @@
+// ============================================================================
+// Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : PackageManagerViewModel.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/ViewModels/PackageManagerViewModel.cs
+// Description  : Package manager view model with semantic installed version verification before prompting downloads.
+// ============================================================================
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
@@ -19,7 +27,7 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public string InstalledVersion { get; set; } = string.Empty;
 
         public bool HasRegistry => Software != null;
-        public bool IsUpToDate => IsInstalled && HasRegistry && !string.IsNullOrEmpty(InstalledVersion) && InstalledVersion == Version;
+        public bool IsUpToDate => IsInstalled && HasRegistry && !string.IsNullOrEmpty(InstalledVersion) && OpenUtau.Core.PackageManager.CompareVersions(InstalledVersion, Version) >= 0;
         public bool CanInstallOrUpdate => HasRegistry && (!IsInstalled || !IsUpToDate);
         public string PrimaryActionLabel => !HasRegistry ? ThemeManager.GetString("packages.install") : (!IsInstalled ? ThemeManager.GetString("packages.install") : (IsUpToDate ? ThemeManager.GetString("packages.install") : ThemeManager.GetString("packages.update")));
         public bool CanUninstall => IsInstalled;

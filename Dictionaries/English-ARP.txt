@@ -1,4 +1,4 @@
-﻿;;; # cmudict  --  major version: .
+;;; # cmudict  --  major version: .
 ;;; 
 ;;; # $headurl$
 ;;; # $date::                                                   $:
@@ -130,7 +130,7 @@ a's  ey z
 a.  ey
 a.'s  ey z
 a.s  ey z
-a  ey f ao r t uw w ah n t uw ey t
+a42128  ey f ao r t uw w ah n t uw ey t
 aa  ey ey
 aaa  t r ih p ah l ey
 aaberg  aa b er g

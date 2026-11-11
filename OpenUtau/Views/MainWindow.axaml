@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 ============================================================================
 Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
 File Name    : MainWindow.axaml
@@ -185,6 +185,7 @@ Description  : Main application workspace UI layout, implementing DELTA SYNTH
             <MenuItem Header="{DynamicResource menu.tools.debugwindow}" Click="OnMenuDebugWindow"/>
             <MenuItem Header="{DynamicResource phoneticassistant.caption}" Click="OnMenuPhoneticAssistant"/>
             <MenuItem Header="{DynamicResource menu.tools.singers}" Click="OnMenuSingers"/>
+            <MenuItem Header="{DynamicResource menu.tools.syncallpictures}" Click="OnMenuSyncAllPictures"/>
             <MenuItem Header="{DynamicResource menu.tools.singer.install}" Click="OnMenuInstallSinger"/>
             <MenuItem Header="{DynamicResource menu.tools.wavtoolresampler.install}" Click="OnMenuInstallWavtoolResampler"/>
             <MenuItem Header="{DynamicResource menu.tools.packages}" Click="OnMenuPackageManager"/>

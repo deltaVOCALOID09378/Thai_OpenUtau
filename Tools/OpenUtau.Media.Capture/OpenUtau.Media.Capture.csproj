@@ -1,0 +1,27 @@
+<!--
+============================================================================
+1. Date: 11/11/2026 (BE 2569)
+2. File Name: OpenUtau.Media.Capture.csproj
+3. Version: 1.0
+4. Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+5. File Location: Tools/OpenUtau.Media.Capture/OpenUtau.Media.Capture.csproj
+6. Description: Standby System DLL project for high-performance screen capture and video recording
+============================================================================
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RollForward>LatestMajor</RollForward>
+    <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>embedded</DebugType>
+    <Nullable>disable</Nullable>
+    <LangVersion>12</LangVersion>
+    <AssemblyName>OpenUtau.Media.Capture</AssemblyName>
+    <RootNamespace>OpenUtau.Media.Capture</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.0" />
+    <PackageReference Include="Serilog" Version="4.0.1" />
+  </ItemGroup>
+</Project>

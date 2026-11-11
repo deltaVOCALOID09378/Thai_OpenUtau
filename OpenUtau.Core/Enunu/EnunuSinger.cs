@@ -1,12 +1,14 @@
-﻿// ============================================================================
-// Date         : 03/11/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : EnunuSinger.cs
-// Version      : 1.0
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
-// File Location: OpenUtau.Core/Enunu/EnunuSinger.cs
-// Description  : ENUNU singer loader with defensive portrait and sample checks to avoid FileNotFoundException.
 // ============================================================================
+// 1. วัน/เดือน/ปี: 9 พฤศจิกายน พ.ศ. 2569 / 9 November 2026
+// 2. ชื่อไฟล์โค้ด: EnunuSinger.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.2
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Enunu/EnunuSinger.cs
+// 5. หน้าที่: คลาสแสดงผลและจัดการข้อมูลนักร้อง Enunu พร้อมระบบตรวจสอบความปลอดภัยของ Portrait/Sample
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine | Original by OpenUtau Authors
+// ============================================================================
+
 using System;
+using OpenUtau.Core.SingerHub;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,9 +33,9 @@ namespace OpenUtau.Core.Enunu {
         public override string Version => voicebank.Version;
         public override string OtherInfo => voicebank.OtherInfo;
         public override IList<string> Errors => errors;
-        public override string Avatar => voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image);
+        public override string Avatar => DeltaSingerProfileResolver.ResolveAvatar(Name, Location, voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image)) ?? (voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image));
         public override byte[] AvatarData => avatarData;
-        public override string Portrait => voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait);
+        public override string Portrait => DeltaSingerProfileResolver.ResolvePortrait(Name, Location, voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait)) ?? (voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait));
         public override float PortraitOpacity => voicebank.PortraitOpacity;
         public override int PortraitHeight => voicebank.PortraitHeight;
         public override string Sample => voicebank.Sample == null ? null : Path.Combine(Location, voicebank.Sample);

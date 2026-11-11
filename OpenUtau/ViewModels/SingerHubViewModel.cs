@@ -1,4 +1,16 @@
-﻿using System;
+// ============================================================================
+// 1. วัน/เดือน/ปี: 11 พฤศจิกายน พ.ศ. 2569 / 11 November 2026
+// 2. ชื่อไฟล์โค้ด: SingerHubViewModel.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.0
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau/ViewModels/SingerHubViewModel.cs
+// 6. รายละเอียดการแก้ไขงาน: เพิ่มแท็บสังกัด DELTA SYNTH, รองรับนักร้องกลุ่ม Private และ Unreleased พร้อมสถานะแจ้งเตือนตามเงื่อนไข
+// ============================================================================
+
+#pragma warning disable CS0618, CS0649, CS8632, CS0108
+#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Concurrent;
@@ -30,9 +42,20 @@ namespace OpenUtau.App.ViewModels {
         public SingerHubEntry? Registry { get; }
         public string Name { get; }
         public string Version { get; }
-        /// <summary>"lunai", "ufr", or "" for installed-only.</summary>
+        /// <summary>"lunai", "ufr", "brapa", "delta", or "" for installed-only.</summary>
         public string Host { get; }
         public bool IsLunai { get; }
+        public bool IsDeltaSynth => string.Equals(Host, "delta", StringComparison.OrdinalIgnoreCase) || string.Equals(Host, "deltasynth", StringComparison.OrdinalIgnoreCase);
+        public string GroupType { get; } = string.Empty;
+        public bool IsPrivate => IsDeltaSynth && (
+            string.Equals(GroupType, "Collaboration", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(GroupType, "The Drawer Kingdom", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(GroupType, "The DELTA SYNTH Partner", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(GroupType, "TYU Project", StringComparison.OrdinalIgnoreCase));
+        public bool IsUnreleased => IsDeltaSynth && !IsPrivate && (
+            string.IsNullOrEmpty(Registry?.DownloadUrl) ||
+            string.Equals(Registry?.DownloadUrl?.Trim(), "none", StringComparison.OrdinalIgnoreCase));
+
         public string IconUrl { get; }
         /// <summary>LUNAI: falls back to icon.png when iconou.png is unavailable.</summary>
         public string IconFallbackUrl { get; }
@@ -51,7 +74,7 @@ namespace OpenUtau.App.ViewModels {
         public bool HasCompany => !string.IsNullOrEmpty(Company);
         public bool HasRegistry => Registry != null;
         /// <summary>Install when not installed or when installed version is older than latest, and download is available.</summary>
-        public bool CanInstall => HasRegistry && HasDownloadUrl && (!IsInstalled || SingerHubClient.CompareVersions(InstalledVersion, Version) < 0);
+        public bool CanInstall => !IsPrivate && !IsUnreleased && HasRegistry && HasDownloadUrl && (!IsInstalled || SingerHubClient.CompareVersions(InstalledVersion, Version) < 0);
         bool HasDownloadUrl {
             get {
                 if (Registry == null) return false;
@@ -69,6 +92,34 @@ namespace OpenUtau.App.ViewModels {
         public IEnumerable<VersionStatusSegment> VersionStatusSegments {
             get {
                 var list = new List<VersionStatusSegment>();
+                if (IsDeltaSynth) {
+                    if (IsPrivate) {
+                        list.Add(new VersionStatusSegment {
+                            Text = ThemeManager.GetString("lunai.deltasynth.private.terms") + Environment.NewLine + ThemeManager.GetString("lunai.deltasynth.private.contact"),
+                            Bold = false
+                        });
+                        if (IsInstalled) {
+                            list.Add(new VersionStatusSegment {
+                                Text = Environment.NewLine + "[" + ThemeManager.GetString("lunai.installed") + ": " + Ver(InstalledVersion) + "]",
+                                Bold = true
+                            });
+                        }
+                        return list;
+                    } else if (IsUnreleased) {
+                        list.Add(new VersionStatusSegment {
+                            Text = ThemeManager.GetString("lunai.deltasynth.unreleased"),
+                            Bold = false
+                        });
+                        if (IsInstalled) {
+                            list.Add(new VersionStatusSegment {
+                                Text = Environment.NewLine + "[" + ThemeManager.GetString("lunai.installed") + ": " + Ver(InstalledVersion) + "]",
+                                Bold = true
+                            });
+                        }
+                        return list;
+                    }
+                }
+
                 if (HasRegistry) {
                     var latestVer = Ver(Version);
                     if (!IsInstalled) {
@@ -100,6 +151,7 @@ namespace OpenUtau.App.ViewModels {
             Host = (entry.Host ?? "lunai").Trim().ToLowerInvariant();
             if (string.IsNullOrEmpty(Host)) Host = "lunai";
             IsLunai = Host == "lunai";
+            GroupType = (entry.GroupType ?? string.Empty).Trim();
             var code = (entry.Code ?? string.Empty).Trim();
             var codeLower = code.ToLowerInvariant();
             var icon = (entry.Icon ?? string.Empty).Trim();
@@ -109,7 +161,7 @@ namespace OpenUtau.App.ViewModels {
                 IconUrl = icon;
                 IconFallbackUrl = string.Empty;
             } else if (Host == "brapa") {
-                // BRAPA: icon из JSON, страница — tos или сайт команды.
+                // BRAPA: icon จาก JSON, หน้า tos หรือเว็บทางการ
                 IconUrl = icon;
                 IconFallbackUrl = string.Empty;
                 var page = (entry.Tos ?? string.Empty).Trim();
@@ -118,6 +170,11 @@ namespace OpenUtau.App.ViewModels {
                 } else {
                     PageUrl = page;
                 }
+            } else if (Host == "delta" || Host == "deltasynth") {
+                var page = (entry.Tos ?? string.Empty).Trim();
+                PageUrl = (!string.IsNullOrEmpty(page) && !page.Equals("none", StringComparison.OrdinalIgnoreCase)) ? page : "https://deltasynth.com";
+                IconUrl = icon;
+                IconFallbackUrl = string.Empty;
             } else {
                 if (!string.IsNullOrEmpty(codeLower)) {
                     var singerBase = SingersBaseUrl + codeLower + "/";
@@ -136,11 +193,13 @@ namespace OpenUtau.App.ViewModels {
                     ? "Utau French Resources"
                     : Host == "brapa"
                         ? "Team Brapa"
-                        : "LUNAI Project")
+                        : (Host == "delta" || Host == "deltasynth")
+                            ? "DELTA SYNTH"
+                            : "LUNAI Project")
                 : entry.Company.Trim();
             var tos = (entry.Tos ?? string.Empty).Trim();
             if (string.IsNullOrEmpty(tos) || tos.Equals("none", StringComparison.OrdinalIgnoreCase)) {
-                TosUrl = Host == "lunai" ? "https://lunaiproject.github.io/termsofuse" : string.Empty;
+                TosUrl = Host == "lunai" ? "https://lunaiproject.github.io/termsofuse" : (Host == "delta" || Host == "deltasynth" ? "https://deltasynth.com/termsofuse" : string.Empty);
             } else {
                 TosUrl = tos;
             }
@@ -160,6 +219,7 @@ namespace OpenUtau.App.ViewModels {
             Version = version;
             Host = string.Empty;
             IsLunai = isLunai;
+            GroupType = string.Empty;
             IconUrl = string.Empty;
             IconFallbackUrl = string.Empty;
             PageUrl = string.Empty;
@@ -212,14 +272,17 @@ namespace OpenUtau.App.ViewModels {
 
         void ApplyFilter() {
             var q = Rows.AsEnumerable();
-            // ALL: только исполнители из реестров (любой host).
+            // ALL: ทั้งหมดที่มีในทะเบียน (ทุก host)
             if (SelectedTabIndex == 0) q = q.Where(r => r.HasRegistry);
-            // LUNAI: все с host == "lunai".
-            else if (SelectedTabIndex == 1) q = q.Where(r => r.Host == "delta" || r.Host == "lunai");
-            // UFR: все с host == "ufr".
+            // LUNAI: host == "lunai"
+            else if (SelectedTabIndex == 1) q = q.Where(r => r.Host == "lunai");
+            // UFR: host == "ufr"
             else if (SelectedTabIndex == 2) q = q.Where(r => r.Host == "ufr");
-            // BRAPA: все с host == "brapa".
+            // BRAPA: host == "brapa"
             else if (SelectedTabIndex == 3) q = q.Where(r => r.Host == "brapa");
+            // DELTA SYNTH: สังกัด DELTA SYNTH ทั้งหมด
+            else if (SelectedTabIndex == 4) q = q.Where(r => r.IsDeltaSynth);
+
             if (!string.IsNullOrWhiteSpace(SearchText))
                 q = q.Where(r => (r.Name ?? string.Empty).Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase));
             var list = q.ToList();
@@ -245,8 +308,9 @@ namespace OpenUtau.App.ViewModels {
         async Task LoadIconsAsync(IEnumerable<SingerHubRowViewModel> rows) {
             using var http = new HttpClient();
             http.DefaultRequestHeaders.Add("User-Agent", "OpenUtau-LUNAI");
-            foreach (var row in rows.Where(r => !string.IsNullOrEmpty(r.IconUrl))) {
+            foreach (var row in rows) {
                 try {
+                    // 1. ตรวจสอบใน Cache ก่อน
                     Bitmap? cachedBitmap = null;
                     foreach (var url in IconUrlsFor(row)) {
                         if (iconCache.TryGetValue(url, out var cached)) {
@@ -261,9 +325,53 @@ namespace OpenUtau.App.ViewModels {
                         continue;
                     }
 
+                    // 2. ค้นหาไฟล์ภาพโปรไฟล์จากในเครื่อง (E:\A Profile for Singer Picture หรือ โฟลเดอร์คลังเสียง)
+                    if (row.IsDeltaSynth || row.IsInstalled) {
+                        var localAvatar = DeltaSingerProfileResolver.ResolveAvatar(row.Name, row.FolderPath, null);
+                        if (string.IsNullOrEmpty(localAvatar)) {
+                            var rawName = row.Name.Split('(')[0].Trim();
+                            localAvatar = DeltaSingerProfileResolver.FindMatchingProfileImage(rawName);
+                        }
+                        if (!string.IsNullOrEmpty(localAvatar) && File.Exists(localAvatar)) {
+                            try {
+                                using var fs = File.OpenRead(localAvatar);
+                                var bmp = new Bitmap(fs);
+                                await Dispatcher.UIThread.InvokeAsync(() => row.IconBitmap = bmp);
+                                iconCache[localAvatar] = bmp;
+                                if (!string.IsNullOrEmpty(row.IconUrl)) iconCache[row.IconUrl] = bmp;
+                                continue;
+                            } catch { }
+                        }
+                    }
+
+                    // 3. ตรวจสอบว่า IconUrl ชี้ไปยังไฟล์ในเครื่องโดยตรงหรือไม่
+                    bool loadedLocal = false;
+                    foreach (var url in IconUrlsFor(row)) {
+                        string? localPath = null;
+                        if (File.Exists(url)) {
+                            localPath = url;
+                        } else if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.IsFile && File.Exists(uri.LocalPath)) {
+                            localPath = uri.LocalPath;
+                        }
+                        if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath)) {
+                            try {
+                                using var fs = File.OpenRead(localPath);
+                                var bmp = new Bitmap(fs);
+                                await Dispatcher.UIThread.InvokeAsync(() => row.IconBitmap = bmp);
+                                iconCache[url] = bmp;
+                                loadedLocal = true;
+                                break;
+                            } catch { }
+                        }
+                    }
+                    if (loadedLocal) continue;
+
+                    // 4. ดาวน์โหลดผ่าน HTTP/HTTPS สำหรับนักร้องออนไลน์
                     byte[]? bytes = null;
                     string? loadedUrl = null;
                     foreach (var url in IconUrlsFor(row)) {
+                        if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                            !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) continue;
                         try {
                             using var response = await http.GetAsync(url);
                             if (!response.IsSuccessStatusCode) {
@@ -322,7 +430,10 @@ namespace OpenUtau.App.ViewModels {
                 // BRAPA registry: remote JSON only (errors are ignored).
                 var brapaList = await FetchRegistrySafeAsync("https://www.teambrapa.com.br/singers.json");
 
-                var registry = lunaiList.Concat(ufrList).Concat(brapaList).ToList();
+                // DELTA SYNTH registry: ทะเบียนนักร้องทางการของค่าย DELTA SYNTH
+                var deltaList = DeltaSynthSingerRegistry.GetOfficialEntries();
+
+                var registry = lunaiList.Concat(ufrList).Concat(brapaList).Concat(deltaList).ToList();
                 Status = ThemeManager.GetString("lunai.status.listing");
                 var installed = await client.GetInstalledAsync(registry);
 
@@ -338,6 +449,17 @@ namespace OpenUtau.App.ViewModels {
                     if (installedByName.TryGetValue(key, out var info)) {
                         row.SetInstalled(info.Version, info.FolderPath);
                         installedByName.Remove(key);
+                    }
+                    if (!row.IsInstalled && !string.IsNullOrWhiteSpace(entry.Code) && installedByName.TryGetValue(NormalizeName(entry.Code), out var codeInfo)) {
+                        row.SetInstalled(codeInfo.Version, codeInfo.FolderPath);
+                        installedByName.Remove(NormalizeName(entry.Code));
+                    }
+                    if (!row.IsInstalled && row.IsDeltaSynth) {
+                        var rawName = entry.Name.Split('(')[0].Trim();
+                        if (installedByName.TryGetValue(NormalizeName(rawName), out var rawInfo)) {
+                            row.SetInstalled(rawInfo.Version, rawInfo.FolderPath);
+                            installedByName.Remove(NormalizeName(rawName));
+                        }
                     }
                     rows.Add(row);
                 }
@@ -407,4 +529,3 @@ namespace OpenUtau.App.ViewModels {
         }
     }
 }
-

@@ -1,17 +1,17 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:OpenUtau.App.ViewModels"
         xmlns:c="clr-namespace:OpenUtau.App.Controls"
-        mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="640"
+        mc:Ignorable="d" d:DesignWidth="1180" d:DesignHeight="740"
         x:Class="OpenUtau.App.Views.SingersDialog"
         x:DataType="vm:SingersViewModel"
         x:CompileBindings="True"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource singers.caption}"
-        Width="1050" MinWidth="850" MinHeight="600"
+        Width="1180" Height="740" MinWidth="960" MinHeight="650"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False">
 
@@ -31,70 +31,174 @@
       <Setter Property="Padding" Value="8,2"/>
       <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
+
+    <!-- ปุ่มเครื่องมือแก้ไข Oto สำเร็จรูป -->
+    <Style Selector="Button.otobtn">
+      <Setter Property="Margin" Value="0,0,4,0"/>
+      <Setter Property="Padding" Value="7,3"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+    <Style Selector="Button.otobtn-accent">
+      <Setter Property="Margin" Value="0,0,4,0"/>
+      <Setter Property="Padding" Value="8,3"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Background" Value="{DynamicResource AccentBrush1}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush1Foreground}"/>
+    </Style>
   </Window.Styles>
 
   <Border Margin="{Binding $parent[Window].WindowDecorationMargin}">
     <DockPanel Margin="12" LastChildFill="True">
 
+            <!-- =========================== -->
+      <!-- ส่วนท้าย: แผงควบคุมและแก้ไข Oto สำเร็จรูปครบวงจร -->
       <!-- =========================== -->
-      <!-- ส่วนท้าย: คีย์ลัดจัดเรียงแนวตั้ง -->
-      <!-- =========================== -->
-      <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0" Spacing="4">
+      <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0" Spacing="6">
 
-        <!-- แถวคีย์ลัดบน (Q/E/F/W/S/A/D) -->
-        <StackPanel Orientation="Horizontal" Spacing="0" Margin="0">
-          <Border Classes="keybadge"><TextBlock>Q</TextBlock></Border>
-          <TextBlock VerticalAlignment="Center" Margin="0,0,12,0"
-                     Text="{DynamicResource singers.otoview.selectprev}"/>
-          <Border Classes="keybadge"><TextBlock>E</TextBlock></Border>
-          <TextBlock VerticalAlignment="Center" Margin="0,0,12,0"
-                     Text="{DynamicResource singers.otoview.selectnext}"/>
-          <Border Classes="keybadge"><TextBlock>F</TextBlock></Border>
-          <TextBlock VerticalAlignment="Center" Margin="0,0,12,0"
-                     Text="{DynamicResource singers.otoview.showall}"/>
-          <Border Classes="keybadge"><TextBlock>W</TextBlock></Border>
-          <TextBlock VerticalAlignment="Center" Margin="0,0,12,0"
-                     Text="{DynamicResource singers.otoview.zoomin}"/>
-          <Border Classes="keybadge"><TextBlock>S</TextBlock></Border>
-          <TextBlock VerticalAlignment="Center" Margin="0,0,12,0"
-                     Text="{DynamicResource singers.otoview.zoomout}"/>
-          <Border Classes="keybadge"><TextBlock>A</TextBlock></Border>
-          <TextBlock VerticalAlignment="Center" Margin="0,0,12,0"
-                     Text="{DynamicResource singers.otoview.moveleft}"/>
-          <Border Classes="keybadge"><TextBlock>D</TextBlock></Border>
-          <TextBlock VerticalAlignment="Center"
-                     Text="{DynamicResource singers.otoview.moveright}"/>
-        </StackPanel>
+        <!-- แถวที่ 1: แถบเครื่องมือตั้งค่า Oto (1-5) และพรีเซ็ตสำเร็จรูป (Auto, CV, VCV, Copy, Paste, Save) -->
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <WrapPanel Grid.Column="0" Orientation="Horizontal">
+            <!-- ปุ่มคีย์ลัดกำหนดจุด 1-5 -->
+            <Button Classes="otobtn" Click="OnSetOffsetClick" ToolTip.Tip="Offset [1]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="1" FontWeight="Bold"/></Border>
+                <TextBlock Text="{DynamicResource oto.edit.offset}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnSetOverlapClick" ToolTip.Tip="Overlap [2]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="2" FontWeight="Bold"/></Border>
+                <TextBlock Text="{DynamicResource oto.edit.overlap}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnSetPreutterClick" ToolTip.Tip="Preutter [3]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="3" FontWeight="Bold"/></Border>
+                <TextBlock Text="{DynamicResource oto.edit.preutter}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnSetFixedClick" ToolTip.Tip="Fixed/Consonant [4]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="4" FontWeight="Bold"/></Border>
+                <TextBlock Text="{DynamicResource oto.edit.consonant}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnSetCutoffClick" ToolTip.Tip="Cutoff [5]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="5" FontWeight="Bold"/></Border>
+                <TextBlock Text="{DynamicResource oto.edit.cutoff}"/>
+              </StackPanel>
+            </Button>
 
-        <!-- แถวคีย์ลัดล่าง (1-5) + ปุ่มเล่นและ Toggle -->
-        <StackPanel Orientation="Horizontal" Spacing="0">
-          <StackPanel Orientation="Horizontal" Spacing="0" VerticalAlignment="Center">
-            <Border Classes="keybadge"><TextBlock>1</TextBlock></Border>
-            <TextBlock VerticalAlignment="Center" Margin="0,0,10,0"
-                       Text="{DynamicResource oto.edit.offset}"/>
-            <Border Classes="keybadge"><TextBlock>2</TextBlock></Border>
-            <TextBlock VerticalAlignment="Center" Margin="0,0,10,0"
-                       Text="{DynamicResource oto.edit.overlap}"/>
-            <Border Classes="keybadge"><TextBlock>3</TextBlock></Border>
-            <TextBlock VerticalAlignment="Center" Margin="0,0,10,0"
-                       Text="{DynamicResource oto.edit.preutter}"/>
-            <Border Classes="keybadge"><TextBlock>4</TextBlock></Border>
-            <TextBlock VerticalAlignment="Center" Margin="0,0,10,0"
-                       Text="{DynamicResource oto.edit.consonant}"/>
-            <Border Classes="keybadge"><TextBlock>5</TextBlock></Border>
-            <TextBlock VerticalAlignment="Center"
-                       Text="{DynamicResource oto.edit.cutoff}"/>
-          </StackPanel>
+            <Separator Width="1" Height="20" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="4,0,8,0"/>
 
-          <!-- ปุ่มเล่น + Toggle ขวาสุด -->
-          <StackPanel Orientation="Horizontal" Spacing="4"
-                      HorizontalAlignment="Right" Margin="0,0,0,0">
+            <!-- ปุ่มพรีเซ็ตสำเร็จรูปพิเศษเฉพาะ DELTA SYNTH -->
+            <Button Classes="otobtn-accent" Click="OnAutoDetectClick" ToolTip.Tip="Smart Speech Onset Detection">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock Text="⚡" FontSize="11"/>
+                <TextBlock Text="{DynamicResource singers.editoto.autodetect}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnApplyCvPresetClick" ToolTip.Tip="CV Preset (Ovl 50, Pre 100, Fix 150)">
+              <TextBlock Text="{DynamicResource singers.editoto.presetcv}"/>
+            </Button>
+            <Button Classes="otobtn" Click="OnApplyVcvPresetClick" ToolTip.Tip="VCV Preset (Ovl 100, Pre 200, Fix 300)">
+              <TextBlock Text="{DynamicResource singers.editoto.presetvcv}"/>
+            </Button>
+
+            <Separator Width="1" Height="20" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="4,0,8,0"/>
+
+            <!-- ปุ่ม Copy / Paste / Save -->
+            <Button Classes="otobtn" Click="OnCopyTimingClick" ToolTip.Tip="Copy Timing [Ctrl+C]">
+              <TextBlock Text="{DynamicResource singers.editoto.copytiming}"/>
+            </Button>
+            <Button Classes="otobtn" Click="OnPasteTimingClick" ToolTip.Tip="Paste Timing [Ctrl+V]">
+              <TextBlock Text="{DynamicResource singers.editoto.pastetiming}"/>
+            </Button>
+            <Button Classes="otobtn" Click="OnSaveOtosClick" ToolTip.Tip="Save Otos [Ctrl+S]" IsEnabled="{Binding Singer.OtoDirty}">
+              <TextBlock Text="{DynamicResource singers.editoto.save}"/>
+            </Button>
+          </WrapPanel>
+
+          <!-- ตัวแสดงเวลา Cursor Position เรียลไทม์ -->
+          <Border Grid.Column="2" Classes="keybadge" Padding="8,3" Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                  VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBlock Text="Time:" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" FontSize="11"/>
+              <TextBlock x:Name="CursorTimeText" Text="0.0 ms" FontWeight="SemiBold" FontSize="11"
+                         Foreground="{DynamicResource AccentBrush1}"/>
+            </StackPanel>
+          </Border>
+        </Grid>
+
+        <!-- แถวที่ 2: การเลื่อนดูและซูม (Q/E, W/S, A/D, F) + ปุ่มเล่นไฟล์ + โหมด Mel Spectrogram -->
+        <Grid ColumnDefinitions="*,Auto">
+          <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+            <!-- ย้ายไปยัง Oto ก่อนหน้า/ถัดไป -->
+            <Button Classes="otobtn" Click="OnPrevOtoClick" ToolTip.Tip="Previous Oto [Q]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="Q"/></Border>
+                <TextBlock Text="{DynamicResource singers.otoview.selectprev}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnNextOtoClick" ToolTip.Tip="Next Oto [E]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="E"/></Border>
+                <TextBlock Text="{DynamicResource singers.otoview.selectnext}"/>
+              </StackPanel>
+            </Button>
+
+            <Separator Width="1" Height="18" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="4,0,8,0"/>
+
+            <!-- การซูมและการเลื่อนคลื่นเสียง -->
+            <Button Classes="otobtn" Click="OnShowAllClick" ToolTip.Tip="Show All [F]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="F"/></Border>
+                <TextBlock Text="{DynamicResource singers.otoview.showall}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnZoomInClick" ToolTip.Tip="Zoom In [W]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="W"/></Border>
+                <TextBlock Text="{DynamicResource singers.otoview.zoomin}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnZoomOutClick" ToolTip.Tip="Zoom Out [S]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="S"/></Border>
+                <TextBlock Text="{DynamicResource singers.otoview.zoomout}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnPanLeftClick" ToolTip.Tip="Pan Left [A]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="A"/></Border>
+                <TextBlock Text="{DynamicResource singers.otoview.moveleft}"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="otobtn" Click="OnPanRightClick" ToolTip.Tip="Pan Right [D]">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Border Classes="keybadge"><TextBlock Text="D"/></Border>
+                <TextBlock Text="{DynamicResource singers.otoview.moveright}"/>
+              </StackPanel>
+            </Button>
+          </WrapPanel>
+
+          <!-- ปุ่มเล่นเสียง [Space] + สวิตช์ Mel Spectrogram ขวาสุด -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
             <Border BorderThickness="1" CornerRadius="6" ClipToBounds="True"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
-              <Button Classes="inline" Background="Transparent"
-                      Click="OnPlaySelectedFile">
+              <Button Classes="inline" Background="Transparent" Click="OnPlaySelectedFile" ToolTip.Tip="Play/Stop [Space]">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <Viewbox Width="16" Height="16">
+                  <Viewbox Width="14" Height="14">
                     <Path Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                           Data="M 0 0 L 7 6.5 L 0 13 Z"/>
                   </Viewbox>
@@ -104,16 +208,15 @@
             </Border>
             <Border BorderThickness="1" CornerRadius="6" ClipToBounds="True"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
-              <ToggleButton Classes="inline" Background="Transparent"
-                            IsChecked="{Binding ZoomInMel}">
-                <Viewbox Width="16" Height="16">
+              <ToggleButton Classes="inline" Background="Transparent" IsChecked="{Binding ZoomInMel}" ToolTip.Tip="Mel Spectrogram Zoom">
+                <Viewbox Width="14" Height="14">
                   <Path Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                         Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
                 </Viewbox>
               </ToggleButton>
             </Border>
           </StackPanel>
-        </StackPanel>
+        </Grid>
       </StackPanel>
 
       <!-- =========================== -->
@@ -138,11 +241,20 @@
         <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,8"
               ColumnDefinitions="Auto,8,*">
           <!-- อวาตาร์ -->
-          <Border Grid.Column="0" Width="100" Height="100" CornerRadius="8"
-                  BorderThickness="1"
-                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-            <Image Source="{Binding Avatar}" Stretch="UniformToFill"/>
-          </Border>
+          <!-- รูปภาพนักร้อง (Avatar & Full-Body Portrait) -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
+            <Border Width="100" Height="100" CornerRadius="8" ClipToBounds="True"
+                    BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    ToolTip.Tip="รูปโปรไฟล์หัวแทร็ก (Profile Icon)">
+              <Image Source="{Binding Avatar}" Stretch="UniformToFill"/>
+            </Border>
+            <Border Width="65" Height="100" CornerRadius="8" ClipToBounds="True"
+                    BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                    ToolTip.Tip="รูปเต็มตัว (Full-Body Portrait)">
+              <Image Source="{Binding Portrait}" Stretch="Uniform"/>
+            </Border>
+          </StackPanel>
 
           <!-- ส่วนข้อมูล -->
           <StackPanel Grid.Column="2" VerticalAlignment="Top" Spacing="4">
@@ -180,6 +292,7 @@
                     <MenuItem Header="{DynamicResource singers.visitwebsite}" Click="OnVisitWebsite" IsEnabled="{Binding HasWebsite}"/>
                     <MenuItem Header="{DynamicResource singers.setimage}" Click="OnSetImage"/>
                     <MenuItem Header="{DynamicResource singers.setportrait}" Click="OnSetPortrait"/>
+                    <MenuItem Header="{DynamicResource singers.syncpictures}" Click="OnSyncPictures"/>
                     <MenuItem Header="{DynamicResource singers.setencoding}" ItemsSource="{Binding SetEncodingMenuItems}" Classes="MenuItemWithSubMenu"/>
                     <MenuItem Header="{DynamicResource singers.setsingertype}" ItemsSource="{Binding SetSingerTypeMenuItems}" Classes="MenuItemWithSubMenu"/>
                     <MenuItem Header="{DynamicResource singers.setdefaultphonemizer}" ItemsSource="{Binding SetDefaultPhonemizerMenuItems}" Classes="MenuItemWithSubMenu"/>
@@ -307,7 +420,27 @@
                 BorderThickness="1" CornerRadius="6"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 Padding="2">
-          <c:OtoPlot Name="OtoPlot" ZoomInMel="{Binding ZoomInMel}"/>
+          <c:OtoPlot Name="OtoPlot" ZoomInMel="{Binding ZoomInMel}">
+            <c:OtoPlot.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="{DynamicResource oto.edit.offset}" InputGesture="1" Click="OnSetOffsetClick"/>
+                <MenuItem Header="{DynamicResource oto.edit.overlap}" InputGesture="2" Click="OnSetOverlapClick"/>
+                <MenuItem Header="{DynamicResource oto.edit.preutter}" InputGesture="3" Click="OnSetPreutterClick"/>
+                <MenuItem Header="{DynamicResource oto.edit.consonant}" InputGesture="4" Click="OnSetFixedClick"/>
+                <MenuItem Header="{DynamicResource oto.edit.cutoff}" InputGesture="5" Click="OnSetCutoffClick"/>
+                <Separator/>
+                <MenuItem Header="{DynamicResource singers.editoto.autodetect}" Click="OnAutoDetectClick"/>
+                <MenuItem Header="{DynamicResource singers.editoto.presetcv}" Click="OnApplyCvPresetClick"/>
+                <MenuItem Header="{DynamicResource singers.editoto.presetvcv}" Click="OnApplyVcvPresetClick"/>
+                <Separator/>
+                <MenuItem Header="{DynamicResource singers.editoto.copytiming}" InputGesture="Ctrl+C" Click="OnCopyTimingClick"/>
+                <MenuItem Header="{DynamicResource singers.editoto.pastetiming}" InputGesture="Ctrl+V" Click="OnPasteTimingClick"/>
+                <Separator/>
+                <MenuItem Header="{DynamicResource singers.editoto.save}" InputGesture="Ctrl+S" Click="OnSaveOtosClick"/>
+                <MenuItem Header="{DynamicResource singers.playselectedfile}" InputGesture="Space" Click="OnPlaySelectedFile"/>
+              </ContextMenu>
+            </c:OtoPlot.ContextMenu>
+          </c:OtoPlot>
         </Border>
       </Grid>
     </DockPanel>

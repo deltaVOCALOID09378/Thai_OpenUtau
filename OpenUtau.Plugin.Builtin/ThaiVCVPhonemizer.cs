@@ -1,12 +1,13 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// 1. วัน/เดือน/ปี: 6 พฤศจิกายน พ.ศ. 2569 / 6 November 2026
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
 // 2. ชื่อไฟล์โค้ด: ThaiVCVPhonemizer.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 3.0
-// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
+// 3. ลำดับเวอร์ชันของไฟล์: 3.1
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & Gemini AI [ Original by Patiphat Wongyai (Delta) ]
 // 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Plugin.Builtin/ThaiVCVPhonemizer.cs
-// 6. รายละเอียดการแก้ไข: ปรับปรุง Timing Safety ให้ Monotonic Spacing แน่นหนา พร้อมระบบ Fallback สู่ coreCV/V
+// 6. รายละเอียดการแก้ไข: ปรับปรุงการแบ่งสัดส่วนเวลาตามหลักทศนิยม ยืดหยุ่นตามความยาวโน้ต: พยัญชนะต้นไม่เกิน 5-7%
+//                       และตัวสะกดท้าย [v c] ขยายกว้างขึ้นเป็น 30-40% ปลดล็อกค่าคงที่ ticks ให้สอดรับกับทุกโน้ต
 // ============================================================================
 
 using System;
@@ -88,10 +89,12 @@ namespace OpenUtau.Plugin.Builtin {
 
         private Dictionary<string, string> CustomDictionary = new Dictionary<string, string>(StringComparer.Ordinal);
         private bool isDictLoaded = false;
+        private int loadedDictVersion = -1;
         private USinger? singer;
 
         public override void SetSinger(USinger singer) {
             this.singer = singer;
+            isDictLoaded = false;
             LoadCustomDictionary();
         }
 
@@ -99,7 +102,7 @@ namespace OpenUtau.Plugin.Builtin {
             var phonemes = dsPhonemes.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             List<string> syllables = new List<string>();
             string currentSyllable = "";
-            var dictVowels = new HashSet<string> { "a", "i", "u", "e", "o", "@", "Q", "3", "6", "1", "ia", "ua" };
+            var dictVowels = new HashSet<string> { "a", "i", "u", "e", "o", "@", "Q", "3", "6", "1", "ia", "ua", "ay", "aw", "am" };
             var diphthongs = new HashSet<string> { "r", "l", "w" };
             var endingConsonants = new HashSet<string> { "b", "ch", "d", "f", "g", "h", "j", "k", "kh", "l", "m", "n", "p", "ph", "r", "s", "t", "th", "w", "y" };
 
@@ -120,14 +123,14 @@ namespace OpenUtau.Plugin.Builtin {
                 else if (p == "Ua") p = "6";
                 else if (p == "au") p = "aw";
                 
-                if (p == "I") {
+                if (p == "I" || p == "ay") {
                     currentSyllable += "ay";
                     syllables.Add(currentSyllable);
                     currentSyllable = "";
                     continue;
                 }
-                if (p == "aw") {
-                    currentSyllable += "aw";
+                if (p == "aw" || p == "am") {
+                    currentSyllable += p;
                     syllables.Add(currentSyllable);
                     currentSyllable = "";
                     continue;
@@ -189,7 +192,8 @@ namespace OpenUtau.Plugin.Builtin {
         }
 
         private void LoadCustomDictionary() {
-            if (isDictLoaded) return;
+            int currentVer = ThaiDictionaryManager.EnsureUpToDate();
+            if (isDictLoaded && loadedDictVersion == currentVer) return;
             try {
                 ThaiDictionaryManager.ApplyToDictionary(CustomDictionary, phonemes => {
                     if (phonemes.Contains(" ")) return ConvertDiffsingerToSyllables(phonemes);
@@ -214,6 +218,7 @@ namespace OpenUtau.Plugin.Builtin {
                         }
                     }
                 }
+                loadedDictVersion = ThaiDictionaryManager.CurrentVersion;
             } catch (Exception ex) { Log.Error(ex, "เกิดข้อผิดพลาดในการโหลดพจนานุกรม (Failed to load custom dictionary)"); }
             isDictLoaded = true;
         }
@@ -336,7 +341,9 @@ namespace OpenUtau.Plugin.Builtin {
                 if (aliases.Count == 0) aliases.Add(string.IsNullOrEmpty(syllable) ? "a" : syllable);
                 
                 bool firstHasVowel = aliases.Count > 0 && vowels.Any(v => aliases[0].Contains(v));
-                int vcPosition = Math.Max(0, noteDuration - 100);
+                double consRatio = Math.Clamp(0.05 + 0.02 * Math.Min(1.0, (double)noteDuration / 480.0), 0.05, 0.07);
+                double vcRatio = Math.Clamp(0.33 + 0.05 * Math.Min(1.0, (double)noteDuration / 480.0), 0.30, 0.40);
+                int vcPosition = (int)Math.Round(noteDuration * (1.0 - vcRatio));
 
                 for (int i = 0; i < aliases.Count; i++) {
                     string alias = aliases[i];
@@ -345,15 +352,13 @@ namespace OpenUtau.Plugin.Builtin {
                         position = 0;
                     } else {
                         if (!firstHasVowel && i == 1) {
-                            position = Math.Min((int)(noteDuration * 0.025), 20);
-                        } else if (alias == "-") {
-                            position = Math.Max((int)(noteDuration * 0.88), noteDuration - 18);
-                        } else if (alias.EndsWith("-")) {
-                            position = Math.Max((int)(noteDuration * 0.88), noteDuration - 18);
-                        } else if (i == aliases.Count - 1 && aliases.Count >= 3) {
-                            position = Math.Max((int)(noteDuration * 0.80), vcPosition);
+                            position = (int)Math.Round(noteDuration * consRatio);
+                        } else if (alias == "-" || alias.EndsWith("-")) {
+                            position = (int)Math.Round(noteDuration * 0.95);
+                        } else if (i == aliases.Count - 1 || (aliases.Count > 1 && i == aliases.Count - 2 && aliases[aliases.Count - 1].EndsWith("-"))) {
+                            position = vcPosition;
                         } else {
-                            position = Math.Max((int)(noteDuration * 0.80), vcPosition);
+                            position = vcPosition;
                         }
                     }
                     
@@ -418,6 +423,7 @@ namespace OpenUtau.Plugin.Builtin {
 
         public string[] WordToPhonemes(string input) {
             if (string.IsNullOrEmpty(input)) return new string[0];
+            LoadCustomDictionary();
             input = input.Normalize(NormalizationForm.FormC);
             
             if (CustomDictionary.ContainsKey(input)) {
