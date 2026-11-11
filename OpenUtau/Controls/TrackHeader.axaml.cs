@@ -121,9 +121,6 @@ namespace OpenUtau.App.Controls {
                 return;
             }
 
-            if (SettingsInlineChip != null) {
-                SettingsInlineChip.IsVisible = false;
-            }
             if (SingerPhonemizerPanel != null) {
                 SingerPhonemizerPanel.Margin = new Thickness(0);
             }

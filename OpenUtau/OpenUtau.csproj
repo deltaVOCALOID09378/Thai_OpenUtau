@@ -108,6 +108,9 @@ Description  : Main Application Project Configuration. Restored canonical versio
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Update="Views\PhonemeTimingConfigDialog.axaml.cs">
+      <DependentUpon>PhonemeTimingConfigDialog.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\PasteParamDialog.axaml.cs">
       <DependentUpon>PasteParamDialog.axaml</DependentUpon>
     </Compile>

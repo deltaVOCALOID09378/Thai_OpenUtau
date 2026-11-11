@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 ============================================================================
 Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
 File Name    : MainWindow.axaml
@@ -169,6 +169,7 @@ Description  : Main application workspace UI layout, implementing DELTA SYNTH
           <MenuItem Header="{DynamicResource menu.project}" IsEnabled="{Binding Page}">
             <MenuItem Header="{DynamicResource menu.project.expressions}" Click="OnMenuExpressionss"/>
             <MenuItem Header="{DynamicResource menu.project.remaptimeaxis}" Click="OnMenuRemapTimeaxis"/>
+            <MenuItem Header="{DynamicResource menu.project.phonemetiming}" Click="OnMenuPhonemeTiming"/>
           </MenuItem>
           <MenuItem Header="{DynamicResource menu.tools}">
             <MenuItem Header="{DynamicResource menu.tools.layout}">

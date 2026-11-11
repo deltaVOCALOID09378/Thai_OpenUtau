@@ -1,0 +1,2 @@
+name=Auto Pitch Writer Ver.1.7.0
+execute=AutoPitchwriter.exe

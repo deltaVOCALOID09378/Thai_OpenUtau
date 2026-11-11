@@ -389,6 +389,10 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="menu.project">โปรเจกต์</system:String>
 <system:String x:Key="menu.project.expressions">จัดการพารามิเตอร์ (Expressions)...</system:String>
 <system:String x:Key="menu.project.remaptimeaxis">ปรับการตั้งค่า Tempo (โดยไม่ให้จังหวะเพี้ยน)</system:String>
+<system:String x:Key="menu.project.phonemetiming">ตั้งค่าสัดส่วนเสียง (Phoneme Balancer)...</system:String>
+<system:String x:Key="tracks.phonemetiming">ตั้งค่าสัดส่วนเสียง (Phoneme Balancer)...</system:String>
+<system:String x:Key="pianoroll.menu.phonemetiming">ตั้งค่าสัดส่วนเสียง (Phoneme Balancer)...</system:String>
+<system:String x:Key="tracks.recommended_phonemizers">แนะนำสำหรับนักร้องนี้ (Recommended for Singer)</system:String>
 
 <system:String x:Key="menu.tools">เครื่องมือ</system:String>
 <system:String x:Key="menu.tools.clearcache">ล้างไฟล์แคช (Cache)</system:String>
@@ -535,8 +539,8 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="lunai.col.version">เวอร์ชัน</system:String>
 <system:String x:Key="lunai.col.installed">เวอร์ชันในเครื่อง</system:String>
 <system:String x:Key="lunai.col.action">สถานะดำเนินการ</system:String>
-<system:String x:Key="lunai.install">ดาวน์โหลดมาใช้งาน</system:String>
-<system:String x:Key="lunai.update">อัปเดตเสียง</system:String>
+<system:String x:Key="lunai.install">ติดตั้ง</system:String>
+<system:String x:Key="lunai.update">อัปเดต</system:String>
 <system:String x:Key="lunai.uninstall">ลบออก</system:String>
 <system:String x:Key="lunai.unknownversion">ไม่ทราบ</system:String>
 <system:String x:Key="lunai.installed">ติดตั้งแล้ว</system:String>
@@ -548,7 +552,7 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="lunai.section.updatesavailable">อัปเดตที่มีให้</system:String>
 <system:String x:Key="lunai.section.installed">นักร้องของคุณที่มีอยู่</system:String>
 <system:String x:Key="lunai.section.notinstalled">รายชื่อที่ยังไม่ได้ติดตั้ง</system:String>
-<system:String x:Key="lunai.refresh">โหลดหน้าใหม่</system:String>
+<system:String x:Key="lunai.refresh">รีเฟรช</system:String>
 <system:String x:Key="lunai.status.fetching">กำลังดึงรายชื่อจากเซิร์ฟเวอร์...</system:String>
 <system:String x:Key="lunai.status.listing">กำลังสแกนคลังเสียงในเครื่อง...</system:String>
 <system:String x:Key="lunai.status.ready">พร้อมให้บริการ</system:String>

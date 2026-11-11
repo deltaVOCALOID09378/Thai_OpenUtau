@@ -105,7 +105,8 @@ namespace OpenUtau.Core.Editing {
             }
             ArgumentNullException.ThrowIfNull(random);
 
-            float maxDeviation = (float)Math.Clamp(intensity, 0, 100);
+            // สเกล OpenUtau: 1.0 = 10 cents, แปลงค่า intensity (0-100 cents) ให้เป็นหน่วย PitchPoint.Y ที่ถูกต้องและไม่เพี้ยน
+            float maxDeviation = (float)Math.Clamp(intensity, 0, 100) / 10.0f;
             if (durationMs == 0) {
                 return new List<PitchPoint> {
                     new PitchPoint(0, 0, PitchPointShape.io),

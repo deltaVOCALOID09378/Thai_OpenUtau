@@ -75,9 +75,23 @@ namespace OpenUtau.Core {
         public void SearchAllLegacyPlugins() {
             try {
                 var stopWatch = Stopwatch.StartNew();
-                Plugins = PluginLoader.LoadAll(PathManager.Inst.PluginsPath);
+                var pluginList = new List<OpenUtau.Classic.Plugin>();
+                if (Directory.Exists(PathManager.Inst.PluginsPath)) {
+                    pluginList.AddRange(PluginLoader.LoadAll(PathManager.Inst.PluginsPath));
+                }
+                string exePath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty;
+                if (!string.IsNullOrEmpty(exePath)) {
+                    string exePlugins = Path.Combine(exePath, "Plugins");
+                    if (Directory.Exists(exePlugins) && !string.Equals(exePlugins, PathManager.Inst.PluginsPath, StringComparison.OrdinalIgnoreCase)) {
+                        pluginList.AddRange(PluginLoader.LoadAll(exePlugins));
+                    }
+                }
+                Plugins = pluginList
+                    .GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.First())
+                    .ToArray();
                 stopWatch.Stop();
-                Log.Information($"Search all legacy plugins: {stopWatch.Elapsed}");
+                Log.Information($"Search all legacy plugins: {stopWatch.Elapsed} (Found {Plugins.Length})");
             } catch (Exception e) {
                 Log.Error(e, "Failed to search legacy plugins.");
                 Plugins = new OpenUtau.Classic.Plugin[0];

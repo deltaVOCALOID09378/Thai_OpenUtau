@@ -1155,6 +1155,23 @@ namespace OpenUtau.App.Controls {
             EditNoteDefaults();
         }
 
+        void OnMenuPhonemeTiming(object sender, RoutedEventArgs args) {
+            OpenPhonemeTimingConfig();
+        }
+
+        public void OpenPhonemeTimingConfig() {
+            var notesVM = ViewModel?.NotesViewModel;
+            var dialog = new PhonemeTimingConfigDialog() {
+                DataContext = new PhonemeTimingConfigViewModel(
+                    notesVM?.Part,
+                    notesVM?.Selection?.ToList())
+            };
+            dialog.ShowDialog(RootWindow);
+            if (dialog.Position.Y < 0) {
+                dialog.Position = dialog.Position.WithY(0);
+            }
+        }
+
         void EditNoteDefaults() {
             var dialog = new NoteDefaultsDialog();
             dialog.ShowDialog(RootWindow);
@@ -2199,6 +2216,21 @@ namespace OpenUtau.App.Controls {
             dialog.onFinish = options => {
                 var notes = NotesVm.Selection.Count > 0 ? NotesVm.Selection.ToList() : NotesVm.Part.notes.ToList();
                 if (notes.Count == 0) return;
+
+                // กรณีเลือกโหมด Original Canon Plugin ดั้งเดิม
+                if (options.UseOriginalCanonExe) {
+                    var canonPlugin = DocManager.Inst.Plugins.FirstOrDefault(p =>
+                        p.Name.Contains("Auto Pitch Writer", StringComparison.OrdinalIgnoreCase) ||
+                        p.Name.Contains("Canon", StringComparison.OrdinalIgnoreCase) ||
+                        p.Executable.Contains("AutoPitchwriter", StringComparison.OrdinalIgnoreCase));
+                    if (canonPlugin != null) {
+                        var first = notes.OrderBy(n => n.position).First();
+                        var last = notes.OrderBy(n => n.position).Last();
+                        _ = Classic.PluginRunner.from(PathManager.Inst, DocManager.Inst).Execute(NotesVm.Project, NotesVm.Part, first, last, canonPlugin);
+                        return;
+                    }
+                }
+
                 var allowedShapes = new HashSet<OpenUtau.Core.AutoPitch.PitchShapeType>();
                 if (options.Thunderbolt) allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.Thunderbolt);
                 if (options.PitchDropRise) allowedShapes.Add(OpenUtau.Core.AutoPitch.PitchShapeType.PitchDropRise);
@@ -2218,9 +2250,14 @@ namespace OpenUtau.App.Controls {
                         NotesVm.Project,
                         allowedShapes,
                         (float)options.PortamentoStart,
-                        (float)options.PortamentoLength);
+                        (float)options.PortamentoLength,
+                        options.SmartMelodicMode,
+                        options.ApplyNaturalVibrato);
                     foreach (var note in notes) {
                         DocManager.Inst.ExecuteCmd(new SetPitchPointsCommand(NotesVm.Part, note, note.pitch));
+                        if (options.ApplyNaturalVibrato) {
+                            DocManager.Inst.ExecuteCmd(new SetVibratoCommand(NotesVm.Part, note, note.vibrato));
+                        }
                     }
                     DocManager.Inst.ExecuteCmd(new ShowPitchNotification());
                 } finally {

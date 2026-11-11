@@ -1,11 +1,11 @@
 // ==========================================
-// วัน/เดือน/ปี: 29/10/2026
+// วัน/เดือน/ปี: 11/11/2026 (2569)
 // ชื่อไฟล์: ThaiAutoPitchByToneBatchEdit.cs
-// ลำดับเวอร์ชัน: 1.0
-// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI
+// ลำดับเวอร์ชัน: 1.1
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine
 // [ Original by DELTA SYNTH ] (Edit by DELTA SYNTH)
 // ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Editing/ThaiAutoPitchByToneBatchEdit.cs
-// หน้าที่: วาดเส้นแดง (Pitch) อัตโนมัติอ้างอิงตามวรรณยุกต์ไทย พร้อมแทรกการเอื้อนธรรมชาติช่วงปลายโน้ต
+// หน้าที่: วาดเส้นแดง (Pitch) อัตโนมัติอ้างอิงตามวรรณยุกต์ไทย ปรับสมดุล Micro-cents ไม่หลุดคีย์ และใช้เวลา ms จริง
 // ==========================================
 
 using System;
@@ -34,9 +34,14 @@ namespace OpenUtau.Core.Editing {
                     // เคลียร์เส้นแดงเดิมอย่างปลอดภัย
                     docManager.ExecuteCmd(new ResetPitchPointsCommand(part, note));
 
+                    // คำนวณความยาวเวลาจริงในหน่วยมิลลิวินาที (Real-time Milliseconds)
+                    double durationMs = project.timeAxis.MsBetweenTickPos(
+                        part.position + note.position,
+                        part.position + note.End);
+
                     // ตรวจจับวรรณยุกต์อย่างง่ายจากเนื้อร้อง
                     int toneType = DetectThaiTone(note.lyric);
-                    var newPitch = CreatePitchFromTone(toneType, note.duration, random);
+                    var newPitch = CreatePitchFromTone(toneType, durationMs, random);
 
                     int index = 0;
                     foreach (var point in newPitch.data) {
@@ -69,45 +74,43 @@ namespace OpenUtau.Core.Editing {
             return 0; // Default สามัญ
         }
 
-        private static UPitch CreatePitchFromTone(int tone, int duration, Random random) {
+        private static UPitch CreatePitchFromTone(int tone, double durationMs, Random random) {
             var pitch = new UPitch { snapFirst = true };
-            float jitter() => (float)(random.NextDouble() * 0.4 - 0.2); // เพิ่มความสมจริงของเสียงมนุษย์
+            float jitter() => (float)(random.NextDouble() * 0.2 - 0.1); // Jitter ละมุน 1-2 cents
 
             switch (tone) {
-                case 1: // เสียงเอก (Low) - กดต่ำลงแล้วคงที่
-                    pitch.data.Add(new PitchPoint(-40, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(20, -2.5f + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(duration > 240 ? 120 : duration / 2, -2.0f + jitter(), PitchPointShape.io));
+                case 1: // เสียงเอก (Low) - กดต่ำลงเล็กน้อย (-8 cents)
+                    pitch.data.Add(new PitchPoint(-35, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(20, -0.8f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint((float)Math.Min(120, durationMs * 0.5), -0.6f + jitter(), PitchPointShape.io));
                     break;
-                case 2: // เสียงโท (Falling) - ยกขึ้นเล็กน้อยแล้วตกลงลึก
+                case 2: // เสียงโท (Falling) - ยกขึ้นเบาๆ แล้วทอดลง (-10 cents)
                     pitch.data.Add(new PitchPoint(-30, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(25, 2.0f + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(duration > 240 ? 150 : duration / 2, -3.5f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(25, 0.7f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint((float)Math.Min(140, durationMs * 0.5), -1.0f + jitter(), PitchPointShape.io));
                     break;
-                case 3: // เสียงตรี (High) - ยกขึ้นสูงแล้วคงที่
-                    pitch.data.Add(new PitchPoint(-20, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(30, 3.0f + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(duration > 240 ? 120 : duration / 2, 2.5f + jitter(), PitchPointShape.io));
+                case 3: // เสียงตรี (High) - ยกขึ้นสูงเล็กน้อย (+9 cents)
+                    pitch.data.Add(new PitchPoint(-25, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(25, 0.9f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint((float)Math.Min(120, durationMs * 0.5), 0.7f + jitter(), PitchPointShape.io));
                     break;
-                case 4: // เสียงจัตวา (Rising) - กดต่ำแล้วตวัดขึ้นสูง (ลูกเอื้อน)
+                case 4: // เสียงจัตวา (Rising) - กดต่ำแล้วช้อนตวัดขึ้น (+10 cents)
                     pitch.data.Add(new PitchPoint(-30, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(35, -2.5f + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(duration > 240 ? 150 : duration / 2, 3.0f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(30, -0.8f + jitter(), PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint((float)Math.Min(140, durationMs * 0.5), 1.0f + jitter(), PitchPointShape.io));
                     break;
-                default: // เสียงสามัญ (Mid) - ราบเรียบ มี Jitter เล็กน้อย
-                    pitch.data.Add(new PitchPoint(-40, 0, PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(30, 0.5f + jitter(), PitchPointShape.io));
-                    pitch.data.Add(new PitchPoint(duration > 240 ? 100 : duration / 2, -0.2f + jitter(), PitchPointShape.io));
+                default: // เสียงสามัญ (Mid) - ราบเรียบ เกาะคีย์ 100%
+                    pitch.data.Add(new PitchPoint(-30, 0, PitchPointShape.io));
+                    pitch.data.Add(new PitchPoint(20, 0, PitchPointShape.io));
                     break;
             }
 
-            // แทรกกลไก "เอื้อนแบบจังหวะเร็ว" ในช่วงท้ายของโน้ตหากมีความยาวเพียงพอ
-            if (duration >= 480) {
-                pitch.data.Add(new PitchPoint(duration - 150, 1.5f, PitchPointShape.io));
-                pitch.data.Add(new PitchPoint(duration - 75, -1.0f, PitchPointShape.io));
-                pitch.data.Add(new PitchPoint(duration, 0, PitchPointShape.io));
+            // คืนตัวนุ่มนวลท้ายโน้ต
+            if (durationMs >= 350) {
+                pitch.data.Add(new PitchPoint((float)(durationMs - 60), 0.4f, PitchPointShape.io));
+                pitch.data.Add(new PitchPoint((float)durationMs, 0, PitchPointShape.io));
             } else {
-                pitch.data.Add(new PitchPoint(duration, 0, PitchPointShape.io));
+                pitch.data.Add(new PitchPoint((float)durationMs, 0, PitchPointShape.io));
             }
 
             return pitch;

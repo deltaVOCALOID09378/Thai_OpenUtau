@@ -69,6 +69,63 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public IBrush HeaderBorderBrush { get; set; } = ThemeManager.NeutralAccentBrushSemi;
         [Reactive] public IBrush HeaderBackgroundBrush { get; set; } = Brushes.Transparent;
 
+        public string SingerTooltip {
+            get {
+                if (track?.Singer == null || !track.Singer.Found) {
+                    return ThemeManager.GetString("tracks.selectsinger") ?? "Select Singer";
+                }
+                var singer = track.Singer;
+                var systems = SingerCompatibilityService.GetCompatibleSingingSystems(singer);
+                string systemsStr = string.Join(", ", systems);
+                return $"{singer.LocalizedName}\n----------------------------------------\n⚡ ระบบที่รองรับ (Compatible Systems): {systemsStr}\n✨ {SingerCompatibilityService.GetRecommendationDescription(singer, track.Phonemizer)}";
+            }
+        }
+
+        public string PhonemizerTooltip {
+            get {
+                var p = track?.Phonemizer;
+                string pDesc = p != null ? p.ToString() : "[None]";
+                if (track?.Singer == null || !track.Singer.Found) {
+                    return pDesc;
+                }
+                var singer = track.Singer;
+                var systems = SingerCompatibilityService.GetCompatibleSingingSystems(singer);
+                string systemsStr = string.Join(", ", systems);
+                string reco = SingerCompatibilityService.GetRecommendationDescription(singer, p);
+                return $"{pDesc}\n----------------------------------------\n👤 นักร้อง: {singer.LocalizedName}\n⚡ ระบบคลังเสียงที่รองรับ: {systemsStr}\n{reco}";
+            }
+        }
+
+        public void OpenPhonemeTiming() {
+            var part = DocManager.Inst.Project.parts
+                .OfType<UVoicePart>()
+                .FirstOrDefault(p => p.trackNo == track.TrackNo);
+            var vm = new PhonemeTimingConfigViewModel(part, null) {
+                ApplyProjectWide = false
+            };
+            if (track.Singer != null && track.Singer.Found) {
+                var systems = SingerCompatibilityService.GetCompatibleSingingSystems(track.Singer);
+                if (systems.Contains("DiffSinger AI")) {
+                    vm.SelectedSystemIndex = 4;
+                } else if (systems.Contains("UTAU VCCV") || systems.Contains("Thai VCCV / CVVC")) {
+                    vm.SelectedSystemIndex = 3;
+                } else if (systems.Contains("UTAU CVVC")) {
+                    vm.SelectedSystemIndex = 2;
+                } else if (systems.Contains("UTAU VCV")) {
+                    vm.SelectedSystemIndex = 1;
+                }
+            }
+            var dialog = new PhonemeTimingConfigDialog() {
+                DataContext = vm,
+            };
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
+                dialog.ShowDialog(desktop.MainWindow);
+                if (dialog.Position.Y < 0) {
+                    dialog.Position = dialog.Position.WithY(0);
+                }
+            }
+        }
+
         public ViewModelActivator Activator { get; }
 
         private readonly UTrack track;
@@ -98,6 +155,8 @@ namespace OpenUtau.App.ViewModels {
                 }
                 MessageBus.Current.SendMessage(new TracksRefreshEvent());
                 this.RaisePropertyChanged(nameof(Singer));
+                this.RaisePropertyChanged(nameof(SingerTooltip));
+                this.RaisePropertyChanged(nameof(PhonemizerTooltip));
                 RefreshAvatar();
                 UpdateTrackSettingsVisibility();
             });
@@ -114,6 +173,8 @@ namespace OpenUtau.App.ViewModels {
                 MessageBus.Current.SendMessage(new PianorollRefreshEvent("Part"));
                 MessageBus.Current.SendMessage(new TracksRefreshEvent());
                 this.RaisePropertyChanged(nameof(Singer));
+                this.RaisePropertyChanged(nameof(SingerTooltip));
+                this.RaisePropertyChanged(nameof(PhonemizerTooltip));
                 RefreshAvatar();
                 UpdateTrackSettingsVisibility();
             });
@@ -138,6 +199,8 @@ namespace OpenUtau.App.ViewModels {
                 }
                 this.RaisePropertyChanged(nameof(Phonemizer));
                 this.RaisePropertyChanged(nameof(PhonemizerTag));
+            this.RaisePropertyChanged(nameof(SingerTooltip));
+            this.RaisePropertyChanged(nameof(PhonemizerTooltip));
             });
             AllSetPhonemizerCommand = ReactiveCommand.Create<PhonemizerFactory>(factory => {
                 if (factory == null) {
@@ -676,6 +739,42 @@ namespace OpenUtau.App.ViewModels {
             var available = PhonemizerFactory.EnumerateForSinger(track.Singer).ToArray();
             var availableTypes = available.Select(factory => factory.type).ToHashSet();
             bool isDiffSinger = IsDiffSingerTrack(track);
+
+            // Recommended for current singer (คลังเสียงที่แนะนำสำหรับนักร้องนี้โดยเฉพาะ)
+            if (track.Singer != null && track.Singer.Found) {
+                var recommendedFactories = new List<PhonemizerFactory>();
+                if (!string.IsNullOrEmpty(track.Singer.DefaultPhonemizer)) {
+                    var defaultFactory = FindPhonemizerByName(track.Singer.DefaultPhonemizer);
+                    if (defaultFactory != null && availableTypes.Contains(defaultFactory.type)) {
+                        recommendedFactories.Add(defaultFactory);
+                    }
+                }
+                var systems = SingerCompatibilityService.GetCompatibleSingingSystems(track.Singer);
+                if (systems.Contains("UTAU VCV")) {
+                    var vcvFactories = available.Where(f => f.tag.Contains("VCV", StringComparison.OrdinalIgnoreCase) || f.name.Contains("VCV", StringComparison.OrdinalIgnoreCase)).ToList();
+                    foreach (var vf in vcvFactories) {
+                        if (!recommendedFactories.Any(r => r.type == vf.type)) {
+                            recommendedFactories.Add(vf);
+                        }
+                    }
+                } else if (systems.Contains("Thai VCCV / CVVC") || systems.Contains("UTAU VCCV")) {
+                    var thFactories = available.Where(f => f.tag.Contains("TH", StringComparison.OrdinalIgnoreCase) || f.tag.Contains("VCCV", StringComparison.OrdinalIgnoreCase)).ToList();
+                    foreach (var tf in thFactories) {
+                        if (!recommendedFactories.Any(r => r.type == tf.type)) {
+                            recommendedFactories.Add(tf);
+                        }
+                    }
+                }
+
+                if (recommendedFactories.Count > 0) {
+                    items.Add(new MenuItemViewModel() {
+                        Header = "★ " + (ThemeManager.GetString("tracks.recommended_phonemizers") ?? "แนะนำสำหรับนักร้องนี้ (Recommended for Singer)"),
+                        Items = recommendedFactories.Select(f => new PhonemizerMenuItemViewModel(f, SelectPhonemizerCommand, $"★ [{f.tag}] {f.name}", AllSetPhonemizerCommand)).ToArray()
+                    });
+                    items.Add(MenuLineSeparator());
+                }
+            }
+
             //Singer default
             if (track.Singer != null && track.Singer.Found) {
                 var factory = FindPhonemizerByName(track.Singer.DefaultPhonemizer);

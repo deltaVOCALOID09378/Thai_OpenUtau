@@ -614,6 +614,16 @@ namespace OpenUtau.App.Views {
             }
         }
 
+        void OnMenuPhonemeTiming(object sender, RoutedEventArgs args) {
+            var dialog = new PhonemeTimingConfigDialog() {
+                DataContext = new PhonemeTimingConfigViewModel(),
+            };
+            dialog.ShowDialog(this);
+            if (dialog.Position.Y < 0) {
+                dialog.Position = dialog.Position.WithY(0);
+            }
+        }
+
         async void OnMenuSingers(object sender, RoutedEventArgs args) {
             await OpenSingersWindowAsync();
         }

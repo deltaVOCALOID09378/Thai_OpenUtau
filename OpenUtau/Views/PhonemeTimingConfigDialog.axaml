@@ -1,0 +1,272 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OpenUtau.App.ViewModels"
+        x:Class="OpenUtau.App.Views.PhonemeTimingConfigDialog"
+        Title="DELTA SYNTH - Phoneme Timing &amp; Ratio Balancer"
+        Width="700" Height="680"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#141414"
+        FontFamily="Leelawadee UI, Segoe UI, sans-serif">
+
+  <Design.DataContext>
+    <vm:PhonemeTimingConfigViewModel/>
+  </Design.DataContext>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+    <!-- Header / Banner -->
+    <Border Grid.Row="0" Background="#1E1E1E" CornerRadius="6" Padding="12" Margin="0,0,0,12"
+            BorderBrush="#CC2200" BorderThickness="1.5">
+      <StackPanel Spacing="4">
+        <TextBlock Text="PHONEME TIMING &amp; ALIAS RATIO BALANCER" 
+                   FontWeight="Bold" FontSize="16" Foreground="#FF3333"/>
+        <TextBlock Text="ปรับปรุงอัตราส่วนการกระจายเวลา (0-100%) และกลไกหั่นเสียง VCV / CVVC / VCCV / DiffSinger ทั่วทั้งโปรเจกต์" 
+                   FontSize="12" Foreground="#AAAAAA"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Main Settings Tabs -->
+    <TabControl Grid.Row="1" Background="#1A1A1A">
+      <!-- TAB 1: คำปกติและแม่ ก กา (Normal & Mae K.K.) -->
+      <TabItem Header="คำปกติและแม่ ก กา (Normal)">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="10">
+            <!-- กลุ่ม: ต้นประโยค -->
+            <Border Background="#222222" CornerRadius="4" Padding="10">
+              <StackPanel Spacing="8">
+                <TextBlock Text="ต้นประโยค (Phrase Start)" FontWeight="SemiBold" Foreground="#FF5555"/>
+                <!-- - C -->
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="เสียงเงียบนำ (- C):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding NormalStartSilence}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding NormalStartSilence}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <!-- CV -->
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="พยัญชนะ/สระหลัก (CV):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding NormalStartCv}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding NormalStartCv}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <!-- VC -->
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="สระเชื่อมตัวสะกด (VC):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding NormalStartVc}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding NormalStartVc}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- กลุ่ม: กลางประโยค (แม่ ก กา) -->
+            <Border Background="#222222" CornerRadius="4" Padding="10">
+              <StackPanel Spacing="8">
+                <TextBlock Text="กลางประโยค / แม่ ก กา (Open Syllables &amp; Middle)" FontWeight="SemiBold" Foreground="#FF5555"/>
+                <!-- แม่ ก กา -->
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="แม่ ก กา (CV / V C):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding NormalMidOpenCv}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding NormalMidOpenCv}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <!-- มีตัวสะกด -->
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="มีตัวสะกด (CV / VC):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding NormalMidCodaCv}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding NormalMidCodaCv}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- กลุ่ม: ท้ายประโยค -->
+            <Border Background="#222222" CornerRadius="4" Padding="10">
+              <StackPanel Spacing="8">
+                <TextBlock Text="ท้ายประโยค (Phrase End)" FontWeight="SemiBold" Foreground="#FF5555"/>
+                <!-- แม่ ก กา V - -->
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="ก กา หางเสียง (V -):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding NormalEndOpenTail}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding NormalEndOpenTail}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <!-- มีตัวสะกด หางเสียง V - -->
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="มีตัวสะกด หางเสียง (V -):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding NormalEndCodaTail}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding NormalEndCodaTail}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- TAB 2: คำควบกล้ำ (Consonant Clusters) -->
+      <TabItem Header="คำควบกล้ำ (Clusters)">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="10">
+            <!-- ควบกล้ำต้นประโยค -->
+            <Border Background="#222222" CornerRadius="4" Padding="10">
+              <StackPanel Spacing="8">
+                <TextBlock Text="ควบกล้ำต้นประโยค (Cluster Start)" FontWeight="SemiBold" Foreground="#FF5555"/>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="เสียงนำ (- C):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ClusterStartSilence}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding ClusterStartSilence}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="ส่งควบกล้ำแรก (C1):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ClusterStartLead}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding ClusterStartLead}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="ควบหลัก/สระ (C2V):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ClusterStartMainCv}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding ClusterStartMainCv}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- ควบกล้ำกลาง/ท้ายประโยค -->
+            <Border Background="#222222" CornerRadius="4" Padding="10">
+              <StackPanel Spacing="8">
+                <TextBlock Text="ควบกล้ำกลาง/ท้ายประโยค (Cluster Mid &amp; End)" FontWeight="SemiBold" Foreground="#FF5555"/>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="หัวควบกล้ำ (CCV):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ClusterMidCcv}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding ClusterMidCcv}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="ควบสระหลัก (CV):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ClusterMidMainCv}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding ClusterMidMainCv}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="ปล่อยหางท้าย (V -):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ClusterEndTail}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding ClusterEndTail}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- TAB 3: สระเปล่าและตัวสะกด (Plain Vowels & Endings) -->
+      <TabItem Header="สระเปล่าและตัวสะกด (Vowels &amp; Codas)">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="10">
+            <Border Background="#222222" CornerRadius="4" Padding="10">
+              <StackPanel Spacing="8">
+                <TextBlock Text="สระเปล่าและหางเสียง (Plain Vowels &amp; Transitions)" FontWeight="SemiBold" Foreground="#FF5555"/>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="เริ่มเสียงสระ (Onset):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding PlainVowelOnset}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding PlainVowelOnset}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="ยืดหางสระ (Vowel Stretch):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding PlainVowelStretch}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding PlainVowelStretch}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <Border Background="#222222" CornerRadius="4" Padding="10">
+              <StackPanel Spacing="8">
+                <TextBlock Text="ตัวสะกดทุกภาษา (Codas &amp; Endings: VC, C -)" FontWeight="SemiBold" Foreground="#FF5555"/>
+                <Grid ColumnDefinitions="160,*,75">
+                  <TextBlock Grid.Column="0" Text="มาตราส่วนตัวสะกด (VC):" VerticalAlignment="Center" Foreground="#DDDDDD"/>
+                  <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding EndingCodaScale}" Margin="0,0,10,0"/>
+                  <NumericUpDown Grid.Column="2" Minimum="0" Maximum="100" Increment="1" FormatString="{}{0}%"
+                                 Value="{Binding EndingCodaScale}" Width="70" ShowButtonSpinner="False"
+                                 HorizontalContentAlignment="Right" VerticalAlignment="Center"
+                                 Foreground="#00FFCC" Background="#2A2A2A" BorderBrush="#444444" CornerRadius="4"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- TAB 4: ระบบคลังเสียง (Singing Systems) -->
+      <TabItem Header="ระบบคลังเสียง (System Profiles)">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="10">
+            <Border Background="#222222" CornerRadius="4" Padding="10">
+              <StackPanel Spacing="8">
+                <TextBlock Text="เลือกพรีเซ็ตตามรูปแบบกลไกคลังเสียง (Singing System Mode)" FontWeight="SemiBold" Foreground="#FF5555"/>
+                <ComboBox SelectedIndex="{Binding SelectedSystemIndex}" HorizontalAlignment="Stretch" Margin="0,4,0,0">
+                  <ComboBoxItem Content="ตรวจจับอัตโนมัติ (Auto-Detect from Singer Voicebank)"/>
+                  <ComboBoxItem Content="UTAU VCV (สระเชื่อมต่อเนื่อง VCV โหมดญี่ปุ่น)"/>
+                  <ComboBoxItem Content="UTAU CVVC (พยัญชนะสระเชื่อม CVVC มาตรฐาน)"/>
+                  <ComboBoxItem Content="UTAU VCCV (พยัญชนะควบกล้ำ VCCV / ภาษาไทย / สากล)"/>
+                  <ComboBoxItem Content="DiffSinger AI (ระบบเอไอโมเดลเสียงสังเคราะห์ประสาท)"/>
+                </ComboBox>
+                <TextBlock Text="หมายเหตุ: เมื่อเลือกพรีเซ็ต ระบบจะปรับปรุงสัดส่วนให้สอดคล้องกับมาตรฐานทางกลไกเสียงของระบบนั้นๆ โดยอัตโนมัติ" 
+                           FontSize="11" Foreground="#888888" TextWrapping="Wrap" Margin="0,6,0,0"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+
+    <!-- Footer Action Buttons & Scope -->
+    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="0,12,0,0">
+      <!-- Scope Selector -->
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+        <RadioButton Content="มีผลทั้งโปรเจกต์ (Global)" IsChecked="{Binding ApplyProjectWide}" Foreground="#CCCCCC"/>
+        <RadioButton Content="เฉพาะแทร็กปัจจุบัน" IsChecked="{Binding !ApplyProjectWide}" Foreground="#CCCCCC"/>
+      </StackPanel>
+
+      <!-- Buttons -->
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+        <Button Content="คืนค่าเริ่มต้น" Command="{Binding ResetDefaultCommand}" Background="#333333" Foreground="#FFFFFF"/>
+        <Button Content="ยกเลิก" Command="{Binding CancelCommand}" Background="#2A2A2A" Foreground="#CCCCCC"/>
+        <Button Content="บันทึกและนำไปใช้" Command="{Binding SaveCommand}" Background="#CC2200" Foreground="#FFFFFF" FontWeight="Bold"/>
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

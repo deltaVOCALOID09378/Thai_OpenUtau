@@ -14,7 +14,7 @@
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.SingerHubDialog"
         Icon="/Assets/Thai OpenUtau Logo.ico"
-        Title="{DynamicResource lunai.caption}" Width="720" Height="560" WindowStartupLocation="CenterScreen"
+        Title="{DynamicResource lunai.caption}" Width="780" Height="600" WindowStartupLocation="CenterScreen"
         FontFamily="Leelawadee UI, sans-serif"
         Background="#1A1A1A" Foreground="#F0F0F0">
   
