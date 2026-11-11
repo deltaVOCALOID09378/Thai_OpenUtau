@@ -1,16 +1,17 @@
 // ============================================================================
-// วัน/เดือน/ปี: 22 ตุลาคม 2569 (2026-10-22)
+// วัน/เดือน/ปี: 10 พฤศจิกายน 2569 (2026-11-10)
 // ชื่อไฟล์: Preferences.cs
-// ลำดับเวอร์ชัน: 1.0
+// ลำดับเวอร์ชัน: 1.2
 // เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // ตำแหน่งที่จัดวาง: OpenUtau.Core/Util/Preferences.cs
-// รายละเอียดการแก้ไขงาน: ปรับปรุงการบันทึก prefs.json ให้ใช้ FileStream ป้องกัน SafeFileHandle.Preallocate disk full / lock error
+// รายละเอียดการแก้ไขงาน: เสริมความปลอดภัยของระบบ Shortcuts ให้ผสานคีย์ลัดพื้นฐานอัตโนมัติหากค่าว่างเปล่าหรือตกหล่น ป้องกันปุ่มลัดดับถาวร
 // ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -114,6 +115,7 @@ namespace OpenUtau.Core.Util {
             } catch(Exception e){
                 Log.Error(e, "failed to load prefs-default.json");
             }
+            EnsureDefaultShortcuts();
             EnsureOverlayScrollbars();
             Save();
         }
@@ -224,6 +226,7 @@ namespace OpenUtau.Core.Util {
                     }
                     Default.MigrateRealTimePitchMode();
                     MigrateLegacyPreferences(json);
+                    EnsureDefaultShortcuts();
                 } else {
                     Reset();
                 }
@@ -231,7 +234,26 @@ namespace OpenUtau.Core.Util {
                 Log.Error(e, "Failed to load prefs.");
                 Default = new SerializablePreferences();
             }
+            EnsureDefaultShortcuts();
             EnsureOverlayScrollbars();
+        }
+
+        private static void EnsureDefaultShortcuts() {
+            if (Default == null) {
+                Default = new SerializablePreferences();
+                return;
+            }
+            var defaultPrefs = new SerializablePreferences();
+            if (Default.Shortcuts == null || Default.Shortcuts.Count == 0) {
+                Default.Shortcuts = defaultPrefs.Shortcuts;
+                return;
+            }
+            var existingActionIds = new HashSet<string>(Default.Shortcuts.Select(s => s.ActionId));
+            foreach (var defaultBinding in defaultPrefs.Shortcuts) {
+                if (!existingActionIds.Contains(defaultBinding.ActionId)) {
+                    Default.Shortcuts.Add(defaultBinding);
+                }
+            }
         }
 
         private static bool ValidString(Action action) {

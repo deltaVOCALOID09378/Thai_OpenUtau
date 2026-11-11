@@ -1,4 +1,13 @@
-﻿using System;
+// ============================================================================
+// 1. วัน/เดือน/ปี: 8 พฤศจิกายน พ.ศ. 2569 / 8 November 2026
+// 2. ชื่อไฟล์โค้ด: G2pDictionary.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.1
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Api/G2pDictionary.cs
+// 5. หน้าที่: โครงสร้าง Trie จัดเก็บพจนานุกรม G2P เพิ่มเกราะป้องกันไม่ให้คำซ้ำเขียนทับคำมาตรฐานแรก
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine | Original by OpenUtau Authors
+// ============================================================================
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -106,6 +115,9 @@ namespace OpenUtau.Api {
 
             void BuildTrie(TrieNode node, string grapheme, int index, IEnumerable<string> symbols) {
                 if (index == grapheme.Length) {
+                    if (node.symbols != null && node.symbols.Length > 0) {
+                        return;
+                    }
                     node.symbols = symbols
                         .Where(symbol => phonemeSymbols.ContainsKey(symbol))
                         .ToArray();

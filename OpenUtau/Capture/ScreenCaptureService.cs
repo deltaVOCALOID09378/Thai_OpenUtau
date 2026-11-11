@@ -1,11 +1,11 @@
 // ========================================================================
-// Date: 25/10/2569 (BE) / 25/10/2026 (CE)
+// Date: 11/11/2569 (BE) / 11/11/2026 (CE)
 // File: ScreenCaptureService.cs
-// Version: 2.4.0
+// Version: 2.5.0
 // Made And Checked By DELTA SYNTH [Patiphat Wongyai] & All Code Agentic AI Engine
 // [ Original by "OpenUtau Authors" ]
 // Location: OpenUtau/Capture/ScreenCaptureService.cs
-// Description: Multi-resolution screen capture and high-throughput non-blocking video recorder engine for Thai OpenUtau.
+// Description: Multi-resolution screen capture and high-throughput non-blocking video recorder engine for Thai OpenUtau with native Windows h264_mf encoder support.
 // ========================================================================
 
 using System;
@@ -148,6 +148,7 @@ namespace OpenUtau.App.Capture {
 
         /// <summary>
         /// ถ่ายภาพหน้าจอ Piano Roll ในทันที (Capture Screenshot Lossless PNG)
+        /// ปลอดภัย 100% บน UI Thread โดยไม่เกิดปัญหา cross-thread bitmap disposal
         /// </summary>
         public async Task<string?> CapturePictureAsync(Control control) {
             try {
@@ -160,9 +161,13 @@ namespace OpenUtau.App.Capture {
                 var (width, height, scale) = CalculateTargetDimensions(control);
                 var dpi = new Vector(96 * scale, 96 * scale);
 
-                using var rtb = new RenderTargetBitmap(new PixelSize(width, height), dpi);
-                rtb.Render(control);
-                await Task.Run(() => rtb.Save(fullPath));
+                using (var rtb = new RenderTargetBitmap(new PixelSize(width, height), dpi)) {
+                    rtb.Render(control);
+                    using (var fs = File.Create(fullPath)) {
+                        rtb.Save(fs);
+                    }
+                }
+                await Task.CompletedTask;
 
                 Log.Information("Piano Roll screenshot captured: {FullPath}", fullPath);
                 DocManager.Inst.ExecuteCmd(new UserMessageNotification($"📸 แคปภาพสำเร็จ: {filename}"));
@@ -192,6 +197,9 @@ namespace OpenUtau.App.Capture {
                 string p3 = Path.Combine(PathManager.Inst.RootPath, "runtimes", OS.IsWindows() ? "win-x64" : "linux-x64", "native", exe);
                 if (File.Exists(p3)) return p3;
             }
+
+            string pStandalone = Path.Combine(@"A:\Program Files\Thai_OpenUtau_v3.9.4_Standalone", exe);
+            if (File.Exists(pStandalone)) return pStandalone;
 
             string? envPath = Environment.GetEnvironmentVariable("PATH");
             if (envPath != null) {
@@ -233,7 +241,11 @@ namespace OpenUtau.App.Capture {
                 var (width, height, scale) = CalculateTargetDimensions(control);
 
                 // พารามิเตอร์ FFmpeg แบบ Ultra-fast Pipe Stream (yuv420p สำหรับรองรับการเล่นบนทุกแพลตฟอร์ม)
-                string args = $"-y -f image2pipe -vcodec png -r {fps} -i - -c:v libx264 -pix_fmt yuv420p -preset veryfast -crf 18 \"{currentOutputFile}\"";
+                // Windows ใช้ h264_mf (Media Foundation) เพื่อรองรับ Hardware Acceleration ไร้การพึ่งพา libx264 ภายนอก
+                string vcodec = OS.IsWindows() ? "h264_mf" : "libx264";
+                string args = OS.IsWindows()
+                    ? $"-y -f image2pipe -vcodec png -r {fps} -i - -c:v {vcodec} -pix_fmt yuv420p \"{currentOutputFile}\""
+                    : $"-y -f image2pipe -vcodec png -r {fps} -i - -c:v {vcodec} -pix_fmt yuv420p -preset veryfast -crf 18 \"{currentOutputFile}\"";
 
                 var psi = new ProcessStartInfo {
                     FileName = ffmpegPath,

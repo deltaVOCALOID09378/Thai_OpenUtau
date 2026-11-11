@@ -1,4 +1,12 @@
-﻿using System;
+// ============================================================================
+// Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : UpdaterViewModel.cs
+// Version      : 1.3
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/ViewModels/UpdaterViewModel.cs
+// Description  : Application update manager with safe system version verification before prompting or downloading updates.
+// ============================================================================
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -189,23 +197,32 @@ namespace OpenUtau.App.ViewModels {
         }
     }
 
-    // Force allow downgrading so that switching between beta and stable works.
+    // Check installed system version first; only offer updates when remote version is strictly newer.
     public class DowngradableFilter : IAppCastFilter {
-        static bool Eq(int a, int b) {
-            a = a == -1 ? 0 : a;
-            b = b == -1 ? 0 : b;
-            return a == b;
+        static int Norm(int part) => part < 0 ? 0 : part;
+
+        public static Version NormalizeVersion(Version v) {
+            return new Version(Norm(v.Major), Norm(v.Minor), Norm(v.Build), Norm(v.Revision));
         }
-        // Ambiguous version equal where 1.2 == 1.2.0 == 1.2.0.0.
-        static bool Eq(Version a, Version b) {
-            return Eq(a.Major, b.Major)
-                && Eq(a.Minor, b.Minor)
-                && Eq(a.Build, b.Build)
-                && Eq(a.Revision, b.Revision);
+
+        public static bool TryParseNormalizedVersion(string? versionText, out Version normalized) {
+            return PackageManager.TryParseNormalizedVersion(versionText, out normalized);
         }
+
+        public static int CompareVersions(Version a, Version b) {
+            return NormalizeVersion(a).CompareTo(NormalizeVersion(b));
+        }
+
         public FilterResult GetFilteredAppCastItems(Version installed, List<AppCastItem> items) {
-            items = items.Where(item => !Eq(new Version(item.Version), installed)).ToList();
-            return new FilterResult(/*forceInstallOfLatestInFilteredList=*/true, items);
+            if (installed == null || items == null || items.Count == 0) {
+                return new FilterResult(false, new List<AppCastItem>());
+            }
+            var normalizedInstalled = NormalizeVersion(installed);
+            var newerItems = items.Where(item =>
+                item != null &&
+                TryParseNormalizedVersion(item.Version, out var remoteVer) &&
+                remoteVer.CompareTo(normalizedInstalled) > 0).ToList();
+            return new FilterResult(newerItems.Count > 0, newerItems);
         }
     }
 

@@ -1,3 +1,11 @@
+// ============================================================================
+// วัน/เดือน/ปี: 11 พฤศจิกายน 2569 (2026-11-11)
+// ชื่อไฟล์: SingersDialog.axaml.cs
+// ลำดับเวอร์ชัน: 1.1
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// ตำแหน่งที่จัดวาง: OpenUtau/Views/SingersDialog.axaml.cs
+// รายละเอียดการแก้ไขงาน: ปรับปรุงระบบปุ่มกดแก้ไข oto.ini, คีย์ลัดแบบโต้ตอบ (1-5, Q/E, W/S, A/D, F, Space, Ctrl+C/V/S), พรีเซ็ตสำเร็จรูป และแสดงเวลา Cursor Time แบบเรียลไทม์
+// ============================================================================
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,6 +34,20 @@ namespace OpenUtau.App.Views {
         public SingersDialog() {
             InitializeComponent();
             DocManager.Inst.AddSubscriber(this);
+            AddHandler(KeyDownEvent, (s, e) => HandleKeyDown(e), RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+            this.AttachedToVisualTree += (s, e) => {
+                if (OtoPlot != null) {
+                    OtoPlot.PointerMoved += (sender, args) => UpdateCursorTime();
+                }
+            };
+        }
+
+        private void UpdateCursorTime() {
+            if (OtoPlot?.WaveFile != null && CursorTimeText != null) {
+                double pointerMs = Math.Max(0, OtoPlot.GetPointerMs());
+                double totalMs = OtoPlot.WaveFile.Signals[0].Duration * 1000.0;
+                CursorTimeText.Text = $"{pointerMs:F1} / {totalMs:F1} ms";
+            }
         }
 
         protected override void OnClosed(EventArgs e) {
@@ -105,6 +127,11 @@ namespace OpenUtau.App.Views {
                 Log.Error(e, "Failed to set portrait");
                 _ = await MessageBox.ShowError(this, e);
             }
+        }
+
+        void OnSyncPictures(object sender, RoutedEventArgs args) {
+            var viewModel = (DataContext as SingersViewModel)!;
+            viewModel.SyncCurrentSingerPictures();
         }
 
         async void OnPublish(object sender, RoutedEventArgs args) {
@@ -351,13 +378,20 @@ namespace OpenUtau.App.Views {
             }
         }
 
-        public void OnPlaySelectedFile(object sender, RoutedEventArgs e) {
-            var oto = OtoGrid?.SelectedItem as UOto;
-            if (oto == null) {
+        private void PlayOrStopSelected() {
+            var playBack = PlaybackManager.Inst.AudioOutput;
+            if (playBack.PlaybackState == PlaybackState.Playing) {
+                playBack.Stop();
                 return;
             }
+            var oto = OtoGrid?.SelectedItem as UOto;
+            if (oto != null) {
+                PlaybackManager.Inst.PlayFile(oto.File);
+            }
+        }
 
-            PlaybackManager.Inst.PlayFile(oto.File);
+        public void OnPlaySelectedFile(object sender, RoutedEventArgs e) {
+            PlayOrStopSelected();
         }
 
         void RegenFrq(object sender, RoutedEventArgs args) {
@@ -436,62 +470,199 @@ namespace OpenUtau.App.Views {
             }
         }
 
-        void OnKeyDown(object sender, KeyEventArgs args) {
-            if (args.Handled || editingCell || (FocusManager?.GetFocusedElement() is TextBox)) {
+        protected override void OnKeyDown(KeyEventArgs args) {
+            base.OnKeyDown(args);
+            HandleKeyDown(args);
+        }
+
+        private void HandleKeyDown(KeyEventArgs args) {
+            if (args.Handled || editingCell) {
+                return;
+            }
+            if (FocusManager?.GetFocusedElement() is TextBox focusedBox && focusedBox.IsEnabled && focusedBox.IsEffectivelyVisible && focusedBox.IsFocused) {
                 return;
             }
             var viewModel = DataContext as SingersViewModel;
-            if (viewModel == null || OtoPlot == null || OtoPlot.WaveFile == null) {
+            if (viewModel == null) {
                 return;
             }
-            double durationMs = OtoPlot.WaveFile.Signals[0].Duration * 1000;
-            args.Handled = true;
+
+            bool isCtrl = args.KeyModifiers.HasFlag(KeyModifiers.Control);
+
+            // Global Oto shortcuts with Ctrl
+            if (isCtrl) {
+                switch (args.Key) {
+                    case Key.C:
+                        viewModel.CopyTiming();
+                        args.Handled = true;
+                        return;
+                    case Key.V:
+                        if (OtoPlot?.WaveFile != null) {
+                            double durMs = OtoPlot.WaveFile.Signals[0].Duration * 1000.0;
+                            viewModel.PasteTiming(durMs);
+                        }
+                        args.Handled = true;
+                        return;
+                    case Key.S:
+                        viewModel.SaveOtos();
+                        args.Handled = true;
+                        return;
+                }
+            }
+
+            // Space toggles playback
+            if (args.Key == Key.Space && args.KeyModifiers == KeyModifiers.None) {
+                PlayOrStopSelected();
+                args.Handled = true;
+                return;
+            }
+
+            if (OtoPlot == null || OtoPlot.WaveFile == null) {
+                return;
+            }
+            double durationMs = OtoPlot.WaveFile.Signals[0].Duration * 1000.0;
+
             switch (args.Key) {
                 case Key.D1:
+                case Key.NumPad1:
                     viewModel.SetOffset(OtoPlot.GetPointerMs(), durationMs);
+                    args.Handled = true;
                     break;
                 case Key.D2:
+                case Key.NumPad2:
                     viewModel.SetOverlap(OtoPlot.GetPointerMs(), durationMs);
+                    args.Handled = true;
                     break;
                 case Key.D3:
+                case Key.NumPad3:
                     viewModel.SetPreutter(OtoPlot.GetPointerMs(), durationMs);
+                    args.Handled = true;
                     break;
                 case Key.D4:
+                case Key.NumPad4:
                     viewModel.SetFixed(OtoPlot.GetPointerMs(), durationMs);
+                    args.Handled = true;
                     break;
                 case Key.D5:
+                case Key.NumPad5:
                     viewModel.SetCutoff(OtoPlot.GetPointerMs(), durationMs);
+                    args.Handled = true;
                     break;
                 case Key.W:
                     OtoPlot.Zoom(0.5, 0.5);
+                    args.Handled = true;
                     break;
                 case Key.S:
-                    OtoPlot.Zoom(1.5, 0.5);
+                    if (!isCtrl) {
+                        OtoPlot.Zoom(1.5, 0.5);
+                        args.Handled = true;
+                    }
                     break;
                 case Key.A:
-                    OtoPlot.Pan(-0.25);
+                    if (!isCtrl) {
+                        OtoPlot.Pan(-0.25);
+                        args.Handled = true;
+                    }
                     break;
                 case Key.D:
                     OtoPlot.Pan(0.25);
+                    args.Handled = true;
                     break;
                 case Key.Q:
-                    if (OtoGrid != null) {
-                        OtoGrid.SelectedIndex = Math.Max(0, OtoGrid.SelectedIndex - 1);
-                        OtoGrid.ScrollIntoView(OtoGrid.SelectedItem, null);
-                    }
+                    SelectPrevOto();
+                    args.Handled = true;
                     break;
                 case Key.E:
-                    if (OtoGrid != null) {
-                        OtoGrid.SelectedIndex++;
-                        OtoGrid.ScrollIntoView(OtoGrid.SelectedItem, null);
-                    }
+                    SelectNextOto();
+                    args.Handled = true;
                     break;
                 case Key.F:
                     OtoPlot.Zoom(double.PositiveInfinity, 0.5);
+                    args.Handled = true;
                     break;
                 default:
-                    args.Handled = false;
                     break;
+            }
+        }
+
+        private void SelectPrevOto() {
+            if (OtoGrid != null && OtoGrid.SelectedIndex > 0) {
+                OtoGrid.SelectedIndex--;
+                OtoGrid.ScrollIntoView(OtoGrid.SelectedItem, null);
+            }
+        }
+
+        private void SelectNextOto() {
+            if (OtoGrid != null) {
+                var list = OtoGrid.ItemsSource as System.Collections.IList;
+                if (list != null && OtoGrid.SelectedIndex < list.Count - 1) {
+                    OtoGrid.SelectedIndex++;
+                    OtoGrid.ScrollIntoView(OtoGrid.SelectedItem, null);
+                }
+            }
+        }
+
+        public void OnPrevOtoClick(object? sender, RoutedEventArgs e) => SelectPrevOto();
+        public void OnNextOtoClick(object? sender, RoutedEventArgs e) => SelectNextOto();
+        public void OnZoomInClick(object? sender, RoutedEventArgs e) => OtoPlot?.Zoom(0.5, 0.5);
+        public void OnZoomOutClick(object? sender, RoutedEventArgs e) => OtoPlot?.Zoom(1.5, 0.5);
+        public void OnPanLeftClick(object? sender, RoutedEventArgs e) => OtoPlot?.Pan(-0.25);
+        public void OnPanRightClick(object? sender, RoutedEventArgs e) => OtoPlot?.Pan(0.25);
+        public void OnShowAllClick(object? sender, RoutedEventArgs e) => OtoPlot?.Zoom(double.PositiveInfinity, 0.5);
+
+        public void OnSetOffsetClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.SetOffset(OtoPlot.GetPointerMs(), OtoPlot.WaveFile.Signals[0].Duration * 1000.0);
+            }
+        }
+        public void OnSetOverlapClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.SetOverlap(OtoPlot.GetPointerMs(), OtoPlot.WaveFile.Signals[0].Duration * 1000.0);
+            }
+        }
+        public void OnSetPreutterClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.SetPreutter(OtoPlot.GetPointerMs(), OtoPlot.WaveFile.Signals[0].Duration * 1000.0);
+            }
+        }
+        public void OnSetFixedClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.SetFixed(OtoPlot.GetPointerMs(), OtoPlot.WaveFile.Signals[0].Duration * 1000.0);
+            }
+        }
+        public void OnSetCutoffClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.SetCutoff(OtoPlot.GetPointerMs(), OtoPlot.WaveFile.Signals[0].Duration * 1000.0);
+            }
+        }
+        public void OnAutoDetectClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.ApplyAutoDetect(OtoPlot.WaveFile);
+            }
+        }
+        public void OnApplyCvPresetClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.ApplyCvPreset(OtoPlot.GetPointerMs(), OtoPlot.WaveFile.Signals[0].Duration * 1000.0);
+            }
+        }
+        public void OnApplyVcvPresetClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.ApplyVcvPreset(OtoPlot.GetPointerMs(), OtoPlot.WaveFile.Signals[0].Duration * 1000.0);
+            }
+        }
+        public void OnCopyTimingClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm) {
+                vm.CopyTiming();
+            }
+        }
+        public void OnPasteTimingClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm && OtoPlot?.WaveFile != null) {
+                vm.PasteTiming(OtoPlot.WaveFile.Signals[0].Duration * 1000.0);
+            }
+        }
+        public void OnSaveOtosClick(object? sender, RoutedEventArgs e) {
+            if (DataContext is SingersViewModel vm) {
+                vm.SaveOtos();
             }
         }
 

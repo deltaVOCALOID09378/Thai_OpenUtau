@@ -1,4 +1,12 @@
-﻿using System;
+﻿// ============================================================================
+// 1. วัน/เดือน/ปี: 9 พฤศจิกายน พ.ศ. 2569 / 9 November 2026
+// 2. ชื่อไฟล์โค้ด: VoicevoxSinger.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.1
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Voicevox/VoicevoxSinger.cs
+// 6. รายละเอียดการแก้ไข: ตรวจสอบความปลอดภัยของไฟล์ Portrait และ Sample ป้องกัน FileNotFoundException
+// ============================================================================
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -177,13 +185,13 @@ namespace OpenUtau.Core.Voicevox {
         }
 
         public override byte[] LoadPortrait() {
-            return string.IsNullOrEmpty(Portrait)
+            return string.IsNullOrEmpty(Portrait) || !File.Exists(Portrait)
                 ? null
                 : File.ReadAllBytes(Portrait);
         }
 
         public override byte[] LoadSample() {
-            return string.IsNullOrEmpty(Sample)
+            return string.IsNullOrEmpty(Sample) || !File.Exists(Sample)
                 ? null
                 : File.ReadAllBytes(Sample);
         }

@@ -1,10 +1,10 @@
 // ============================================================================
-// Date         : 29/10/2026 (B.E. 2569 / A.D. 2026)
-// File Name    : MachineLearningPhonemizer.cs
-// Version      : 1.2
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
-// File Location: OpenUtau.Core/MachineLearningPhonemizer.cs
-// Description  : ML Phonemizer base class. Refactored logic to reduce allocations.
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
+// 2. ชื่อไฟล์โค้ด: MachineLearningPhonemizer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.3
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/MachineLearningPhonemizer.cs
+// 6. รายละเอียดการแก้ไข: เพิ่ม Fallback Phoneme ที่ปลอดภัย ไม่ throw unhandled exception เมื่อประมวลผลคำไม่สำเร็จ
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -64,17 +64,30 @@ namespace OpenUtau.Core {
         }
 
         public override Result Process(Note[] notes, Note? prev, Note? next, Note? prevNeighbour, Note? nextNeighbour, Note[] prevs) {
-            if (unrecognizedLyrics.TryGetValue(notes[0].position, out var lyric)) {
-                if (string.IsNullOrEmpty(lyric)) throw new Exception("Phoneme not found for this note");
-                throw new Exception($"Unrecognized phoneme \"{lyric}\"");
+            if (partResult.TryGetValue(notes[0].position, out var phonemes) && phonemes != null && phonemes.Count > 0) {
+                return new Result {
+                    phonemes = phonemes.Select(tu => new Phoneme { phoneme = tu.Item1, position = tu.Item2 }).ToArray(),
+                };
             }
-            if (!partResult.TryGetValue(notes[0].position, out var phonemes)) {
-                Exception? cause = partExceptions.TryGetValue(notes[0].position, out var partEx) ? partEx : SetUpException;
-                if (cause != null) throw new Exception("Phonemizer failed to process.", cause);
-                throw new Exception("Part result not found");
+
+            // DELTA SYNTH: Resilient fallback phoneme to avoid unhandled exceptions during playback/rendering
+            string fallbackPhoneme = notes[0].lyric;
+            if (unrecognizedLyrics.TryGetValue(notes[0].position, out var lyric) && !string.IsNullOrEmpty(lyric)) {
+                fallbackPhoneme = lyric;
             }
+            if (string.IsNullOrWhiteSpace(fallbackPhoneme)) {
+                fallbackPhoneme = "SP";
+            }
+            Exception? cause = partExceptions.TryGetValue(notes[0].position, out var partEx) ? partEx : SetUpException;
+
             return new Result {
-                phonemes = phonemes.Select(tu => new Phoneme { phoneme = tu.Item1, position = tu.Item2 }).ToArray(),
+                phonemes = new[] {
+                    new Phoneme {
+                        phoneme = fallbackPhoneme,
+                        position = 0,
+                        error = cause
+                    }
+                }
             };
         }
 

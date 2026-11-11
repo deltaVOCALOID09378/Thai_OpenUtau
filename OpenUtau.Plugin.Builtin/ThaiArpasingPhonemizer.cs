@@ -1,13 +1,13 @@
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
 #nullable enable
 // ============================================================================
-// Date         : 27/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : ThaiArpasingPhonemizer.cs
-// Version      : 5.0
-// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai ]
+// Version      : 5.2
+// Author Credit: Made And Checked By DELTA SYNTH & Gemini AI [ Original by Patiphat Wongyai (Delta) ]
 // File Location: OpenUtau.Plugin.Builtin/ThaiArpasingPhonemizer.cs
-// Description  : Thai Arpasing Phonemizer with Safe Sub-Interval Division, boundary clamping,
-//                pre-utterance collision protection, and unified ThaiDictionaryManager caching.
+// Description  : ผสานสระ a/ah และพจนานุกรมเรียลไทม์ พร้อมปรับปรุงการหั่นเสียงตัวสะกด [v c] ให้กว้างขึ้นเป็น 30-40%
+//                ทศนิยมยืดหยุ่นตามความยาวโน้ต และพยัญชนะต้นไม่เกิน 5-7% ปลดล็อกค่าคงที่ ticks อย่างสมบูรณ์
 // ============================================================================
 
 using System;
@@ -24,7 +24,7 @@ namespace OpenUtau.Plugin.Builtin {
     [Phonemizer("Thai Arpasing Phonemizer", "TH Arpasing Delta", "DELTA SYNTH", language: "TH")]
     public class ThaiArpasingPhonemizer : Phonemizer {
 
-        static readonly string[] vowels = new string[] { "ah", "ih", "uh", "eh", "oh", "ae", "ao", "er", "ue", "eu", "ia", "ua", "ay", "aw", "am" };
+        static readonly string[] vowels = new string[] { "ah", "a", "ih", "uh", "eh", "oh", "ae", "ao", "er", "ue", "eu", "ia", "ua", "ay", "aw", "am" };
         static readonly string[] diphthongs = new string[] { "r", "l", "w" };
         static readonly string[] consonants = new string[] { "b", "ch", "d", "f", "h", "j", "k", "kh", "l", "m", "n", "ng", "p", "ph", "r", "s", "t", "th", "w", "y" };
         static readonly string[] endingConsonants = new string[] { "b", "ch", "d", "f", "h", "j", "k", "kh", "l", "m", "n", "ng", "p", "ph", "r", "s", "t", "th", "w", "y" };
@@ -103,18 +103,22 @@ namespace OpenUtau.Plugin.Builtin {
             {"ศักดิ์", "sak"},
             {"เพียง", "ph ia ng"}, {"หลง", "l oh ng"}, {"เหี่ยว", "h ia w"}, {"เพรียว", "ph r ia w"}, // สระลดรูปและคำควบกล้ำเพิ่มเติม (v17.3)
             {"เกิน", "k er n"}, {"เคย", "kh er y"}, {"เธอ", "th er"}, {"เพ้อ", "ph er"}, {"เจอ", "j er"}, {"เดิน", "d er n"}, // สระลดรูปเพิ่มเติม (v17.3)
-            {"ฤดู", "r eu d uh"}, {"อยู่", "y uh"}, {"หมด", "m oh d"}, {"คง", "kh oh ng"}, {"หม่น", "m oh n"} // สระลดรูปเพิ่มเติม (v17.3)
+            {"ฤดู", "r eu d uh"}, {"อยู่", "y uh"}, {"หมด", "m oh d"}, {"คง", "kh oh ng"}, {"หม่น", "m oh n"},
+            {"a", "ah"} // เชื่อมต่อคำเดี่ยว a ร้องเป็น ah (v5.2)
         };
         private bool isDictLoaded = false;
+        private int loadedDictVersion = -1;
         private USinger? singer;
 
         public override void SetSinger(USinger singer) {
             this.singer = singer;
+            isDictLoaded = false;
             LoadCustomDictionary();
         }
 
         private void LoadCustomDictionary() {
-            if (isDictLoaded) return;
+            int currentVer = ThaiDictionaryManager.EnsureUpToDate();
+            if (isDictLoaded && loadedDictVersion == currentVer) return;
             try {
                 ThaiDictionaryManager.ApplyToDictionary(CustomDictionary);
                 if (singer != null && !string.IsNullOrEmpty(singer.Location)) {
@@ -123,6 +127,7 @@ namespace OpenUtau.Plugin.Builtin {
                         LoadDictFile(Path.Combine(singer.Location, dict));
                     }
                 }
+                loadedDictVersion = ThaiDictionaryManager.CurrentVersion;
             } catch (Exception ex) {
                 Log.Error(ex, "Failed to load custom dictionary.");
             }
@@ -265,26 +270,30 @@ namespace OpenUtau.Plugin.Builtin {
                     }
 
                     int position = 0;
+                    double consRatio = Math.Clamp(0.05 + 0.02 * Math.Min(1.0, (double)noteDuration / 480.0), 0.05, 0.07);
+                    double vcRatio = Math.Clamp(0.33 + 0.05 * Math.Min(1.0, (double)noteDuration / 480.0), 0.30, 0.40);
+
                     if (i == 0) {
                         if (sIdx == 0) {
-                            position = -Math.Min((int)(noteDuration * 0.12), 100);
+                            position = -(int)Math.Round(noteDuration * consRatio);
                         } else {
                             position = 0;
                         }
                     } else if (alias.EndsWith("-")) {
-                        position = Math.Max((int)(noteDuration * 0.90), noteDuration - 15); 
+                        position = (int)Math.Round(noteDuration * 0.95); 
                     } else if (X != null && alias == $"{V} {X}") {
-                        position = Math.Max((int)(noteDuration * 0.70), noteDuration - 120); 
+                        // ตัวสะกดท้าย [v c] ขยายพื้นที่กว้างขึ้นเป็น 30-40% แบบยืดหยุ่นตามความยาวโน้ต
+                        position = (int)Math.Round(noteDuration * (1.0 - vcRatio)); 
                     } else if (Dip != null && i == 1) {
-                        position = Math.Min((int)(noteDuration * 0.05), 30);
+                        position = (int)Math.Round(noteDuration * (consRatio * 0.5));
                     } else if (Dip != null && i == 2) {
-                        position = Math.Min((int)(noteDuration * 0.10), 60);
+                        position = (int)Math.Round(noteDuration * consRatio);
                     } else if (i == aliases.Count - 1 && aliases.Count >= 3) {
-                        position = Math.Max((int)(noteDuration * 0.80), noteDuration - 60);
+                        position = (int)Math.Round(noteDuration * (1.0 - vcRatio));
                     } else if (i == 1) {
-                        position = Math.Min((int)(noteDuration * 0.12), 80);
+                        position = (int)Math.Round(noteDuration * consRatio);
                     } else {
-                        position = Math.Min((int)(noteDuration * 0.20), 110);
+                        position = (int)Math.Round(noteDuration * Math.Min(0.20, consRatio * 2.0));
                     }
 
                     int absolutePosition = position + sylStartPos;
@@ -351,6 +360,8 @@ namespace OpenUtau.Plugin.Builtin {
 
         public string[] WordToPhonemes(string input) {
             if (string.IsNullOrEmpty(input)) return new string[0];
+            LoadCustomDictionary();
+            input = input.Normalize(NormalizationForm.FormC);
             
             if (CustomDictionary.ContainsKey(input)) {
                 return CustomDictionary[input].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);

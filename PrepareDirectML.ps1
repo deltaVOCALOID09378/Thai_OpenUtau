@@ -1,5 +1,11 @@
-# Made And Checked By DELTA SYNTH & Gemini AI
-# Original by Patiphat Wongyai (Delta)
+# ============================================================================
+# Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
+# File Name    : PrepareDirectML.ps1
+# Version      : 1.2
+# Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+# File Location: PrepareDirectML.ps1
+# Description  : Checks existing DirectML.dll in destination and local NuGet cache before downloading from NuGet.
+# ============================================================================
 
 [CmdletBinding()]
 param(
@@ -20,11 +26,19 @@ if (-not (Test-Path -LiteralPath $destinationPath -PathType Container)) {
     throw "The DirectML destination does not exist: $destinationPath"
 }
 
+$targetDirectML = Join-Path $destinationPath "DirectML.dll"
+if (Test-Path -LiteralPath $targetDirectML -PathType Leaf) {
+    $existingInfo = Get-Item -LiteralPath $targetDirectML
+    if ($existingInfo.Length -ge 1MB) {
+        Write-Output "DirectML ($Architecture) is already present and valid at $targetDirectML ($($existingInfo.Length) bytes). Skipping download."
+        return
+    }
+}
+
 $relativePackagePath = ".nuget\packages\microsoft.ai.directml\$Version\bin\$Architecture-win\DirectML.dll"
 $userProfile = [System.Environment]::GetFolderPath(
     [System.Environment+SpecialFolder]::UserProfile)
 $cachedDirectML = Join-Path $userProfile $relativePackagePath
-$targetDirectML = Join-Path $destinationPath "DirectML.dll"
 
 if (Test-Path -LiteralPath $cachedDirectML -PathType Leaf) {
     Copy-Item -LiteralPath $cachedDirectML -Destination $targetDirectML -Force
@@ -58,3 +72,4 @@ if ($targetInfo.Length -lt 1MB) {
 }
 
 Write-Output "DirectML $Version ($Architecture) prepared at $targetDirectML"
+

@@ -1,17 +1,18 @@
 # ============================================================================
-# Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+# Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
 # File Name    : BumpVersion.ps1
-# Version      : 1.5
-# Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai (Delta) ]
+# Version      : 1.6
+# Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
 # File Location: BumpVersion.ps1
-# Description  : Professional version calculation pipeline implementing DELTA SYNTH formula:
-#                Base >= 2.0, +0.5 monthly increment, +0.1 per modified file, and compile tracking.
+# Description  : Professional version management pipeline implementing DELTA SYNTH formula
+#                without runaway BaseVersion compounding on uncommitted working trees.
 # ============================================================================
 
 [CmdletBinding()]
 param(
     [string] $ProjectPath = "OpenUtau\OpenUtau.csproj",
-    [switch] $Preview
+    [switch] $Preview,
+    [switch] $ForceIncrement
 )
 
 $ErrorActionPreference = "Stop"
@@ -29,48 +30,33 @@ if ($versionNodes.Count -eq 0) {
 $versionFile = Join-Path $scriptDir "version.txt"
 $currentDate = Get-Date
 
-# 1. Base Version Retrieval (minimum >= 2.0, starting from 3.2 series)
-[double]$baseVersion = 3.2
+[string]$explicitVersion = ""
+[double]$baseVersion = 3.9
 [string]$lastDateStr = ""
-[int]$buildNumber = 0
+[int]$buildNumber = 5
 
 if (Test-Path -LiteralPath $versionFile) {
     $lines = Get-Content -LiteralPath $versionFile
     foreach ($line in $lines) {
-        if ($line -match "BaseVersion=([0-9\.]+)") {
-            [double]::TryParse($matches[1], [ref]$baseVersion) | Out-Null
+        if ($line -match "^Version=([0-9]+\.[0-9]+\.[0-9]+)") {
+            $explicitVersion = $matches[1]
         }
-        if ($line -match "LastDate=([0-9\-]+)") {
+        if ($line -match "^BaseVersion=([0-9\.]+)") {
+            [double]::TryParse($matches[1], [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$baseVersion) | Out-Null
+        }
+        if ($line -match "^LastDate=([0-9\-]+)") {
             $lastDateStr = $matches[1]
         }
-        if ($line -match "BuildNumber=([0-9]+)") {
+        if ($line -match "^BuildNumber=([0-9]+)") {
             [int]::TryParse($matches[1], [ref]$buildNumber) | Out-Null
         }
     }
-} else {
-    $existingVer = $versionNodes[0].InnerText
-    if ($existingVer -match "^([0-9]+)\.([0-9]+)") {
-        $baseVersion = [double]"$($matches[1]).$($matches[2])"
-    }
-    if ($baseVersion -lt 2.0) { $baseVersion = 2.0 }
 }
 
-# 2. Monthly Increment Calculation (+0.5 if month changed or first run)
-[double]$monthIncrement = 0.0
-if (-not [string]::IsNullOrEmpty($lastDateStr)) {
-    try {
-        $lastDate = [DateTime]::ParseExact($lastDateStr, "yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture)
-        if ($currentDate.Year -ne $lastDate.Year -or $currentDate.Month -ne $lastDate.Month) {
-            $monthIncrement = 0.5
-        }
-    } catch {
-        $monthIncrement = 0.5
-    }
-} else {
-    $monthIncrement = 0.5
+if ($baseVersion -lt 2.0 -or $baseVersion -ge 10.0) {
+    $baseVersion = 3.9
 }
 
-# 3. File Modification Increment (0.1 per modified/staged/untracked file)
 $modifiedFilesCount = 0
 try {
     $gitStatus = & git status --porcelain 2>$null
@@ -81,16 +67,35 @@ try {
     $modifiedFilesCount = 0
 }
 
-[double]$filesIncrement = [Math]::Round($modifiedFilesCount * 0.1, 1)
+[double]$monthIncrement = 0.0
+if ($ForceIncrement -and -not [string]::IsNullOrEmpty($lastDateStr)) {
+    try {
+        $lastDate = [DateTime]::ParseExact($lastDateStr, "yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture)
+        if ($currentDate.Year -ne $lastDate.Year -or $currentDate.Month -ne $lastDate.Month) {
+            $monthIncrement = 0.5
+        }
+    } catch {
+        $monthIncrement = 0.0
+    }
+}
 
-# 4. Final Numerical Version Assembly
-$buildNumber++
-[double]$calculatedDecimal = [Math]::Round($baseVersion + $monthIncrement + $filesIncrement, 1)
-[int]$major = [int][Math]::Floor($calculatedDecimal)
-[int]$minor = [int][Math]::Round(($calculatedDecimal - $major) * 10)
-if ($minor -ge 10) {
-    $major += [int][Math]::Floor($minor / 10)
-    $minor = $minor % 10
+if ($ForceIncrement) {
+    $buildNumber++
+    $baseVersion = [Math]::Round($baseVersion + $monthIncrement, 1)
+}
+
+if (-not $ForceIncrement -and -not [string]::IsNullOrEmpty($explicitVersion)) {
+    $parts = $explicitVersion.Split('.')
+    [int]$major = [int]$parts[0]
+    [int]$minor = [int]$parts[1]
+    [int]$buildNumber = [int]$parts[2]
+} else {
+    [int]$major = [int][Math]::Floor($baseVersion)
+    [int]$minor = [int][Math]::Round(($baseVersion - $major) * 10)
+    if ($minor -ge 10) {
+        $major += [int][Math]::Floor($minor / 10)
+        $minor = $minor % 10
+    }
 }
 
 $fullVersionString = "$major.$minor.$buildNumber"
@@ -98,9 +103,9 @@ $shortVersionString = "$major.$minor"
 
 Write-Host "======================================================================"
 Write-Host " DELTA SYNTH Version Bumper: v$fullVersionString"
-Write-Host " - Base Version     : $baseVersion"
+Write-Host " - Base Version     : $shortVersionString"
 Write-Host " - Monthly Increment: +$monthIncrement"
-Write-Host " - Modified Files   : $modifiedFilesCount files (+$filesIncrement)"
+Write-Host " - Modified Files   : $modifiedFilesCount files"
 Write-Host " - Build Sequence   : #$buildNumber"
 Write-Host "======================================================================"
 
@@ -121,7 +126,7 @@ if (-not $Preview) {
 
     foreach ($nodeName in @("CFBundleVersion", "CFBundleShortVersionString")) {
         foreach ($node in @($projectXml.SelectNodes("/Project/PropertyGroup/$nodeName"))) {
-            $node.InnerText = $shortVersionString
+            $node.InnerText = if ($nodeName -eq "CFBundleVersion") { $fullVersionString } else { $shortVersionString }
         }
     }
 
@@ -138,7 +143,7 @@ if (-not $Preview) {
 
     $versionFileContent = @"
 Version=$fullVersionString
-BaseVersion=$calculatedDecimal
+BaseVersion=$shortVersionString
 LastDate=$($currentDate.ToString("yyyy-MM-dd"))
 BuildNumber=$buildNumber
 ModifiedFilesCount=$modifiedFilesCount
@@ -150,3 +155,4 @@ ModifiedFilesCount=$modifiedFilesCount
 }
 
 $fullVersionString
+

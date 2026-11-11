@@ -1,17 +1,17 @@
 <!--
- * วัน/เดือน/ปี: 30/10/2569 (2026)
+ * วัน/เดือน/ปี: 11/11/2569 (2026)
  * ชื่อไฟล์โค้ด: LyricsDialog.axaml
- * เวอร์ชั่น: 1.2
+ * เวอร์ชั่น: 1.3
  * เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
  * ตำแหน่งไฟล์: OpenUtau.App/Views/LyricsDialog.axaml
- * รายละเอียดการแก้ไข: ปรับโครงสร้าง UI ให้รองรับฟอนต์ Leelawadee UI และประทับโทนสีมาตรฐานขององค์กร (Dark Theme & Red Accent)
+ * รายละเอียดการแก้ไข: เพิ่มระบบค้นหาและแทนที่คำ Notepad Style (เปลี่ยนคำ A เป็น B ทันที และมีผลกับเนื้อเพลงทุกแทร็ก) ปรับโทนสีตามรูปที่ 3
 -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:c="using:OpenUtau.App.Controls"
-        mc:Ignorable="d" MinWidth="400" MinHeight="200" Width="600" Height="300"
+        mc:Ignorable="d" MinWidth="450" MinHeight="220" Width="660" Height="340"
         x:Class="OpenUtau.App.Views.LyricsDialog" WindowStartupLocation="CenterOwner"
         Icon="/Assets/Thai OpenUtau Logo.ico"
         Title="{DynamicResource lyrics.caption}"
@@ -37,68 +37,76 @@
     </Style>
   </Window.Styles>
   
-  <Grid Margin="10,10,10,4" RowDefinitions="*,6,Auto,4,Auto">
+  <Grid Margin="10,10,10,6" RowDefinitions="*,8,Auto,8,Auto">
+    <!-- Row 0: Notepad-style Multiline Lyrics Editor -->
     <c:WorkspacePanelTextBox Name="DIALOG_Box" Classes="workspacePanelTextBox workspacePanelTextBoxMultiline" Grid.Row="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
              AcceptsReturn="True" AcceptsTab="False" TextWrapping="Wrap"
              Text="{Binding Text}" Focusable="True"
-             Background="#1A1A1A" Foreground="#F0F0F0" FontFamily="Leelawadee UI"/>
+             Background="#141414" Foreground="#F0F0F0" FontFamily="Leelawadee UI"/>
              
-    <TextBlock Grid.Row="2" Margin="0,2" HorizontalAlignment="Right">
-      <TextBlock.Text>
-        <MultiBinding StringFormat="{}{0}/{1}">
-          <Binding Path="CurrentCount"/>
-          <Binding Path="TotalCount"/>
-        </MultiBinding>
-      </TextBlock.Text>
-    </TextBlock>
+    <!-- Row 2: Separators (Left) and Find & Replace All (Right) -->
+    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
+      <!-- Word Separators -->
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+        <TextBlock Text="{StaticResource lyrics.separators}" Margin="0,2" VerticalAlignment="Center"/>
+        <Border CornerRadius="6" Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
+          <TextBlock Text="⎵" Margin="0" Padding="4,2"/>
+        </Border>
+        <Border CornerRadius="6" Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
+          <TextBlock Text="," Margin="0" Padding="4,2"/>
+        </Border>
+        <Border CornerRadius="6" Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
+          <TextBlock Text="&quot;" Margin="0" Padding="4,2"/>
+        </Border>
+        <Border CornerRadius="6" Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
+          <TextBlock Text="↵" Margin="0" Padding="4,2"/>
+        </Border>
+        <Border CornerRadius="6" Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
+          <TextBlock Text="字" Margin="0" Padding="4,2"/>
+        </Border>
+      </StackPanel>
+
+      <!-- Notepad Find & Replace (เปลี่ยนคำ A เป็น B [ยืนยัน]) -->
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <TextBlock Text="{DynamicResource lyrics.replace.find}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+        <TextBox Width="110" Height="26" Padding="6,2" Text="{Binding TargetWord}"
+                 Background="#141414" Foreground="#FFFFFF" BorderBrush="#FFFFFF" BorderThickness="1"
+                 CornerRadius="3" VerticalAlignment="Center" FontFamily="Leelawadee UI"/>
+        <TextBlock Text="{DynamicResource lyrics.replace.into}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+        <TextBox Width="110" Height="26" Padding="6,2" Text="{Binding ReplacementWord}"
+                 Background="#141414" Foreground="#FFFFFF" BorderBrush="#FFFFFF" BorderThickness="1"
+                 CornerRadius="3" VerticalAlignment="Center" FontFamily="Leelawadee UI"/>
+        <Button Content="{DynamicResource lyrics.replace.confirm}" Padding="12,3" FontWeight="SemiBold"
+                Command="{Binding ReplaceAllWords}" VerticalAlignment="Center"/>
+      </StackPanel>
+    </Grid>
     
-    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
-      <TextBlock Text="{StaticResource lyrics.separators}" Margin="0,2"/>
-      <Border CornerRadius="6"
-              Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
-        <TextBlock Text="⎵" Margin="0" Padding="4,2"/>
-      </Border>
-      <Border CornerRadius="6"
-              Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
-        <TextBlock Text="," Margin="0" Padding="4,2"/>
-      </Border>
-      <Border CornerRadius="6"
-              Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
-        <TextBlock Text="&quot;" Margin="0" Padding="4,2"/>
-      </Border>
-      <Border CornerRadius="6"
-              Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
-        <TextBlock Text="↵" Margin="0" Padding="4,2"/>
-      </Border>
-      <Border CornerRadius="6"
-              Background="{DynamicResource MenuFlyoutItemBackgroundPointerOver}">
-        <TextBlock Text="字" Margin="0" Padding="4,2"/>
-      </Border>
-    </StackPanel>
-    
-    <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="{StaticResource lyrics.livepreview}" Margin="0,8"/>
-      <ToggleSwitch Margin="0" IsChecked="{Binding LivePreview}">
-        <ToggleSwitch.Styles>
-          <Style Selector="TextBlock">
-            <Setter Property="IsVisible" Value="False"/>
-          </Style>
-        </ToggleSwitch.Styles>
-      </ToggleSwitch>
-      <TextBlock Text="{StaticResource lyrics.applyselected}" Margin="0,8"/>
-      <ToggleSwitch Margin="0" IsChecked="{Binding ApplySelection}">
-        <ToggleSwitch.Styles>
-          <Style Selector="TextBlock">
-            <Setter Property="IsVisible" Value="False"/>
-          </Style>
-        </ToggleSwitch.Styles>
-      </ToggleSwitch>
-    </StackPanel>
-    
-    <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-      <Button Content="{DynamicResource button.reset}" Margin="0" Command="{Binding Reset}"/>
-      <Button Content="{DynamicResource button.cancel}" Margin="0" Click="OnCancel"/>
-      <Button Content="{DynamicResource button.apply}" Margin="0" Click="OnFinish"/>
-    </StackPanel>
+    <!-- Row 4: Toggles (Left) and Dialog Action Buttons (Right) -->
+    <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto">
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+        <TextBlock Text="{StaticResource lyrics.livepreview}" Margin="0,8" VerticalAlignment="Center"/>
+        <ToggleSwitch Margin="0" IsChecked="{Binding LivePreview}" VerticalAlignment="Center">
+          <ToggleSwitch.Styles>
+            <Style Selector="TextBlock">
+              <Setter Property="IsVisible" Value="False"/>
+            </Style>
+          </ToggleSwitch.Styles>
+        </ToggleSwitch>
+        <TextBlock Text="{StaticResource lyrics.applyselected}" Margin="0,8" VerticalAlignment="Center"/>
+        <ToggleSwitch Margin="0" IsChecked="{Binding ApplySelection}" VerticalAlignment="Center">
+          <ToggleSwitch.Styles>
+            <Style Selector="TextBlock">
+              <Setter Property="IsVisible" Value="False"/>
+            </Style>
+          </ToggleSwitch.Styles>
+        </ToggleSwitch>
+      </StackPanel>
+      
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <Button Content="{DynamicResource button.reset}" Margin="0" Padding="12,6" Command="{Binding Reset}"/>
+        <Button Content="{DynamicResource button.cancel}" Margin="0" Padding="12,6" Click="OnCancel"/>
+        <Button Content="{DynamicResource button.apply}" Margin="0" Padding="12,6" FontWeight="SemiBold" Click="OnFinish"/>
+      </StackPanel>
+    </Grid>
   </Grid>
 </Window>

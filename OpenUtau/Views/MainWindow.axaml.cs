@@ -1,11 +1,11 @@
 // ============================================================================
-// Date         : 28/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : MainWindow.axaml.cs
-// Version      : 1.6
+// Version      : 1.7
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau/Views/MainWindow.axaml.cs
-// Description  : Main application workspace controller with graceful shutdown lifecycle,
-//                audio buffer teardown, secondary window cleanup, and preference persistence.
+// Description  : Main application workspace controller with seamless global shortcuts dispatch
+//                (Space, Ctrl+S, Undo, Redo, FullScreen) across PianoRollContainer and tracks.
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -618,6 +618,18 @@ namespace OpenUtau.App.Views {
             await OpenSingersWindowAsync();
         }
 
+        async void OnMenuSyncAllPictures(object? sender, RoutedEventArgs args) {
+            try {
+                DocManager.Inst.ExecuteCmd(new UserMessageNotification("⏳ กำลังเริ่มซิงก์รูปภาพนักร้อง DELTA SYNTH..."));
+                int count = await System.Threading.Tasks.Task.Run(() => OpenUtau.Core.SingerHub.DeltaSingerProfileResolver.DeployPicturesToVoicebanks());
+                SingerManager.Inst.SearchAllSingers();
+                DocManager.Inst.ExecuteCmd(new UserMessageNotification($"✅ ซิงก์รูปภาพนักร้องสำเร็จทั้งหมด {count} คลังเสียง!"));
+            } catch (Exception ex) {
+                Log.Error(ex, "Failed to sync all singer pictures");
+                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
+            }
+        }
+
         /// <summary>
         /// Check if a track has a singer and if it exists.
         /// If the user haven't selected a singer for the track, or the singer specified in ustx project doesn't exist, return null.
@@ -892,17 +904,22 @@ namespace OpenUtau.App.Views {
         }
 
         void OnKeyDown(object sender, KeyEventArgs args) {
-            if (PianoRollContainer.IsKeyboardFocusWithin) {
-                args.Handled = false;
+            if (args.Handled) return;
+            var focused = FocusManager?.GetFocusedElement();
+            if (focused is TextBox focusedBox && focusedBox.IsEnabled && focusedBox.IsEffectivelyVisible && focusedBox.IsFocused) {
                 return;
             }
 
+            bool inPianoRoll = PianoRollContainer.IsKeyboardFocusWithin;
             var tracksVm = viewModel.TracksViewModel;
 
             if (args.KeyModifiers == KeyModifiers.None) {
                 args.Handled = true;
                 switch (args.Key) {
-                    case Key.Delete: viewModel.TracksViewModel.DeleteSelectedParts(); break;
+                    case Key.Delete:
+                        if (!inPianoRoll) viewModel.TracksViewModel.DeleteSelectedParts();
+                        else args.Handled = false;
+                        break;
                     case Key.Space: PlayOrPause(); break;
                     case Key.Home: viewModel.PlaybackViewModel.MovePlayPos(0); break;
                     case Key.End:
@@ -931,15 +948,27 @@ namespace OpenUtau.App.Views {
             } else if (args.KeyModifiers == cmdKey) {
                 args.Handled = true;
                 switch (args.Key) {
-                    case Key.A: viewModel.TracksViewModel.SelectAllParts(); break;
+                    case Key.A:
+                        if (!inPianoRoll) viewModel.TracksViewModel.SelectAllParts();
+                        else args.Handled = false;
+                        break;
                     case Key.N: NewProject(); break;
                     case Key.O: Open(); break;
                     case Key.S: _ = Save(); break;
                     case Key.Z: viewModel.Undo(); break;
                     case Key.Y: viewModel.Redo(); break;
-                    case Key.C: tracksVm.CopyParts(); break;
-                    case Key.X: tracksVm.CutParts(); break;
-                    case Key.V: tracksVm.PasteParts(); break;
+                    case Key.C:
+                        if (!inPianoRoll) tracksVm.CopyParts();
+                        else args.Handled = false;
+                        break;
+                    case Key.X:
+                        if (!inPianoRoll) tracksVm.CutParts();
+                        else args.Handled = false;
+                        break;
+                    case Key.V:
+                        if (!inPianoRoll) tracksVm.PasteParts();
+                        else args.Handled = false;
+                        break;
                     default:
                         args.Handled = false;
                         break;
@@ -949,18 +978,18 @@ namespace OpenUtau.App.Views {
                 switch (args.Key) {
                     // solo
                     case Key.S:
-                        if (viewModel.TracksViewModel.SelectedParts.Count > 0) {
+                        if (!inPianoRoll && viewModel.TracksViewModel.SelectedParts.Count > 0) {
                             var part = viewModel.TracksViewModel.SelectedParts.First();
                             var track = DocManager.Inst.Project.tracks[part.trackNo];
                             MessageBus.Current.SendMessage(new TracksSoloEvent(part.trackNo, !track.Solo, false));
-                        }
+                        } else args.Handled = false;
                         break;
                     // mute
                     case Key.M:
-                        if (viewModel.TracksViewModel.SelectedParts.Count > 0) {
+                        if (!inPianoRoll && viewModel.TracksViewModel.SelectedParts.Count > 0) {
                             var part = viewModel.TracksViewModel.SelectedParts.First();
                             MessageBus.Current.SendMessage(new TracksMuteEvent(part.trackNo, false));
-                        }
+                        } else args.Handled = false;
                         break;
                     default:
                         args.Handled = false;

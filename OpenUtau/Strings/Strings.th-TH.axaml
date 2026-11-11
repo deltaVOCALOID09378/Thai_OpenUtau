@@ -316,6 +316,9 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="lyrics.nonote">ไม่พบตัวโน้ตให้จัดการเลยครับ!</system:String>
 <system:String x:Key="lyrics.max">สูงสุด</system:String>
 <system:String x:Key="lyrics.reset">คืนค่าเดิม</system:String>
+  <system:String x:Key="lyrics.replace.find">เปลี่ยนคำ</system:String>
+  <system:String x:Key="lyrics.replace.into">เป็น</system:String>
+  <system:String x:Key="lyrics.replace.confirm">ยืนยัน</system:String>
 <system:String x:Key="lyrics.selectnotes">รบกวนเลือกตัวโน้ตก่อนดำเนินการนะครับ!</system:String>
 <system:String x:Key="lyrics.separators">สัญลักษณ์แบ่งคำ</system:String>
 
@@ -406,6 +409,7 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="menu.tools.singer.install">ติดตั้งคลังเสียงนักร้อง (Singer)...</system:String>
 <system:String x:Key="menu.tools.singer.installadv">ติดตั้งคลังเสียงนักร้อง (แบบขั้นสูง)...</system:String>
 <system:String x:Key="menu.tools.singers">‍ จัดการคลังเสียงนักร้อง...</system:String>
+  <system:String x:Key="menu.tools.syncallpictures">ซิงก์รูปภาพนักร้อง DELTA SYNTH ทั้งหมด (Sync All Pictures)</system:String>
 <system:String x:Key="menu.tools.wavtoolresampler.install">ติดตั้งเอนจิน Wavtool/Resampler (.exe)...</system:String>
 
 <system:String x:Key="menu.view">มุมมอง</system:String>
@@ -521,6 +525,10 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="lunai.tab.lunai">สังกัด LUNAI</system:String>
 <system:String x:Key="lunai.tab.ufr">สังกัด UFR</system:String>
 <system:String x:Key="lunai.tab.brapa">สังกัด BRAPA</system:String>
+  <system:String x:Key="lunai.tab.deltasynth">สังกัด DELTA SYNTH</system:String>
+  <system:String x:Key="lunai.deltasynth.private.terms">ขอสงวนสิทธิ์เก็บไว้ ตามเงื่อนไขที่เจ้าของเสียงกำหนด เท่านั้น</system:String>
+  <system:String x:Key="lunai.deltasynth.private.contact">สามารถติดต่อ กับ เจ้าของ นักร้องตัวหลัก ได้ด้วยตัวเอง ทันที</system:String>
+  <system:String x:Key="lunai.deltasynth.unreleased">กำลังเตรียม กำหนด การปล่อยตัว.... โปรดรอ กำหนด การณ์ ประกาศ ในชุดใหม่ จาก อนาคต เร็วๆ นี้</system:String>
 <system:String x:Key="lunai.company">โปรเจกต์ LUNAI</system:String>
 <system:String x:Key="lunai.website">เว็บไซต์</system:String>
 <system:String x:Key="lunai.col.name">รายชื่อนักร้อง</system:String>
@@ -999,6 +1007,12 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="singers.editoto.regenfrq.regenerating">กำลังประมวลผลดักค่าความถี่เสียง (FRQ)...</system:String>
 <system:String x:Key="singers.editoto.reset">คืนค่าล้างตาราง Otos</system:String>
 <system:String x:Key="singers.editoto.save">บันทึกตาราง Otos แล้ว</system:String>
+<system:String x:Key="singers.editoto.autodetect">ตรวจจับเสียงอัตโนมัติ</system:String>
+<system:String x:Key="singers.editoto.presetcv">พรีเซ็ต CV สำเร็จรูป</system:String>
+<system:String x:Key="singers.editoto.presetvcv">พรีเซ็ต VCV สำเร็จรูป</system:String>
+<system:String x:Key="singers.editoto.copytiming">คัดลอกค่า Timing</system:String>
+<system:String x:Key="singers.editoto.pastetiming">วางค่า Timing</system:String>
+<system:String x:Key="singers.editoto.cursortime">ตำแหน่งเคอร์เซอร์:</system:String>
 <system:String x:Key="singers.editoto.searchalias">ค้นหาตามชื่อเสียง (Alias)</system:String>
 <system:String x:Key="singers.editoto.setsetparampath">รบกวนดาวน์โหลด setParam (รุ่น 4.0b ขึ้นไป) จาก http://nwp8861.blog92.fc2.com/ แล้วอย่าลืมนำมาตั้งค่า Path ในเมนูตั้งค่าก่อนนะครับ!</system:String>
 <system:String x:Key="singers.editoto.setvlabelerpath">รบกวนดาวน์โหลด vLabeler (รุ่น 1.0.0-beta1 ขึ้นไป) จาก https://github.com/sdercolin/vlabeler แล้วนำมาตั้งค่า Path ไว้ในการตั้งค่าระบบได้เลย!</system:String>
@@ -1026,6 +1040,7 @@ OpenUtau คือแพลตฟอร์มเสียงสังเคร�
 <system:String x:Key="singers.setencoding">กำหนดการถอดรหัสภาษาไฟล์ตัวอักษร (Encoding)</system:String>
 <system:String x:Key="singers.setimage">ตั้งภาพไอคอน (Icon)</system:String>
 <system:String x:Key="singers.setportrait">เลือกภาพเต็มตัวศิลปิน (Portrait)</system:String>
+  <system:String x:Key="singers.syncpictures">ซิงก์รูปภาพนักร้อง DELTA (Sync Pictures)</system:String>
 <system:String x:Key="singers.setsingertype">กำหนดชนิดเครื่องยนต์ของนักร้อง</system:String>
 <system:String x:Key="singers.subbanks.cancel">ยกเลิกไม่บันทึก</system:String>
 <system:String x:Key="singers.subbanks.clear">ล้างข้อมูลทั้งหมด</system:String>

@@ -1,13 +1,17 @@
-:: Made And Checked By DELTA SYNTH & Gemini AI
-:: Original by Patiphat Wongyai
-:: Version: 2.0 (Multi-Runtime .NET 8.0 - 12.0+ Support)
-
 @echo off
+:: ========================================================================
+:: Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
+:: File Name    : MultiPlatform_Build.bat
+:: Version      : 2.1
+:: Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+:: File Location: Scripts/MultiPlatform_Build.bat
+:: Description  : Multi-Platform packaging script with .NET 8.0 - 12.0+ RollForward support.
+:: ========================================================================
 setlocal enabledelayedexpansion
 set "DOTNET_ROLL_FORWARD=LatestMajor"
 
 echo ========================================================
-echo DELTA SYNTH MULTI-PLATFORM PACKAGING SYSTEM (v2.0)
+echo DELTA SYNTH MULTI-PLATFORM PACKAGING SYSTEM (v2.1)
 echo Supported Runtime: .NET 8.0 - 12.0+ (RollForward Active)
 echo ========================================================
 echo.

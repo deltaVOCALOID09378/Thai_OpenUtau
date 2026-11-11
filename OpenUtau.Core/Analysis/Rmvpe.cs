@@ -1,3 +1,11 @@
+// ============================================================================
+// วัน/เดือน/ปี: 10 พฤศจิกายน 2569 (2026-11-10)
+// ชื่อไฟล์: Rmvpe.cs
+// ลำดับเวอร์ชัน: 1.1
+// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// ตำแหน่งที่จัดวาง: OpenUtau.Core/Analysis/Rmvpe.cs
+// รายละเอียดการแก้ไขงาน: โหลดโมเดล RMVPE ผ่านหน่วยความจำ (File.ReadAllBytes) เพื่อป้องกันการล็อกไฟล์ rmvpe.onnx บนดิสก์ระหว่างใช้งาน
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -221,7 +229,8 @@ public class RmvpeTranscriber : IDisposable {
                 new[] { modelPath });
         }
         Log.Information("RMVPE loading model from {ModelPath}", modelPath);
-        session = Onnx.getInferenceSession(modelPath, OnnxRunnerChoice.CPU);
+        var modelBytes = File.ReadAllBytes(modelPath);
+        session = Onnx.getInferenceSession(modelBytes, OnnxRunnerChoice.CPU);
         waveformInputName = ResolveWaveformInputName(session);
         thresholdInputName = ResolveThresholdInputName(session);
         f0OutputName = ResolveF0OutputName(session);

@@ -1,4 +1,12 @@
-﻿using System;
+// ============================================================================
+// Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
+// File Name    : PackageManagerDialog.axaml.cs
+// Version      : 1.2
+// Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// File Location: OpenUtau/Views/PackageManagerDialog.axaml.cs
+// Description  : Package manager dialog verifying installed package status before prompting user for download or installation.
+// ============================================================================
+using System;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -15,6 +23,9 @@ namespace OpenUtau.App.Views {
             try {
                 if (DataContext is PackageManagerViewModel vm) {
                     if (sender is Button b && b.DataContext is PackageRowViewModel row) {
+                        if (row.IsUpToDate) {
+                            return;
+                        }
                         if (row.IsInstalled && !row.IsUpToDate) {
                             var msg = string.Format(ThemeManager.GetString("packages.confirm.update.message"), row.Id, row.Version);
                             var caption = ThemeManager.GetString("packages.confirm.update.caption");

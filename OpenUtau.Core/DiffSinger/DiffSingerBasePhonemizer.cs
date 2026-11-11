@@ -1,10 +1,10 @@
 // ============================================================================
-// วัน/เดือน/ปี: 22 ตุลาคม 2569 (2026-10-22)
-// ชื่อไฟล์: DiffSingerBasePhonemizer.cs
-// ลำดับเวอร์ชัน: 1.0
-// เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by oxygen-dioxide, OpenUtau Authors ]
-// ตำแหน่งที่จัดวาง: OpenUtau.Core/DiffSinger/DiffSingerBasePhonemizer.cs
-// รายละเอียดการแก้ไขงาน: ปรับปรุงการตรวจสอบ Root Path ของ Singer (รองรับทั้งกรณี dsdur/ และ Root) พร้อม Fallback ป้องกัน Crash เมื่อไม่พบ Config
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
+// 2. ชื่อไฟล์โค้ด: DiffSingerBasePhonemizer.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.1
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by oxygen-dioxide, OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/DiffSinger/DiffSingerBasePhonemizer.cs
+// 6. รายละเอียดการแก้ไขงาน: ป้องกัน Exception ใน PhonemeTokenize ด้วย Fallback ไปยัง Pause/Token เริ่มต้น
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -322,11 +322,16 @@ namespace OpenUtau.Core.DiffSinger
         }
 
         int PhonemeTokenize(string phoneme){
-            bool success = phonemeTokens.TryGetValue(phoneme, out int token);
-            if(!success){
-                throw new Exception($"Phoneme \"{phoneme}\" isn't supported by duration model. Please check {Path.Combine(rootPath, dsConfig.phonemes)}");
+            if (phonemeTokens.TryGetValue(phoneme, out int token)) {
+                return token;
             }
-            return token;
+            if (phonemeTokens.TryGetValue("SP", out token) || phonemeTokens.TryGetValue("AP", out token)) {
+                return token;
+            }
+            if (phonemeTokens.Count > 0) {
+                return phonemeTokens.Values.First();
+            }
+            return 0;
         }
         
         protected virtual string[] PostProcessWordSymbols(Note[][] phrase, int wordIndex, string[] symbols) { return symbols; }

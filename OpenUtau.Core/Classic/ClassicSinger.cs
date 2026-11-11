@@ -1,4 +1,14 @@
+// ============================================================================
+// 1. วัน/เดือน/ปี: 9 พฤศจิกายน พ.ศ. 2569 / 9 November 2026
+// 2. ชื่อไฟล์โค้ด: ClassicSinger.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.2
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Classic/ClassicSinger.cs
+// 5. หน้าที่: คลาสแสดงผลและจัดการข้อมูลนักร้อง UTAU คลาสสิก พร้อมระบบตรวจสอบความปลอดภัยของ Portrait/Sample
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine | Original by OpenUtau Authors
+// ============================================================================
+
 using System;
+using OpenUtau.Core.SingerHub;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,9 +33,9 @@ namespace OpenUtau.Classic {
         public override string Version => voicebank.Version;
         public override string OtherInfo => voicebank.OtherInfo;
         public override IList<string> Errors => errors;
-        public override string Avatar => voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image);
+        public override string Avatar => DeltaSingerProfileResolver.ResolveAvatar(Name, Location, voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image)) ?? (voicebank.Image == null ? null : Path.Combine(Location, voicebank.Image));
         public override byte[] AvatarData => LoadAvatarDataLazy();
-        public override string Portrait => voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait);
+        public override string Portrait => DeltaSingerProfileResolver.ResolvePortrait(Name, Location, voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait)) ?? (voicebank.Portrait == null ? null : Path.Combine(Location, voicebank.Portrait));
         public override float PortraitOpacity => voicebank.PortraitOpacity;
         public override int PortraitHeight => voicebank.PortraitHeight;
         public override string DefaultPhonemizer => voicebank.DefaultPhonemizer;
@@ -208,7 +218,7 @@ namespace OpenUtau.Classic {
         }
 
         public override byte[] LoadPortrait() {
-            return string.IsNullOrEmpty(Portrait)
+            return string.IsNullOrEmpty(Portrait) || !File.Exists(Portrait)
                 ? null
                 : File.ReadAllBytes(Portrait);
         }

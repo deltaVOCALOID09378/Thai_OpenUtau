@@ -1,11 +1,11 @@
 // ============================================================================
-// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : DocManager.cs
-// Version      : 1.2
+// Version      : 1.4
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // File Location: OpenUtau.Core/DocManager.cs
-// Description  : Central document, command, plugin, and undo/redo manager with built-in
-//                Native Accent BatchEdit discovery and GeminiSpark integration.
+// Description  : Central document, command, plugin, and undo/redo manager with fast plugin
+//                assembly deduplication by AssemblyName.Name and thread-safe OtoChangedNotification filtering.
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -155,19 +155,26 @@ namespace OpenUtau.Core {
             var assembliesToLoad = new List<(string file, AssemblyName assemblyName)>();
             var allLoadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var group in managedCandidates.GroupBy(
-                candidate => candidate.identity,
+                candidate => candidate.assemblyName.Name ?? candidate.identity,
                 StringComparer.OrdinalIgnoreCase)) {
                 var first = group.First();
                 var loadedAssembly = allLoadedAssemblies
                     .FirstOrDefault(assembly =>
+                        string.Equals(assembly.GetName().Name, first.assemblyName.Name, StringComparison.OrdinalIgnoreCase) ||
                         AssemblyName.ReferenceMatchesDefinition(
                             assembly.GetName(),
                             first.assemblyName));
                 if (loadedAssembly != null) {
                     var builtIn = group.FirstOrDefault(candidate =>
-                        Path.GetFileName(candidate.file) == kBuiltin);
+                        string.Equals(Path.GetFileName(candidate.file), kBuiltin, StringComparison.OrdinalIgnoreCase));
                     if (!string.IsNullOrEmpty(builtIn.file)) {
                         assembliesToLoad.Add((builtIn.file, builtIn.assemblyName));
+                        foreach (var duplicate in group.Where(candidate => candidate.file != builtIn.file)) {
+                            Log.Debug(
+                                "Skipping redundant builtin plugin copy {AssemblyName} at {File}.",
+                                duplicate.identity,
+                                duplicate.file);
+                        }
                     } else {
                         foreach (var candidate in group) {
                             Log.Information(
@@ -398,7 +405,8 @@ namespace OpenUtau.Core {
                 if (!(cmd is ProgressBarNotification)
                     && !(cmd is WaveformReadyNotification)
                     && !(cmd is PhraseRenderedNotification)
-                    && !(cmd is PartRenderedNotification)) {
+                    && !(cmd is PartRenderedNotification)
+                    && !(cmd is OtoChangedNotification)) {
                     Log.Warning($"{cmd} not on main thread");
                 }
                 if (PostOnUIThread != null) {
@@ -534,7 +542,7 @@ namespace OpenUtau.Core {
 
         public void RollBackUndoGroup() {
             if (undoGroup == null) {
-                Log.Error("No active undoGroup to rollback.");
+                // If there is no active undoGroup, quietly return without error spam
                 return;
             }
             for (int i = undoGroup.Commands.Count - 1; i >= 0; i--) {

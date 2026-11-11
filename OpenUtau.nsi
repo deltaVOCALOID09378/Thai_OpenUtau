@@ -1,10 +1,11 @@
 ; ============================================================================
-; Date         : 21/10/2026 (B.E. 2569 / A.D. 2026)
+; Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
 ; File Name    : OpenUtau.nsi
-; Version      : 1.4
+; Version      : 1.6
 ; Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by UTAU THAILAND, stakira, Ferina and Printmov ]
 ; File Location: OpenUtau.nsi
-; Description  : Professional NSIS installer configuration with corrected icon asset path.
+; Description  : Professional NSIS installer configuration with pre-installation Windows Registry
+;                version checks (Major >= 8) for VC++ Redistributable and .NET Runtime before installing.
 ; ============================================================================
 
 ManifestDPIAware true
@@ -104,6 +105,12 @@ Section "การลงทะเบียนระบบ (Registry & File Assoc
 SectionEnd
 
 Section "VC Redist"
+  ; Check Windows Registry for existing VC++ 2015-2022 Redistributable (v14.x+) before installing
+  ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\${ARCH}" "Installed"
+  IntCmp $0 1 vcredist_already_installed 0 0
+  ReadRegDWORD $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\${ARCH}" "Installed"
+  IntCmp $0 1 vcredist_already_installed 0 0
+
   SetOutPath "$TEMP"
   IfFileExists "$TEMP\vc_redist.${ARCH}.exe" 0 +4
     DetailPrint "กำลังติดตั้ง Microsoft Visual C++ Redistributable..."
@@ -114,10 +121,32 @@ Section "VC Redist"
     DetailPrint "กำลังติดตั้ง Microsoft Visual C++ Redistributable..."
     ExecWait '"$TEMP\vc_redist.${ARCH}.exe" /quiet /norestart'
     Delete "$TEMP\vc_redist.${ARCH}.exe"
+    Goto done_vcredist
+  vcredist_already_installed:
+    DetailPrint "ตรวจพบ Microsoft Visual C++ Redistributable ติดตั้งอยู่ในระบบแล้ว ข้ามการติดตั้งซ้ำ"
   done_vcredist:
 SectionEnd
 
 Section ".NET Desktop Runtime 8"
+  ; Check if self-contained runtime is bundled or if .NET sharedhost >= 8.0 is already installed in Registry
+  IfFileExists "$INSTDIR\coreclr.dll" dotnet_already_installed 0
+  ReadRegStr $0 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\${ARCH}\sharedhost" "Version"
+  StrCmp $0 "" check_wow64_dotnet 0
+  StrCpy $1 $0 2
+  StrCmp $1 "6." check_wow64_dotnet 0
+  StrCmp $1 "7." check_wow64_dotnet 0
+  StrCmp $1 "5." check_wow64_dotnet 0
+  StrCmp $1 "3." check_wow64_dotnet dotnet_already_installed
+  check_wow64_dotnet:
+  ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\${ARCH}\sharedhost" "Version"
+  StrCmp $0 "" install_dotnet_now 0
+  StrCpy $1 $0 2
+  StrCmp $1 "6." install_dotnet_now 0
+  StrCmp $1 "7." install_dotnet_now 0
+  StrCmp $1 "5." install_dotnet_now 0
+  StrCmp $1 "3." install_dotnet_now dotnet_already_installed
+
+  install_dotnet_now:
   SetOutPath "$TEMP"
   IfFileExists "$EXEDIR\dotnet_redist.${ARCH}.exe" 0 +4
     DetailPrint "กำลังติดตั้ง Microsoft .NET Desktop Runtime 8..."
@@ -128,6 +157,9 @@ Section ".NET Desktop Runtime 8"
     DetailPrint "กำลังติดตั้ง Microsoft .NET Desktop Runtime 8..."
     ExecWait '"$TEMP\dotnet_redist.${ARCH}.exe" /install /quiet /norestart'
     Delete "$TEMP\dotnet_redist.${ARCH}.exe"
+    Goto done_dotnet
+  dotnet_already_installed:
+    DetailPrint "ตรวจพบ Microsoft .NET Runtime 8.0+ ในระบบแล้ว ข้ามการติดตั้งซ้ำ"
   done_dotnet:
 SectionEnd
 

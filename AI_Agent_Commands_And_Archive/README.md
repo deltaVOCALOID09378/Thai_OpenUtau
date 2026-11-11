@@ -27,10 +27,17 @@ AI_Agent_Commands_And_Archive/
 ├── Command_Runners/                                  # สคริปต์และตัวรันคำสั่งสำหรับ Agent และระบบ Automation
 │   ├── Pull Request.bat                              # สคริปต์ Git เช็กเอาต์และดึง Main branch สำหรับ Release
 │   ├── Pull Request-1.bat                            # สคริปต์ Git ดึง Head ของ Pull Requests ต่างๆ
+│   ├── Update_ProgramFiles_DLLs.bat                  # สคริปต์อัปเดตและซิงก์ไฟล์ DLL เข้าสู่ C:\Program Files\OpenUtau
+│   ├── convert.ps1                                   # สคริปต์ PowerShell แปลงข้อมูลเสียง
+│   ├── download_g2p.ps1                              # สคริปต์ดาวน์โหลดโมเดล G2P พื้นฐาน
+│   ├── download_g2p2.ps1                             # สคริปต์ตรวจสอบและดาวน์โหลดโมเดล G2P เพิ่มเติม
 │   ├── run.bat                                       # สคริปต์ตรวจสอบการคอมไพล์และโครงสร้างคำศัพท์ VCCV (audit_vccv_engine.bat)
 │   ├── update_audio_output.py                        # สคริปต์ Agent ปรับปรุงโมดูล Audio Output
 │   └── update_preferences_vm.py                      # สคริปต์ Agent ปรับปรุงโมดูล Preferences ViewModel
 ├── Unused_Files/                                     # บันทึกประวัติและไฟล์สำรองที่ไม่ถูกเรียกใช้งานหลัก
+│   ├── All Editing File For Agent/                   # โฟลเดอร์ไฟล์ทดลองแก้ไขสำหรับ Agent รุ่นก่อนหน้า
+│   ├── Compile_Full_Program (1).bat                  # ไฟล์สำเนาซ้ำซ้อนของ Compile_Full_Program.bat
+│   ├── Package_Program (1).bat                       # ไฟล์สำเนาซ้ำซ้อนของ Package_Program.bat
 │   ├── About-Project.md                              # เอกสารสรุปโครงการร่างเดิม (ฉบับหลักปัจจุบันคือ About_Project.md)
 │   ├── All File Mapping.md                           # บันทึกการจับคู่รายการไฟล์ระบบขนาดใหญ่
 │   ├── All File of (Thai OpenUtau Type5).txt         # รายการไฟล์ Type5 เดิม

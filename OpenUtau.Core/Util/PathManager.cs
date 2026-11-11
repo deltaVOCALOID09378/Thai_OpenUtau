@@ -1,3 +1,11 @@
+// ============================================================================
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
+// 2. ชื่อไฟล์โค้ด: PathManager.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 2.3
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Util/PathManager.cs
+// 6. รายละเอียดการแก้ไข: จัดลำดับการดึงข้อมูลผู้ใช้จากโฟลเดอร์ Document เป็นหลัก และรองรับโฟลเดอร์ Singers เสริม
+// ============================================================================
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -42,12 +50,15 @@ namespace OpenUtau.Core {
                 HomePathIsAscii = true;
             } else {
                 string exePath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                IsInstalled = File.Exists(Path.Combine(exePath, "installed.txt"));
-                if (!IsInstalled) {
+                string docDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "OpenUtau");
+                bool isExplicitPortable = File.Exists(Path.Combine(exePath, "portable.txt"));
+                if (isExplicitPortable && !File.Exists(Path.Combine(exePath, "installed.txt"))) {
+                    IsInstalled = false;
                     DataPath = exePath;
                 } else {
-                    string dataHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-                    DataPath = Path.Combine(dataHome, "OpenUtau");
+                    // DELTA SYNTH: User data always prioritizes Documents/OpenUtau as primary
+                    IsInstalled = true;
+                    DataPath = docDataPath;
                 }
                 CachePath = Path.Combine(DataPath, "Cache");
                 HomePathIsAscii = true;
@@ -67,6 +78,8 @@ namespace OpenUtau.Core {
         public string CachePath { get; private set; }
         public bool HomePathIsAscii { get; private set; }
         public bool IsInstalled { get; private set; }
+        // DELTA SYNTH: Restores LegacyDataPath for backward compatibility with older components & forks
+        public string LegacyDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "OpenUtau");
         public string SingersPathOld => Path.Combine(DataPath, "Content", "Singers");
         public string SingersPath => Path.Combine(DataPath, "Singers");
         public string AdditionalSingersPath => Preferences.Default.AdditionalSingerPath;
@@ -93,6 +106,11 @@ namespace OpenUtau.Core {
                 var list = new List<string> { SingersPath };
                 if (Directory.Exists(SingersPathOld)) {
                     list.Add(SingersPathOld);
+                }
+                string exePath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                string exeSingers = Path.Combine(exePath, "Singers");
+                if (Directory.Exists(exeSingers) && !string.Equals(exeSingers, SingersPath, StringComparison.OrdinalIgnoreCase)) {
+                    list.Add(exeSingers);
                 }
                 if (Directory.Exists(AdditionalSingersPath)) {
                     list.Add(AdditionalSingersPath);

@@ -1,3 +1,12 @@
+// ============================================================================
+// 1. วัน/เดือน/ปี: 8 พฤศจิกายน พ.ศ. 2569 / 8 November 2026
+// 2. ชื่อไฟล์โค้ด: G2pPack.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.1
+// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Api/G2pPack.cs
+// 5. หน้าที่: คลาสจัดการโหลดแพ็กเกจ G2P และพจนานุกรม ป้องกันการเขียนทับคำอ่านด้วยคำซ้ำ
+// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine | Original by OpenUtau Authors
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -41,14 +50,20 @@ namespace OpenUtau.Api {
                     .ForEach(parts => builder.AddSymbol(prepPhoneme(parts[0]), parts[1]));
             }
             if (dictTxt != null) {
+                var loadedWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 dictTxt.Where(line => !line.StartsWith(";;;"))
                     .Select(line => line.Trim())
                     .Select(line => line.Split(new string[] { "  " }, StringSplitOptions.None))
                     .Where(parts => parts.Length == 2)
                     .ToList()
-                    .ForEach(parts => builder.AddEntry(
-                        prepGrapheme(parts[0]),
-                        parts[1].Split().Select(symbol => prepPhoneme(symbol))));
+                    .ForEach(parts => {
+                        string word = prepGrapheme(parts[0]);
+                        if (loadedWords.Add(word)) {
+                            builder.AddEntry(word, parts[1].Split().Select(symbol => prepPhoneme(symbol)));
+                        }
+                    });
+
+
             }
             var dict = builder.Build();
             InferenceSession session = null;

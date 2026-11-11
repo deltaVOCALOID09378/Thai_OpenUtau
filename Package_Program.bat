@@ -82,6 +82,10 @@ rem Consolidate DirectML if available
 if exist "%PROJECT_ROOT%\All Rendered File\DirectML.dll" (
     if not exist "%TARGET_DIR%\DirectML.dll" copy /y "%PROJECT_ROOT%\All Rendered File\DirectML.dll" "%TARGET_DIR%\" >nul 2>&1
 )
+rem Consolidate FFmpeg if available
+if exist "%PROJECT_ROOT%\ffmpeg.exe" (
+    if not exist "%TARGET_DIR%\ffmpeg.exe" copy /y "%PROJECT_ROOT%\ffmpeg.exe" "%TARGET_DIR%\" >nul 2>&1
+)
 
 rem Step 2: Prepare Export Directories
 if not defined PKG_VER set "PKG_VER=3.3.0"

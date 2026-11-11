@@ -2,8 +2,8 @@
 
 > **Status:** Active / Enterprise Sustainable R&D  
 > **Standard:** DELTA SYNTH Engineering Protocol (Preserve → Strengthen → Optimize → Verify)  
-> **Version:** v3.9.4 (Enterprise Zero-Defect Master Edition)  
-> **Last Updated:** 07 พฤศจิกายน พ.ศ. 2569 / 07 November 2026 (B.E. 2569 / A.D. 2026)  
+> **Version:** v3.9.5 (Enterprise Zero-Defect Master Edition)  
+> **Last Updated:** 11 พฤศจิกายน พ.ศ. 2569 / 11 November 2026 (B.E. 2569 / A.D. 2026)  
 > **Author & Architect Credit:** Made And Checked By DELTA SYNTH & All Code Agentic AI Engine `[ Original by stakira, DELTA SYNTH & OpenUtau Contributors ]`  
 > **File Location:** `d:\Program Developing\Thai_OpenUtau\About_Project.md`
 
@@ -193,5 +193,9 @@ graph TD
 | **2026-11-02** | `3.9.2` | DELTA SYNTH & AI | ขจัดข้อผิดพลาดคอมไพล์ 78 จุด, จัดระเบียบ XAML และสร้างสกิล `Thai-OpenUtau-Fix-And-Update-At-All` |
 | **2026-11-06** | `3.9.3` | DELTA SYNTH & AI | ยกเครื่อง Worldline Resampler: แก้ปัญหา oto.ini, ขยาย Padding 80ms, และเพิ่ม Moresampler Coordinator |
 | **2026-11-07** | `3.9.4` | DELTA SYNTH & AI | สถาปัตยกรรมเสียง Worldline ขั้นสูง: ขจัด Sample Rate Crash, ติดตั้ง Equal-Power Cosine Crossfade, จัดทำ `About_Project.md` 12 หัวข้อมาตรฐาน และบันทึกรายงานวิจัยพัฒนาที่ยั่งยืน |
+| **2026-11-08** | `3.9.5` | DELTA SYNTH & AI | พัฒนา `DeltaSingerProfileResolver` (ตรวจจับโปรไฟล์คลังเสียงอัตโนมัติ) และปรับสมดุล `ThaiArpasingPhonemizer` / `ArpasingPhonemizer` |
+| **2026-11-10** | `3.9.5` | DELTA SYNTH & AI | ยกระดับระบบตรวจสอบเวอร์ชันในเครื่องก่อนแจ้งเตือนหรือดาวน์โหลดทุกจุด (`UpdaterViewModel`, `UpdaterDialog`, `PackageManager`, `Install-File.bat`, `OpenUtau.nsi`, `PrepareDirectML.ps1`), แก้ปัญหา Version Drift (`114.4.18` -> `3.9.5`), เร่งความเร็วสแกนปลั๊กอินใน `DocManager` และจัดระเบียบ Workspace ตามมาตรฐาน `agent-workspace-archive` |
+| **2026-11-11** | `3.9.5` | DELTA SYNTH & AI | สถาปัตยกรรมรูปภาพนักร้องใหม่แยกขาด Full-Body (`E:\A Full Body Picture`) และ Profile (`E:\A Profile for Singer Picture`) ป้องกันภาพสลับกัน 100% พร้อม Sanity Guard ใน `DeltaSingerProfileResolver` (`v1.2`), อัปเดต 101 คลังเสียงบนดิสก์จริง, เพิ่มพรีวิวภาพคู่ Dual Preview ใน `SingersDialog` และเมนูซิงก์ภาพใน MainWindow, ปรับปรุงเอนจินบันทึกหน้าจอสู่ Windows MediaFoundation `h264_mf` ลื่นไหล 60 FPS, แก้ไข Log `No active undoGroup to rollback` ใน `LyricsViewModel`, ผ่าน Release Cycle Pipeline ครบ 7 ขั้นตอน และแพ็กเกจ Standalone .NET 8 Bundled พร้อม SFX Installer สมบูรณ์แบบ |
 
 ---
+

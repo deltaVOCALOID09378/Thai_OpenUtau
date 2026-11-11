@@ -592,16 +592,6 @@
                              ItemsSource="{Binding NotesViewModel.Keys}" KeyDown="OnKeyKeyDown"/>
               </Button.ContextMenu>
             </Button>
-            <Button Classes="topBarTextChip" Margin="4,0,0,0" Padding="6,0" Click="OnVocalTuningMenuButton"
-              ToolTip.Tip="{DynamicResource pianoroll.menu.vocaltuning}">
-              <TextBlock Text="{DynamicResource pianoroll.menu.vocaltuning}"
-                         TextAlignment="Center"
-                         VerticalAlignment="Center"/>
-              <Button.ContextMenu>
-                <ContextMenu Name="VocalTuningMenu" Classes="WithCommand" Placement="BottomEdgeAlignedLeft"
-                             ItemsSource="{Binding VocalTuningEdits}"/>
-              </Button.ContextMenu>
-            </Button>
             <Border Width="12" IsVisible="{Binding UsesExpandedPianoRollLayout}"/>
             <c:PianoRollTopBarViewToggles IsVisible="{Binding UsesExpandedPianoRollLayout}"
                                           VerticalAlignment="Center"/>

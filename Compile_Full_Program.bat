@@ -146,6 +146,10 @@ if exist "%PROJECT_ROOT%\SDL3.dll" (
     copy /y "%PROJECT_ROOT%\SDL3.dll" "%OUTPUT_DIR%\" >nul 2>&1
     echo [*] SDL3.dll consolidated.
 )
+if exist "%PROJECT_ROOT%\ffmpeg.exe" (
+    copy /y "%PROJECT_ROOT%\ffmpeg.exe" "%OUTPUT_DIR%\" >nul 2>&1
+    echo [*] ffmpeg.exe consolidated.
+)
 
 rem Consolidate Wavtools and Resamplers if present
 if exist "%PROJECT_ROOT%\Wavtools" (
@@ -180,6 +184,7 @@ if exist "%ALL_RENDERED%" (
     if not exist "%ALL_RENDERED%\Dictionaries" mkdir "%ALL_RENDERED%\Dictionaries" >nul 2>&1
     if exist "%PROJECT_ROOT%\Dictionaries" xcopy "%PROJECT_ROOT%\Dictionaries\*" "%ALL_RENDERED%\Dictionaries\" /s /e /y /q >nul 2>&1
     if exist "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary" xcopy "%PROJECT_ROOT%\OpenUtau.Plugin.Builtin\Dictionary\*" "%ALL_RENDERED%\Dictionaries\" /s /e /y /q >nul 2>&1
+    if exist "%PROJECT_ROOT%\ffmpeg.exe" copy /y "%PROJECT_ROOT%\ffmpeg.exe" "%ALL_RENDERED%\" >nul 2>&1
     echo [*] Binaries and Dictionaries deployed to All Rendered File.
 )
 

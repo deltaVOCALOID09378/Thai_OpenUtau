@@ -1,10 +1,10 @@
 // ============================================================================
-// วัน/เดือน/ปี: 28 ตุลาคม 2569 (2026-10-28)
+// วัน/เดือน/ปี: 10 พฤศจิกายน 2569 (2026-11-10)
 // ชื่อไฟล์: PackageManager.cs
-// ลำดับเวอร์ชัน: 1.2
+// ลำดับเวอร์ชัน: 1.4
 // เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors ]
 // ตำแหน่งที่จัดวาง: OpenUtau.Core/PackageManager.cs
-// รายละเอียดการแก้ไขงาน: ป้องกัน Zip-Slip Sibling-Prefix Bypass ในการแตกไฟล์แพ็กเกจ .oudep
+// รายละเอียดการแก้ไขงาน: รองรับการเปรียบเทียบเลขเวอร์ชันรูปแบบตัวเลขเดี่ยว/วันที่ (เช่น 230917, 240512) ป้องกันการลบ oudep.yaml เมื่อไฟล์ .onnx ถูกล็อก และป้องกัน Zip-Slip
 // ============================================================================
 using System;
 using System.Collections.Generic;
@@ -179,6 +179,9 @@ namespace OpenUtau.Core {
                 var results = dirs.Select(dir => {
                     try {
                         var yamlPath = Path.Combine(dir, "oudep.yaml");
+                        if (!File.Exists(yamlPath)) {
+                            return null;
+                        }
                         using var reader = new StreamReader(yamlPath, Encoding.UTF8);
                         var metadata = Core.Yaml.DefaultDeserializer.Deserialize<OudepMetadata>(reader) ?? new OudepMetadata();
                         if (string.IsNullOrEmpty(metadata.id)) {
@@ -205,17 +208,57 @@ namespace OpenUtau.Core {
             return sb.ToString();
         }
 
-        private class VersionStringComparer : IComparer<string> {
-            public int Compare(string? x, string? y) {
-                var a = x ?? string.Empty;
-                var b = y ?? string.Empty;
-                if (Version.TryParse(a, out var va) && Version.TryParse(b, out var vb)) {
-                    return va.CompareTo(vb);
-                }
-                if (Version.TryParse(a, out _)) return 1;
-                if (Version.TryParse(b, out _)) return -1;
-                return string.Compare(a, b, StringComparison.Ordinal);
+        public static bool TryParseNormalizedVersion(string? raw, out Version normalized) {
+            normalized = new Version(0, 0, 0, 0);
+            if (string.IsNullOrWhiteSpace(raw)) {
+                return false;
             }
+            string cleaned = raw.Trim().TrimStart('v', 'V');
+            int dashIdx = cleaned.IndexOf('-');
+            if (dashIdx > 0) {
+                cleaned = cleaned.Substring(0, dashIdx);
+            }
+            int plusIdx = cleaned.IndexOf('+');
+            if (plusIdx > 0) {
+                cleaned = cleaned.Substring(0, plusIdx);
+            }
+            if (!cleaned.Contains('.')) {
+                if (int.TryParse(cleaned, out int singleInt) && singleInt >= 0) {
+                    normalized = new Version(singleInt, 0, 0, 0);
+                    return true;
+                }
+                return false;
+            }
+            var parts = cleaned.Split('.');
+            if (parts.Length > 4) {
+                cleaned = string.Join(".", parts.Take(4));
+            }
+            if (!Version.TryParse(cleaned, out var parsed) || parsed == null) {
+                return false;
+            }
+            normalized = new Version(
+                Math.Max(0, parsed.Major),
+                Math.Max(0, parsed.Minor),
+                Math.Max(0, parsed.Build),
+                Math.Max(0, parsed.Revision));
+            return true;
+        }
+
+        public static int CompareVersions(string? x, string? y) {
+            var a = (x ?? string.Empty).Trim();
+            var b = (y ?? string.Empty).Trim();
+            bool hasA = TryParseNormalizedVersion(a, out var va);
+            bool hasB = TryParseNormalizedVersion(b, out var vb);
+            if (hasA && hasB) {
+                return va.CompareTo(vb);
+            }
+            if (hasA) return 1;
+            if (hasB) return -1;
+            return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private class VersionStringComparer : IComparer<string> {
+            public int Compare(string? x, string? y) => CompareVersions(x, y);
         }
 
         private static readonly IComparer<string> VersionComparer = new VersionStringComparer();
@@ -242,6 +285,17 @@ namespace OpenUtau.Core {
             if (software.versions == null || software.versions.Length == 0) throw new ArgumentException("No versions available");
             var version = software.versions.OrderByDescending(v => v.version, VersionComparer).First();
             if (version.mirrors == null || version.mirrors.Length == 0) throw new ArgumentException("No mirrors available");
+
+            // Check if the package is already installed on the machine at an equal or newer version before downloading
+            var installedList = await GetInstalledAsync();
+            var existing = installedList.FirstOrDefault(i => string.Equals(i.id, software.id, StringComparison.OrdinalIgnoreCase));
+            if (existing != null && !string.IsNullOrEmpty(existing.version) && CompareVersions(existing.version, version.version) >= 0) {
+                Log.Information("Package {Id} version {InstalledVer} is already installed and up-to-date (target: {TargetVer}). Skipping download.",
+                    software.id, existing.version, version.version);
+                progress?.Report(100);
+                return;
+            }
+
             var mirror = version.mirrors[0];
             string cacheDir = PathManager.Inst.CachePath;
             Directory.CreateDirectory(cacheDir);
@@ -342,13 +396,7 @@ namespace OpenUtau.Core {
 
             await Task.Run(() => {
                 var basePath = Path.Combine(PathManager.Inst.DependencyPath, id);
-                try {
-                    if (Directory.Exists(basePath)) {
-                        Directory.Delete(basePath, true);
-                    }
-                } catch (Exception e) {
-                    Log.Error(e, $"Failed to remove old dependency folder {basePath}");
-                }
+                Directory.CreateDirectory(basePath);
                 var canonicalBase = Path.GetFullPath(basePath);
                 if (!canonicalBase.EndsWith(Path.DirectorySeparatorChar)) {
                     canonicalBase += Path.DirectorySeparatorChar;
@@ -364,7 +412,15 @@ namespace OpenUtau.Core {
                     var dir = Path.GetDirectoryName(filePath);
                     if (!entry.IsDirectory && !string.IsNullOrEmpty(dir)) {
                         Directory.CreateDirectory(dir);
-                        entry.WriteToFile(filePath);
+                        try {
+                            entry.WriteToFile(filePath, new SharpCompress.Common.ExtractionOptions {
+                                Overwrite = true
+                            });
+                        } catch (IOException ex) when (File.Exists(filePath)) {
+                            // If a model file (e.g. .onnx) is currently memory-mapped/locked by an active session,
+                            // keep the existing file intact instead of leaving the package in a broken state without oudep.yaml.
+                            Log.Warning(ex, "File {FilePath} is currently in use; keeping existing file in place.", filePath);
+                        }
                     }
                 }
             });

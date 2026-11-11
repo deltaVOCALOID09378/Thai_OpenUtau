@@ -1,10 +1,10 @@
 // ============================================================================
-// Date: 21 ตุลาคม 2569 (21 October 2026)
+// Date: 9 พฤศจิกายน 2569 (9 November 2026)
 // File Name: ThemeLoader.cs
-// Version: 1.0
+// Version: 1.1
 // Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Contributors ]
 // Location: OpenUtau/ThemeLoader.cs
-// Description: ปรับปรุงระบบบันทึก Log เมื่อไม่พบ Loader ที่ลงทะเบียนไว้ให้แจ้งเตือนเป็น Warning เพื่อการตรวจสอบที่ชัดเจนขึ้น
+// Description: ปรับระดับการบันทึก Log ของ Loader ที่ไม่ใช่ธีม (เช่น Vocoder Packages) เป็น Debug ป้องกันการเตือนเท็จใน Log
 // ============================================================================
 
 using System;
@@ -43,7 +43,8 @@ public static class OudepLoaderRegistry {
         foreach (var ep in entrypoints) {
             var loader = OudepLoaderRegistry.Create(ep.Entrypoint.loader);
             if (loader == null) {
-                Log.Warning("No loader registered for '{loader}' in package {id}", ep.Entrypoint.loader, ep.Package.id);
+                // Non-theme package entrypoints (e.g., vocoders like Hnsep, PcNsfHifiGanVocoder) are handled by their respective systems.
+                Log.Debug("No theme loader registered for '{loader}' in package {id}", ep.Entrypoint.loader, ep.Package.id);
                 continue;
             }
             try {

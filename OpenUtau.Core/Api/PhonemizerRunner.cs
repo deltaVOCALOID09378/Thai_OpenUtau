@@ -1,8 +1,10 @@
 // ============================================================================
-// Made And Checked By DELTA SYNTH & Gemini AI
-// Original by Patiphat Wongyai (Delta)
-// Version: 1.2 | Date: 2026-07-28
-// Description: ปรับคิวหน่วยเสียงให้รอด้วยสัญญาณ ลดการใช้ CPU และปิดงานอย่างปลอดภัย
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
+// 2. ชื่อไฟล์โค้ด: PhonemizerRunner.cs
+// 3. ลำดับเวอร์ชันของไฟล์: 1.3
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by Patiphat Wongyai (Delta) ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/Api/PhonemizerRunner.cs
+// 6. รายละเอียดการแก้ไข: ป้องกัน ArgumentOutOfRangeException ในการเข้าถึง Track Index เมื่อรันหน่วยเสียง
 // ============================================================================
 
 using System;
@@ -161,7 +163,16 @@ namespace OpenUtau.Api {
                 p.SetTiming(request.timeAxis);
                 if (p.SetUpException == null) {
                     try {
-                        p.SetUp(notes, DocManager.Inst.Project, DocManager.Inst.Project.tracks[request.part.trackNo]);
+                        var project = DocManager.Inst.Project;
+                        UTrack track = null;
+                        if (project != null && project.tracks != null) {
+                            if (request.part.trackNo >= 0 && request.part.trackNo < project.tracks.Count) {
+                                track = project.tracks[request.part.trackNo];
+                            } else if (project.tracks.Count > 0) {
+                                track = project.tracks[0];
+                            }
+                        }
+                        p.SetUp(notes, project, track ?? new UTrack());
                     } catch (Exception e) {
                         Log.Error(e, $"phonemizer failed to setup.");
                         p.SetUpException = e;

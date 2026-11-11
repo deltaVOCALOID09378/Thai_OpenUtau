@@ -294,6 +294,9 @@ Do you want to continue by splitting at the nearest position after current playh
 
   <system:String x:Key="lyrics.applyselected">Apply only to selected notes</system:String>
   <system:String x:Key="lyrics.caption">Edit Lyrics</system:String>
+  <system:String x:Key="lyrics.replace.find">Find</system:String>
+  <system:String x:Key="lyrics.replace.into">Replace with</system:String>
+  <system:String x:Key="lyrics.replace.confirm">Confirm</system:String>
   <system:String x:Key="lyrics.livepreview">Live preview</system:String>
   <system:String x:Key="lyrics.nonote">There is no note!</system:String>
   <system:String x:Key="lyrics.selectnotes">Select some notes first!</system:String>
@@ -380,6 +383,7 @@ Do you want to continue by splitting at the nearest position after current playh
   <system:String x:Key="menu.tools.singer.install">Install Singer...</system:String>
   <system:String x:Key="menu.tools.singer.installadv">Install Singer (Advanced)...</system:String>
   <system:String x:Key="menu.tools.singers">Singers...</system:String>
+  <system:String x:Key="menu.tools.syncallpictures">Sync All DELTA Singer Pictures</system:String>
   <system:String x:Key="menu.tools.wavtoolresampler.install">Install Wavtool/Resampler (.exe)...</system:String>
   <system:String x:Key="menu.view">View</system:String>
 
@@ -489,6 +493,10 @@ Warning: this option removes custom presets.</system:String>
   <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
   <system:String x:Key="lunai.tab.ufr">UFR</system:String>
   <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
+  <system:String x:Key="lunai.tab.deltasynth">DELTA SYNTH</system:String>
+  <system:String x:Key="lunai.deltasynth.private.terms">Reserved under voicebank owner's terms and conditions only.</system:String>
+  <system:String x:Key="lunai.deltasynth.private.contact">Direct contact with the primary voicebank owner is available immediately.</system:String>
+  <system:String x:Key="lunai.deltasynth.unreleased">Preparing for release schedule... Please wait for upcoming announcements.</system:String>
   <system:String x:Key="lunai.company">LUNAI Project</system:String>
   <system:String x:Key="lunai.website">Website</system:String>
   <system:String x:Key="lunai.col.name">Name</system:String>
@@ -960,6 +968,12 @@ The voicebank may not work on another OS.</system:String>
   <system:String x:Key="singers.editoto.regenfrq.regenerating">Regenerating FRQ</system:String>
   <system:String x:Key="singers.editoto.reset">Reset Otos</system:String>
   <system:String x:Key="singers.editoto.save">Save Otos</system:String>
+  <system:String x:Key="singers.editoto.autodetect">Auto Detect</system:String>
+  <system:String x:Key="singers.editoto.presetcv">CV Preset</system:String>
+  <system:String x:Key="singers.editoto.presetvcv">VCV Preset</system:String>
+  <system:String x:Key="singers.editoto.copytiming">Copy Timing</system:String>
+  <system:String x:Key="singers.editoto.pastetiming">Paste Timing</system:String>
+  <system:String x:Key="singers.editoto.cursortime">Cursor:</system:String>
   <system:String x:Key="singers.editoto.searchalias">Search Alias</system:String>
   <system:String x:Key="singers.editoto.setsetparampath">Download setParam (v4.0b or higher) from http://nwp8861.blog92.fc2.com/ and set setParam path in Preferences first!</system:String>
   <system:String x:Key="singers.editoto.setvlabelerpath">Download vLabeler (1.0.0-beta1 or higher) from https://github.com/sdercolin/vlabeler and set vLabeler path in Preferences first!</system:String>
@@ -987,6 +1001,7 @@ The voicebank may not work on another OS.</system:String>
   <system:String x:Key="singers.setencoding">Set Encoding</system:String>
   <system:String x:Key="singers.setimage">Set Icon</system:String>
   <system:String x:Key="singers.setportrait">Set Portrait</system:String>
+  <system:String x:Key="singers.syncpictures">Sync DELTA Singer Pictures</system:String>
   <system:String x:Key="singers.setsingertype">Set Singer Type</system:String>
   <system:String x:Key="singers.subbanks.clear">Clear</system:String>
   <system:String x:Key="singers.subbanks.color">Color</system:String>

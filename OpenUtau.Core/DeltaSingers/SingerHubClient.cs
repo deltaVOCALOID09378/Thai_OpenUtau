@@ -1,10 +1,10 @@
 // ============================================================================
-// 1. วัน/เดือน/ปี: 31 ตุลาคม พ.ศ. 2569 / 31 October 2026
+// 1. วัน/เดือน/ปี: 10 พฤศจิกายน พ.ศ. 2569 / 10 November 2026
 // 2. ชื่อไฟล์โค้ด: SingerHubClient.cs
-// 3. ลำดับเวอร์ชันของไฟล์: 1.3
-// 4. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/DeltaSingers/SingerHubClient.cs
-// 5. หน้าที่: จัดการข้อมูลคลังเสียง SingerHub และเพิ่มคุณสมบัติ NameTh, Voicer, Genre, Engine ใน SingerHubEntry
-// 6. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Agentic AI | Original by DELTA SYNTH
+// 3. ลำดับเวอร์ชันของไฟล์: 1.5
+// 4. เครดิตผู้สร้าง: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by DELTA SYNTH ]
+// 5. ตำแหน่งที่จัดวางไฟล์: OpenUtau.Core/DeltaSingers/SingerHubClient.cs
+// 6. รายละเอียดการแก้ไขงาน: เพิ่ม GroupType ใน SingerHubEntry รองรับการจำแนกสถานะนักร้อง DELTA SYNTH (Private / Unreleased / Official)
 // ============================================================================
 
 #pragma warning disable CS0618, CS0649, CS8632, CS0108
@@ -61,6 +61,9 @@ namespace OpenUtau.Core.SingerHub {
 
         [JsonProperty("host")]
         public string Host { get; set; } = "delta";
+
+        [JsonProperty("groupType")]
+        public string GroupType { get; set; } = string.Empty;
 
         [JsonProperty("icon")]
         public string Icon { get; set; } = string.Empty;
@@ -383,11 +386,7 @@ namespace OpenUtau.Core.SingerHub {
         }
 
         public static int CompareVersions(string a, string b) {
-            if (Version.TryParse(a?.Trim(), out var va) && Version.TryParse(b?.Trim(), out var vb))
-                return va.CompareTo(vb);
-            if (int.TryParse(a?.Trim(), out var ia) && int.TryParse(b?.Trim(), out var ib))
-                return ia.CompareTo(ib);
-            return string.Compare(a ?? string.Empty, b ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+            return PackageManager.CompareVersions(a, b);
         }
 
         static string GetArchiveFolderName(string downloadUrl) {

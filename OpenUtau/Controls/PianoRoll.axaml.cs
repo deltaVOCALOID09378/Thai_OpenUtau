@@ -1,12 +1,11 @@
 // ============================================================================
-// Date         : 31/10/2026 (B.E. 2569 / A.D. 2026)
+// Date         : 10/11/2026 (B.E. 2569 / A.D. 2026)
 // File Name    : PianoRoll.axaml.cs
-// Version      : 3.4.0
+// Version      : 3.5.0
 // Author Credit: Made And Checked By DELTA SYNTH & All Code Agentic AI Engine [ Original by OpenUtau Authors & DELTA SYNTH ]
 // File Location: OpenUtau/Controls/PianoRoll.axaml.cs
-// Description  : Piano Roll controller with Vocal Tuning macro menu & toolbar integration,
-//                Thai 5-Tone AutoPitch, CleanAllSuffixes, full 6-shape Canon AutoPitchwriter,
-//                Multi-Accent & Global Multi-Lyric Randomizer, and Alt+Drag note duplication.
+// Description  : Piano Roll controller with resilient shortcut resolution fallback, zero-cooldown tool switching,
+//                instant spacebar playback toggle even without part selection, and enhanced keyboard handling.
 // ============================================================================
 using OpenUtau.App.Capture;
 using System;
@@ -86,7 +85,11 @@ namespace OpenUtau.App.Controls {
         private Window RootWindow => (Window)TopLevel.GetTopLevel(this)!;
 
         string? GetActionIdForShortcut(Key pressedKey, KeyModifiers pressedMods) {
-            foreach (var sc in Preferences.Default.Shortcuts) {
+            var shortcuts = Preferences.Default?.Shortcuts;
+            if (shortcuts == null || shortcuts.Count == 0) {
+                shortcuts = new Preferences.SerializablePreferences().Shortcuts;
+            }
+            foreach (var sc in shortcuts) {
                 if (Enum.TryParse(sc.KeyName, out Key parsedKey) && 
                     Enum.TryParse(sc.ModifiersName, out KeyModifiers parsedMods)) {
                     
@@ -2366,6 +2369,11 @@ namespace OpenUtau.App.Controls {
         void OnKeyDown(object? sender, KeyEventArgs args) {
             var notesVm = ViewModel.NotesViewModel;
             if (notesVm.Part == null) {
+                if (args.Key == Key.Space && args.KeyModifiers == KeyModifiers.None) {
+                    ViewModel.PlaybackViewModel?.PlayOrPause();
+                    args.Handled = true;
+                    return;
+                }
                 args.Handled = false;
                 return;
             }
